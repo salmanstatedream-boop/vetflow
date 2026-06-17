@@ -16,6 +16,7 @@ interface AppointmentsPageHeaderProps {
   publicBookingUrl: string;
   doctors: Doctor[];
   activeBranchId: string;
+  userRole?: string | null;
 }
 
 export default function AppointmentsPageHeader({
@@ -23,7 +24,9 @@ export default function AppointmentsPageHeader({
   publicBookingUrl,
   doctors,
   activeBranchId,
+  userRole,
 }: AppointmentsPageHeaderProps) {
+  const isDoctor = userRole === 'doctor';
   const searchParams = useSearchParams();
   const openNew = searchParams.get('new') === '1';
   const initialPhone = searchParams.get('phone') || undefined;
@@ -33,9 +36,14 @@ export default function AppointmentsPageHeader({
   return (
     <PageHeader
       title="Appointments"
-      description="Create linked appointments, manage schedules, and handle emergencies."
+      description={
+        isDoctor
+          ? 'Your upcoming appointments.'
+          : 'Create linked appointments, manage schedules, and handle emergencies.'
+      }
       icon={Calendar}
       actions={
+        isDoctor ? undefined : (
         <div className="flex flex-wrap items-center gap-3">
           <StaffAppointmentForm
             doctors={doctors}
@@ -65,6 +73,7 @@ export default function AppointmentsPageHeader({
             </div>
           )}
         </div>
+        )
       }
     />
   );

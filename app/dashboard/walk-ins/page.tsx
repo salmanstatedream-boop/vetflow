@@ -168,6 +168,7 @@ export default async function WalkInsPage({
       <WalkInDashboardClient
         doctors={doctors}
         activeBranchId={activeBranchId}
+        branches={session.branches}
         initialVisits={visits}
         checkoutVisits={checkoutVisits}
         highlightIntake={openIntake === '1'}

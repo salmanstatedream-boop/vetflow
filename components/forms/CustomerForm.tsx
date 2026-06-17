@@ -13,15 +13,29 @@ import { CustomerSchema, type CustomerInput } from '@/lib/validations/schemas';
 import Select from '@/components/ui/premium/Select';
 import { Loader2, Pencil, Plus, Trash2, X } from 'lucide-react';
 
+export type CreatedCustomerPayload = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  address?: string;
+};
+
 interface CustomerFormProps {
   branches: { id: string; name: string }[];
   activeBranchId?: string;
   defaultPhone?: string;
-  onSuccess?: () => void;
+  onSuccess?: (customer?: CreatedCustomerPayload) => void;
+  onExistingCustomerId?: (customerId: string) => void;
   mode?: 'create' | 'edit';
   customerId?: string;
   initialValues?: CustomerInput;
   trigger?: 'add' | 'edit' | 'none';
+  defaultOpen?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  skipRefresh?: boolean;
 }
 
 export default function CustomerForm({
@@ -33,8 +47,19 @@ export default function CustomerForm({
   customerId,
   initialValues,
   trigger = 'add',
+  defaultOpen = false,
+  open: controlledOpen,
+  onOpenChange,
+  onExistingCustomerId,
+  skipRefresh = false,
 }: CustomerFormProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(defaultOpen);
+  const isControlled = controlledOpen !== undefined;
+  const isOpen = isControlled ? controlledOpen : internalOpen;
+  const setOpen = (next: boolean) => {
+    if (!isControlled) setInternalOpen(next);
+    onOpenChange?.(next);
+  };
   const [error, setError] = useState<string | null>(null);
   const [existingCustomerId, setExistingCustomerId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -67,6 +92,12 @@ export default function CustomerForm({
     }
   }, [initialValues, reset]);
 
+  useEffect(() => {
+    if (defaultOpen && !isControlled) {
+      setInternalOpen(true);
+    }
+  }, [defaultOpen, isControlled]);
+
   const openForm = () => {
     setExistingCustomerId(null);
     setError(null);
@@ -82,7 +113,7 @@ export default function CustomerForm({
         address: '',
       });
     }
-    setIsOpen(true);
+    setOpen(true);
   };
 
   const onSubmit = async (data: CustomerInput) => {
@@ -96,9 +127,29 @@ export default function CustomerForm({
       if (res.success) {
         reset();
         setExistingCustomerId(null);
-        setIsOpen(false);
-        router.refresh();
-        if (onSuccess) onSuccess();
+        setOpen(false);
+        if (!skipRefresh) {
+          router.refresh();
+        }
+        if (onSuccess) {
+          if (!isEdit) {
+            const created = (res as { customer?: { id: string; first_name: string; last_name: string; phone: string; email: string | null; address: string | null } }).customer;
+            onSuccess(
+              created
+                ? {
+                    id: created.id,
+                    firstName: created.first_name,
+                    lastName: created.last_name,
+                    phone: created.phone,
+                    email: created.email || '',
+                    address: created.address || undefined,
+                  }
+                : undefined
+            );
+          } else {
+            onSuccess();
+          }
+        }
       } else {
         const dupId = (res as { existingCustomerId?: string }).existingCustomerId;
         if (dupId) {
@@ -141,7 +192,7 @@ export default function CustomerForm({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="glass-panel w-full max-w-md rounded-2xl shadow-premium border border-outline-variant/40 p-6 relative">
             <button
-              onClick={() => setIsOpen(false)}
+              onClick={() => setOpen(false)}
               className="absolute right-4 top-4 text-on-surface-variant/40 hover:text-on-surface-variant transition-colors"
             >
               <X className="w-5 h-5" />
@@ -158,12 +209,25 @@ export default function CustomerForm({
               <div className="mb-4 p-3 bg-destructive/5 border border-destructive/20 text-destructive text-xs rounded-xl space-y-2">
                 <p>{error}</p>
                 {existingCustomerId && (
-                  <a
-                    href={`/dashboard/customers/${existingCustomerId}`}
-                    className="inline-block text-[10px] font-bold text-primary hover:underline"
-                  >
-                    Use existing customer profile →
-                  </a>
+                  onExistingCustomerId ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onExistingCustomerId(existingCustomerId);
+                        setOpen(false);
+                      }}
+                      className="inline-block text-[10px] font-bold text-primary hover:underline"
+                    >
+                      Use existing customer in walk-in →
+                    </button>
+                  ) : (
+                    <a
+                      href={`/dashboard/customers/${existingCustomerId}`}
+                      className="inline-block text-[10px] font-bold text-primary hover:underline"
+                    >
+                      Use existing customer profile →
+                    </a>
+                  )
                 )}
               </div>
             )}
@@ -226,7 +290,7 @@ export default function CustomerForm({
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setIsOpen(false)} className="w-1/2 border border-outline-variant py-2.5 rounded-xl text-xs font-semibold text-on-surface">
+                <button type="button" onClick={() => setOpen(false)} className="w-1/2 border border-outline-variant py-2.5 rounded-xl text-xs font-semibold text-on-surface">
                   Cancel
                 </button>
                 <button type="submit" disabled={isLoading} className="w-1/2 bg-primary text-white py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-60">

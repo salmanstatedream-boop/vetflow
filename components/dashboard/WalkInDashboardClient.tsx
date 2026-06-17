@@ -50,6 +50,7 @@ interface CheckoutVisit {
 interface WalkInDashboardClientProps {
   doctors: Doctor[];
   activeBranchId: string;
+  branches: { id: string; name: string }[];
   initialVisits: Visit[];
   checkoutVisits: CheckoutVisit[];
   highlightIntake?: boolean;
@@ -58,6 +59,7 @@ interface WalkInDashboardClientProps {
 export default function WalkInDashboardClient({
   doctors,
   activeBranchId,
+  branches,
   initialVisits,
   checkoutVisits,
   highlightIntake = false,
@@ -158,6 +160,7 @@ export default function WalkInDashboardClient({
           {!selectedPatient ? (
             <PatientLookupPanel
               activeBranchId={activeBranchId}
+              branches={branches}
               selected={selectedPatient}
               onSelect={setSelectedPatient}
               onClear={() => setSelectedPatient(null)}

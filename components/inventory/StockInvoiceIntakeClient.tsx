@@ -1,10 +1,14 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { parseStockInvoiceImageAction, type StockInvoiceDraft } from '@/lib/services/stock-invoice-ocr';
-import { confirmStockIntakeAction, createCategoryAction } from '@/lib/services/inventory-actions';
-import { STOCK_PRODUCT_TYPE_OPTIONS, type StockProductType } from '@/lib/inventory/product-types';
+import { confirmStockIntakeAction } from '@/lib/services/inventory-actions';
+import {
+  STOCK_PRODUCT_TYPE_OPTIONS,
+  formatProductTypeLabel,
+  normalizeProductTypeSlug,
+} from '@/lib/inventory/product-types';
 import { useCreatableOptions } from '@/lib/hooks/useCreatableOptions';
 import Select from '@/components/ui/premium/Select';
 import CreatableSelect from '@/components/ui/premium/CreatableSelect';
@@ -25,14 +29,13 @@ type DraftRow = {
   unit: string;
   productId: string | null;
   createNew: boolean;
-  type: StockProductType;
-  categoryName: string;
+  type: string;
 };
 
 interface StockInvoiceIntakeClientProps {
   activeBranchId: string;
   products: CatalogProduct[];
-  categories: { id: string; name: string }[];
+  existingProductTypes?: string[];
 }
 
 const EMPTY_ROW: DraftRow = {
@@ -44,7 +47,6 @@ const EMPTY_ROW: DraftRow = {
   productId: null,
   createNew: true,
   type: 'medicine',
-  categoryName: '',
 };
 
 function fuzzyMatch(name: string, sku: string, catalog: CatalogProduct[]): string | null {
@@ -74,7 +76,6 @@ function draftToRows(draft: StockInvoiceDraft, catalog: CatalogProduct[]): Draft
       productId: matched,
       createNew: !matched,
       type: 'medicine',
-      categoryName: '',
     };
   });
 }
@@ -82,7 +83,7 @@ function draftToRows(draft: StockInvoiceDraft, catalog: CatalogProduct[]): Draft
 export default function StockInvoiceIntakeClient({
   activeBranchId,
   products,
-  categories,
+  existingProductTypes = [],
 }: StockInvoiceIntakeClientProps) {
   const router = useRouter();
   const [supplierName, setSupplierName] = useState('');
@@ -97,17 +98,26 @@ export default function StockInvoiceIntakeClient({
   const [reviewOpen, setReviewOpen] = useState(false);
   const [invalidTypeRows, setInvalidTypeRows] = useState<Set<number>>(new Set());
 
-  const onCreateCategory = useCallback(async (label: string) => {
-    const res = await createCategoryAction(label);
-    if (!res.success) throw new Error(res.error);
-    return { name: res.category!.name };
-  }, []);
+  const typeSeed = useMemo(() => {
+    const seen = new Set<string>();
+    const opts: { value: string; label: string }[] = [];
+    for (const opt of STOCK_PRODUCT_TYPE_OPTIONS) {
+      opts.push(opt);
+      seen.add(opt.value);
+    }
+    for (const raw of existingProductTypes) {
+      const slug = normalizeProductTypeSlug(raw);
+      if (!seen.has(slug)) {
+        opts.push({ value: slug, label: formatProductTypeLabel(slug) });
+        seen.add(slug);
+      }
+    }
+    return opts;
+  }, [existingProductTypes]);
 
-  const { options: categoryOptions, handleCreate: handleCreateCategory } = useCreatableOptions(
-    categories,
-    onCreateCategory,
-    { refreshOnCreate: true }
-  );
+  const { options: typeOptions, handleCreate: handleCreateType } = useCreatableOptions(typeSeed, undefined, {
+    refreshOnCreate: false,
+  });
 
   const catalogOptions = useMemo(
     () => [
@@ -166,14 +176,13 @@ export default function StockInvoiceIntakeClient({
         productId: null,
         createNew: true,
         type: rows[idx]?.type || 'medicine',
-        categoryName: rows[idx]?.categoryName || '',
       });
     } else {
       const matched = products.find((p) => p.id === value);
       updateRow(idx, {
         productId: value,
         createNew: false,
-        type: (matched?.type as StockProductType) || 'medicine',
+        type: matched?.type ? normalizeProductTypeSlug(matched.type) : 'medicine',
       });
     }
     setInvalidTypeRows((prev) => {
@@ -212,8 +221,7 @@ export default function StockInvoiceIntakeClient({
         unit: r.unit,
         productId: r.productId,
         createNew: r.createNew && !r.productId,
-        type: r.createNew && !r.productId ? r.type : undefined,
-        categoryName: r.createNew && !r.productId ? r.categoryName : undefined,
+        type: r.createNew && !r.productId ? normalizeProductTypeSlug(r.type) : undefined,
       })),
     });
     if (res.success) {
@@ -348,7 +356,6 @@ export default function StockInvoiceIntakeClient({
                     <th className="px-3 py-2">Unit price</th>
                     <th className="px-3 py-2">Catalog match</th>
                     <th className="px-3 py-2">Type</th>
-                    <th className="px-3 py-2">Category</th>
                     <th className="px-3 py-2" />
                   </tr>
                 </thead>
@@ -391,44 +398,36 @@ export default function StockInvoiceIntakeClient({
                             placeholder="Match catalog…"
                           />
                         </td>
-                        <td className="px-3 py-2 min-w-[110px]">
+                        <td className="px-3 py-2 min-w-[130px]">
                           {isNew ? (
-                            <select
+                            <CreatableSelect
+                              size="compact"
                               value={row.type}
-                              onChange={(e) => {
-                                updateRow(idx, { type: e.target.value as StockProductType });
+                              onChange={(v) => {
+                                updateRow(idx, { type: normalizeProductTypeSlug(v) });
                                 setInvalidTypeRows((prev) => {
                                   const next = new Set(prev);
                                   next.delete(idx);
                                   return next;
                                 });
                               }}
-                              className={`w-full px-2 py-1 border rounded text-xs bg-surface-container ${
+                              options={typeOptions}
+                              onCreateOption={async (label) => {
+                                const slug = normalizeProductTypeSlug(label);
+                                await handleCreateType(slug);
+                                updateRow(idx, { type: slug });
+                                setInvalidTypeRows((prev) => {
+                                  const next = new Set(prev);
+                                  next.delete(idx);
+                                  return next;
+                                });
+                              }}
+                              placeholder="Type…"
+                              className={
                                 invalidTypeRows.has(idx)
-                                  ? 'border-destructive ring-1 ring-destructive/40'
-                                  : 'border-outline-variant'
-                              }`}
-                              aria-label="Product type"
-                            >
-                              {STOCK_PRODUCT_TYPE_OPTIONS.map((opt) => (
-                                <option key={opt.value} value={opt.value}>
-                                  {opt.label}
-                                </option>
-                              ))}
-                            </select>
-                          ) : (
-                            <span className="text-[10px] text-on-surface-variant">—</span>
-                          )}
-                        </td>
-                        <td className="px-3 py-2 min-w-[130px]">
-                          {isNew ? (
-                            <CreatableSelect
-                              size="compact"
-                              value={row.categoryName}
-                              onChange={(v) => updateRow(idx, { categoryName: v })}
-                              options={categoryOptions}
-                              onCreateOption={handleCreateCategory}
-                              placeholder="Category…"
+                                  ? 'ring-1 ring-destructive/40 rounded'
+                                  : undefined
+                              }
                             />
                           ) : (
                             <span className="text-[10px] text-on-surface-variant">—</span>

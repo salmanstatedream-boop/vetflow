@@ -22,7 +22,7 @@ export const ProductSchema = z.object({
   brand: z.string().optional().or(z.literal('')),
   sku: z.string().optional().or(z.literal('')),
   unit: z.string().min(1, { message: 'Unit is required' }),
-  type: z.enum(['medicine', 'food', 'accessory', 'service', 'treats'], { message: 'Invalid type' }),
+  type: z.string().min(1, { message: 'Product type is required' }).max(50),
   purchasePrice: moneyField,
   sellingPrice: moneyField,
   stockQuantity: stockCountField,
@@ -227,11 +227,10 @@ export const StockIntakeLineSchema = z
     unit: z.string().optional().or(z.literal('')),
     productId: z.string().uuid().nullable().optional(),
     createNew: z.boolean().optional(),
-    type: z.enum(['medicine', 'food', 'treats', 'accessory']).optional(),
-    categoryName: z.string().max(100).optional().or(z.literal('')),
+    type: z.string().min(1).max(50).optional(),
   })
   .superRefine((line, ctx) => {
-    if (line.createNew && !line.productId && !line.type) {
+    if (line.createNew && !line.productId && !line.type?.trim()) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'Product type is required for new catalog items',

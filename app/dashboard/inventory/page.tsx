@@ -99,6 +99,13 @@ export default async function InventoryPage({
   // Compute stats
   const totalItems = (products?.length || 0) + (orgServices?.length || 0);
   const lowStockItems = products?.filter((p) => p.type !== 'service' && p.stock_quantity <= p.reorder_level) || [];
+  const existingProductTypes = Array.from(
+    new Set<string>(
+      (products || [])
+        .map((p) => String(p.type ?? ''))
+        .filter((t) => t.length > 0)
+    )
+  );
 
   return (
     <div className="space-y-8">
@@ -123,7 +130,7 @@ export default async function InventoryPage({
       {tab === 'intake' ? (
         <StockInvoiceIntakeClient
           activeBranchId={activeBranchId}
-          categories={categories || []}
+          existingProductTypes={existingProductTypes}
           products={(products || []).map((p) => ({
             id: p.id,
             name: p.name,

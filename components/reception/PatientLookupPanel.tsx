@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import {
+  getCustomerByIdAction,
   lookupCustomerByPhoneAction,
   searchCustomersAction,
   type CustomerSearchResult,
@@ -10,6 +11,7 @@ import {
 import { createPetAction } from '@/lib/services/pet-actions';
 import { looksLikePhone } from '@/lib/reception/phone';
 import CreatableSelect from '@/components/ui/premium/CreatableSelect';
+import CustomerForm, { type CreatedCustomerPayload } from '@/components/forms/CustomerForm';
 import { SPECIES_OPTIONS } from '@/lib/pets/species-options';
 import { useCreatableOptions } from '@/lib/hooks/useCreatableOptions';
 import { Loader2, Phone, Heart, UserPlus, Plus } from 'lucide-react';
@@ -21,6 +23,7 @@ export type SelectedPatient = {
 
 interface PatientLookupPanelProps {
   activeBranchId: string;
+  branches: { id: string; name: string }[];
   onSelect: (selection: SelectedPatient) => void;
   selected?: SelectedPatient | null;
   onClear?: () => void;
@@ -28,6 +31,7 @@ interface PatientLookupPanelProps {
 
 export default function PatientLookupPanel({
   activeBranchId,
+  branches,
   onSelect,
   selected,
   onClear,
@@ -42,6 +46,7 @@ export default function PatientLookupPanel({
   const [newPetBreed, setNewPetBreed] = useState('');
   const [isAddingPet, setIsAddingPet] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [customerFormOpen, setCustomerFormOpen] = useState(false);
 
   const { options: speciesOptions, handleCreate: handleCreateSpecies } = useCreatableOptions(
     SPECIES_OPTIONS,
@@ -83,6 +88,39 @@ export default function PatientLookupPanel({
       setIsSearching(false);
     }
   }, []);
+
+  const applyOwner = (customer: CustomerSearchResult, openAddPet = false) => {
+    setOwner(customer);
+    setResults([]);
+    setShowAddPet(openAddPet || customer.pets.length === 0);
+    setCustomerFormOpen(false);
+  };
+
+  const handleCustomerCreated = (created?: CreatedCustomerPayload) => {
+    if (!created) return;
+    applyOwner(
+      {
+        id: created.id,
+        firstName: created.firstName,
+        lastName: created.lastName,
+        phone: created.phone,
+        email: created.email,
+        address: created.address,
+        pets: [],
+      },
+      true
+    );
+  };
+
+  const handleExistingCustomerId = async (customerId: string) => {
+    setError(null);
+    const res = await getCustomerByIdAction(customerId);
+    if (res.success && res.customer) {
+      applyOwner(res.customer, res.customer.pets.length === 0);
+    } else {
+      setError(res.error || 'Could not load existing customer');
+    }
+  };
 
   const handleSelectPet = (customer: CustomerSearchResult, petId: string) => {
     const pet = customer.pets.find((p) => p.id === petId);
@@ -288,14 +326,27 @@ export default function PatientLookupPanel({
       {query.length >= 2 && !isSearching && !displayOwner && results.length === 0 && (
         <p className="text-[10px] text-on-surface-variant">
           No match.{' '}
-          <Link
-            href={`/dashboard/customers?phone=${encodeURIComponent(query)}`}
+          <button
+            type="button"
+            onClick={() => setCustomerFormOpen(true)}
             className="text-primary font-semibold hover:underline"
           >
             Register new owner
-          </Link>
+          </button>
         </p>
       )}
+
+      <CustomerForm
+        branches={branches}
+        activeBranchId={activeBranchId}
+        defaultPhone={looksLikePhone(query) ? query : undefined}
+        trigger="none"
+        open={customerFormOpen}
+        onOpenChange={setCustomerFormOpen}
+        onSuccess={handleCustomerCreated}
+        onExistingCustomerId={handleExistingCustomerId}
+        skipRefresh
+      />
     </div>
   );
 }

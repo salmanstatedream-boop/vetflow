@@ -78,6 +78,7 @@ interface AppointmentsListClientProps {
   initialAppointments: Appointment[];
   doctors: Doctor[];
   userRole?: string | null;
+  readOnly?: boolean;
 }
 
 function emergencyBadge() {
@@ -160,6 +161,7 @@ interface AppointmentRowProps {
   ) => Promise<void>;
   onCheckIn: () => void;
   userRole?: string | null;
+  readOnly?: boolean;
   editId: string | null;
   setEditId: (id: string | null) => void;
   editReason: string;
@@ -185,6 +187,7 @@ function AppointmentRow({
   runAction,
   onCheckIn,
   userRole,
+  readOnly,
   editId,
   setEditId,
   editReason,
@@ -277,6 +280,7 @@ function AppointmentRow({
         {appt.reason}
       </td>
       <td className="px-6 py-4">{statusBadge(appt.status)}</td>
+      {!readOnly && (
       <td className="px-6 py-4 text-right">
         {isTerminal ? (
           <span className="text-[10px] text-on-surface-variant/40 italic">Closed</span>
@@ -480,6 +484,7 @@ function AppointmentRow({
           </div>
         )}
       </td>
+      )}
     </tr>
   );
 }
@@ -488,6 +493,7 @@ export default function AppointmentsListClient({
   initialAppointments,
   doctors,
   userRole,
+  readOnly = false,
 }: AppointmentsListClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -698,7 +704,7 @@ export default function AppointmentsListClient({
                     <th className="px-6 py-3">Preferred Slot</th>
                     <th className="px-6 py-3">Reason</th>
                     <th className="px-6 py-3">Status</th>
-                    <th className="px-6 py-3 text-right">Actions</th>
+                    {!readOnly && <th className="px-6 py-3 text-right">Actions</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/30 text-xs">
@@ -722,6 +728,7 @@ export default function AppointmentsListClient({
                         setActiveTab('upcoming');
                       }}
                       userRole={userRole}
+                      readOnly={readOnly}
                       editId={editId}
                       setEditId={setEditId}
                       editReason={editReason}

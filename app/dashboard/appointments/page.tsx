@@ -45,11 +45,19 @@ export default async function AppointmentsPage() {
 
   const supabase = await createClient();
 
-  // 2. Fetch appointments in active branch
-  const { data: appointmentsRaw, error } = await supabase
+  const isDoctor = session.role === 'doctor';
+
+  // 2. Fetch appointments in active branch (doctors see only their own)
+  let appointmentsQuery = supabase
     .from('appointments')
     .select('*')
-    .eq('branch_id', activeBranchId)
+    .eq('branch_id', activeBranchId);
+
+  if (isDoctor) {
+    appointmentsQuery = appointmentsQuery.eq('doctor_id', session.userId);
+  }
+
+  const { data: appointmentsRaw, error } = await appointmentsQuery
     .order('preferred_date', { ascending: true })
     .order('preferred_time', { ascending: true });
 
@@ -127,6 +135,7 @@ export default async function AppointmentsPage() {
           publicBookingUrl={publicBookingUrl}
           doctors={doctors}
           activeBranchId={activeBranchId}
+          userRole={session.role}
         />
       </Suspense>
 
@@ -136,11 +145,12 @@ export default async function AppointmentsPage() {
 
       {/* APPOINTMENTS LIST */}
       <Suspense fallback={null}>
-        <AppointmentsListClient 
-        initialAppointments={appointments || []} 
-        doctors={doctors}
-        userRole={session.role}
-      />
+        <AppointmentsListClient
+          initialAppointments={appointments || []}
+          doctors={doctors}
+          userRole={session.role}
+          readOnly={isDoctor}
+        />
       </Suspense>
 
     </div>

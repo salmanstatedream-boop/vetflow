@@ -27,6 +27,12 @@ import {
   StaffAppointmentSchema,
 } from '@/lib/validations/schemas';
 
+function assertCanMutateAppointments(ctx: NonNullable<Awaited<ReturnType<typeof resolveServerAuthContext>>>) {
+  if (ctx.role === 'doctor') {
+    throw new Error('Doctors cannot modify appointments.');
+  }
+}
+
 async function ensureVisitAssignment(
   supabase: Awaited<ReturnType<typeof createClient>>,
   visitId: string,
@@ -142,6 +148,7 @@ export async function confirmAppointmentAction(appointmentId: string) {
     }
     assertOrganization(ctx);
     assertCapability(ctx, 'manage_appointments');
+    assertCanMutateAppointments(ctx);
     assertFeature(ctx, 'appointments');
 
     const supabase = await createClient();
@@ -203,6 +210,7 @@ export async function createStaffAppointmentAction(payload: unknown) {
     }
     assertOrganization(ctx);
     assertCapability(ctx, 'manage_appointments');
+    assertCanMutateAppointments(ctx);
     assertFeature(ctx, 'appointments');
 
     const parsed = StaffAppointmentSchema.parse(payload);
@@ -425,6 +433,7 @@ export async function checkInAppointmentAction(appointmentId: string, doctorId: 
     }
     assertOrganization(ctx);
     assertCapability(ctx, 'manage_appointments');
+    assertCanMutateAppointments(ctx);
     assertFeature(ctx, 'appointments');
 
     const supabase = await createClient();
@@ -640,6 +649,7 @@ async function loadAppointmentForAction(appointmentId: string) {
   }
   assertOrganization(ctx);
   assertCapability(ctx, 'manage_appointments');
+  assertCanMutateAppointments(ctx);
   assertFeature(ctx, 'appointments');
 
   const supabase = await createClient();

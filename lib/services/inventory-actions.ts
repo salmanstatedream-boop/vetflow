@@ -18,6 +18,7 @@ import {
   type ProductInput,
   type StockAdjustmentInput,
 } from '@/lib/validations/schemas';
+import { normalizeProductTypeSlug } from '@/lib/inventory/product-types';
 
 function canManageProduct(
   ctx: { role?: string | null; userId: string },
@@ -272,10 +273,7 @@ export async function confirmStockIntakeAction(payload: unknown) {
           created_by: ctx.userId,
         });
       } else if (line.createNew) {
-        let categoryId: string | null = null;
-        if (line.categoryName?.trim()) {
-          categoryId = await findOrCreateCategory(ctx.organizationId!, line.categoryName.trim());
-        }
+        const productType = normalizeProductTypeSlug(line.type ?? 'medicine');
 
         const { data: product, error } = await adminClient
           .from('products')
@@ -285,8 +283,8 @@ export async function confirmStockIntakeAction(payload: unknown) {
             name: line.name,
             sku: line.sku || null,
             unit: line.unit || 'pcs',
-            type: line.type ?? 'medicine',
-            category_id: categoryId,
+            type: productType,
+            category_id: null,
             purchase_price: line.unitPrice,
             selling_price: line.unitPrice * 1.2,
             stock_quantity: line.quantity,
