@@ -7,7 +7,6 @@ import {
   type CustomerSearchResult,
 } from '@/lib/services/customer-actions';
 import { createRetailSaleAction } from '@/lib/services/retail-sale-actions';
-import { useGlobalLoadingOptional } from '@/components/layout/NavigationLoadingProvider';
 import { looksLikePhone } from '@/lib/reception/phone';
 import Select from '@/components/ui/premium/Select';
 import { useCurrency } from '@/lib/context/CurrencyContext';
@@ -67,7 +66,6 @@ export default function RetailSaleClient({
   appliesToServices,
 }: RetailSaleClientProps) {
   const { formatCurrency } = useCurrency();
-  const globalLoading = useGlobalLoadingOptional();
   const [phone, setPhone] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -193,7 +191,6 @@ export default function RetailSaleClient({
     }
 
     setIsSubmitting(true);
-    globalLoading?.startLoading();
     let res: Awaited<ReturnType<typeof createRetailSaleAction>>;
     try {
       res = await createRetailSaleAction({
@@ -219,7 +216,6 @@ export default function RetailSaleClient({
       });
     } finally {
       setIsSubmitting(false);
-      globalLoading?.stopLoading();
     }
 
     if (res.success) {

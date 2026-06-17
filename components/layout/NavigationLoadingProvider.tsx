@@ -4,64 +4,74 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useRef,
   useState,
   type ReactNode,
 } from 'react';
-import { usePathname } from 'next/navigation';
 import TopLoadingBar from '@/components/layout/TopLoadingBar';
 
 interface GlobalLoadingContextValue {
-  isLoading: boolean;
   isNavigating: boolean;
+  isActionLoading: boolean;
+  /** @deprecated Use isActionLoading */
+  isLoading: boolean;
+  navigationTarget: string | null;
+  startNavigation: (target?: string) => void;
+  completeNavigation: () => void;
+  startAction: () => void;
+  stopAction: () => void;
+  /** @deprecated Use startAction */
   startLoading: () => void;
+  /** @deprecated Use stopAction */
   stopLoading: () => void;
-  startNavigation: () => void;
 }
 
 const GlobalLoadingContext = createContext<GlobalLoadingContextValue | null>(null);
 
 export function NavigationLoadingProvider({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-  const [loadingCount, setLoadingCount] = useState(0);
-  const prevPath = useRef(pathname);
-  const countRef = useRef(0);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [navigationTarget, setNavigationTarget] = useState<string | null>(null);
+  const [actionCount, setActionCount] = useState(0);
+  const actionCountRef = useRef(0);
 
-  const syncCount = useCallback((next: number) => {
-    countRef.current = Math.max(0, next);
-    setLoadingCount(countRef.current);
+  const syncActionCount = useCallback((next: number) => {
+    actionCountRef.current = Math.max(0, next);
+    setActionCount(actionCountRef.current);
   }, []);
 
-  const startLoading = useCallback(() => {
-    syncCount(countRef.current + 1);
-  }, [syncCount]);
+  const startNavigation = useCallback((target?: string) => {
+    setIsNavigating(true);
+    if (target) setNavigationTarget(target);
+  }, []);
 
-  const stopLoading = useCallback(() => {
-    syncCount(countRef.current - 1);
-  }, [syncCount]);
+  const completeNavigation = useCallback(() => {
+    setIsNavigating(false);
+    setNavigationTarget(null);
+  }, []);
 
-  const startNavigation = useCallback(() => {
-    startLoading();
-  }, [startLoading]);
+  const startAction = useCallback(() => {
+    syncActionCount(actionCountRef.current + 1);
+  }, [syncActionCount]);
 
-  useEffect(() => {
-    if (pathname !== prevPath.current) {
-      syncCount(0);
-      prevPath.current = pathname;
-    }
-  }, [pathname, syncCount]);
+  const stopAction = useCallback(() => {
+    syncActionCount(actionCountRef.current - 1);
+  }, [syncActionCount]);
 
-  const isLoading = loadingCount > 0;
+  const isActionLoading = actionCount > 0;
 
   return (
     <GlobalLoadingContext.Provider
       value={{
-        isLoading,
-        isNavigating: isLoading,
-        startLoading,
-        stopLoading,
+        isNavigating,
+        isActionLoading,
+        isLoading: isActionLoading,
+        navigationTarget,
         startNavigation,
+        completeNavigation,
+        startAction,
+        stopAction,
+        startLoading: startAction,
+        stopLoading: stopAction,
       }}
     >
       <TopLoadingBar />

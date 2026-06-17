@@ -10,7 +10,7 @@ export default function TopLoadingBar() {
   const trickleRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const hideRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const isActive = loading?.isLoading ?? false;
+  const isActive = loading?.isNavigating ?? false;
 
   useEffect(() => {
     if (isActive) {
@@ -19,16 +19,16 @@ export default function TopLoadingBar() {
         hideRef.current = null;
       }
       setVisible(true);
-      setProgress((p) => (p < 15 ? 15 : p));
+      setProgress((p) => (p < 12 ? 12 : p));
 
       if (!trickleRef.current) {
         trickleRef.current = setInterval(() => {
           setProgress((p) => {
-            if (p >= 90) return p;
-            const inc = Math.random() * 8 + 2;
-            return Math.min(p + inc, 90);
+            if (p >= 88) return p;
+            const inc = Math.random() * 6 + 1.5;
+            return Math.min(p + inc, 88);
           });
-        }, 300);
+        }, 280);
       }
     } else if (visible) {
       if (trickleRef.current) {
@@ -39,7 +39,7 @@ export default function TopLoadingBar() {
       hideRef.current = setTimeout(() => {
         setVisible(false);
         setProgress(0);
-      }, 350);
+      }, 200);
     }
 
     return () => {
@@ -64,12 +64,12 @@ export default function TopLoadingBar() {
       className="fixed top-0 left-0 right-0 z-[9999] h-[3px] pointer-events-none"
       role="progressbar"
       aria-valuemin={0}
-      aria-valuemax={100}
       aria-valuenow={Math.round(progress)}
-      aria-label="Loading"
+      aria-valuemax={100}
+      aria-label="Page loading"
     >
       <div
-        className="h-full bg-primary shadow-[0_0_8px_rgba(var(--color-primary-rgb,59,130,246),0.5)] transition-[width] duration-300 ease-out"
+        className="h-full bg-primary shadow-[0_0_10px_color-mix(in_srgb,var(--color-primary)_45%,transparent)] transition-[width] duration-200 ease-out"
         style={{ width: `${progress}%` }}
       />
     </div>

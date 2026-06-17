@@ -13,6 +13,7 @@ import ImpersonationBanner from '@/components/layout/ImpersonationBanner';
 import DashboardPageTransition from '@/components/layout/DashboardPageTransition';
 import DashboardNavLink from '@/components/layout/DashboardNavLink';
 import NavigationLoadingOverlay from '@/components/layout/NavigationLoadingOverlay';
+import ThemeToggle from '@/components/layout/ThemeToggle';
 import { CurrencyProvider } from '@/lib/context/CurrencyContext';
 import type { LucideIcon } from 'lucide-react';
 import {
@@ -443,6 +444,7 @@ export default function DashboardShellClient({
             </div>
 
             <div className="flex items-center gap-3">
+              <ThemeToggle />
               <button
                 type="button"
                 onClick={() => setIsSearchOpen(true)}

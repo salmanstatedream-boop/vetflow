@@ -1,37 +1,27 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
-type ActionResult = { success: boolean; error?: string };
-
-export function useAsyncAction<T extends ActionResult>(
-  action: () => Promise<T>,
-  options?: { onSuccess?: (result: T) => void }
+export function useAsyncAction<T extends unknown[], R>(
+  fn: (...args: T) => Promise<R>
 ) {
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const inFlight = useRef(false);
 
-  const run = useCallback(async () => {
-    setPending(true);
-    setError(null);
-    try {
-      const result = await action();
-      if (result.success) {
-        options?.onSuccess?.(result);
-      } else {
-        setError(result.error || 'Action failed');
+  const run = useCallback(
+    async (...args: T): Promise<R | undefined> => {
+      if (inFlight.current) return undefined;
+      inFlight.current = true;
+      setLoading(true);
+      try {
+        return await fn(...args);
+      } finally {
+        inFlight.current = false;
+        setLoading(false);
       }
-      return result;
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'An unexpected error occurred';
-      setError(message);
-      return { success: false, error: message } as T;
-    } finally {
-      setPending(false);
-    }
-  }, [action, options]);
+    },
+    [fn]
+  );
 
-  const clearError = useCallback(() => setError(null), []);
-
-  return { run, pending, error, clearError };
+  return { loading, run };
 }

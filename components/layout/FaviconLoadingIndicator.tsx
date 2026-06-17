@@ -44,7 +44,8 @@ export default function FaviconLoadingIndicator() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    if (!nav?.isNavigating) {
+    const busy = nav?.isNavigating || nav?.isActionLoading;
+    if (!busy) {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
@@ -65,7 +66,7 @@ export default function FaviconLoadingIndicator() {
       }
       setFavicon(STATIC_ICON);
     };
-  }, [nav?.isNavigating]);
+  }, [nav?.isNavigating, nav?.isActionLoading]);
 
   return null;
 }

@@ -594,6 +594,62 @@ body {
   );
 }
 
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Light theme — warm clinic palette (dark remains default via html.dark) */
+html.light {
+  --color-surface: #f8f7fc;
+  --color-surface-dim: #f3f1f8;
+  --color-surface-container: #ffffff;
+  --color-surface-container-high: #eeecf4;
+  --color-surface-container-highest: #e4e1ec;
+  --color-on-surface: #1c1b22;
+  --color-on-surface-variant: #49454e;
+  --color-outline: #79747e;
+  --color-outline-variant: #cac4d4;
+  --color-primary: #6750a4;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #e9ddff;
+  --color-secondary: #006493;
+  --color-secondary-container: #c8e6ff;
+  --color-tertiary: #7d5700;
+  --color-destructive: #ba1a1a;
+  --color-border: #e4e1ec;
+
+  --background: 270 20% 97%;
+  --foreground: 260 10% 12%;
+  --card: 0 0% 100%;
+  --card-foreground: 260 10% 12%;
+  --primary: 263 44% 48%;
+  --primary-foreground: 0 0% 100%;
+  --muted: 270 15% 94%;
+  --muted-foreground: 260 8% 40%;
+  --border: 270 12% 88%;
+}
+
+html.light .glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(103, 80, 164, 0.12);
+}
+
+html,
+html.dark {
+  color-scheme: dark;
+}
+
+html.light {
+  color-scheme: light;
+}
+
+html.theme-transition,
+html.theme-transition * {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease !important;
+}
+
 /* Collapse sticky showcase scroll track height during E2E screenshots to eliminate the visual layout gap */
 html.screenshotting .sticky-showcase-container {
   height: auto !important;

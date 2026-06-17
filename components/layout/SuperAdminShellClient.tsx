@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import DashboardNavLink from '@/components/layout/DashboardNavLink';
 import NavigationLoadingOverlay from '@/components/layout/NavigationLoadingOverlay';
+import ThemeToggle from '@/components/layout/ThemeToggle';
 import LogoutButton from '@/components/ui/premium/LogoutButton';
 import { platformTenantSearchAction } from '@/lib/services/super-admin-actions';
 import type { LucideIcon } from 'lucide-react';
@@ -267,6 +268,7 @@ export default function SuperAdminShellClient({
             </div>
 
             <div className="flex items-center gap-3">
+              <ThemeToggle />
               <button
                 type="button"
                 onClick={() => setIsSearchOpen(true)}

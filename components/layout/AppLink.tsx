@@ -6,23 +6,22 @@ import { useGlobalLoadingOptional } from '@/components/layout/NavigationLoadingP
 
 type AppLinkProps = ComponentProps<typeof Link>;
 
-function isInternalHref(href: AppLinkProps['href']): boolean {
-  if (typeof href === 'string') {
-    return href.startsWith('/') && !href.startsWith('//');
-  }
+function resolveHref(href: AppLinkProps['href']): string {
+  if (typeof href === 'string') return href;
   const path = href.pathname ?? '';
-  return path.startsWith('/') && !path.startsWith('//');
+  return path.startsWith('/') && !path.startsWith('//') ? path : '';
 }
 
 export default function AppLink({ href, onClick, ...props }: AppLinkProps) {
-  const loading = useGlobalLoadingOptional();
+  const nav = useGlobalLoadingOptional();
 
   return (
     <Link
       href={href}
       onClick={(e) => {
-        if (isInternalHref(href)) {
-          loading?.startLoading();
+        const target = resolveHref(href);
+        if (target) {
+          nav?.startNavigation(target);
         }
         onClick?.(e);
       }}

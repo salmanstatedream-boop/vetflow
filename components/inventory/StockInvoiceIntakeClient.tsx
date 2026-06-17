@@ -6,7 +6,6 @@ import { parseStockInvoiceImageAction, type StockInvoiceDraft } from '@/lib/serv
 import { confirmStockIntakeAction, createCategoryAction } from '@/lib/services/inventory-actions';
 import { STOCK_PRODUCT_TYPE_OPTIONS, type StockProductType } from '@/lib/inventory/product-types';
 import { useCreatableOptions } from '@/lib/hooks/useCreatableOptions';
-import { useGlobalLoadingOptional } from '@/components/layout/NavigationLoadingProvider';
 import Select from '@/components/ui/premium/Select';
 import CreatableSelect from '@/components/ui/premium/CreatableSelect';
 import { Camera, Loader2, Plus, Trash2, CheckCircle, AlertTriangle, X, ClipboardList } from 'lucide-react';
@@ -86,7 +85,6 @@ export default function StockInvoiceIntakeClient({
   categories,
 }: StockInvoiceIntakeClientProps) {
   const router = useRouter();
-  const globalLoading = useGlobalLoadingOptional();
   const [supplierName, setSupplierName] = useState('');
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [invoiceDate, setInvoiceDate] = useState('');
@@ -133,7 +131,6 @@ export default function StockInvoiceIntakeClient({
     setIsParsing(true);
     setError(null);
     setSuccess(false);
-    globalLoading?.startLoading();
     const fd = new FormData();
     fd.append('image', file);
     const res = await parseStockInvoiceImageAction(fd);
@@ -148,7 +145,6 @@ export default function StockInvoiceIntakeClient({
       setError(res.error || 'Failed to parse image');
     }
     setIsParsing(false);
-    globalLoading?.stopLoading();
     e.target.value = '';
   };
 
@@ -203,7 +199,6 @@ export default function StockInvoiceIntakeClient({
     setInvalidTypeRows(new Set());
     setIsSaving(true);
     setError(null);
-    globalLoading?.startLoading();
     const res = await confirmStockIntakeAction({
       branchId: activeBranchId,
       supplierName,
@@ -230,7 +225,6 @@ export default function StockInvoiceIntakeClient({
       setError(res.error || 'Failed to save intake');
     }
     setIsSaving(false);
-    globalLoading?.stopLoading();
   };
 
   if (success) {
