@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   Search,
   Loader2,
+  Pill,
 } from 'lucide-react';
 
 interface Visit {
@@ -29,11 +30,13 @@ interface Visit {
   triageNotes: string | null;
   pet: { id: string; name: string; species: string; breed: string | null; gender: string };
   customer: { firstName: string; lastName: string; phone: string };
+  prescriptionId?: string | null;
 }
 
 interface DoctorQueueClientProps {
   waitingVisits: Visit[];
   consultingVisits: Visit[];
+  completedVisits?: Visit[];
   doctorFirstName: string;
   doctorLastName: string;
   showConsultTimer: boolean;
@@ -42,6 +45,7 @@ interface DoctorQueueClientProps {
 export default function DoctorQueueClient({
   waitingVisits,
   consultingVisits,
+  completedVisits = [],
   doctorFirstName,
   doctorLastName,
   showConsultTimer,
@@ -227,6 +231,50 @@ export default function DoctorQueueClient({
               </div>
             )}
           </div>
+
+          {completedVisits.length > 0 && (
+            <div className="glass-panel rounded-2xl border border-outline-variant/40 overflow-hidden shadow-premium">
+              <div className="p-5 border-b border-outline-variant/30 bg-surface-container/20">
+                <h3 className="text-sm font-bold text-on-surface uppercase tracking-wider flex items-center gap-2">
+                  <Pill className="w-4 h-4 text-primary" />
+                  Completed today ({completedVisits.length})
+                </h3>
+              </div>
+              <div className="divide-y divide-border/20">
+                {completedVisits.map((v) => (
+                  <div key={v.id} className="p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                      <span className="font-bold text-sm text-on-surface block">{v.pet.name}</span>
+                      <p className="text-xs text-on-surface-variant/70">
+                        {v.customer.firstName} {v.customer.lastName} · {v.reason}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {v.prescriptionId && (
+                        <a
+                          href={`/api/prescriptions/${v.prescriptionId}/pdf`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-primary/10 text-primary border border-primary/20"
+                        >
+                          <Pill className="w-3 h-3" />
+                          Rx PDF
+                        </a>
+                      )}
+                      <a
+                        href={`/api/visits/${v.id}/treatment-pdf`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[10px] font-bold text-on-surface-variant hover:text-primary underline"
+                      >
+                        Treatment summary
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="md:col-span-4 glass-panel rounded-2xl border border-outline-variant/40 p-6 shadow-premium space-y-6">

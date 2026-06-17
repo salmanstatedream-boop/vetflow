@@ -40,7 +40,6 @@ export function NavigationLoadingProvider({ children }: { children: ReactNode })
   const [navigationTarget, setNavigationTarget] = useState<string | null>(null);
   const [actionCount, setActionCount] = useState(0);
   const actionCountRef = useRef(0);
-  const prevPathnameRef = useRef(pathname);
 
   const syncActionCount = useCallback((next: number) => {
     actionCountRef.current = Math.max(0, next);
@@ -56,8 +55,7 @@ export function NavigationLoadingProvider({ children }: { children: ReactNode })
   const completeNavigation = useCallback(() => {
     setIsNavigating(false);
     setNavigationTarget(null);
-    prevPathnameRef.current = pathname;
-  }, [pathname]);
+  }, []);
 
   const startAction = useCallback(() => {
     syncActionCount(actionCountRef.current + 1);
@@ -68,36 +66,16 @@ export function NavigationLoadingProvider({ children }: { children: ReactNode })
   }, [syncActionCount]);
 
   useEffect(() => {
-    if (!isNavigating) {
-      prevPathnameRef.current = pathname;
-      return;
-    }
-
-    const pathChanged = pathname !== prevPathnameRef.current;
-    const atTarget =
-      navigationTarget != null &&
-      routePathsMatch(pathname, navigationTarget);
-
-    if (!pathChanged && !atTarget) return;
-
-    let frame1 = 0;
-    let frame2 = 0;
-    frame1 = requestAnimationFrame(() => {
-      frame2 = requestAnimationFrame(() => {
-        completeNavigation();
-      });
-    });
+    if (!isNavigating) return;
 
     const safety = setTimeout(() => {
       completeNavigation();
     }, NAVIGATION_SAFETY_MS);
 
     return () => {
-      cancelAnimationFrame(frame1);
-      cancelAnimationFrame(frame2);
       clearTimeout(safety);
     };
-  }, [pathname, isNavigating, navigationTarget, completeNavigation]);
+  }, [isNavigating, completeNavigation]);
 
   const isActionLoading = actionCount > 0;
 

@@ -397,10 +397,6 @@ export default function PetMedicalProfileClient({
         </div>
       </div>
 
-      {profile.activities.length > 0 && (
-        <MedicalRecordActivityPanel activities={profile.activities} />
-      )}
-
       <div className="border-b border-outline-variant/30 flex gap-6 overflow-x-auto">
         {TABS.map((tab) => (
           <button
@@ -995,6 +991,12 @@ export default function PetMedicalProfileClient({
             </ul>
           ) : (
             <p className="text-xs text-on-surface-variant italic">No follow-up recommendations.</p>
+          )}
+          {profile.activities.length > 0 && (
+            <MedicalRecordActivityPanel
+              activities={profile.activities}
+              title="Recent medical updates"
+            />
           )}
         </div>
       )}

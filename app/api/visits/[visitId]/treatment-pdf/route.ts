@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { assertCapability, resolveServerAuthContext } from '@/lib/auth/context';
 import { getPdfBranding } from '@/lib/services/branding';
 import { formatAttendingDoctor } from '@/lib/utils/doctor-display';
+import { resolvePrimaryConcern } from '@/lib/consultation/treatment-pdf';
 import React from 'react';
 
 export async function GET(
@@ -111,8 +112,10 @@ export async function GET(
           : 'Pet Parent',
         petName: pet?.name || 'Patient',
         petSpecies: pet?.species || '',
-        reason: (visit.reason as string) || '',
-        chiefComplaint: (notes.chief_complaint as string) || '',
+        primaryConcern: resolvePrimaryConcern(
+          (visit.reason as string) || '',
+          (notes.chief_complaint as string) || ''
+        ),
         history: (notes.history as string) || undefined,
         examinationFindings: (notes.examination_findings as string) || undefined,
         diagnosis: (notes.diagnosis as string) || '',

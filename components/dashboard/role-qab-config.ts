@@ -17,7 +17,6 @@ import {
   ClipboardList,
   BriefcaseMedical,
   FileCheck2,
-  UserCheck,
   ShoppingBag,
   Store,
 } from 'lucide-react';
@@ -94,7 +93,6 @@ const DOCTOR_QABS: QabItem[] = [
   { id: 'patient', label: 'Pet Patient Profile', description: 'Search patient history', icon: Heart, launcher: 'modal', modalId: 'patient_profile', capability: 'view_patient_history' },
   { id: 'treatment', label: 'Treatment Record', description: 'Today\'s treatments', icon: FileCheck2, launcher: 'modal', modalId: 'treatment_record', capability: 'clinical_queue' },
   { id: 'consultation', label: 'Consultation', description: 'Open clinical queue', icon: BriefcaseMedical, launcher: 'page', href: '/dashboard/doctors', capability: 'clinical_queue' },
-  { id: 'checkin', label: 'Next Appointment Check-in', description: 'Follow-up approvals', icon: UserCheck, launcher: 'modal', modalId: 'next_appointment_checkin', capability: 'manage_appointments', feature: 'appointments' },
 ];
 
 export function getQabsForRole(role: UserSessionDetails['role']): QabItem[] {

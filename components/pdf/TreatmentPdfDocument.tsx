@@ -62,8 +62,7 @@ export interface TreatmentPdfProps {
   customerName: string;
   petName: string;
   petSpecies: string;
-  reason: string;
-  chiefComplaint: string;
+  primaryConcern?: string;
   history?: string;
   examinationFindings?: string;
   diagnosis: string;
@@ -143,15 +142,12 @@ export default function TreatmentPdfDocument(props: TreatmentPdfProps) {
           </View>
         )}
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Reason for visit</Text>
-          <Text style={styles.body}>{props.reason}</Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Chief complaint</Text>
-          <Text style={styles.body}>{props.chiefComplaint}</Text>
-        </View>
+        {props.primaryConcern && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Primary Concern</Text>
+            <Text style={styles.body}>{props.primaryConcern}</Text>
+          </View>
+        )}
 
         {props.history && (
           <View style={styles.section}>
@@ -200,19 +196,17 @@ export default function TreatmentPdfDocument(props: TreatmentPdfProps) {
           </View>
         )}
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>List Prescribed Medicines</Text>
-          {(props.prescriptionItems?.length ?? 0) > 0 ? (
-            props.prescriptionItems!.map((item, idx) => (
+        {(props.prescriptionItems?.length ?? 0) > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Prescribed Medicines</Text>
+            {props.prescriptionItems!.map((item, idx) => (
               <Text key={idx} style={styles.body}>
                 • {item.medicine_name} — {item.dosage}, {item.frequency}, {item.duration}
                 {item.quantity_requested ? ` (Qty: ${item.quantity_requested})` : ''}
               </Text>
-            ))
-          ) : (
-            <Text style={styles.body}>No prescribed medicines recorded.</Text>
-          )}
-        </View>
+            ))}
+          </View>
+        )}
 
         <Text style={styles.footer}>
           {props.footerText || `Thank you for your visit. — ${props.clinicName}`}

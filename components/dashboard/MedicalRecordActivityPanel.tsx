@@ -1,6 +1,7 @@
 'use client';
 
 import { useVisibilityPolling } from '@/lib/hooks/useVisibilityPolling';
+import { formatMedicalActionLabel } from '@/lib/activity/format-medical-activity';
 import { FileText, FlaskConical, Pill, Stethoscope, Upload } from 'lucide-react';
 
 export type MedicalActivityRow = {
@@ -11,25 +12,27 @@ export type MedicalActivityRow = {
   resourceType: string;
   createdAt: string;
   summary: string;
+  label?: string;
+  petName?: string;
 };
 
 interface MedicalRecordActivityPanelProps {
   activities: MedicalActivityRow[];
+  title?: string;
 }
 
 function actionIcon(action: string) {
   if (action.includes('PRESCRIPTION')) return Pill;
   if (action.includes('LAB')) return FlaskConical;
   if (action.includes('DOCUMENT')) return Upload;
-  if (action.includes('CLINICAL')) return Stethoscope;
+  if (action.includes('CLINICAL') || action.includes('VISIT')) return Stethoscope;
   return FileText;
 }
 
-function formatAction(action: string) {
-  return action.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-export default function MedicalRecordActivityPanel({ activities }: MedicalRecordActivityPanelProps) {
+export default function MedicalRecordActivityPanel({
+  activities,
+  title = 'Recent Medical Record Updates',
+}: MedicalRecordActivityPanelProps) {
   useVisibilityPolling(20000, true);
 
   return (
@@ -37,7 +40,7 @@ export default function MedicalRecordActivityPanel({ activities }: MedicalRecord
       <div className="p-5 border-b border-outline-variant/30 bg-surface-container/20">
         <h3 className="text-sm font-bold text-on-surface uppercase tracking-wider flex items-center gap-2">
           <FileText className="w-4 h-4 text-primary" />
-          Recent Medical Record Updates
+          {title}
         </h3>
       </div>
 
@@ -49,14 +52,15 @@ export default function MedicalRecordActivityPanel({ activities }: MedicalRecord
         <div className="divide-y divide-outline-variant/20 max-h-80 overflow-y-auto">
           {activities.map((a) => {
             const Icon = actionIcon(a.action);
+            const label = a.label ?? formatMedicalActionLabel(a.action);
             return (
               <div key={a.id} className="px-5 py-3 flex items-start gap-3 hover:bg-surface-container/20">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
                   <Icon className="w-4 h-4 text-primary" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-bold text-on-surface">{formatAction(a.action)}</p>
-                  <p className="text-[10px] text-on-surface-variant truncate">{a.summary}</p>
+                  <p className="text-xs font-bold text-on-surface">{label}</p>
+                  <p className="text-[10px] text-on-surface-variant line-clamp-2">{a.summary}</p>
                   <p className="text-[10px] text-on-surface-variant/60 mt-0.5">
                     {a.actorName} ({a.actorRole}) · {new Date(a.createdAt).toLocaleString()}
                   </p>

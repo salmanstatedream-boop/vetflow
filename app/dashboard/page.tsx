@@ -30,6 +30,11 @@ import LiveOperationsPanel, {
 import MedicalRecordActivityPanel, {
   type MedicalActivityRow,
 } from '@/components/dashboard/MedicalRecordActivityPanel';
+import {
+  buildMedicalActivityDetail,
+  formatMedicalActionLabel,
+  isDraftSaveActivity,
+} from '@/lib/activity/format-medical-activity';
 import { isConsultTrackingEnabled } from '@/lib/auth/features';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -641,6 +646,7 @@ export default async function DashboardOverview({
             'DOCUMENT_DELETED',
             'LAB_ORDER_CREATED',
             'LAB_ORDER_UPDATED',
+            'VISIT_READY_FOR_CHECKOUT',
           ])
           .order('created_at', { ascending: false })
           .limit(12)
@@ -657,11 +663,10 @@ export default async function DashboardOverview({
                 actorMap.set(a.id, `${a.first_name} ${a.last_name}`.trim());
               }
             }
-            medicalActivities = logs.map((log) => {
+            medicalActivities = logs
+              .filter((log) => !isDraftSaveActivity(log.after_data as Record<string, unknown> | null))
+              .map((log) => {
               const after = log.after_data as Record<string, unknown> | null;
-              let summary = log.resource_type;
-              if (after?.diagnosis) summary = String(after.diagnosis);
-              else if (after?.status) summary = `${log.resource_type}: ${after.status}`;
               return {
                 id: log.id,
                 action: log.action,
@@ -669,7 +674,9 @@ export default async function DashboardOverview({
                 actorRole: log.actor_role || 'staff',
                 resourceType: log.resource_type,
                 createdAt: log.created_at,
-                summary,
+                summary: buildMedicalActivityDetail(after, log.resource_type),
+                label: formatMedicalActionLabel(log.action),
+                petName: typeof after?.patient_name === 'string' ? after.patient_name : undefined,
               };
             });
           })
@@ -798,7 +805,7 @@ export default async function DashboardOverview({
     role === 'clinic_admin';
 
   const staffGateLocked =
-    role !== 'clinic_admin' && showAttendance && !myAttendance.checkedIn;
+    role !== 'clinic_admin' && role !== 'doctor' && showAttendance && !myAttendance.checkedIn;
 
   return (
     <div className="space-y-8">
@@ -810,7 +817,7 @@ export default async function DashboardOverview({
         quickLinks={staffGateLocked ? [] : quickLinks}
       />
 
-      {showAttendance && <AttendanceWidgetClient initial={myAttendance} />}
+      {showAttendance && role !== 'doctor' && <AttendanceWidgetClient initial={myAttendance} />}
 
       <StaffDashboardGate locked={staffGateLocked}>
       <DashboardQabShell

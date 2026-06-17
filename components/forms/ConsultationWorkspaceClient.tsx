@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -39,6 +39,8 @@ import {
   X,
   Pause,
   Play,
+  Pill,
+  ExternalLink,
 } from 'lucide-react';
 
 interface Product {
@@ -195,6 +197,10 @@ export default function ConsultationWorkspaceClient({
   const [showPauseModal, setShowPauseModal] = useState(false);
   const [pauseReasonInput, setPauseReasonInput] = useState('');
   const [pauseLoading, setPauseLoading] = useState(false);
+  const [applyingFollowUp, setApplyingFollowUp] = useState(false);
+  const [followUpScheduled, setFollowUpScheduled] = useState(false);
+  const [showCompleteSuccess, setShowCompleteSuccess] = useState(false);
+  const [completedPrescriptionId, setCompletedPrescriptionId] = useState<string | null>(null);
 
   const {
     register,
@@ -304,6 +310,21 @@ export default function ConsultationWorkspaceClient({
     return [];
   }, [followUpMode, followUpOffsetDays, consecutiveCountInput, consecutiveStartDate, followUpBaseDate]);
 
+  useEffect(() => {
+    if (followUpMode !== 'consecutive') return;
+    const count = parseInt(consecutiveCountInput, 10);
+    if (count >= 1 && consecutiveStartDate) {
+      setValue('followUpConsecutive', { count, startDate: consecutiveStartDate }, { shouldValidate: true });
+    }
+  }, [followUpMode, consecutiveCountInput, consecutiveStartDate, setValue]);
+
+  useEffect(() => {
+    if (followUpMode === 'consecutive' && !getValues('followUpConsecutive')) {
+      const count = parseInt(consecutiveCountInput, 10) || 3;
+      setValue('followUpConsecutive', { count, startDate: consecutiveStartDate });
+    }
+  }, [followUpMode, consecutiveCountInput, consecutiveStartDate, getValues, setValue]);
+
   const showPriorVisitsCard = isFollowUpPatient || history.length > 0;
   const priorVisitsPreview = history.slice(0, 3);
 
@@ -343,7 +364,7 @@ export default function ConsultationWorkspaceClient({
 
     setSavingDraft(true);
     setTabError(null);
-    const res = await saveConsultationDraftAction(visitId, getValues());
+    const res = await saveConsultationDraftAction(visitId, buildSubmitPayload(getValues()));
     setSavingDraft(false);
 
     if (!res.success) {
@@ -368,7 +389,7 @@ export default function ConsultationWorkspaceClient({
     if (errors.chiefComplaint) setActiveSoapTab('S');
     else if (errors.examinationFindings) setActiveSoapTab('O');
     else if (errors.diagnosis) setActiveSoapTab('A');
-    else if (errors.treatmentPlan || errors.serviceItems) setActiveSoapTab('P');
+    else if (errors.treatmentPlan || errors.serviceItems || errors.followUpConsecutive) setActiveSoapTab('P');
     else if (errors.prescriptionItems) setActiveSoapTab('Rx');
   };
 
@@ -424,13 +445,22 @@ export default function ConsultationWorkspaceClient({
     setCustomFollowUpDay('');
   };
 
-  const applyConsecutiveFollowUp = () => {
+  const applyConsecutiveFollowUp = async () => {
     const count = parseInt(consecutiveCountInput, 10);
-    if (!count || count < 1 || !consecutiveStartDate) return;
+    if (!count || count < 1 || !consecutiveStartDate) {
+      setTabError('Enter a valid number of days and start date for follow-up scheduling.');
+      return;
+    }
+    setApplyingFollowUp(true);
+    setTabError(null);
     setValue('followUpMode', 'consecutive');
     setValue('followUpOffsetDays', []);
     setValue('followUpDays', []);
-    setValue('followUpConsecutive', { count, startDate: consecutiveStartDate });
+    setValue('followUpConsecutive', { count, startDate: consecutiveStartDate }, { shouldValidate: true });
+    await new Promise((r) => setTimeout(r, 300));
+    setApplyingFollowUp(false);
+    setFollowUpScheduled(true);
+    setTimeout(() => setFollowUpScheduled(false), 2000);
   };
 
   const buildSubmitPayload = (data: CompleteConsultationInput): CompleteConsultationInput => {
@@ -470,7 +500,8 @@ export default function ConsultationWorkspaceClient({
       const payload = buildSubmitPayload(data);
       const res = await completeConsultationAction(payload);
       if (res.success) {
-        router.replace('/dashboard/doctors');
+        setCompletedPrescriptionId(res.prescriptionId ?? null);
+        setShowCompleteSuccess(true);
       } else {
         setError(res.error || 'Failed to complete consultation');
       }
@@ -641,7 +672,7 @@ export default function ConsultationWorkspaceClient({
                 className="px-4 py-2 rounded-xl text-xs font-bold bg-violet-600 text-white disabled:opacity-50 flex items-center gap-2"
               >
                 {pauseLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                Pause
+                Pause Consultation
               </button>
             </div>
           </div>
@@ -676,7 +707,7 @@ export default function ConsultationWorkspaceClient({
                 }}
                 className="px-4 py-2 rounded-xl text-xs font-bold border border-outline-variant"
               >
-                Cancel
+                Go Back
               </button>
               <button
                 type="button"
@@ -685,7 +716,54 @@ export default function ConsultationWorkspaceClient({
                 className="px-4 py-2 rounded-xl text-xs font-bold bg-primary text-white disabled:opacity-50 flex items-center gap-2"
               >
                 {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                Confirm &amp; complete consult
+                Confirm &amp; Finalize
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCompleteSuccess && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="glass-panel rounded-2xl border border-outline-variant/40 p-6 max-w-md w-full shadow-premium space-y-4">
+            <h3 className="text-sm font-bold text-on-surface">Consultation finalized</h3>
+            <p className="text-xs text-on-surface-variant">
+              {pet.name} has been sent to checkout. Print documents or return to your queue.
+            </p>
+            <div className="flex flex-col gap-2">
+              <a
+                href={`/api/visits/${visitId}/treatment-pdf`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold border border-outline-variant hover:bg-surface-container/40"
+              >
+                <FileCheck2 className="w-4 h-4" />
+                Print treatment summary
+              </a>
+              {completedPrescriptionId && (
+                <a
+                  href={`/api/prescriptions/${completedPrescriptionId}/pdf`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold border border-primary/30 text-primary hover:bg-primary/5"
+                >
+                  <Pill className="w-4 h-4" />
+                  Print prescription
+                </a>
+              )}
+              <Link
+                href={`/dashboard/doctors/patients/${patientId}`}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold border border-outline-variant hover:bg-surface-container/40"
+              >
+                <ExternalLink className="w-4 h-4" />
+                View patient record
+              </Link>
+              <button
+                type="button"
+                onClick={() => router.replace('/dashboard/doctors')}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold bg-primary text-white"
+              >
+                Back to queue
               </button>
             </div>
           </div>
@@ -1169,10 +1247,24 @@ export default function ConsultationWorkspaceClient({
                         className="px-2 py-1.5 bg-surface border border-outline-variant rounded-lg text-[10px]"
                       />
                     </div>
-                    <button type="button" onClick={applyConsecutiveFollowUp} className="text-[10px] font-bold text-primary border border-primary/30 px-3 py-1.5 rounded-lg">
-                      Apply
+                    <button type="button" onClick={() => void applyConsecutiveFollowUp()} disabled={applyingFollowUp} className="text-[10px] font-bold text-primary border border-primary/30 px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 disabled:opacity-60">
+                      {applyingFollowUp ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          Scheduling…
+                        </>
+                      ) : followUpScheduled ? (
+                        'Scheduled'
+                      ) : (
+                        'Confirm Schedule'
+                      )}
                     </button>
                   </div>
+                  {errors.followUpConsecutive && (
+                    <p className="text-[10px] text-destructive font-semibold">
+                      {errors.followUpConsecutive.message as string}
+                    </p>
+                  )}
                   {followUpPreviews.length > 0 && (
                     <p className="text-[10px] text-primary font-semibold">
                       Preview: {followUpPreviews.map((p) => p.preferredDate).join(', ')}
@@ -1520,7 +1612,7 @@ export default function ConsultationWorkspaceClient({
                     className="border border-emerald-500/40 text-emerald-400 py-2.5 px-4 rounded-2xl font-bold text-sm flex items-center gap-2 hover:bg-emerald-500/10 disabled:opacity-60"
                   >
                     {pauseLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-                    Resume
+                    Resume Consultation
                   </button>
                 ) : (
                   <button
@@ -1530,7 +1622,7 @@ export default function ConsultationWorkspaceClient({
                     className="border border-violet-500/40 text-violet-300 py-2.5 px-4 rounded-2xl font-bold text-sm flex items-center gap-2 hover:bg-violet-500/10 disabled:opacity-60"
                   >
                     <Pause className="w-4 h-4" />
-                    Pause
+                    Pause Consultation
                   </button>
                 )}
               <button
@@ -1541,12 +1633,12 @@ export default function ConsultationWorkspaceClient({
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Finalizing consult…
+                    Saving consultation…
                   </>
                 ) : (
                   <>
                     <CheckCircle className="w-4 h-4" />
-                    Complete Consultation & Discharge
+                    Finalize Consultation
                   </>
                 )}
               </button>

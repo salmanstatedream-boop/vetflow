@@ -213,7 +213,7 @@ export async function completeConsultationAction(payload: unknown) {
 
     const { data: visit, error: visitError } = await supabase
       .from('visits')
-      .select('*')
+      .select('*, patients ( name )')
       .eq('id', parsed.visitId)
       .eq('organization_id', ctx.organizationId)
       .single();
@@ -221,6 +221,14 @@ export async function completeConsultationAction(payload: unknown) {
     if (visitError || !visit) {
       throw new Error('Visit record not found or access denied.');
     }
+
+    const patientName = (visit.patients as { name?: string } | null)?.name ?? 'Patient';
+    const visitReason = (visit.reason as string) || '';
+    const activityBase = {
+      visit_id: visit.id,
+      patient_name: patientName,
+      visit_reason: visitReason,
+    };
 
     if (parsed.visitType === 'lab') {
       const { count: labOrderCount } = await supabase
@@ -291,7 +299,7 @@ export async function completeConsultationAction(payload: unknown) {
       action: isUpdate ? 'CLINICAL_NOTE_UPDATED' : 'CLINICAL_NOTE_CREATED',
       resourceType: 'CLINICAL_NOTE',
       resourceId: notesResult.data?.id,
-      afterData: { visit_id: parsed.visitId, diagnosis: parsed.diagnosis },
+      afterData: { ...activityBase, diagnosis: parsed.diagnosis },
     });
 
     // Persist visit services
@@ -363,7 +371,12 @@ export async function completeConsultationAction(payload: unknown) {
         action: 'PRESCRIPTION_CREATED',
         resourceType: 'PRESCRIPTION',
         resourceId: prescriptionId || undefined,
-        afterData: prescription,
+        afterData: {
+          ...prescription,
+          ...activityBase,
+          medicine_names: parsed.prescriptionItems.map((item) => item.medicineName),
+          medicine_count: parsed.prescriptionItems.length,
+        },
       });
     }
 
@@ -415,7 +428,7 @@ export async function completeConsultationAction(payload: unknown) {
       action: 'VISIT_READY_FOR_CHECKOUT',
       resourceType: 'VISIT',
       resourceId: visit.id,
-      afterData: { status: 'ready_for_checkout' },
+      afterData: { ...activityBase, status: 'ready_for_checkout', diagnosis: parsed.diagnosis },
     });
 
     return { success: true, visitId: visit.id, prescriptionId };

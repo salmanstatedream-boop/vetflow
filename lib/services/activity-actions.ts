@@ -5,16 +5,12 @@ import {
   assertOrganization,
   resolveServerAuthContext,
 } from '@/lib/auth/context';
-
-const MEDICAL_ACTIONS = [
-  'CLINICAL_NOTE_CREATED',
-  'CLINICAL_NOTE_UPDATED',
-  'PRESCRIPTION_CREATED',
-  'DOCUMENT_UPLOADED',
-  'DOCUMENT_DELETED',
-  'LAB_ORDER_CREATED',
-  'LAB_ORDER_UPDATED',
-];
+import {
+  buildMedicalActivityDetail,
+  formatMedicalActionLabel,
+  isDraftSaveActivity,
+  MEDICAL_ACTIVITY_ACTIONS,
+} from '@/lib/activity/format-medical-activity';
 
 export async function getMedicalRecordActivityAction(branchId: string, limit = 15) {
   try {
@@ -29,14 +25,19 @@ export async function getMedicalRecordActivityAction(branchId: string, limit = 1
       .select('id, action, resource_type, created_at, actor_user_id, actor_role, after_data')
       .eq('organization_id', ctx.organizationId)
       .eq('branch_id', branchId)
-      .in('action', MEDICAL_ACTIONS)
+      .in('action', [...MEDICAL_ACTIVITY_ACTIONS])
       .order('created_at', { ascending: false })
-      .limit(limit);
+      .limit(limit * 2);
 
     if (error) throw new Error(error.message);
 
+    const filtered = (logs || []).filter((log) => {
+      const after = log.after_data as Record<string, unknown> | null;
+      return !isDraftSaveActivity(after);
+    });
+
     const actorIds = [
-      ...new Set((logs || []).map((l) => l.actor_user_id).filter(Boolean)),
+      ...new Set(filtered.map((l) => l.actor_user_id).filter(Boolean)),
     ] as string[];
 
     const actorMap = new Map<string, string>();
@@ -50,13 +51,8 @@ export async function getMedicalRecordActivityAction(branchId: string, limit = 1
       }
     }
 
-    const activities = (logs || []).map((log) => {
+    const activities = filtered.slice(0, limit).map((log) => {
       const after = log.after_data as Record<string, unknown> | null;
-      let summary = log.resource_type;
-      if (after?.diagnosis) summary = String(after.diagnosis);
-      else if (after?.status) summary = `${log.resource_type}: ${after.status}`;
-      else if (after?.file_name) summary = String(after.file_name);
-
       return {
         id: log.id,
         action: log.action,
@@ -64,7 +60,9 @@ export async function getMedicalRecordActivityAction(branchId: string, limit = 1
         actorRole: log.actor_role || 'staff',
         resourceType: log.resource_type,
         createdAt: log.created_at,
-        summary,
+        summary: buildMedicalActivityDetail(after, log.resource_type),
+        label: formatMedicalActionLabel(log.action),
+        petName: typeof after?.patient_name === 'string' ? after.patient_name : undefined,
       };
     });
 

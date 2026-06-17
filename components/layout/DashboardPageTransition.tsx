@@ -1,33 +1,10 @@
 'use client';
 
 import { motion, useReducedMotion } from 'framer-motion';
-import { useEffect, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { useGlobalLoadingOptional } from '@/components/layout/NavigationLoadingProvider';
-
-function NavigationCompleteOnPathname({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-  const nav = useGlobalLoadingOptional();
-  const isNavigating = nav?.isNavigating;
-  const completeNavigation = nav?.completeNavigation;
-
-  useEffect(() => {
-    if (!isNavigating || !completeNavigation) return;
-    let frame1 = 0;
-    let frame2 = 0;
-    frame1 = requestAnimationFrame(() => {
-      frame2 = requestAnimationFrame(() => {
-        completeNavigation();
-      });
-    });
-    return () => {
-      cancelAnimationFrame(frame1);
-      cancelAnimationFrame(frame2);
-    };
-  }, [pathname, isNavigating, completeNavigation]);
-
-  return <>{children}</>;
-}
+import NavigationContentReady from '@/components/layout/NavigationContentReady';
 
 export default function DashboardPageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -35,7 +12,7 @@ export default function DashboardPageTransition({ children }: { children: ReactN
   const nav = useGlobalLoadingOptional();
 
   if (reduceMotion) {
-    return <NavigationCompleteOnPathname>{children}</NavigationCompleteOnPathname>;
+    return <NavigationContentReady>{children}</NavigationContentReady>;
   }
 
   return (
@@ -46,7 +23,7 @@ export default function DashboardPageTransition({ children }: { children: ReactN
       transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
       onAnimationComplete={() => nav?.completeNavigation()}
     >
-      {children}
+      <NavigationContentReady>{children}</NavigationContentReady>
     </motion.div>
   );
 }

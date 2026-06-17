@@ -9,6 +9,7 @@ import {
   ClipboardList,
   AlertTriangle,
   ArrowRight,
+  Pill,
 } from 'lucide-react';
 
 export type DoctorQueueVisit = {
@@ -22,6 +23,7 @@ export type DoctorQueueVisit = {
   consultPauseAccumulatedSec?: number;
   isEmergency: boolean;
   triageNotes: string | null;
+  prescriptionId?: string | null;
   pet: { id: string; name: string; species: string; breed: string | null };
   customer: { firstName: string; lastName: string };
 };
@@ -97,6 +99,18 @@ export default function DoctorQueuePanel({
                             <AlertTriangle className="w-2.5 h-2.5" />
                             ER
                           </span>
+                        )}
+                        {v.prescriptionId && (
+                          <a
+                            href={`/api/prescriptions/${v.prescriptionId}/pdf`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-primary/10 text-primary border border-primary/20"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Pill className="w-2.5 h-2.5" />
+                            Rx
+                          </a>
                         )}
                       </span>
                       <span className="text-[10px] text-on-surface-variant">

@@ -24,6 +24,12 @@ import type {
   VisitPrescriptionRow,
 } from '@/lib/types/patient-medical';
 import type { MedicalActivityRow } from '@/components/dashboard/MedicalRecordActivityPanel';
+import {
+  buildMedicalActivityDetail,
+  formatMedicalActionLabel,
+  isDraftSaveActivity,
+  MEDICAL_ACTIVITY_ACTIONS,
+} from '@/lib/activity/format-medical-activity';
 
 const DOCUMENTS_BUCKET = 'clinic-documents';
 const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
@@ -194,9 +200,17 @@ function canEditCareNotes(ctx: ServerAuthContext): boolean {
 async function fetchActivities(
   supabase: Awaited<ReturnType<typeof createClient>>,
   organizationId: string,
-  visitIds: string[]
+  opts: {
+    visitIds: string[];
+    noteIds: string[];
+    prescriptionIds: string[];
+    petName: string;
+  }
 ): Promise<MedicalActivityRow[]> {
+  const { visitIds, noteIds, prescriptionIds, petName } = opts;
   if (visitIds.length === 0) return [];
+
+  const resourceIds = new Set([...visitIds, ...noteIds, ...prescriptionIds]);
 
   const { data: logs } = await supabase
     .from('audit_logs')
@@ -204,20 +218,18 @@ async function fetchActivities(
       'id, action, resource_type, created_at, actor_user_id, actor_role, after_data, resource_id'
     )
     .eq('organization_id', organizationId)
-    .in('action', [
-      'CLINICAL_NOTE_CREATED',
-      'CLINICAL_NOTE_UPDATED',
-      'PRESCRIPTION_CREATED',
-      'DOCUMENT_UPLOADED',
-      'LAB_ORDER_CREATED',
-      'LAB_ORDER_UPDATED',
-    ])
+    .in('action', [...MEDICAL_ACTIVITY_ACTIONS])
     .order('created_at', { ascending: false })
-    .limit(20);
+    .limit(40);
 
-  const relevant = (logs ?? []).filter(
-    (l) => l.resource_id && visitIds.includes(l.resource_id)
-  );
+  const relevant = (logs ?? []).filter((l) => {
+    const after = l.after_data as Record<string, unknown> | null;
+    if (isDraftSaveActivity(after)) return false;
+    const visitId = after?.visit_id;
+    if (typeof visitId === 'string' && visitIds.includes(visitId)) return true;
+    if (l.resource_id && resourceIds.has(l.resource_id)) return true;
+    return false;
+  });
 
   const actorIds = [...new Set(relevant.map((l) => l.actor_user_id).filter(Boolean))] as string[];
   const actorMap = new Map<string, string>();
@@ -233,8 +245,10 @@ async function fetchActivities(
 
   return relevant.slice(0, 10).map((log) => {
     const after = log.after_data as Record<string, unknown> | null;
-    let summary = log.resource_type;
-    if (after?.diagnosis) summary = String(after.diagnosis);
+    const enrichedAfter = {
+      ...(after ?? {}),
+      patient_name: after?.patient_name ?? petName,
+    };
     return {
       id: log.id,
       action: log.action,
@@ -242,7 +256,9 @@ async function fetchActivities(
       actorRole: log.actor_role || 'staff',
       resourceType: log.resource_type,
       createdAt: log.created_at,
-      summary,
+      summary: buildMedicalActivityDetail(enrichedAfter, log.resource_type),
+      label: formatMedicalActionLabel(log.action),
+      petName: typeof enrichedAfter.patient_name === 'string' ? enrichedAfter.patient_name : petName,
     };
   });
 }
@@ -303,8 +319,6 @@ export async function getPatientMedicalProfileAction(petId: string) {
         error: 'You can only view medical history for patients assigned to you.',
       };
     }
-
-    const visitIds = (visitRows ?? []).map((v) => v.id);
 
     const [{ data: labOrders }, { data: invoices }, { data: allDocs }, { data: profilePhoto }] =
       await Promise.all([
@@ -414,7 +428,24 @@ export async function getPatientMedicalProfileAction(petId: string) {
       email: string | null;
     } | null;
 
-    const activities = await fetchActivities(supabase, ctx.organizationId, visitIds);
+    const visitIds = (visitRows ?? []).map((v) => v.id);
+    const noteIds = (visitRows ?? []).flatMap((v) => {
+      const notes = v.clinical_notes;
+      if (!notes) return [];
+      return Array.isArray(notes) ? notes.map((n: { id: string }) => n.id) : [(notes as { id: string }).id];
+    });
+    const prescriptionIds = (visitRows ?? []).flatMap((v) => {
+      const rx = v.prescriptions;
+      if (!rx) return [];
+      return Array.isArray(rx) ? rx.map((p: { id: string }) => p.id) : [(rx as { id: string }).id];
+    });
+
+    const activities = await fetchActivities(supabase, ctx.organizationId, {
+      visitIds,
+      noteIds,
+      prescriptionIds,
+      petName: pet.name,
+    });
 
     const data: PatientMedicalProfileData = {
       petId: pet.id,

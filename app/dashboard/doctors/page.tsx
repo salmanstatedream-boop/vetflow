@@ -103,6 +103,50 @@ export default async function DoctorDashboardPage() {
   const waitingVisits = visits.filter((v) => v.status === 'waiting');
   const consultingVisits = visits.filter((v) => v.status === 'consulting');
 
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const { data: completedData } = await supabase
+    .from('visits')
+    .select(`
+      id, reason, status, checked_in_at,
+      pets:patients ( id, name, species, breed, gender ),
+      customers ( first_name, last_name, phone ),
+      prescriptions ( id ),
+      visit_assignments!inner ( doctor_id )
+    `)
+    .eq('visit_assignments.doctor_id', session.userId)
+    .eq('status', 'ready_for_checkout')
+    .gte('completed_at', todayStart.toISOString())
+    .order('completed_at', { ascending: false })
+    .limit(10);
+
+  const completedVisits =
+    completedData?.map((v) => {
+      const rxList = v.prescriptions as { id: string }[] | { id: string } | null;
+      const rx = Array.isArray(rxList) ? rxList[0] : rxList;
+      return {
+        id: v.id,
+        reason: v.reason,
+        status: v.status,
+        checkedInAt: v.checked_in_at,
+        isEmergency: false,
+        triageNotes: null,
+        pet: {
+          id: (v.pets as { id: string; name: string; species: string; breed: string | null; gender: string }).id,
+          name: (v.pets as { name: string }).name,
+          species: (v.pets as { species: string }).species,
+          breed: (v.pets as { breed: string | null }).breed,
+          gender: (v.pets as { gender: string }).gender,
+        },
+        customer: {
+          firstName: (v.customers as { first_name: string }).first_name,
+          lastName: (v.customers as { last_name: string }).last_name,
+          phone: (v.customers as { phone: string }).phone,
+        },
+        prescriptionId: rx?.id ?? null,
+      };
+    }) ?? [];
+
   return (
     <div className="space-y-8">
       <PageHeader
@@ -114,6 +158,7 @@ export default async function DoctorDashboardPage() {
       <DoctorQueueClient
         waitingVisits={waitingVisits}
         consultingVisits={consultingVisits}
+        completedVisits={completedVisits}
         doctorFirstName={session.firstName || ''}
         doctorLastName={session.lastName || ''}
         showConsultTimer={showConsultTimer}
