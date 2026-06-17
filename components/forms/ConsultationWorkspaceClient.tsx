@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CompleteConsultationSchema, type CompleteConsultationInput } from '@/lib/validations/schemas';
 import { completeConsultationAction, saveConsultationDraftAction } from '@/lib/services/clinical-actions';
@@ -14,7 +14,8 @@ import Select from '@/components/ui/premium/Select';
 import RequiredLabel from '@/components/ui/RequiredLabel';
 import type { ProductType } from '@/lib/inventory/product-types';
 import { SoapTabBar, SOAP_TAB_ORDER, getSoapTabTitle, type SoapTab } from '@/components/consultation/SoapTabBar';
-import { validateSoapTab, validateAllSoapSteps } from '@/lib/consultation/soap-validation';
+import { validateSoapTab, validateAllSoapSteps, isPrescriptionLineComplete } from '@/lib/consultation/soap-validation';
+import { getFirstValidationIssue } from '@/lib/consultation/consultation-form-errors';
 import {
   computeFollowUpPreviews,
   defaultConsecutiveStartDate,
@@ -201,6 +202,7 @@ export default function ConsultationWorkspaceClient({
   const [followUpScheduled, setFollowUpScheduled] = useState(false);
   const [showCompleteSuccess, setShowCompleteSuccess] = useState(false);
   const [completedPrescriptionId, setCompletedPrescriptionId] = useState<string | null>(null);
+  const tabErrorRef = useRef<HTMLDivElement>(null);
 
   const {
     register,
@@ -276,8 +278,16 @@ export default function ConsultationWorkspaceClient({
     A: Boolean(diagnosisWatch?.trim()),
     P: Boolean(treatmentPlanWatch?.trim()) || serviceFields.length > 0,
     D: labOrders.length > 0 || documents.length > 0,
-    Rx: noPrescriptionNeeded || prescriptionItemsWatch.length > 0,
+    Rx:
+      noPrescriptionNeeded ||
+      prescriptionItemsWatch.some((line) => isPrescriptionLineComplete(line)),
   };
+
+  useEffect(() => {
+    if (noPrescriptionNeeded) {
+      setValue('prescriptionItems', []);
+    }
+  }, [noPrescriptionNeeded, setValue]);
 
   const soapContext = useMemo(
     () => ({
@@ -380,18 +390,25 @@ export default function ConsultationWorkspaceClient({
   };
 
   const handleSoapTabChange = (tab: SoapTab) => {
+    const targetIdx = SOAP_TAB_ORDER.indexOf(tab);
+    if (targetIdx <= maxUnlockedIndex) {
+      setTabError(null);
+      setActiveSoapTab(tab);
+      return;
+    }
     void validateAndAdvanceTab(tab);
   };
 
-  const { handleFormKeyDown } = useSoapFieldNavigation(activeSoapTab, goToNextSoapTab);
-
-  const jumpToErrorTab = () => {
-    if (errors.chiefComplaint) setActiveSoapTab('S');
-    else if (errors.examinationFindings) setActiveSoapTab('O');
-    else if (errors.diagnosis) setActiveSoapTab('A');
-    else if (errors.treatmentPlan || errors.serviceItems || errors.followUpConsecutive) setActiveSoapTab('P');
-    else if (errors.prescriptionItems) setActiveSoapTab('Rx');
+  const onInvalidSubmit = (fieldErrors: FieldErrors<CompleteConsultationInput>) => {
+    const issue = getFirstValidationIssue(fieldErrors);
+    setActiveSoapTab(issue.tab);
+    setTabError(issue.message);
+    requestAnimationFrame(() => {
+      tabErrorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
   };
+
+  const { handleFormKeyDown } = useSoapFieldNavigation(activeSoapTab, goToNextSoapTab);
 
   const setFollowUpMode = (mode: FollowUpMode) => {
     setValue('followUpMode', mode);
@@ -464,11 +481,15 @@ export default function ConsultationWorkspaceClient({
   };
 
   const buildSubmitPayload = (data: CompleteConsultationInput): CompleteConsultationInput => {
-    const mode = data.followUpMode ?? 'none';
+    const base: CompleteConsultationInput = {
+      ...data,
+      prescriptionItems: data.noPrescriptionNeeded ? [] : (data.prescriptionItems ?? []),
+    };
+    const mode = base.followUpMode ?? 'none';
     if (mode === 'consecutive') {
-      const count = parseInt(consecutiveCountInput, 10) || data.followUpConsecutive?.count || 0;
+      const count = parseInt(consecutiveCountInput, 10) || base.followUpConsecutive?.count || 0;
       return {
-        ...data,
+        ...base,
         followUpMode: 'consecutive',
         followUpConsecutive: { count, startDate: consecutiveStartDate },
         followUpOffsetDays: [],
@@ -476,16 +497,26 @@ export default function ConsultationWorkspaceClient({
       };
     }
     if (mode === 'offset') {
+      const days = base.followUpOffsetDays ?? [];
+      if (days.length === 0) {
+        return {
+          ...base,
+          followUpMode: 'none',
+          followUpOffsetDays: [],
+          followUpDays: [],
+          followUpConsecutive: undefined,
+        };
+      }
       return {
-        ...data,
+        ...base,
         followUpMode: 'offset',
-        followUpOffsetDays: data.followUpOffsetDays ?? [],
-        followUpDays: data.followUpOffsetDays ?? [],
+        followUpOffsetDays: days,
+        followUpDays: days,
         followUpConsecutive: undefined,
       };
     }
     return {
-      ...data,
+      ...base,
       followUpMode: 'none',
       followUpOffsetDays: [],
       followUpDays: [],
@@ -537,6 +568,21 @@ export default function ConsultationWorkspaceClient({
     }
 
     await executeComplete(payload);
+  };
+
+  const submitConsultation = handleSubmit(onSubmit, onInvalidSubmit);
+
+  const onFormSubmit = (event: FormEvent<HTMLFormElement>) => {
+    if (getValues('noPrescriptionNeeded')) {
+      setValue('prescriptionItems', []);
+    }
+    const mode = getValues('followUpMode') ?? 'none';
+    if (mode === 'offset' && (getValues('followUpOffsetDays') ?? []).length === 0) {
+      setValue('followUpMode', 'none');
+      setValue('followUpOffsetDays', []);
+      setValue('followUpDays', []);
+    }
+    submitConsultation(event);
   };
 
   const confirmFollowUpAndComplete = async () => {
@@ -943,7 +989,7 @@ export default function ConsultationWorkspaceClient({
 
       {/* RIGHT: SOAPDRx WORKSPACE */}
       <form
-        onSubmit={handleSubmit(onSubmit, jumpToErrorTab)}
+        onSubmit={onFormSubmit}
         onKeyDown={handleFormKeyDown}
         className="md:col-span-8 space-y-6 pb-28"
       >
@@ -988,7 +1034,10 @@ export default function ConsultationWorkspaceClient({
           />
 
           {tabError && (
-            <div className="p-3 bg-destructive/10 border border-destructive/30 text-destructive text-xs rounded-xl">
+            <div
+              ref={tabErrorRef}
+              className="p-3 bg-destructive/10 border border-destructive/30 text-destructive text-xs rounded-xl"
+            >
               {tabError}
             </div>
           )}
@@ -1221,6 +1270,11 @@ export default function ConsultationWorkspaceClient({
                       </button>
                     </div>
                   )}
+                  {errors.followUpOffsetDays && (
+                    <p className="text-[10px] text-destructive font-semibold">
+                      {errors.followUpOffsetDays.message as string}
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -1398,10 +1452,45 @@ export default function ConsultationWorkspaceClient({
               <p className="text-[10px] text-on-surface-variant/60 mt-1">Medicines and items to dispense at checkout.</p>
             </div>
 
+            <div className="p-4 rounded-xl bg-surface-container/30 border border-outline-variant/40 space-y-2">
+              <h4 className="text-[10px] font-bold uppercase text-primary tracking-wider">Consultation summary</h4>
+              <p className="text-xs text-on-surface">
+                <span className="font-semibold">Chief complaint:</span>{' '}
+                {chiefComplaintWatch?.trim() || '—'}
+              </p>
+              <p className="text-xs text-on-surface">
+                <span className="font-semibold">Diagnosis:</span>{' '}
+                {diagnosisWatch?.trim() || '—'}
+              </p>
+              <p className="text-xs text-on-surface">
+                <span className="font-semibold">Treatment plan:</span>{' '}
+                {treatmentPlanWatch?.trim() || '—'}
+                {serviceFields.length > 0 ? ` (${serviceFields.length} service${serviceFields.length === 1 ? '' : 's'})` : ''}
+              </p>
+              <p className="text-xs text-on-surface">
+                <span className="font-semibold">Labs &amp; docs:</span>{' '}
+                {labOrders.length} lab{labOrders.length === 1 ? '' : 's'}, {documents.length} doc{documents.length === 1 ? '' : 's'}
+              </p>
+              <p className="text-xs text-on-surface">
+                <span className="font-semibold">Prescription:</span>{' '}
+                {noPrescriptionNeeded
+                  ? 'No prescription needed'
+                  : prescriptionItemsWatch.length > 0
+                    ? `${prescriptionItemsWatch.length} line${prescriptionItemsWatch.length === 1 ? '' : 's'}`
+                    : '—'}
+              </p>
+            </div>
+
             <label className="flex items-center gap-2 p-3 rounded-xl border border-outline-variant/40 bg-surface-container/20 cursor-pointer">
               <input
                 type="checkbox"
-                {...register('noPrescriptionNeeded')}
+                {...register('noPrescriptionNeeded', {
+                  onChange: (e) => {
+                    if (e.target.checked) {
+                      setValue('prescriptionItems', []);
+                    }
+                  },
+                })}
                 className="rounded border-outline-variant"
               />
               <span className="text-xs font-semibold text-on-surface">No prescription needed for this visit</span>

@@ -60,7 +60,7 @@ export interface QabItem {
 const ADMIN_QABS: QabItem[] = [
   { id: 'role_creation', label: 'Role Creation', description: 'Roles & permissions', icon: UserCog, launcher: 'modal', modalId: 'role_creation' },
   { id: 'staff', label: 'Staff Management', description: 'Invite & schedule team', icon: Users, launcher: 'modal', modalId: 'staff_management', capability: 'manage_staff' },
-  { id: 'inventory', label: 'Inventory Control', description: 'Stock & catalogs', icon: Layers, launcher: 'modal', modalId: 'inventory_control', capability: 'manage_inventory', feature: 'inventory' },
+  { id: 'inventory', label: 'Inventory Control', description: 'Stock alerts & add items', icon: Layers, launcher: 'modal', modalId: 'inventory_control', capability: 'manage_inventory', feature: 'inventory' },
   { id: 'appointment', label: 'Appointment', description: 'Book & walk-ins', icon: Calendar, launcher: 'modal', modalId: 'appointment', capability: 'manage_appointments', feature: 'appointments' },
   { id: 'patient', label: 'Patient Profile', description: 'Search medical files', icon: Heart, launcher: 'modal', modalId: 'patient_profile', capability: 'manage_pets' },
   { id: 'invoices', label: 'Invoices', description: 'Billing & checkout', icon: Receipt, launcher: 'modal', modalId: 'invoices', capability: 'billing_checkout', feature: 'sales' },

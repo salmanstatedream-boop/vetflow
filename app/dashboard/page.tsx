@@ -169,6 +169,7 @@ export default async function DashboardOverview({
   let staffAttendanceRows: StaffAttendanceOverviewRow[] = [];
   let doctorQueueWaiting: DoctorQueueVisit[] = [];
   let doctorQueueConsulting: DoctorQueueVisit[] = [];
+  let productCategories: { id: string; name: string }[] = [];
   const showAttendance = hasCapability(role, 'mark_attendance');
 
   if (isDemoMode()) {
@@ -773,6 +774,18 @@ export default async function DashboardOverview({
       );
     }
 
+    if (hasCapability(role, 'manage_inventory') && session.organizationId) {
+      queries.push(
+        supabase
+          .from('product_categories')
+          .select('id, name')
+          .eq('organization_id', session.organizationId)
+          .then((r) => {
+            productCategories = r.data || [];
+          })
+      );
+    }
+
     await Promise.all(queries);
   }
 
@@ -832,6 +845,8 @@ export default async function DashboardOverview({
         liveActiveConsults={liveActiveConsults}
         liveCheckoutQueue={liveCheckoutQueue}
         showConsultTimer={showConsultTimer}
+        branches={session.branches}
+        categories={productCategories}
       />
 
       {role === 'doctor' && !staffGateLocked && (

@@ -85,8 +85,12 @@ export default function PetMedicalProfileClient({
   editable = false,
   canUploadPhoto = false,
   canEditCareNotes = false,
+  userRole = null,
   onRefresh,
 }: PetMedicalProfileClientProps) {
+  const canViewInternalNotes =
+    userRole === 'doctor' || userRole === 'clinic_admin' || userRole === 'receptionist';
+
   const { formatCurrency } = useCurrency();
   const [activeTab, setActiveTab] = useState<TabKey>('history');
   const [error, setError] = useState<string | null>(null);
@@ -724,6 +728,12 @@ export default function PetMedicalProfileClient({
                                 <p>
                                   <span className="font-semibold text-on-surface">Treatment:</span>{' '}
                                   {notes.treatment_plan}
+                                </p>
+                              )}
+                              {canViewInternalNotes && notes.internal_notes && (
+                                <p className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-200/90">
+                                  <span className="font-semibold text-on-surface">Internal notes:</span>{' '}
+                                  {notes.internal_notes}
                                 </p>
                               )}
                               {notes.procedure_notes && (

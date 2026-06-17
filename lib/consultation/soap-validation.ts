@@ -22,7 +22,7 @@ function hasVital(values: CompleteConsultationInput): boolean {
   );
 }
 
-function isPrescriptionLineComplete(item: CompleteConsultationInput['prescriptionItems'][number]): boolean {
+export function isPrescriptionLineComplete(item: CompleteConsultationInput['prescriptionItems'][number]): boolean {
   return Boolean(
     item.medicineName?.trim() &&
       item.dosage?.trim() &&

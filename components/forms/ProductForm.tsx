@@ -18,12 +18,19 @@ interface ProductFormProps {
   categories: { id: string; name: string }[];
   branches: { id: string; name: string }[];
   activeBranchId?: string;
+  variant?: 'default' | 'embedded';
 }
 
-export default function ProductForm({ categories, branches, activeBranchId }: ProductFormProps) {
+export default function ProductForm({
+  categories,
+  branches,
+  activeBranchId,
+  variant = 'default',
+}: ProductFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -36,6 +43,7 @@ export default function ProductForm({ categories, branches, activeBranchId }: Pr
     formState: { errors },
   } = useForm<ProductInput>({
     resolver: zodResolver(ProductSchema),
+    shouldUnregister: false,
     defaultValues: {
       branchId: activeBranchId || (branches.length > 0 ? branches[0].id : ''),
       type: 'service',
@@ -62,16 +70,35 @@ export default function ProductForm({ categories, branches, activeBranchId }: Pr
     onCreateCategory
   );
 
+  const openModal = () => {
+    setError(null);
+    setSuccessMessage(null);
+    setIsOpen(true);
+  };
+
   const onSubmit = async (data: ProductInput) => {
     setIsLoading(true);
     setError(null);
+    setSuccessMessage(null);
     try {
       const res = await createProductAction(data);
       if (res.success) {
-        reset();
-        setIsOpen(false);
+        reset({
+          branchId: activeBranchId || (branches.length > 0 ? branches[0].id : ''),
+          type: 'service',
+          unit: 'pcs',
+          stockQuantity: 0,
+          reorderLevel: 5,
+          purchasePrice: 0,
+          sellingPrice: 0,
+        });
         setShowAdvanced(false);
+        setSuccessMessage('Saved');
         router.refresh();
+        setTimeout(() => {
+          setIsOpen(false);
+          setSuccessMessage(null);
+        }, 800);
       } else {
         setError(res.error || 'Failed to add product');
       }
@@ -84,9 +111,19 @@ export default function ProductForm({ categories, branches, activeBranchId }: Pr
 
   return (
     <>
-      <Button type="button" onClick={() => setIsOpen(true)} icon={<Plus className="w-4 h-4" />}>
-        Add Catalog Item
-      </Button>
+      {variant === 'embedded' ? (
+        <button
+          type="button"
+          onClick={openModal}
+          className="block w-full text-center border border-primary text-primary py-2.5 rounded-xl text-xs font-bold hover:bg-primary/10 transition-colors"
+        >
+          Add catalog item
+        </button>
+      ) : (
+        <Button type="button" onClick={openModal} icon={<Plus className="w-4 h-4" />}>
+          Add Catalog Item
+        </Button>
+      )}
 
       <Modal
         open={isOpen}
@@ -101,8 +138,15 @@ export default function ProductForm({ categories, branches, activeBranchId }: Pr
               {error}
             </div>
           )}
+          {successMessage && (
+            <div className="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 text-xs rounded-xl font-semibold">
+              {successMessage}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <input type="hidden" {...register('categoryId')} />
+
             <div>
               <label className="block text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider mb-1.5">
                 Item name
@@ -119,12 +163,17 @@ export default function ProductForm({ categories, branches, activeBranchId }: Pr
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <Select
-                label="Type"
-                value={typeWatch}
-                onChange={(v) => setValue('type', v as ProductInput['type'])}
-                options={PRODUCT_TYPE_OPTIONS}
-              />
+              <div>
+                <Select
+                  label="Type"
+                  value={typeWatch}
+                  onChange={(v) => setValue('type', v as ProductInput['type'], { shouldValidate: true })}
+                  options={PRODUCT_TYPE_OPTIONS}
+                />
+                {errors.type && (
+                  <span className="text-[10px] text-destructive mt-1 block">{errors.type.message}</span>
+                )}
+              </div>
               <div>
                 <label className="block text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider mb-1.5">
                   Selling price ($)
@@ -135,15 +184,23 @@ export default function ProductForm({ categories, branches, activeBranchId }: Pr
                   {...register('sellingPrice', { valueAsNumber: true })}
                   className="w-full px-3 py-2 bg-surface-container/30 border border-outline-variant focus:border-primary rounded-xl outline-none text-xs text-on-surface font-bold"
                 />
+                {errors.sellingPrice && (
+                  <span className="text-[10px] text-destructive mt-1 block">{errors.sellingPrice.message}</span>
+                )}
               </div>
             </div>
 
-            <Select
-              label="Branch"
-              value={branchIdWatch}
-              onChange={(v) => setValue('branchId', v)}
-              options={branches.map((b) => ({ value: b.id, label: b.name }))}
-            />
+            <div>
+              <Select
+                label="Branch"
+                value={branchIdWatch}
+                onChange={(v) => setValue('branchId', v, { shouldValidate: true })}
+                options={branches.map((b) => ({ value: b.id, label: b.name }))}
+              />
+              {errors.branchId && (
+                <span className="text-[10px] text-destructive mt-1 block">{errors.branchId.message}</span>
+              )}
+            </div>
 
             <CreatableSelect
               label="Category (optional)"
@@ -164,6 +221,9 @@ export default function ProductForm({ categories, branches, activeBranchId }: Pr
                   {...register('stockQuantity', { valueAsNumber: true })}
                   className="w-full px-3 py-2 bg-surface-container/30 border border-outline-variant focus:border-primary rounded-xl outline-none text-xs text-on-surface"
                 />
+                {errors.stockQuantity && (
+                  <span className="text-[10px] text-destructive mt-1 block">{errors.stockQuantity.message}</span>
+                )}
               </div>
             )}
 
@@ -176,24 +236,23 @@ export default function ProductForm({ categories, branches, activeBranchId }: Pr
               Advanced fields
             </button>
 
-            {showAdvanced && (
-              <div className="space-y-3 pt-2 border-t border-outline-variant/30">
-                <input type="hidden" {...register('categoryId')} />
-                <div className="grid grid-cols-2 gap-3">
-                  <input
-                    type="text"
-                    {...register('brand')}
-                    placeholder="Brand"
-                    className="w-full px-3 py-2 bg-surface-container/30 border border-outline-variant rounded-xl outline-none text-xs text-on-surface"
-                  />
-                  <input
-                    type="text"
-                    {...register('sku')}
-                    placeholder="SKU"
-                    className="w-full px-3 py-2 bg-surface-container/30 border border-outline-variant rounded-xl outline-none text-xs text-on-surface"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
+            <div className={showAdvanced ? 'space-y-3 pt-2 border-t border-outline-variant/30' : 'hidden'}>
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  type="text"
+                  {...register('brand')}
+                  placeholder="Brand"
+                  className="w-full px-3 py-2 bg-surface-container/30 border border-outline-variant rounded-xl outline-none text-xs text-on-surface"
+                />
+                <input
+                  type="text"
+                  {...register('sku')}
+                  placeholder="SKU"
+                  className="w-full px-3 py-2 bg-surface-container/30 border border-outline-variant rounded-xl outline-none text-xs text-on-surface"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
                   <input
                     type="number"
                     step="0.01"
@@ -201,15 +260,23 @@ export default function ProductForm({ categories, branches, activeBranchId }: Pr
                     placeholder="Purchase price"
                     className="w-full px-3 py-2 bg-surface-container/30 border border-outline-variant rounded-xl outline-none text-xs text-on-surface"
                   />
+                  {errors.purchasePrice && (
+                    <span className="text-[10px] text-destructive mt-1 block">{errors.purchasePrice.message}</span>
+                  )}
+                </div>
+                <div>
                   <input
                     type="number"
                     {...register('reorderLevel', { valueAsNumber: true })}
                     placeholder="Reorder level"
                     className="w-full px-3 py-2 bg-surface-container/30 border border-outline-variant rounded-xl outline-none text-xs text-on-surface"
                   />
+                  {errors.reorderLevel && (
+                    <span className="text-[10px] text-destructive mt-1 block">{errors.reorderLevel.message}</span>
+                  )}
                 </div>
               </div>
-            )}
+            </div>
 
             <div className="flex gap-3 pt-2">
               <Button type="button" variant="secondary" className="w-1/2" onClick={() => setIsOpen(false)}>

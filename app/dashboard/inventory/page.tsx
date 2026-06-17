@@ -167,12 +167,21 @@ export default async function InventoryPage({
           branches={session.branches}
         />
       ) : (
-        <div className="glass-panel rounded-2xl border border-outline-variant/40 p-12 text-center">
+        <div className="glass-panel rounded-2xl border border-outline-variant/40 p-12 text-center space-y-4">
           <ShoppingBag className="w-12 h-12 text-on-surface-variant/30 mx-auto mb-4" />
           <h4 className="text-sm font-bold text-on-surface mb-1">Catalog is Empty</h4>
           <p className="text-xs text-on-surface-variant/60">
             Create products, medicines, or services to begin prescription and invoicing checkout.
           </p>
+          {hasCapability(session.role, 'manage_inventory') && (
+            <div className="flex justify-center pt-2">
+              <ProductForm
+                categories={categories || []}
+                branches={session.branches}
+                activeBranchId={activeBranchId}
+              />
+            </div>
+          )}
         </div>
       )}
         </>

@@ -269,7 +269,7 @@ export default function PrescriptionPdfDocument({
           
           {treatmentPlan ? (
             <>
-              <Text style={styles.clinicalLabel}>Treatment Directions</Text>
+              <Text style={styles.clinicalLabel}>Instructions</Text>
               <Text style={styles.clinicalText}>{treatmentPlan}</Text>
             </>
           ) : null}

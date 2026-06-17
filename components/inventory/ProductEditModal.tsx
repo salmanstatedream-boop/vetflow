@@ -41,6 +41,7 @@ export default function ProductEditModal({
   const [isOpen, setIsOpen] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -53,6 +54,7 @@ export default function ProductEditModal({
     formState: { errors },
   } = useForm<UpdateProductInput>({
     resolver: zodResolver(UpdateProductSchema),
+    shouldUnregister: false,
     defaultValues: {
       productId: product.id,
       branchId: activeBranchId,
@@ -100,17 +102,23 @@ export default function ProductEditModal({
       categoryName: product.product_categories?.name || '',
     });
     setError(null);
+    setSuccessMessage(null);
     setIsOpen(true);
   };
 
   const onSubmit = async (data: UpdateProductInput) => {
     setIsLoading(true);
     setError(null);
+    setSuccessMessage(null);
     try {
       const res = await updateProductAction(data);
       if (res.success) {
-        setIsOpen(false);
+        setSuccessMessage('Saved');
         router.refresh();
+        setTimeout(() => {
+          setIsOpen(false);
+          setSuccessMessage(null);
+        }, 800);
       } else {
         setError(res.error || 'Failed to update product');
       }
@@ -145,9 +153,16 @@ export default function ProductEditModal({
               {error}
             </div>
           )}
+          {successMessage && (
+            <div className="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 text-xs rounded-xl font-semibold">
+              {successMessage}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <input type="hidden" {...register('productId')} />
+            <input type="hidden" {...register('categoryId')} />
+            <input type="hidden" {...register('stockQuantity', { valueAsNumber: true })} />
 
             <div>
               <label className="block text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider mb-1.5">
@@ -164,12 +179,17 @@ export default function ProductEditModal({
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <Select
-                label="Type"
-                value={typeWatch}
-                onChange={(v) => setValue('type', v as UpdateProductInput['type'])}
-                options={PRODUCT_TYPE_OPTIONS}
-              />
+              <div>
+                <Select
+                  label="Type"
+                  value={typeWatch}
+                  onChange={(v) => setValue('type', v as UpdateProductInput['type'], { shouldValidate: true })}
+                  options={PRODUCT_TYPE_OPTIONS}
+                />
+                {errors.type && (
+                  <span className="text-[10px] text-destructive mt-1 block">{errors.type.message}</span>
+                )}
+              </div>
               <div>
                 <label className="block text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider mb-1.5">
                   Selling price ($)
@@ -180,15 +200,28 @@ export default function ProductEditModal({
                   {...register('sellingPrice', { valueAsNumber: true })}
                   className="w-full px-3 py-2 bg-surface-container/30 border border-outline-variant focus:border-primary rounded-xl outline-none text-xs text-on-surface font-bold"
                 />
+                {errors.sellingPrice && (
+                  <span className="text-[10px] text-destructive mt-1 block">{errors.sellingPrice.message}</span>
+                )}
               </div>
             </div>
 
-            <Select
-              label="Branch"
-              value={branchIdWatch}
-              onChange={(v) => setValue('branchId', v)}
-              options={branches.map((b) => ({ value: b.id, label: b.name }))}
-            />
+            <div>
+              <Select
+                label="Branch"
+                value={branchIdWatch}
+                onChange={(v) => setValue('branchId', v, { shouldValidate: true })}
+                options={branches.map((b) => ({ value: b.id, label: b.name }))}
+              />
+              {errors.branchId && (
+                <span className="text-[10px] text-destructive mt-1 block">{errors.branchId.message}</span>
+              )}
+              {branchIdWatch && branchIdWatch !== activeBranchId && (
+                <p className="text-[10px] text-amber-600 mt-1.5 font-medium">
+                  Item will move to the selected branch.
+                </p>
+              )}
+            </div>
 
             <CreatableSelect
               label="Category (optional)"
@@ -208,25 +241,23 @@ export default function ProductEditModal({
               Advanced fields
             </button>
 
-            {showAdvanced && (
-              <div className="space-y-3 pt-2 border-t border-outline-variant/30">
-                <input type="hidden" {...register('categoryId')} />
-                <input type="hidden" {...register('stockQuantity', { valueAsNumber: true })} />
-                <div className="grid grid-cols-2 gap-3">
-                  <input
-                    type="text"
-                    {...register('brand')}
-                    placeholder="Brand"
-                    className="w-full px-3 py-2 bg-surface-container/30 border border-outline-variant rounded-xl outline-none text-xs text-on-surface"
-                  />
-                  <input
-                    type="text"
-                    {...register('sku')}
-                    placeholder="SKU"
-                    className="w-full px-3 py-2 bg-surface-container/30 border border-outline-variant rounded-xl outline-none text-xs text-on-surface"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
+            <div className={showAdvanced ? 'space-y-3 pt-2 border-t border-outline-variant/30' : 'hidden'}>
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  type="text"
+                  {...register('brand')}
+                  placeholder="Brand"
+                  className="w-full px-3 py-2 bg-surface-container/30 border border-outline-variant rounded-xl outline-none text-xs text-on-surface"
+                />
+                <input
+                  type="text"
+                  {...register('sku')}
+                  placeholder="SKU"
+                  className="w-full px-3 py-2 bg-surface-container/30 border border-outline-variant rounded-xl outline-none text-xs text-on-surface"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
                   <input
                     type="number"
                     step="0.01"
@@ -234,15 +265,23 @@ export default function ProductEditModal({
                     placeholder="Purchase price"
                     className="w-full px-3 py-2 bg-surface-container/30 border border-outline-variant rounded-xl outline-none text-xs text-on-surface"
                   />
+                  {errors.purchasePrice && (
+                    <span className="text-[10px] text-destructive mt-1 block">{errors.purchasePrice.message}</span>
+                  )}
+                </div>
+                <div>
                   <input
                     type="number"
                     {...register('reorderLevel', { valueAsNumber: true })}
                     placeholder="Reorder level"
                     className="w-full px-3 py-2 bg-surface-container/30 border border-outline-variant rounded-xl outline-none text-xs text-on-surface"
                   />
+                  {errors.reorderLevel && (
+                    <span className="text-[10px] text-destructive mt-1 block">{errors.reorderLevel.message}</span>
+                  )}
                 </div>
               </div>
-            )}
+            </div>
 
             <div className="flex gap-3 pt-2">
               <Button type="button" variant="secondary" className="w-1/2" onClick={() => setIsOpen(false)}>

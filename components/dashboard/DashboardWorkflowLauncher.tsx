@@ -23,6 +23,7 @@ import { listCameraDevicesAction } from '@/lib/services/camera-actions';
 import { confirmAppointmentAction } from '@/lib/services/appointment-actions';
 import type { ForecastItem } from '@/lib/inventory/forecast';
 import type { QabModalId } from '@/components/dashboard/role-qab-config';
+import ProductForm from '@/components/forms/ProductForm';
 import { Loader2, Search, ExternalLink, Users, Shield } from 'lucide-react';
 
 interface Doctor {
@@ -41,6 +42,8 @@ interface DashboardWorkflowLauncherProps {
   showConsultTimer: boolean;
   organizationId: string;
   clinicName: string;
+  branches: { id: string; name: string }[];
+  categories: { id: string; name: string }[];
 }
 
 export default function DashboardWorkflowLauncher({
@@ -53,6 +56,8 @@ export default function DashboardWorkflowLauncher({
   showConsultTimer,
   organizationId,
   clinicName,
+  branches,
+  categories,
 }: DashboardWorkflowLauncherProps) {
   const router = useRouter();
 
@@ -95,6 +100,8 @@ export default function DashboardWorkflowLauncher({
         onClose={onClose}
         activeBranchId={activeBranchId}
         organizationId={organizationId}
+        branches={branches}
+        categories={categories}
       />
 
       <InvoicesQuickModal open={activeModal === 'invoices'} onClose={onClose} />
@@ -356,11 +363,15 @@ function InventoryControlModal({
   onClose,
   activeBranchId,
   organizationId,
+  branches,
+  categories,
 }: {
   open: boolean;
   onClose: () => void;
   activeBranchId: string;
   organizationId: string;
+  branches: { id: string; name: string }[];
+  categories: { id: string; name: string }[];
 }) {
   const [lowStock, setLowStock] = useState<
     Array<{ id: string; name: string; stock_quantity: number; reorder_level: number }>
@@ -387,6 +398,12 @@ function InventoryControlModal({
         >
           Scan supplier invoice (AI)
         </Link>
+        <ProductForm
+          categories={categories}
+          branches={branches}
+          activeBranchId={activeBranchId}
+          variant="embedded"
+        />
         <div>
           <h4 className="text-[10px] font-bold uppercase text-on-surface-variant mb-2">Low stock</h4>
           {lowStock.length === 0 ? (

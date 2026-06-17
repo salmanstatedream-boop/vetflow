@@ -6,16 +6,27 @@ const UUID_LIKE =
 export const EntityIdSchema = z.string().regex(UUID_LIKE, { message: 'Invalid ID' });
 
 // --- INVENTORY / PRODUCTS ---
+const moneyField = z
+  .number()
+  .refine((n) => !Number.isNaN(n), { message: 'Enter a valid amount' })
+  .nonnegative({ message: 'Must be zero or greater' });
+
+const stockCountField = z
+  .number()
+  .refine((n) => !Number.isNaN(n), { message: 'Enter a valid number' })
+  .int()
+  .nonnegative({ message: 'Must be zero or greater' });
+
 export const ProductSchema = z.object({
   name: z.string().min(1, { message: 'Product name is required' }),
   brand: z.string().optional().or(z.literal('')),
   sku: z.string().optional().or(z.literal('')),
   unit: z.string().min(1, { message: 'Unit is required' }),
   type: z.enum(['medicine', 'food', 'accessory', 'service', 'treats'], { message: 'Invalid type' }),
-  purchasePrice: z.number().nonnegative(),
-  sellingPrice: z.number().nonnegative(),
-  stockQuantity: z.number().int().nonnegative(),
-  reorderLevel: z.number().int().nonnegative(),
+  purchasePrice: moneyField,
+  sellingPrice: moneyField,
+  stockQuantity: stockCountField,
+  reorderLevel: stockCountField,
   categoryId: EntityIdSchema.nullable().optional(),
   categoryName: z.string().max(100).optional().or(z.literal('')),
   branchId: EntityIdSchema,

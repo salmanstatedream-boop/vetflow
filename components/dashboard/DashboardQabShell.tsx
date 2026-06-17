@@ -35,6 +35,8 @@ interface DashboardQabShellProps {
   liveActiveConsults?: LiveConsultRow[];
   liveCheckoutQueue?: LiveConsultRow[];
   showConsultTimer?: boolean;
+  branches: { id: string; name: string }[];
+  categories: { id: string; name: string }[];
 }
 
 export default function DashboardQabShell({
@@ -49,6 +51,8 @@ export default function DashboardQabShell({
   liveActiveConsults = [],
   liveCheckoutQueue = [],
   showConsultTimer = false,
+  branches,
+  categories,
 }: DashboardQabShellProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -101,6 +105,8 @@ export default function DashboardQabShell({
         showConsultTimer={showConsultTimer}
         organizationId={organizationId}
         clinicName={clinicName}
+        branches={branches}
+        categories={categories}
       />
     </>
   );
