@@ -12,9 +12,10 @@ import {
 import type { LiveConsultRow } from '@/components/dashboard/LiveOperationsPanel';
 import type { UserSessionDetails } from '@/lib/services/auth';
 import type { Feature } from '@/lib/auth/features';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useGlobalLoadingOptional } from '@/components/layout/NavigationLoadingProvider';
+import { routePathsMatch } from '@/lib/utils/route-path';
 
 interface Doctor {
   id: string;
@@ -50,6 +51,7 @@ export default function DashboardQabShell({
   showConsultTimer = false,
 }: DashboardQabShellProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const navLoading = useGlobalLoadingOptional();
   const [activeModal, setActiveModal] = useState<QabModalId | null>(null);
   const [pendingQabId, setPendingQabId] = useState<string | null>(null);
@@ -69,6 +71,7 @@ export default function DashboardQabShell({
   const handleAction = useCallback(
     (item: QabItem) => {
       if (item.launcher === 'page' && item.href) {
+        if (routePathsMatch(item.href, pathname)) return;
         setPendingQabId(item.id);
         navLoading?.startNavigation(item.href);
         startTransition(() => {
@@ -80,7 +83,7 @@ export default function DashboardQabShell({
         setActiveModal(item.modalId);
       }
     },
-    [router, navLoading]
+    [router, pathname, navLoading]
   );
 
   const closeModal = useCallback(() => setActiveModal(null), []);

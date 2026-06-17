@@ -12,7 +12,6 @@ import LogoutButton from '@/components/ui/premium/LogoutButton';
 import ImpersonationBanner from '@/components/layout/ImpersonationBanner';
 import DashboardPageTransition from '@/components/layout/DashboardPageTransition';
 import DashboardNavLink from '@/components/layout/DashboardNavLink';
-import NavigationLoadingOverlay from '@/components/layout/NavigationLoadingOverlay';
 import ThemeToggle from '@/components/layout/ThemeToggle';
 import { CurrencyProvider } from '@/lib/context/CurrencyContext';
 import type { LucideIcon } from 'lucide-react';
@@ -206,7 +205,7 @@ export default function DashboardShellClient({
     }`;
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col mesh-gradient">
+    <div className="min-h-screen bg-surface flex flex-col dashboard-shell">
       {session.isImpersonating && session.organizationName && (
         <ImpersonationBanner organizationName={session.organizationName} />
       )}
@@ -461,7 +460,6 @@ export default function DashboardShellClient({
           </header>
 
           <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto relative">
-            <NavigationLoadingOverlay />
             <CurrencyProvider currency={session.currency}>
               <DashboardPageTransition>{children}</DashboardPageTransition>
             </CurrencyProvider>

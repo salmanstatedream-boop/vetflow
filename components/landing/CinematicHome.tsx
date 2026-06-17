@@ -9,6 +9,7 @@ import ParticleField from '@/components/landing/ParticleField';
 import DashboardMockup from '@/components/landing/DashboardMockup';
 import StickyShowcase from '@/components/landing/StickyShowcase';
 import StatCounter from '@/components/landing/StatCounter';
+import ThemeToggle from '@/components/layout/ThemeToggle';
 import {
   Stethoscope,
   Calendar,
@@ -217,6 +218,7 @@ export default function CinematicHome() {
             ))}
           </div>
           <div className="hidden md:flex items-center gap-2">
+            <ThemeToggle />
             <Link
               href="/login"
               className="inline-flex items-center gap-1.5 text-sm font-bold px-4 py-2 rounded-xl border border-outline-variant/60 hover:bg-surface-container/40 transition-all"
@@ -269,9 +271,12 @@ export default function CinematicHome() {
             >
               <div className="flex items-center justify-between">
                 <span className="font-black text-lg">ClinixDev</span>
-                <button type="button" onClick={() => setMobileOpen(false)} aria-label="Close menu">
-                  <X className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <ThemeToggle />
+                  <button type="button" onClick={() => setMobileOpen(false)} aria-label="Close menu">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
               {NAV_LINKS.map((l) => (
                 <a

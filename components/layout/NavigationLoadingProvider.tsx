@@ -4,11 +4,15 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
 } from 'react';
+import { usePathname } from 'next/navigation';
 import TopLoadingBar from '@/components/layout/TopLoadingBar';
+import { routePathsMatch } from '@/lib/utils/route-path';
 
 interface GlobalLoadingContextValue {
   isNavigating: boolean;
@@ -28,11 +32,15 @@ interface GlobalLoadingContextValue {
 
 const GlobalLoadingContext = createContext<GlobalLoadingContextValue | null>(null);
 
+const NAVIGATION_SAFETY_MS = 8000;
+
 export function NavigationLoadingProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
   const [isNavigating, setIsNavigating] = useState(false);
   const [navigationTarget, setNavigationTarget] = useState<string | null>(null);
   const [actionCount, setActionCount] = useState(0);
   const actionCountRef = useRef(0);
+  const prevPathnameRef = useRef(pathname);
 
   const syncActionCount = useCallback((next: number) => {
     actionCountRef.current = Math.max(0, next);
@@ -40,14 +48,16 @@ export function NavigationLoadingProvider({ children }: { children: ReactNode })
   }, []);
 
   const startNavigation = useCallback((target?: string) => {
+    if (target && routePathsMatch(target, pathname)) return;
     setIsNavigating(true);
     if (target) setNavigationTarget(target);
-  }, []);
+  }, [pathname]);
 
   const completeNavigation = useCallback(() => {
     setIsNavigating(false);
     setNavigationTarget(null);
-  }, []);
+    prevPathnameRef.current = pathname;
+  }, [pathname]);
 
   const startAction = useCallback(() => {
     syncActionCount(actionCountRef.current + 1);
@@ -57,23 +67,66 @@ export function NavigationLoadingProvider({ children }: { children: ReactNode })
     syncActionCount(actionCountRef.current - 1);
   }, [syncActionCount]);
 
+  useEffect(() => {
+    if (!isNavigating) {
+      prevPathnameRef.current = pathname;
+      return;
+    }
+
+    const pathChanged = pathname !== prevPathnameRef.current;
+    const atTarget =
+      navigationTarget != null &&
+      routePathsMatch(pathname, navigationTarget);
+
+    if (!pathChanged && !atTarget) return;
+
+    let frame1 = 0;
+    let frame2 = 0;
+    frame1 = requestAnimationFrame(() => {
+      frame2 = requestAnimationFrame(() => {
+        completeNavigation();
+      });
+    });
+
+    const safety = setTimeout(() => {
+      completeNavigation();
+    }, NAVIGATION_SAFETY_MS);
+
+    return () => {
+      cancelAnimationFrame(frame1);
+      cancelAnimationFrame(frame2);
+      clearTimeout(safety);
+    };
+  }, [pathname, isNavigating, navigationTarget, completeNavigation]);
+
   const isActionLoading = actionCount > 0;
 
+  const value = useMemo<GlobalLoadingContextValue>(
+    () => ({
+      isNavigating,
+      isActionLoading,
+      isLoading: isActionLoading,
+      navigationTarget,
+      startNavigation,
+      completeNavigation,
+      startAction,
+      stopAction,
+      startLoading: startAction,
+      stopLoading: stopAction,
+    }),
+    [
+      isNavigating,
+      isActionLoading,
+      navigationTarget,
+      startNavigation,
+      completeNavigation,
+      startAction,
+      stopAction,
+    ]
+  );
+
   return (
-    <GlobalLoadingContext.Provider
-      value={{
-        isNavigating,
-        isActionLoading,
-        isLoading: isActionLoading,
-        navigationTarget,
-        startNavigation,
-        completeNavigation,
-        startAction,
-        stopAction,
-        startLoading: startAction,
-        stopLoading: stopAction,
-      }}
-    >
+    <GlobalLoadingContext.Provider value={value}>
       <TopLoadingBar />
       {children}
     </GlobalLoadingContext.Provider>

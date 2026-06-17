@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import DashboardNavLink from '@/components/layout/DashboardNavLink';
-import NavigationLoadingOverlay from '@/components/layout/NavigationLoadingOverlay';
 import ThemeToggle from '@/components/layout/ThemeToggle';
 import LogoutButton from '@/components/ui/premium/LogoutButton';
 import { platformTenantSearchAction } from '@/lib/services/super-admin-actions';
@@ -118,7 +117,7 @@ export default function SuperAdminShellClient({
   );
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col mesh-gradient">
+    <div className="min-h-screen bg-surface flex flex-col dashboard-shell">
       {isSearchOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-start justify-center pt-24 px-4">
           <div className="glass-panel w-full max-w-xl overflow-hidden">
@@ -287,7 +286,6 @@ export default function SuperAdminShellClient({
             </div>
           </header>
           <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto relative">
-            <NavigationLoadingOverlay />
             {children}
           </main>
         </div>

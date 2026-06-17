@@ -1,9 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import type { ComponentProps } from 'react';
 import { cn } from '@/lib/utils';
 import { useGlobalLoadingOptional } from '@/components/layout/NavigationLoadingProvider';
+import { normalizeRoutePath, routePathsMatch } from '@/lib/utils/route-path';
 
 type DashboardNavLinkProps = ComponentProps<typeof Link>;
 
@@ -17,18 +19,21 @@ function resolveHref(href: DashboardNavLinkProps['href']): string {
 }
 
 export default function DashboardNavLink({ href, onClick, className, ...props }: DashboardNavLinkProps) {
+  const pathname = usePathname();
   const nav = useGlobalLoadingOptional();
   const target = resolveHref(href);
+  const targetPath = normalizeRoutePath(target.split('?')[0] ?? target);
   const isPending =
     nav?.isNavigating &&
     nav.navigationTarget != null &&
-    (nav.navigationTarget === target || target.startsWith(`${nav.navigationTarget}/`));
+    (routePathsMatch(nav.navigationTarget, targetPath) ||
+      targetPath.startsWith(`${normalizeRoutePath(nav.navigationTarget)}/`));
 
   return (
     <Link
       href={href}
       onClick={(e) => {
-        if (target && !target.startsWith('http')) {
+        if (target && !target.startsWith('http') && !routePathsMatch(target, pathname)) {
           nav?.startNavigation(target);
         }
         onClick?.(e);

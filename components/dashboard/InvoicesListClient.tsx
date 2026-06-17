@@ -253,7 +253,7 @@ export default function InvoicesListClient({
                       Paid
                     </span>
                   ) : inv.payment_status === 'partially_paid' ? (
-                    <span className="inline-flex items-center gap-1 bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                    <span className="inline-flex items-center gap-1 bg-secondary-container/50 text-secondary border border-secondary/25 px-2 py-0.5 rounded-full text-[10px] font-bold">
                       Partial
                     </span>
                   ) : (

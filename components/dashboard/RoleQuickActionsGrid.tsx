@@ -53,15 +53,15 @@ function QabCard({
       type="button"
       onClick={onClick}
       disabled={loading}
-      className="group relative text-left p-4 rounded-2xl border border-sky-500/25 bg-sky-500/10 hover:bg-sky-500/20 hover:border-sky-500/40 transition-all shadow-sm disabled:opacity-70"
+      className="group relative text-left p-4 rounded-2xl border border-primary/20 bg-primary-container/40 hover:bg-primary-container/60 hover:border-primary/30 transition-all shadow-sm disabled:opacity-70"
     >
       {loading && (
         <span className="absolute inset-0 flex items-center justify-center rounded-2xl bg-surface/60 backdrop-blur-[1px]">
           <Loader2 className="w-5 h-5 text-primary animate-spin" />
         </span>
       )}
-      <div className="w-9 h-9 rounded-xl bg-sky-500/20 flex items-center justify-center mb-3 group-hover:bg-sky-500/30 transition-colors">
-        <Icon className="w-4.5 h-4.5 text-sky-300" />
+      <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center mb-3 group-hover:bg-primary/25 transition-colors">
+        <Icon className="w-4.5 h-4.5 text-primary" />
       </div>
       <span className="text-xs font-bold text-on-surface block leading-tight">{item.label}</span>
       <span className="text-[10px] text-on-surface-variant/70 block mt-0.5 line-clamp-2">

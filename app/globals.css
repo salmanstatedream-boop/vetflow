@@ -620,6 +620,14 @@ html.light {
   --color-destructive: #ba1a1a;
   --color-border: #e4e1ec;
 
+  --color-landing-bg: #f5f3fa;
+  --color-landing-surface: #ffffff;
+  --color-landing-cyan: #006493;
+  --color-landing-pink: #6750a4;
+
+  --shadow-premium: 0 4px 24px -8px rgba(28, 27, 34, 0.08);
+  --shadow-premium-hover: 0 12px 32px -10px rgba(103, 80, 164, 0.12);
+
   --background: 270 20% 97%;
   --foreground: 260 10% 12%;
   --card: 0 0% 100%;
@@ -632,8 +640,68 @@ html.light {
 }
 
 html.light .glass-panel {
-  background: rgba(255, 255, 255, 0.85);
-  border-color: rgba(103, 80, 164, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(103, 80, 164, 0.1);
+  box-shadow: var(--shadow-premium);
+}
+
+html.light .glass {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(103, 80, 164, 0.1);
+}
+
+html.light .mesh-gradient {
+  background:
+    radial-gradient(at 40% 20%, rgba(103, 80, 164, 0.04) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, rgba(0, 100, 147, 0.03) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, rgba(103, 80, 164, 0.03) 0px, transparent 50%),
+    radial-gradient(at 80% 80%, rgba(103, 80, 164, 0.02) 0px, transparent 50%);
+}
+
+html.dark .dashboard-shell {
+  background:
+    radial-gradient(at 40% 20%, rgba(160, 120, 255, 0.12) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, rgba(255, 184, 105, 0.08) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, rgba(137, 206, 255, 0.06) 0px, transparent 50%),
+    radial-gradient(at 80% 80%, rgba(160, 120, 255, 0.05) 0px, transparent 50%),
+    var(--color-surface);
+}
+
+html.light .dashboard-shell {
+  background-color: var(--color-surface);
+}
+
+html.light .nav-scrolled {
+  background: rgba(255, 255, 255, 0.92) !important;
+  box-shadow: 0 4px 24px rgba(28, 27, 34, 0.06);
+}
+
+html.light .aurora-bg {
+  opacity: 0.35;
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(103, 80, 164, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(0, 100, 147, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 40% 80%, rgba(103, 80, 164, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 90% 70%, rgba(103, 80, 164, 0.04) 0%, transparent 50%);
+}
+
+html.light .floating-orb-1,
+html.light .floating-orb-2,
+html.light .floating-orb-3 {
+  opacity: 0.4;
+}
+
+html.light .landing-hero-mesh {
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(0, 100, 147, 0.06) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 20%, rgba(103, 80, 164, 0.05) 0%, transparent 45%),
+    linear-gradient(to top, var(--color-landing-bg) 0%, transparent 40%);
+}
+
+html.light .landing-grid-bg {
+  background-image:
+    linear-gradient(rgba(103, 80, 164, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(103, 80, 164, 0.04) 1px, transparent 1px);
 }
 
 html,

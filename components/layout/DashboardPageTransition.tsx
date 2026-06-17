@@ -2,31 +2,45 @@
 
 import { motion, useReducedMotion } from 'framer-motion';
 import { useEffect, type ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 import { useGlobalLoadingOptional } from '@/components/layout/NavigationLoadingProvider';
 
-function NavigationCompleteOnMount({ children }: { children: ReactNode }) {
+function NavigationCompleteOnPathname({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
   const nav = useGlobalLoadingOptional();
+  const isNavigating = nav?.isNavigating;
+  const completeNavigation = nav?.completeNavigation;
 
   useEffect(() => {
-    const frame = requestAnimationFrame(() => {
-      nav?.completeNavigation();
+    if (!isNavigating || !completeNavigation) return;
+    let frame1 = 0;
+    let frame2 = 0;
+    frame1 = requestAnimationFrame(() => {
+      frame2 = requestAnimationFrame(() => {
+        completeNavigation();
+      });
     });
-    return () => cancelAnimationFrame(frame);
-  }, [nav]);
+    return () => {
+      cancelAnimationFrame(frame1);
+      cancelAnimationFrame(frame2);
+    };
+  }, [pathname, isNavigating, completeNavigation]);
 
   return <>{children}</>;
 }
 
 export default function DashboardPageTransition({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
   const reduceMotion = useReducedMotion();
   const nav = useGlobalLoadingOptional();
 
   if (reduceMotion) {
-    return <NavigationCompleteOnMount>{children}</NavigationCompleteOnMount>;
+    return <NavigationCompleteOnPathname>{children}</NavigationCompleteOnPathname>;
   }
 
   return (
     <motion.div
+      key={pathname}
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
