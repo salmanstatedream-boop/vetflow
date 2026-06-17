@@ -4,7 +4,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { createInvoiceFromVisitAction } from '@/lib/services/billing-actions';
+import { createInvoiceFromVisitFormAction } from '@/lib/services/billing-actions';
+import { paymentMethodRequiresProof } from '@/lib/billing/payment-method';
+import PaymentProofUpload from '@/components/billing/PaymentProofUpload';
 import { useCurrency } from '@/lib/context/CurrencyContext';
 import { CheckoutSchema, type CheckoutInput } from '@/lib/validations/schemas';
 import {
@@ -54,6 +56,7 @@ export default function InvoiceCheckoutClient({
   const router = useRouter();
   const { formatCurrency } = useCurrency();
   const [error, setError] = useState<string | null>(null);
+  const [paymentProof, setPaymentProof] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [completed, setCompleted] = useState<{
     invoiceId: string;
@@ -80,6 +83,7 @@ export default function InvoiceCheckoutClient({
 
   const discountWatch = watch('discount') || 0;
   const paymentStatusWatch = watch('paymentStatus');
+  const paymentMethodWatch = watch('paymentMethod');
   const amountPaidWatch = watch('amountPaid') || 0;
   const sendEmailWatch = watch('sendEmailReceipt');
 
@@ -111,10 +115,23 @@ export default function InvoiceCheckoutClient({
   const total = Math.max(0, totalBeforeDiscount - discountWatch);
 
   const onSubmit = async (data: CheckoutInput) => {
+    const needsProof =
+      (data.paymentStatus === 'paid' || data.paymentStatus === 'partial') &&
+      paymentMethodRequiresProof(data.paymentMethod);
+    if (needsProof && !paymentProof) {
+      setError('Upload a payment receipt for card or bank transfer.');
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
     try {
-      const res = await createInvoiceFromVisitAction(data);
+      const formData = new FormData();
+      formData.set('payload', JSON.stringify(data));
+      if (paymentProof) {
+        formData.set('proof', paymentProof);
+      }
+      const res = await createInvoiceFromVisitFormAction(formData);
       if (res.success && res.invoiceId) {
         setCompleted({
           invoiceId: res.invoiceId,
@@ -302,7 +319,13 @@ export default function InvoiceCheckoutClient({
                   Payment method
                 </label>
                 <select
-                  {...register('paymentMethod')}
+                  {...register('paymentMethod', {
+                    onChange: (e) => {
+                      if (!paymentMethodRequiresProof(e.target.value)) {
+                        setPaymentProof(null);
+                      }
+                    },
+                  })}
                   className="w-full px-3 py-2 bg-surface-container/30 border border-outline-variant focus:border-primary rounded-xl text-xs text-on-surface font-bold outline-none"
                 >
                   <option value="cash">Cash</option>
@@ -310,6 +333,15 @@ export default function InvoiceCheckoutClient({
                   <option value="bank_transfer">Bank transfer</option>
                 </select>
               </div>
+            )}
+
+            {(paymentStatusWatch === 'paid' || paymentStatusWatch === 'partial') &&
+              paymentMethodRequiresProof(paymentMethodWatch) && (
+              <PaymentProofUpload
+                file={paymentProof}
+                onChange={setPaymentProof}
+                required
+              />
             )}
 
             {paymentStatusWatch === 'partial' && (

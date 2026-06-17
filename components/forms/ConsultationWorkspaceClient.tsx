@@ -11,6 +11,7 @@ import { pauseConsultationAction, resumeConsultationAction } from '@/lib/service
 import ConsultationLabsDocsPanel from '@/components/forms/ConsultationLabsDocsPanel';
 import CatalogItemQuickAddModal from '@/components/inventory/CatalogItemQuickAddModal';
 import Select from '@/components/ui/premium/Select';
+import CreatableSelect from '@/components/ui/premium/CreatableSelect';
 import RequiredLabel from '@/components/ui/RequiredLabel';
 import type { ProductType } from '@/lib/inventory/product-types';
 import { SoapTabBar, SOAP_TAB_ORDER, getSoapTabTitle, type SoapTab } from '@/components/consultation/SoapTabBar';
@@ -288,6 +289,15 @@ export default function ConsultationWorkspaceClient({
       setValue('prescriptionItems', []);
     }
   }, [noPrescriptionNeeded, setValue]);
+
+  const prescriptionProductOptions = useMemo(
+    () =>
+      localProducts.map((p) => ({
+        value: p.id,
+        label: `${p.name} (${p.type}) — $${p.sellingPrice}`,
+      })),
+    [localProducts]
+  );
 
   const soapContext = useMemo(
     () => ({
@@ -1521,29 +1531,32 @@ export default function ConsultationWorkspaceClient({
                     className="p-4 bg-surface-container/20 border border-outline-variant/40 rounded-xl grid grid-cols-12 gap-3 items-end relative"
                   >
                     {/* Catalog linker selection */}
-                    <div className="col-span-12 sm:col-span-4">
-                      <label className="block text-[9px] font-bold text-on-surface-variant/40 uppercase mb-1">
-                        Link Inventory Product
-                      </label>
-                      <Select
+                    <div className="col-span-12 sm:col-span-4 space-y-1">
+                      <CreatableSelect
+                        label="Link Inventory Product"
                         size="compact"
+                        allowCreate={false}
+                        showAddButton={false}
+                        searchPlaceholder="Search catalog…"
                         value={watch(`prescriptionItems.${idx}.productId`) || ''}
                         onChange={(v) => handleSelectProduct(idx, v)}
                         options={[
                           { value: '', label: '— Custom / free-text —' },
-                          ...localProducts.map((p) => ({
-                            value: p.id,
-                            label: `${p.name} ($${p.sellingPrice})`,
-                          })),
+                          ...prescriptionProductOptions,
                         ]}
                         placeholder="Link product…"
-                        onAddNew={() => {
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
                           setQuickAddType('medicine');
                           setQuickAddTarget({ kind: 'product', index: idx });
                           setQuickAddOpen(true);
                         }}
-                        addNewLabel="Add catalog item"
-                      />
+                        className="text-[9px] font-bold text-primary hover:underline"
+                      >
+                        Add catalog item
+                      </button>
                     </div>
 
                     <div className="col-span-12 sm:col-span-8 grid grid-cols-4 gap-2">

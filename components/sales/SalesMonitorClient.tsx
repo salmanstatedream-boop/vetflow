@@ -3,6 +3,13 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useCurrency } from '@/lib/context/CurrencyContext';
+import {
+  formatPaymentMethods,
+  matchesPaymentFilter,
+  PAYMENT_METHOD_LABELS,
+  type PaymentFilter,
+  type PaymentMethod,
+} from '@/lib/billing/payment-method';
 import { DollarSign, ShoppingBag, TrendingUp, Printer } from 'lucide-react';
 
 export type RetailSaleRow = {
@@ -13,6 +20,7 @@ export type RetailSaleRow = {
   total: number;
   itemSummary: string;
   soldByName: string;
+  paymentMethods: PaymentMethod[];
 };
 
 interface SalesMonitorClientProps {
@@ -32,6 +40,7 @@ export default function SalesMonitorClient({
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [search, setSearch] = useState('');
+  const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>('all');
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -39,6 +48,7 @@ export default function SalesMonitorClient({
       const d = s.createdAt.slice(0, 10);
       if (dateFrom && d < dateFrom) return false;
       if (dateTo && d > dateTo) return false;
+      if (!matchesPaymentFilter(paymentFilter, s.paymentMethods)) return false;
       if (!q) return true;
       return (
         s.customerName.toLowerCase().includes(q) ||
@@ -46,7 +56,7 @@ export default function SalesMonitorClient({
         s.itemSummary.toLowerCase().includes(q)
       );
     });
-  }, [sales, dateFrom, dateTo, search]);
+  }, [sales, dateFrom, dateTo, search, paymentFilter]);
 
   return (
     <div className="space-y-6">
@@ -85,6 +95,23 @@ export default function SalesMonitorClient({
         </div>
       </div>
 
+      <div className="flex flex-wrap gap-2">
+        {(['all', 'cash', 'card', 'bank_transfer'] as const).map((method) => (
+          <button
+            key={method}
+            type="button"
+            onClick={() => setPaymentFilter(method)}
+            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold capitalize transition-colors ${
+              paymentFilter === method
+                ? 'bg-primary text-white'
+                : 'bg-surface-container border border-outline-variant text-on-surface-variant'
+            }`}
+          >
+            {method === 'all' ? 'All payments' : PAYMENT_METHOD_LABELS[method]}
+          </button>
+        ))}
+      </div>
+
       <div className="flex flex-col sm:flex-row gap-3">
         <input
           type="search"
@@ -112,6 +139,7 @@ export default function SalesMonitorClient({
               <th className="px-5 py-3">Customer</th>
               <th className="px-5 py-3">Items</th>
               <th className="px-5 py-3">Sold by</th>
+              <th className="px-5 py-3">Payment</th>
               <th className="px-5 py-3 text-right">Total</th>
               <th className="px-5 py-3 text-right">Actions</th>
             </tr>
@@ -119,7 +147,7 @@ export default function SalesMonitorClient({
           <tbody className="divide-y divide-outline-variant/20">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-5 py-8 text-center text-on-surface-variant/60 italic">
+                <td colSpan={8} className="px-5 py-8 text-center text-on-surface-variant/60 italic">
                   No retail sales match your filters.
                 </td>
               </tr>
@@ -133,6 +161,9 @@ export default function SalesMonitorClient({
                   <td className="px-5 py-3">{s.customerName}</td>
                   <td className="px-5 py-3 text-on-surface-variant max-w-xs truncate">{s.itemSummary}</td>
                   <td className="px-5 py-3 text-on-surface-variant">{s.soldByName}</td>
+                  <td className="px-5 py-3 text-on-surface-variant capitalize">
+                    {formatPaymentMethods(s.paymentMethods)}
+                  </td>
                   <td className="px-5 py-3 text-right font-bold">{formatCurrency(s.total)}</td>
                   <td className="px-5 py-3 text-right">
                     <div className="flex justify-end gap-2">

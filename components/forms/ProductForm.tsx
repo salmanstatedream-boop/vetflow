@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
+import type { FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { createProductAction, createCategoryAction } from '@/lib/services/inventory-actions';
@@ -76,6 +77,19 @@ export default function ProductForm({
     setIsOpen(true);
   };
 
+  const onInvalid = (fieldErrors: FieldErrors<ProductInput>) => {
+    const firstKey = Object.keys(fieldErrors)[0] as keyof ProductInput | undefined;
+    const firstError = firstKey ? fieldErrors[firstKey] : undefined;
+    const message =
+      firstError && typeof firstError === 'object' && 'message' in firstError
+        ? String(firstError.message)
+        : 'Please fix the highlighted fields before saving.';
+    setError(message);
+    if (fieldErrors.purchasePrice || fieldErrors.reorderLevel) {
+      setShowAdvanced(true);
+    }
+  };
+
   const onSubmit = async (data: ProductInput) => {
     setIsLoading(true);
     setError(null);
@@ -144,8 +158,9 @@ export default function ProductForm({
             </div>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <input type="hidden" {...register('categoryId')} />
+          <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-4">
+            <input type="hidden" {...register('branchId')} />
+            <input type="hidden" {...register('unit')} />
 
             <div>
               <label className="block text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider mb-1.5">

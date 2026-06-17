@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
+import type { FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { updateProductAction, createCategoryAction } from '@/lib/services/inventory-actions';
@@ -63,10 +64,10 @@ export default function ProductEditModal({
       sku: product.sku || '',
       unit: product.unit || 'pcs',
       type: product.type as UpdateProductInput['type'],
-      purchasePrice: Number(product.purchase_price),
-      sellingPrice: Number(product.selling_price),
+      purchasePrice: Number(product.purchase_price) || 0,
+      sellingPrice: Number(product.selling_price) || 0,
       stockQuantity: 0,
-      reorderLevel: product.reorder_level,
+      reorderLevel: product.reorder_level ?? 0,
       categoryName: product.product_categories?.name || '',
     },
   });
@@ -95,15 +96,28 @@ export default function ProductEditModal({
       sku: product.sku || '',
       unit: product.unit || 'pcs',
       type: product.type as UpdateProductInput['type'],
-      purchasePrice: Number(product.purchase_price),
-      sellingPrice: Number(product.selling_price),
+      purchasePrice: Number(product.purchase_price) || 0,
+      sellingPrice: Number(product.selling_price) || 0,
       stockQuantity: 0,
-      reorderLevel: product.reorder_level,
+      reorderLevel: product.reorder_level ?? 0,
       categoryName: product.product_categories?.name || '',
     });
     setError(null);
     setSuccessMessage(null);
     setIsOpen(true);
+  };
+
+  const onInvalid = (fieldErrors: FieldErrors<UpdateProductInput>) => {
+    const firstKey = Object.keys(fieldErrors)[0] as keyof UpdateProductInput | undefined;
+    const firstError = firstKey ? fieldErrors[firstKey] : undefined;
+    const message =
+      firstError && typeof firstError === 'object' && 'message' in firstError
+        ? String(firstError.message)
+        : 'Please fix the highlighted fields before saving.';
+    setError(message);
+    if (fieldErrors.purchasePrice || fieldErrors.reorderLevel) {
+      setShowAdvanced(true);
+    }
   };
 
   const onSubmit = async (data: UpdateProductInput) => {
@@ -159,9 +173,10 @@ export default function ProductEditModal({
             </div>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-4">
             <input type="hidden" {...register('productId')} />
-            <input type="hidden" {...register('categoryId')} />
+            <input type="hidden" {...register('branchId')} />
+            <input type="hidden" {...register('unit')} />
             <input type="hidden" {...register('stockQuantity', { valueAsNumber: true })} />
 
             <div>

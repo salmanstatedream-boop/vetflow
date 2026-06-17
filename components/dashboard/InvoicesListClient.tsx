@@ -21,6 +21,13 @@ import {
   resendInvoiceEmailAction,
 } from '@/lib/services/billing-actions';
 import { useCurrency } from '@/lib/context/CurrencyContext';
+import {
+  formatPaymentMethods,
+  matchesPaymentFilter,
+  PAYMENT_METHOD_LABELS,
+  type PaymentFilter,
+  type PaymentMethod,
+} from '@/lib/billing/payment-method';
 
 export type InvoiceRow = {
   id: string;
@@ -37,6 +44,7 @@ export type InvoiceRow = {
   petName: string;
   customerEmail: string | null;
   itemCount: number;
+  paymentMethods: PaymentMethod[];
 };
 
 type StatusFilter = 'all' | 'paid' | 'unpaid' | 'partially_paid';
@@ -54,6 +62,7 @@ export default function InvoicesListClient({
   const { formatCurrency } = useCurrency();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(initialStatus);
   const [saleTypeFilter, setSaleTypeFilter] = useState<SaleTypeFilter>('all');
+  const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>('all');
   const [search, setSearch] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -67,6 +76,7 @@ export default function InvoicesListClient({
     return invoices.filter((inv) => {
       if (statusFilter !== 'all' && inv.payment_status !== statusFilter) return false;
       if (saleTypeFilter !== 'all' && inv.sale_type !== saleTypeFilter) return false;
+      if (!matchesPaymentFilter(paymentFilter, inv.paymentMethods)) return false;
       const d = inv.created_at.slice(0, 10);
       if (dateFrom && d < dateFrom) return false;
       if (dateTo && d > dateTo) return false;
@@ -77,7 +87,7 @@ export default function InvoicesListClient({
         inv.invoice_number.toLowerCase().includes(q)
       );
     });
-  }, [invoices, statusFilter, saleTypeFilter, search, dateFrom, dateTo]);
+  }, [invoices, statusFilter, saleTypeFilter, paymentFilter, search, dateFrom, dateTo]);
 
   const saleTypeCounts = useMemo(
     () => ({
@@ -181,6 +191,23 @@ export default function InvoicesListClient({
         ))}
       </div>
 
+      <div className="flex flex-wrap gap-2 items-center">
+        {(['all', 'cash', 'card', 'bank_transfer'] as const).map((method) => (
+          <button
+            key={method}
+            type="button"
+            onClick={() => setPaymentFilter(method)}
+            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold capitalize transition-colors ${
+              paymentFilter === method
+                ? 'bg-violet-600 text-white'
+                : 'bg-surface-container border border-outline-variant text-on-surface-variant'
+            }`}
+          >
+            {method === 'all' ? 'All payments' : PAYMENT_METHOD_LABELS[method]}
+          </button>
+        ))}
+      </div>
+
       <div className="flex flex-wrap gap-2">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-on-surface-variant" />
@@ -215,6 +242,7 @@ export default function InvoicesListClient({
               <th className="px-6 py-4">Invoice ID</th>
               <th className="px-6 py-4">Patient / Owner</th>
               <th className="px-6 py-4">Total</th>
+              <th className="px-6 py-4">Payment</th>
               <th className="px-6 py-4">Status</th>
               <th className="px-6 py-4">Date</th>
               <th className="px-6 py-4 text-right">Actions</th>
@@ -245,6 +273,9 @@ export default function InvoicesListClient({
                 </td>
                 <td className="px-6 py-4 font-bold text-on-surface">
                   {formatCurrency(Number(inv.total))}
+                </td>
+                <td className="px-6 py-4 text-on-surface-variant capitalize text-[10px]">
+                  {formatPaymentMethods(inv.paymentMethods)}
                 </td>
                 <td className="px-6 py-4">
                   {inv.payment_status === 'paid' ? (

@@ -63,7 +63,7 @@ export default async function InvoiceDetailPage({
 
   const { data: payments } = await supabase
     .from('payments')
-    .select('id, amount, payment_method, created_at')
+    .select('id, amount, payment_method, created_at, proof_storage_path, proof_file_name')
     .eq('invoice_id', invoice.id)
     .order('created_at', { ascending: true });
 
@@ -275,9 +275,19 @@ export default async function InvoiceDetailPage({
               <h4 className="text-[10px] font-bold uppercase text-on-surface-variant mb-2">Payment history</h4>
               <div className="space-y-1">
                 {(payments || []).map((p) => (
-                  <div key={p.id} className="flex justify-between text-xs text-on-surface-variant">
+                  <div key={p.id} className="flex justify-between items-center text-xs text-on-surface-variant gap-2">
                     <span className="capitalize">
                       {p.payment_method} · {new Date(p.created_at).toLocaleString()}
+                      {p.proof_storage_path && (
+                        <a
+                          href={`/api/payments/proof?paymentId=${p.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="ml-2 text-primary font-semibold hover:underline"
+                        >
+                          View receipt
+                        </a>
+                      )}
                     </span>
                     <span className="font-bold text-on-surface">{fmt(Number(p.amount))}</span>
                   </div>

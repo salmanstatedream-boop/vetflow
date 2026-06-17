@@ -6,9 +6,11 @@ import {
   lookupCustomerByPhoneAction,
   type CustomerSearchResult,
 } from '@/lib/services/customer-actions';
-import { createRetailSaleAction } from '@/lib/services/retail-sale-actions';
+import { createRetailSaleFormAction } from '@/lib/services/retail-sale-actions';
+import { paymentMethodRequiresProof } from '@/lib/billing/payment-method';
+import PaymentProofUpload from '@/components/billing/PaymentProofUpload';
 import { looksLikePhone } from '@/lib/reception/phone';
-import Select from '@/components/ui/premium/Select';
+import CreatableSelect from '@/components/ui/premium/CreatableSelect';
 import { useCurrency } from '@/lib/context/CurrencyContext';
 import {
   ShoppingBag,
@@ -81,6 +83,7 @@ export default function RetailSaleClient({
   const [discount, setDiscount] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'bank_transfer'>('cash');
   const [paymentReference, setPaymentReference] = useState('');
+  const [paymentProof, setPaymentProof] = useState<File | null>(null);
   const [sendEmailReceipt, setSendEmailReceipt] = useState(false);
   const [notes, setNotes] = useState('');
 
@@ -190,30 +193,43 @@ export default function RetailSaleClient({
       return;
     }
 
+    if (paymentMethodRequiresProof(paymentMethod) && !paymentProof) {
+      setError('Upload a payment receipt for card or bank transfer.');
+      return;
+    }
+
     setIsSubmitting(true);
-    let res: Awaited<ReturnType<typeof createRetailSaleAction>>;
+    let res: Awaited<ReturnType<typeof createRetailSaleFormAction>>;
     try {
-      res = await createRetailSaleAction({
-        branchId: activeBranchId,
-        customerId,
-        customerFirstName: firstName.trim(),
-        customerLastName: lastName.trim(),
-        customerPhone: phone.trim(),
-        customerEmail: email.trim() || undefined,
-        lineItems: cart.map((l) => ({
-          productId: l.productId ?? null,
-          serviceId: l.serviceId ?? null,
-          name: l.name,
-          quantity: l.quantity,
-          unitPrice: l.unitPrice,
-          lineType: l.lineType,
-        })),
-        discount,
-        paymentMethod,
-        paymentReference,
-        notes,
-        sendEmailReceipt,
-      });
+      const formData = new FormData();
+      formData.set(
+        'payload',
+        JSON.stringify({
+          branchId: activeBranchId,
+          customerId,
+          customerFirstName: firstName.trim(),
+          customerLastName: lastName.trim(),
+          customerPhone: phone.trim(),
+          customerEmail: email.trim() || undefined,
+          lineItems: cart.map((l) => ({
+            productId: l.productId ?? null,
+            serviceId: l.serviceId ?? null,
+            name: l.name,
+            quantity: l.quantity,
+            unitPrice: l.unitPrice,
+            lineType: l.lineType,
+          })),
+          discount,
+          paymentMethod,
+          paymentReference,
+          notes,
+          sendEmailReceipt,
+        })
+      );
+      if (paymentProof) {
+        formData.set('proof', paymentProof);
+      }
+      res = await createRetailSaleFormAction(formData);
     } finally {
       setIsSubmitting(false);
     }
@@ -239,6 +255,7 @@ export default function RetailSaleClient({
     setMatchedCustomer(null);
     setDiscount(0);
     setPaymentReference('');
+    setPaymentProof(null);
     setNotes('');
     setCompleted(null);
     setError(null);
@@ -371,7 +388,11 @@ export default function RetailSaleClient({
               </button>
             ))}
           </div>
-          <Select
+          <CreatableSelect
+            allowCreate={false}
+            showAddButton={false}
+            searchPlaceholder="Search catalog…"
+            listMaxHeightClass="max-h-72"
             value={selectedCatalogId}
             onChange={setSelectedCatalogId}
             options={[
@@ -465,7 +486,10 @@ export default function RetailSaleClient({
               <button
                 key={m}
                 type="button"
-                onClick={() => setPaymentMethod(m)}
+                onClick={() => {
+                  setPaymentMethod(m);
+                  if (!paymentMethodRequiresProof(m)) setPaymentProof(null);
+                }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold capitalize ${
                   paymentMethod === m ? 'bg-primary text-white' : 'border border-outline-variant'
                 }`}
@@ -480,6 +504,13 @@ export default function RetailSaleClient({
             placeholder="Payment reference (optional)"
             className="w-full px-3 py-2 bg-surface-container/20 border border-outline-variant rounded-xl text-xs"
           />
+          {paymentMethodRequiresProof(paymentMethod) && (
+            <PaymentProofUpload
+              file={paymentProof}
+              onChange={setPaymentProof}
+              required
+            />
+          )}
           <label className="flex items-center gap-2 text-xs">
             <input
               type="checkbox"

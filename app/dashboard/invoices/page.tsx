@@ -4,6 +4,7 @@ import { resolveServerAuthContext } from '@/lib/auth/context';
 import { guardRoute } from '@/lib/auth/page-guards';
 import { createClient } from '@/lib/supabase/server';
 import InvoicesListClient from '@/components/dashboard/InvoicesListClient';
+import { getInvoicePaymentMethods } from '@/lib/billing/payment-method';
 import PageHeader from '@/components/ui/premium/PageHeader';
 import { Receipt } from 'lucide-react';
 
@@ -61,7 +62,8 @@ export default async function InvoicesPage({
       created_at,
       customers ( first_name, last_name, email ),
       pets:patients ( name ),
-      invoice_items ( id )
+      invoice_items ( id ),
+      payments ( payment_method, amount, created_at )
     `)
     .eq('branch_id', activeBranchId)
     .order('created_at', { ascending: false });
@@ -78,6 +80,7 @@ export default async function InvoicesPage({
     const cust = inv.customers as { first_name?: string; last_name?: string; email?: string | null } | null;
     const pet = inv.pets as { name?: string } | null;
     const items = inv.invoice_items as { id: string }[] | null;
+    const payments = inv.payments as { payment_method: string }[] | null;
     return {
       id: inv.id,
       invoice_number: inv.invoice_number,
@@ -93,6 +96,7 @@ export default async function InvoicesPage({
       petName: pet?.name || '—',
       customerEmail: cust?.email || null,
       itemCount: items?.length || 0,
+      paymentMethods: getInvoicePaymentMethods(payments),
     };
   });
 

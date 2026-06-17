@@ -3,6 +3,7 @@ import { resolveServerAuthContext } from '@/lib/auth/context';
 import { guardRoute } from '@/lib/auth/page-guards';
 import { createClient } from '@/lib/supabase/server';
 import ConsultationWorkspaceClient from '@/components/forms/ConsultationWorkspaceClient';
+import { STOCK_PRODUCT_TYPES } from '@/lib/inventory/product-types';
 import PageHeader from '@/components/ui/premium/PageHeader';
 import Link from 'next/link';
 import { ArrowLeft, Stethoscope } from 'lucide-react';
@@ -110,14 +111,16 @@ export default async function ConsultationRoomPage({
       : null,
   })) || [];
 
-  // 4. Fetch branch catalog products (medicines & food)
+  // 4. Fetch branch catalog products (all stock types — not filtered by stock level)
   const { data: productsData } = await supabase
     .from('products')
     .select('id, name, type, selling_price')
     .eq('organization_id', session.organizationId)
     .eq('branch_id', visit.branch_id)
-    .in('type', ['medicine', 'food'])
-    .eq('is_active', true);
+    .in('type', [...STOCK_PRODUCT_TYPES])
+    .eq('is_active', true)
+    .is('deleted_at', null)
+    .order('name', { ascending: true });
 
   const products = productsData?.map((p) => ({
     id: p.id,

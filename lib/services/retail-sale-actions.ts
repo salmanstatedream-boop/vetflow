@@ -23,6 +23,9 @@ import {
 } from '@/lib/email';
 import { formatMoney } from '@/lib/utils/currency';
 import { normalizePhoneInput } from '@/lib/reception/phone';
+import { paymentMethodRequiresProof } from '@/lib/billing/payment-method';
+import { attachProofToPayment, uploadPaymentProofFile } from '@/lib/billing/payment-proof';
+import { createClient } from '@/lib/supabase/server';
 
 async function resolveOrCreateCustomer(
   adminClient: Awaited<ReturnType<typeof createAdminClient>>,
@@ -115,7 +118,7 @@ async function validateStock(
   }
 }
 
-export async function createRetailSaleAction(payload: unknown) {
+export async function createRetailSaleAction(payload: unknown, proofFile?: File | null) {
   try {
     const ctx = await resolveServerAuthContext();
     if (!ctx) throw new Error('Unauthorized: Session is invalid.');
@@ -124,6 +127,11 @@ export async function createRetailSaleAction(payload: unknown) {
     assertFeature(ctx, 'sales');
 
     const parsed = RetailSaleSchema.parse(payload);
+    if (paymentMethodRequiresProof(parsed.paymentMethod)) {
+      if (!proofFile || proofFile.size === 0) {
+        throw new Error('Payment receipt is required for card and bank transfer.');
+      }
+    }
     assertBranchAccess(ctx, parsed.branchId);
 
     const adminClient = await createAdminClient();
@@ -188,7 +196,7 @@ export async function createRetailSaleAction(payload: unknown) {
       throw new Error(itemsErr.message || 'Failed to save invoice line items.');
     }
 
-    const { error: payErr } = await adminClient.from('payments').insert({
+    const { data: paymentRow, error: payErr } = await adminClient.from('payments').insert({
       organization_id: ctx.organizationId,
       branch_id: parsed.branchId,
       invoice_id: invoice.id,
@@ -196,11 +204,22 @@ export async function createRetailSaleAction(payload: unknown) {
       payment_method: parsed.paymentMethod,
       reference_number: parsed.paymentReference || null,
       created_by: ctx.userId,
-    });
+    }).select('id').single();
 
-    if (payErr) {
+    if (payErr || !paymentRow) {
       await adminClient.from('invoices').delete().eq('id', invoice.id);
-      throw new Error(payErr.message || 'Failed to register payment.');
+      throw new Error(payErr?.message || 'Failed to register payment.');
+    }
+
+    if (proofFile && paymentMethodRequiresProof(parsed.paymentMethod)) {
+      const supabase = await createClient();
+      const proof = await uploadPaymentProofFile(
+        supabase,
+        ctx.organizationId!,
+        invoice.id,
+        proofFile
+      );
+      await attachProofToPayment(adminClient, paymentRow.id, proof);
     }
 
     await deductStockForProductLines(adminClient, {
@@ -262,4 +281,14 @@ export async function createRetailSaleAction(payload: unknown) {
       error: err instanceof Error ? err.message : 'Failed to complete retail sale.',
     };
   }
+}
+
+export async function createRetailSaleFormAction(formData: FormData) {
+  const payloadRaw = formData.get('payload');
+  if (typeof payloadRaw !== 'string') {
+    return { success: false as const, error: 'Invalid sale payload.' };
+  }
+  const proof = formData.get('proof');
+  const proofFile = proof instanceof File && proof.size > 0 ? proof : null;
+  return createRetailSaleAction(JSON.parse(payloadRaw), proofFile);
 }

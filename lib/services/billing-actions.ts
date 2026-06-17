@@ -22,6 +22,9 @@ import {
 } from '@/lib/email';
 import { compileVisitBillingItems } from '@/lib/billing/compile-visit-billing';
 import { formatMoney } from '@/lib/utils/currency';
+import { paymentMethodRequiresProof } from '@/lib/billing/payment-method';
+import { attachProofToPayment, uploadPaymentProofFile } from '@/lib/billing/payment-proof';
+import { createClient } from '@/lib/supabase/server';
 
 /**
  * Executes checkout transaction on the server.
@@ -29,7 +32,7 @@ import { formatMoney } from '@/lib/utils/currency';
  * retrieves active organization tax rules, computes final totals, registers invoice and payment records,
  * performs atomic stock deductions for physical items, and marks visit completed.
  */
-export async function createInvoiceFromVisitAction(payload: unknown) {
+export async function createInvoiceFromVisitAction(payload: unknown, proofFile?: File | null) {
   try {
     const ctx = await resolveServerAuthContext();
     if (!ctx) {
@@ -40,6 +43,14 @@ export async function createInvoiceFromVisitAction(payload: unknown) {
     assertFeature(ctx, 'sales');
 
     const parsed = CheckoutSchema.parse(payload);
+    if (
+      (parsed.paymentStatus === 'paid' || parsed.paymentStatus === 'partial') &&
+      paymentMethodRequiresProof(parsed.paymentMethod)
+    ) {
+      if (!proofFile || proofFile.size === 0) {
+        throw new Error('Payment receipt is required for card and bank transfer.');
+      }
+    }
 
     const adminClient = await createAdminClient();
 
@@ -175,7 +186,7 @@ export async function createInvoiceFromVisitAction(payload: unknown) {
 
     // 8. Register Payment record when paid or partial at checkout
     if (isPaid || isPartial) {
-      const { error: payErr } = await adminClient
+      const { data: paymentRow, error: payErr } = await adminClient
         .from('payments')
         .insert({
           organization_id: ctx.organizationId,
@@ -185,11 +196,24 @@ export async function createInvoiceFromVisitAction(payload: unknown) {
           payment_method: parsed.paymentMethod,
           reference_number: parsed.paymentReference || null,
           created_by: ctx.userId,
-        });
+        })
+        .select('id')
+        .single();
 
-      if (payErr) {
+      if (payErr || !paymentRow) {
         await adminClient.from('invoices').delete().eq('id', invoice.id);
-        throw new Error(payErr.message || 'Failed to register payment transaction.');
+        throw new Error(payErr?.message || 'Failed to register payment transaction.');
+      }
+
+      if (proofFile && paymentMethodRequiresProof(parsed.paymentMethod)) {
+        const supabase = await createClient();
+        const proof = await uploadPaymentProofFile(
+          supabase,
+          ctx.organizationId!,
+          invoice.id,
+          proofFile
+        );
+        await attachProofToPayment(adminClient, paymentRow.id, proof);
       }
     }
 
@@ -330,7 +354,7 @@ export async function createInvoiceFromVisitAction(payload: unknown) {
   }
 }
 
-export async function updateInvoicePaymentStatusAction(payload: unknown) {
+export async function updateInvoicePaymentStatusAction(payload: unknown, proofFile?: File | null) {
   try {
     const ctx = await resolveServerAuthContext();
     if (!ctx) {
@@ -341,6 +365,11 @@ export async function updateInvoicePaymentStatusAction(payload: unknown) {
     assertFeature(ctx, 'sales');
 
     const parsed = UpdateInvoicePaymentSchema.parse(payload);
+    if (paymentMethodRequiresProof(parsed.paymentMethod)) {
+      if (!proofFile || proofFile.size === 0) {
+        throw new Error('Payment receipt is required for card and bank transfer.');
+      }
+    }
     const adminClient = await createAdminClient();
 
     const { data: invoice, error: invErr } = await adminClient
@@ -379,7 +408,7 @@ export async function updateInvoicePaymentStatusAction(payload: unknown) {
       throw new Error(`Payment amount must be between 0 and ${formatMoney(remaining, ctx.currency)}.`);
     }
 
-    const { error: payErr } = await adminClient.from('payments').insert({
+    const { data: paymentRow, error: payErr } = await adminClient.from('payments').insert({
       organization_id: ctx.organizationId,
       branch_id: invoice.branch_id,
       invoice_id: invoice.id,
@@ -387,10 +416,21 @@ export async function updateInvoicePaymentStatusAction(payload: unknown) {
       payment_method: parsed.paymentMethod,
       reference_number: parsed.paymentReference || null,
       created_by: ctx.userId,
-    });
+    }).select('id').single();
 
-    if (payErr) {
-      throw new Error(payErr.message || 'Failed to register payment.');
+    if (payErr || !paymentRow) {
+      throw new Error(payErr?.message || 'Failed to register payment.');
+    }
+
+    if (proofFile && paymentMethodRequiresProof(parsed.paymentMethod)) {
+      const supabase = await createClient();
+      const proof = await uploadPaymentProofFile(
+        supabase,
+        ctx.organizationId!,
+        invoice.id,
+        proofFile
+      );
+      await attachProofToPayment(adminClient, paymentRow.id, proof);
     }
 
     const newPaidTotal = paidSoFar + payAmount;
@@ -496,4 +536,24 @@ export async function resendInvoiceEmailAction(invoiceId: string) {
       error: err instanceof Error ? err.message : 'Failed to resend email.',
     };
   }
+}
+
+export async function createInvoiceFromVisitFormAction(formData: FormData) {
+  const payloadRaw = formData.get('payload');
+  if (typeof payloadRaw !== 'string') {
+    return { success: false, error: 'Invalid checkout payload.' };
+  }
+  const proof = formData.get('proof');
+  const proofFile = proof instanceof File && proof.size > 0 ? proof : null;
+  return createInvoiceFromVisitAction(JSON.parse(payloadRaw), proofFile);
+}
+
+export async function updateInvoicePaymentFormAction(formData: FormData) {
+  const payloadRaw = formData.get('payload');
+  if (typeof payloadRaw !== 'string') {
+    return { success: false, error: 'Invalid payment payload.' };
+  }
+  const proof = formData.get('proof');
+  const proofFile = proof instanceof File && proof.size > 0 ? proof : null;
+  return updateInvoicePaymentStatusAction(JSON.parse(payloadRaw), proofFile);
 }

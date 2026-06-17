@@ -2,7 +2,9 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { updateInvoicePaymentStatusAction } from '@/lib/services/billing-actions';
+import { updateInvoicePaymentFormAction } from '@/lib/services/billing-actions';
+import { paymentMethodRequiresProof } from '@/lib/billing/payment-method';
+import PaymentProofUpload from '@/components/billing/PaymentProofUpload';
 import { useCurrency } from '@/lib/context/CurrencyContext';
 import { Loader2, CheckCircle2 } from 'lucide-react';
 
@@ -23,6 +25,8 @@ export default function InvoicePaymentActions({
   const { formatCurrency } = useCurrency();
   const [amount, setAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'bank_transfer'>('cash');
+  const [paymentReference, setPaymentReference] = useState('');
+  const [paymentProof, setPaymentProof] = useState<File | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -38,16 +42,30 @@ export default function InvoicePaymentActions({
       setMessage(`Enter an amount between ${formatCurrency(0.01)} and ${formatCurrency(remaining)}`);
       return;
     }
+    if (paymentMethodRequiresProof(paymentMethod) && !paymentProof) {
+      setMessage('Upload a payment receipt for card or bank transfer.');
+      return;
+    }
     setMessage(null);
     startTransition(async () => {
-      const res = await updateInvoicePaymentStatusAction({
-        invoiceId,
-        paymentMethod,
-        paymentReference: '',
-        amount: payAmount,
-      });
+      const formData = new FormData();
+      formData.set(
+        'payload',
+        JSON.stringify({
+          invoiceId,
+          paymentMethod,
+          paymentReference,
+          amount: payAmount,
+        })
+      );
+      if (paymentProof) {
+        formData.set('proof', paymentProof);
+      }
+      const res = await updateInvoicePaymentFormAction(formData);
       if (res.success) {
         setAmount('');
+        setPaymentReference('');
+        setPaymentProof(null);
         router.refresh();
       } else {
         setMessage(res.error || 'Payment failed');
@@ -86,7 +104,11 @@ export default function InvoicePaymentActions({
           </label>
           <select
             value={paymentMethod}
-            onChange={(e) => setPaymentMethod(e.target.value as typeof paymentMethod)}
+            onChange={(e) => {
+              const method = e.target.value as typeof paymentMethod;
+              setPaymentMethod(method);
+              if (!paymentMethodRequiresProof(method)) setPaymentProof(null);
+            }}
             className="w-full px-3 py-2 border border-outline-variant rounded-xl text-xs font-bold"
           >
             <option value="cash">Cash</option>
@@ -95,6 +117,21 @@ export default function InvoicePaymentActions({
           </select>
         </div>
       </div>
+      <div>
+        <label className="block text-[10px] font-semibold text-on-surface-variant uppercase mb-1">
+          Reference (optional)
+        </label>
+        <input
+          type="text"
+          value={paymentReference}
+          onChange={(e) => setPaymentReference(e.target.value)}
+          placeholder="Transaction ID, auth code…"
+          className="w-full px-3 py-2 border border-outline-variant rounded-xl text-xs"
+        />
+      </div>
+      {paymentMethodRequiresProof(paymentMethod) && (
+        <PaymentProofUpload file={paymentProof} onChange={setPaymentProof} required />
+      )}
       <button
         type="button"
         onClick={handlePay}

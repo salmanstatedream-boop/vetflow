@@ -23,6 +23,8 @@ interface CreatableSelectProps {
   showAddButton?: boolean;
   addButtonLabel?: string;
   size?: 'default' | 'compact';
+  listMaxHeightClass?: string;
+  searchPlaceholder?: string;
 }
 
 export default function CreatableSelect({
@@ -41,6 +43,8 @@ export default function CreatableSelect({
   showAddButton = true,
   addButtonLabel = 'Add new…',
   size = 'default',
+  listMaxHeightClass,
+  searchPlaceholder = 'Search or type new…',
 }: CreatableSelectProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -66,6 +70,7 @@ export default function CreatableSelect({
     !options.some((o) => o.label.toLowerCase() === query.trim().toLowerCase());
 
   const isCompact = size === 'compact';
+  const listHeightClass = listMaxHeightClass ?? (isCompact ? 'max-h-72' : 'max-h-56');
 
   useEffect(() => {
     if (!open || !triggerRef.current) return;
@@ -160,11 +165,11 @@ export default function CreatableSelect({
                 autoFocus
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search or type new…"
+                placeholder={searchPlaceholder}
                 className="w-full px-2 py-1.5 text-xs bg-surface-container/40 border border-outline-variant rounded-lg outline-none focus:border-primary"
               />
             </div>
-            <div className="max-h-48 overflow-y-auto py-1">
+            <div className={cn(listHeightClass, 'overflow-y-auto py-1')}>
               {filtered.map((o) => (
                 <button
                   key={o.value}

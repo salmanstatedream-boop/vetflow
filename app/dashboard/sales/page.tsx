@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import DeniedState from '@/components/ui/premium/DeniedState';
 import PageHeader from '@/components/ui/premium/PageHeader';
 import SalesMonitorClient from '@/components/sales/SalesMonitorClient';
+import { getInvoicePaymentMethods } from '@/lib/billing/payment-method';
 import { BarChart3 } from 'lucide-react';
 
 export const metadata = {
@@ -59,7 +60,8 @@ export default async function SalesMonitorPage() {
       created_at,
       created_by,
       customers ( first_name, last_name ),
-      invoice_items ( name, quantity )
+      invoice_items ( name, quantity ),
+      payments ( payment_method, created_at )
     `)
     .eq('branch_id', activeBranchId)
     .eq('sale_type', 'retail')
@@ -103,6 +105,7 @@ export default async function SalesMonitorPage() {
   const sales = (retailInvoices || []).map((inv) => {
     const cust = inv.customers as { first_name?: string; last_name?: string } | null;
     const items = inv.invoice_items as { name: string; quantity: number }[] | null;
+    const payments = inv.payments as { payment_method: string; created_at: string }[] | null;
     const itemSummary = (items || []).map((i) => `${i.name} x${i.quantity}`).join(', ');
     return {
       id: inv.id,
@@ -112,6 +115,7 @@ export default async function SalesMonitorPage() {
       total: Number(inv.total),
       itemSummary: itemSummary || '—',
       soldByName: inv.created_by ? creatorMap.get(inv.created_by as string) || '—' : '—',
+      paymentMethods: getInvoicePaymentMethods(payments),
     };
   });
 
