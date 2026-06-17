@@ -89,8 +89,15 @@ export default async function InventoryPage({
     .select('id, name')
     .eq('organization_id', session.organizationId);
 
+  const { data: orgServices } = await supabase
+    .from('services')
+    .select('id, name, description, price')
+    .eq('organization_id', session.organizationId!)
+    .eq('is_active', true)
+    .order('name');
+
   // Compute stats
-  const totalItems = products?.length || 0;
+  const totalItems = (products?.length || 0) + (orgServices?.length || 0);
   const lowStockItems = products?.filter((p) => p.type !== 'service' && p.stock_quantity <= p.reorder_level) || [];
 
   return (
@@ -144,9 +151,15 @@ export default async function InventoryPage({
       </div>
 
       {/* PRODUCT LIST TABLE */}
-      {products && products.length > 0 ? (
+      {products && products.length > 0 || (orgServices && orgServices.length > 0) ? (
         <InventoryCatalogClient
           products={products || []}
+          orgServices={(orgServices || []).map((s) => ({
+            id: s.id,
+            name: s.name,
+            description: s.description,
+            price: Number(s.price),
+          }))}
           activeBranchId={activeBranchId}
           role={session.role}
           userId={session.userId}

@@ -504,7 +504,7 @@ export default async function DashboardOverview({
         supabase
           .from('invoices')
           .select(
-            'id, invoice_number, visit_id, total, payment_status, created_at, customers(first_name, last_name), pets:patients(name)'
+            'id, invoice_number, visit_id, sale_type, total, payment_status, created_at, customers(first_name, last_name), pets:patients(name)'
           )
           .eq('branch_id', activeBranchId)
           .order('created_at', { ascending: false })
@@ -518,6 +518,7 @@ export default async function DashboardOverview({
                   id: inv.id,
                   invoiceNumber: inv.invoice_number,
                   visitId: inv.visit_id,
+                  saleType: (inv.sale_type as 'clinical' | 'retail') || (inv.visit_id ? 'clinical' : 'retail'),
                   customerName: cust
                     ? `${(cust as { first_name: string }).first_name} ${(cust as { last_name: string }).last_name}`
                     : 'Unknown',

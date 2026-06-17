@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { createProductAction, createCategoryAction } from '@/lib/services/inventory-actions';
+import { useGlobalLoadingOptional } from '@/components/layout/NavigationLoadingProvider';
 import { ProductSchema, type ProductInput } from '@/lib/validations/schemas';
 import { PRODUCT_TYPE_OPTIONS } from '@/lib/inventory/product-types';
 import { useCreatableOptions } from '@/lib/hooks/useCreatableOptions';
@@ -26,6 +27,7 @@ export default function ProductForm({ categories, branches, activeBranchId }: Pr
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const globalLoading = useGlobalLoadingOptional();
 
   const {
     register,
@@ -65,6 +67,7 @@ export default function ProductForm({ categories, branches, activeBranchId }: Pr
   const onSubmit = async (data: ProductInput) => {
     setIsLoading(true);
     setError(null);
+    globalLoading?.startLoading();
     try {
       const res = await createProductAction(data);
       if (res.success) {
@@ -79,6 +82,7 @@ export default function ProductForm({ categories, branches, activeBranchId }: Pr
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
       setIsLoading(false);
+      globalLoading?.stopLoading();
     }
   };
 

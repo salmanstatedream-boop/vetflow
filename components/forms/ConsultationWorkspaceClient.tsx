@@ -22,6 +22,7 @@ import {
   type FollowUpMode,
 } from '@/lib/consultation/follow-up-schedule';
 import { useSoapFieldNavigation } from '@/lib/hooks/useSoapFieldNavigation';
+import { useGlobalLoadingOptional } from '@/components/layout/NavigationLoadingProvider';
 import {
   Heart, 
   User, 
@@ -149,6 +150,7 @@ export default function ConsultationWorkspaceClient({
   isFollowUpPatient = false,
 }: ConsultationWorkspaceClientProps) {
   const router = useRouter();
+  const globalLoading = useGlobalLoadingOptional();
   const followUpBaseDate = checkedInAt.slice(0, 10);
   const [localProducts, setLocalProducts] = useState(products);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
@@ -466,6 +468,7 @@ export default function ConsultationWorkspaceClient({
   const executeComplete = async (data: CompleteConsultationInput) => {
     setIsSubmitting(true);
     setError(null);
+    globalLoading?.startLoading();
     try {
       const payload = buildSubmitPayload(data);
       const res = await completeConsultationAction(payload);
@@ -478,6 +481,7 @@ export default function ConsultationWorkspaceClient({
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
       setIsSubmitting(false);
+      globalLoading?.stopLoading();
       setShowFollowUpConfirm(false);
       setPendingSubmitData(null);
     }

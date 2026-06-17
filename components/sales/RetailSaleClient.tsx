@@ -7,6 +7,7 @@ import {
   type CustomerSearchResult,
 } from '@/lib/services/customer-actions';
 import { createRetailSaleAction } from '@/lib/services/retail-sale-actions';
+import { useGlobalLoadingOptional } from '@/components/layout/NavigationLoadingProvider';
 import { looksLikePhone } from '@/lib/reception/phone';
 import Select from '@/components/ui/premium/Select';
 import { useCurrency } from '@/lib/context/CurrencyContext';
@@ -66,6 +67,7 @@ export default function RetailSaleClient({
   appliesToServices,
 }: RetailSaleClientProps) {
   const { formatCurrency } = useCurrency();
+  const globalLoading = useGlobalLoadingOptional();
   const [phone, setPhone] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -191,28 +193,34 @@ export default function RetailSaleClient({
     }
 
     setIsSubmitting(true);
-    const res = await createRetailSaleAction({
-      branchId: activeBranchId,
-      customerId,
-      customerFirstName: firstName.trim(),
-      customerLastName: lastName.trim(),
-      customerPhone: phone.trim(),
-      customerEmail: email.trim() || undefined,
-      lineItems: cart.map((l) => ({
-        productId: l.productId ?? null,
-        serviceId: l.serviceId ?? null,
-        name: l.name,
-        quantity: l.quantity,
-        unitPrice: l.unitPrice,
-        lineType: l.lineType,
-      })),
-      discount,
-      paymentMethod,
-      paymentReference,
-      notes,
-      sendEmailReceipt,
-    });
-    setIsSubmitting(false);
+    globalLoading?.startLoading();
+    let res: Awaited<ReturnType<typeof createRetailSaleAction>>;
+    try {
+      res = await createRetailSaleAction({
+        branchId: activeBranchId,
+        customerId,
+        customerFirstName: firstName.trim(),
+        customerLastName: lastName.trim(),
+        customerPhone: phone.trim(),
+        customerEmail: email.trim() || undefined,
+        lineItems: cart.map((l) => ({
+          productId: l.productId ?? null,
+          serviceId: l.serviceId ?? null,
+          name: l.name,
+          quantity: l.quantity,
+          unitPrice: l.unitPrice,
+          lineType: l.lineType,
+        })),
+        discount,
+        paymentMethod,
+        paymentReference,
+        notes,
+        sendEmailReceipt,
+      });
+    } finally {
+      setIsSubmitting(false);
+      globalLoading?.stopLoading();
+    }
 
     if (res.success) {
       setCompleted({

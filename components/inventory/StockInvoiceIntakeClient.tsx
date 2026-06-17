@@ -6,6 +6,7 @@ import { parseStockInvoiceImageAction, type StockInvoiceDraft } from '@/lib/serv
 import { confirmStockIntakeAction, createCategoryAction } from '@/lib/services/inventory-actions';
 import { STOCK_PRODUCT_TYPE_OPTIONS, type StockProductType } from '@/lib/inventory/product-types';
 import { useCreatableOptions } from '@/lib/hooks/useCreatableOptions';
+import { useGlobalLoadingOptional } from '@/components/layout/NavigationLoadingProvider';
 import Select from '@/components/ui/premium/Select';
 import CreatableSelect from '@/components/ui/premium/CreatableSelect';
 import { Camera, Loader2, Plus, Trash2, CheckCircle, AlertTriangle, X, ClipboardList } from 'lucide-react';
@@ -85,6 +86,7 @@ export default function StockInvoiceIntakeClient({
   categories,
 }: StockInvoiceIntakeClientProps) {
   const router = useRouter();
+  const globalLoading = useGlobalLoadingOptional();
   const [supplierName, setSupplierName] = useState('');
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [invoiceDate, setInvoiceDate] = useState('');
@@ -95,6 +97,7 @@ export default function StockInvoiceIntakeClient({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [invalidTypeRows, setInvalidTypeRows] = useState<Set<number>>(new Set());
 
   const onCreateCategory = useCallback(async (label: string) => {
     const res = await createCategoryAction(label);
@@ -130,6 +133,7 @@ export default function StockInvoiceIntakeClient({
     setIsParsing(true);
     setError(null);
     setSuccess(false);
+    globalLoading?.startLoading();
     const fd = new FormData();
     fd.append('image', file);
     const res = await parseStockInvoiceImageAction(fd);
@@ -144,6 +148,7 @@ export default function StockInvoiceIntakeClient({
       setError(res.error || 'Failed to parse image');
     }
     setIsParsing(false);
+    globalLoading?.stopLoading();
     e.target.value = '';
   };
 
@@ -161,10 +166,25 @@ export default function StockInvoiceIntakeClient({
 
   const handleCatalogMatch = (idx: number, value: string) => {
     if (value === '__new__') {
-      updateRow(idx, { productId: null, createNew: true, type: 'medicine', categoryName: '' });
+      updateRow(idx, {
+        productId: null,
+        createNew: true,
+        type: rows[idx]?.type || 'medicine',
+        categoryName: rows[idx]?.categoryName || '',
+      });
     } else {
-      updateRow(idx, { productId: value, createNew: false });
+      const matched = products.find((p) => p.id === value);
+      updateRow(idx, {
+        productId: value,
+        createNew: false,
+        type: (matched?.type as StockProductType) || 'medicine',
+      });
     }
+    setInvalidTypeRows((prev) => {
+      const next = new Set(prev);
+      next.delete(idx);
+      return next;
+    });
   };
 
   const handleConfirm = async () => {
@@ -172,13 +192,18 @@ export default function StockInvoiceIntakeClient({
       setError('Add at least one line item.');
       return;
     }
-    const missingType = rows.some((r) => r.createNew && !r.productId && !r.type);
-    if (missingType) {
+    const missing = rows
+      .map((r, i) => (r.createNew && !r.productId && !r.type ? i : -1))
+      .filter((i) => i >= 0);
+    if (missing.length > 0) {
+      setInvalidTypeRows(new Set(missing));
       setError('Select a product type for each new catalog item.');
       return;
     }
+    setInvalidTypeRows(new Set());
     setIsSaving(true);
     setError(null);
+    globalLoading?.startLoading();
     const res = await confirmStockIntakeAction({
       branchId: activeBranchId,
       supplierName,
@@ -205,6 +230,7 @@ export default function StockInvoiceIntakeClient({
       setError(res.error || 'Failed to save intake');
     }
     setIsSaving(false);
+    globalLoading?.stopLoading();
   };
 
   if (success) {
@@ -283,7 +309,7 @@ export default function StockInvoiceIntakeClient({
       )}
 
       {reviewOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="glass-panel w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-2xl border border-outline-variant/40 shadow-premium relative">
             <div className="sticky top-0 z-10 bg-surface-container/95 backdrop-blur-md px-5 py-4 border-b border-outline-variant/40 flex items-center justify-between">
               <h3 className="text-sm font-bold text-on-surface flex items-center gap-2">
@@ -373,13 +399,29 @@ export default function StockInvoiceIntakeClient({
                         </td>
                         <td className="px-3 py-2 min-w-[110px]">
                           {isNew ? (
-                            <Select
-                              size="compact"
+                            <select
                               value={row.type}
-                              onChange={(v) => updateRow(idx, { type: v as StockProductType })}
-                              options={STOCK_PRODUCT_TYPE_OPTIONS}
-                              placeholder="Type…"
-                            />
+                              onChange={(e) => {
+                                updateRow(idx, { type: e.target.value as StockProductType });
+                                setInvalidTypeRows((prev) => {
+                                  const next = new Set(prev);
+                                  next.delete(idx);
+                                  return next;
+                                });
+                              }}
+                              className={`w-full px-2 py-1 border rounded text-xs bg-surface-container ${
+                                invalidTypeRows.has(idx)
+                                  ? 'border-destructive ring-1 ring-destructive/40'
+                                  : 'border-outline-variant'
+                              }`}
+                              aria-label="Product type"
+                            >
+                              {STOCK_PRODUCT_TYPE_OPTIONS.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </option>
+                              ))}
+                            </select>
                           ) : (
                             <span className="text-[10px] text-on-surface-variant">—</span>
                           )}

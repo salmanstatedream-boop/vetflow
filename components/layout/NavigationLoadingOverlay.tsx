@@ -1,11 +1,25 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import { useNavigationLoadingOptional } from '@/components/layout/NavigationLoadingProvider';
+import { useGlobalLoadingOptional } from '@/components/layout/NavigationLoadingProvider';
+
+const OVERLAY_DELAY_MS = 400;
 
 export default function NavigationLoadingOverlay() {
-  const nav = useNavigationLoadingOptional();
-  if (!nav?.isNavigating) return null;
+  const nav = useGlobalLoadingOptional();
+  const [showOverlay, setShowOverlay] = useState(false);
+
+  useEffect(() => {
+    if (!nav?.isNavigating) {
+      setShowOverlay(false);
+      return;
+    }
+    const timer = setTimeout(() => setShowOverlay(true), OVERLAY_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [nav?.isNavigating]);
+
+  if (!showOverlay) return null;
 
   return (
     <div

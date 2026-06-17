@@ -10,45 +10,84 @@ import {
   type ReactNode,
 } from 'react';
 import { usePathname } from 'next/navigation';
+import TopLoadingBar from '@/components/layout/TopLoadingBar';
 
-interface NavigationLoadingContextValue {
+interface GlobalLoadingContextValue {
+  isLoading: boolean;
   isNavigating: boolean;
+  startLoading: () => void;
+  stopLoading: () => void;
   startNavigation: () => void;
 }
 
-const NavigationLoadingContext = createContext<NavigationLoadingContextValue | null>(null);
+const GlobalLoadingContext = createContext<GlobalLoadingContextValue | null>(null);
 
 export function NavigationLoadingProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const [isNavigating, setIsNavigating] = useState(false);
+  const [loadingCount, setLoadingCount] = useState(0);
   const prevPath = useRef(pathname);
+  const countRef = useRef(0);
+
+  const syncCount = useCallback((next: number) => {
+    countRef.current = Math.max(0, next);
+    setLoadingCount(countRef.current);
+  }, []);
+
+  const startLoading = useCallback(() => {
+    syncCount(countRef.current + 1);
+  }, [syncCount]);
+
+  const stopLoading = useCallback(() => {
+    syncCount(countRef.current - 1);
+  }, [syncCount]);
+
+  const startNavigation = useCallback(() => {
+    startLoading();
+  }, [startLoading]);
 
   useEffect(() => {
     if (pathname !== prevPath.current) {
-      setIsNavigating(false);
+      syncCount(0);
       prevPath.current = pathname;
     }
-  }, [pathname]);
+  }, [pathname, syncCount]);
 
-  const startNavigation = useCallback(() => {
-    setIsNavigating(true);
-  }, []);
+  const isLoading = loadingCount > 0;
 
   return (
-    <NavigationLoadingContext.Provider value={{ isNavigating, startNavigation }}>
+    <GlobalLoadingContext.Provider
+      value={{
+        isLoading,
+        isNavigating: isLoading,
+        startLoading,
+        stopLoading,
+        startNavigation,
+      }}
+    >
+      <TopLoadingBar />
       {children}
-    </NavigationLoadingContext.Provider>
+    </GlobalLoadingContext.Provider>
   );
 }
 
-export function useNavigationLoading() {
-  const ctx = useContext(NavigationLoadingContext);
+export function useGlobalLoading() {
+  const ctx = useContext(GlobalLoadingContext);
   if (!ctx) {
-    throw new Error('useNavigationLoading must be used within NavigationLoadingProvider');
+    throw new Error('useGlobalLoading must be used within NavigationLoadingProvider');
   }
   return ctx;
 }
 
+export function useGlobalLoadingOptional() {
+  return useContext(GlobalLoadingContext);
+}
+
+/** @deprecated Use useGlobalLoading */
+export function useNavigationLoading() {
+  return useGlobalLoading();
+}
+
+/** @deprecated Use useGlobalLoadingOptional */
 export function useNavigationLoadingOptional() {
-  return useContext(NavigationLoadingContext);
+  return useGlobalLoadingOptional();
 }

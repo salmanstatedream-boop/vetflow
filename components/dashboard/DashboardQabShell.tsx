@@ -13,7 +13,7 @@ import type { LiveConsultRow } from '@/components/dashboard/LiveOperationsPanel'
 import type { UserSessionDetails } from '@/lib/services/auth';
 import type { Feature } from '@/lib/auth/features';
 import { useRouter } from 'next/navigation';
-import { useNavigationLoadingOptional } from '@/components/layout/NavigationLoadingProvider';
+import { useGlobalLoadingOptional } from '@/components/layout/NavigationLoadingProvider';
 
 interface Doctor {
   id: string;
@@ -49,7 +49,7 @@ export default function DashboardQabShell({
   showConsultTimer = false,
 }: DashboardQabShellProps) {
   const router = useRouter();
-  const navLoading = useNavigationLoadingOptional();
+  const navLoading = useGlobalLoadingOptional();
   const [activeModal, setActiveModal] = useState<QabModalId | null>(null);
   const [pendingQabId, setPendingQabId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
@@ -63,7 +63,7 @@ export default function DashboardQabShell({
     (item: QabItem) => {
       if (item.launcher === 'page' && item.href) {
         setPendingQabId(item.id);
-        navLoading?.startNavigation();
+        navLoading?.startLoading();
         startTransition(() => {
           router.push(item.href!);
         });

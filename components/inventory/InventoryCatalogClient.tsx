@@ -1,14 +1,14 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import StockAdjustmentForm from '@/components/forms/StockAdjustmentForm';
 import ProductEditModal from '@/components/inventory/ProductEditModal';
 import { deleteProductAction } from '@/lib/services/inventory-actions';
 import { useCurrency } from '@/lib/context/CurrencyContext';
-import { ShieldAlert, Trash2, Loader2 } from 'lucide-react';
+import { ShieldAlert, Trash2, Loader2, Settings } from 'lucide-react';
 import type { UserSessionDetails } from '@/lib/services/auth';
-
 import { PRODUCT_TYPE_OPTIONS } from '@/lib/inventory/product-types';
 
 const TYPE_TAB_LABELS: Record<string, string> = {
@@ -41,8 +41,20 @@ interface ProductRow {
   product_categories: { name: string } | null;
 }
 
+export interface OrgServiceRow {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+}
+
+type CatalogRow =
+  | { source: 'product'; product: ProductRow }
+  | { source: 'org_service'; service: OrgServiceRow };
+
 interface InventoryCatalogClientProps {
   products: ProductRow[];
+  orgServices: OrgServiceRow[];
   activeBranchId: string;
   role: UserSessionDetails['role'];
   userId: string;
@@ -62,6 +74,7 @@ function canManageRow(
 
 export default function InventoryCatalogClient({
   products,
+  orgServices,
   activeBranchId,
   role,
   userId,
@@ -73,10 +86,21 @@ export default function InventoryCatalogClient({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const router = useRouter();
 
+  const catalogRows = useMemo((): CatalogRow[] => {
+    const productRows: CatalogRow[] = products.map((p) => ({ source: 'product', product: p }));
+    const serviceRows: CatalogRow[] = orgServices.map((s) => ({ source: 'org_service', service: s }));
+    return [...productRows, ...serviceRows];
+  }, [products, orgServices]);
+
   const filtered = useMemo(() => {
-    if (typeTab === 'all') return products;
-    return products.filter((p) => p.type === typeTab);
-  }, [products, typeTab]);
+    if (typeTab === 'all') return catalogRows;
+    if (typeTab === 'service') {
+      return catalogRows.filter(
+        (r) => r.source === 'org_service' || (r.source === 'product' && r.product.type === 'service')
+      );
+    }
+    return catalogRows.filter((r) => r.source === 'product' && r.product.type === typeTab);
+  }, [catalogRows, typeTab]);
 
   const handleDelete = async (productId: string, name: string) => {
     if (!confirm(`Remove "${name}" from the catalog?`)) return;
@@ -90,7 +114,7 @@ export default function InventoryCatalogClient({
     }
   };
 
-  if (products.length === 0) return null;
+  if (catalogRows.length === 0) return null;
 
   return (
     <div className="space-y-4">
@@ -123,96 +147,147 @@ export default function InventoryCatalogClient({
             </tr>
           </thead>
           <tbody className="divide-y divide-border/30 text-xs">
-            {filtered.map((prod) => {
-              const isLowStock =
-                prod.type !== 'service' && prod.stock_quantity <= prod.reorder_level;
-              const manageable = canManageRow(role, userId, prod.created_by);
-
-              return (
-                <tr key={prod.id} className="hover:bg-surface-container/10 transition-colors">
-                  <td className="px-6 py-4">
-                    <span className="font-bold text-on-surface block">{prod.name}</span>
-                    <span className="text-[10px] text-on-surface-variant/50 block">
-                      {prod.brand && `Brand: ${prod.brand}`} {prod.sku && `• SKU: ${prod.sku}`}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 capitalize text-on-surface-variant/70">
-                    <span className="font-semibold text-on-surface">{prod.type}</span>
-                    {prod.product_categories && (
-                      <span className="text-on-surface-variant/60 block text-[10px]">
-                        Category: {prod.product_categories.name}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 space-y-0.5 text-on-surface-variant/80 font-medium">
-                    <div>Sell: {formatCurrency(Number(prod.selling_price))}</div>
-                    <div className="text-[10px] text-on-surface-variant/50">
-                      Buy: {formatCurrency(Number(prod.purchase_price))}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    {prod.type === 'service' ? (
-                      <span className="text-on-surface-variant/50 italic font-semibold">
-                        Virtual Service
-                      </span>
-                    ) : (
-                      <div className="space-y-1">
-                        <span
-                          className={`font-bold ${isLowStock ? 'text-destructive' : 'text-on-surface'}`}
-                        >
-                          {prod.stock_quantity} {prod.unit || 'pcs'}
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-8 text-center text-on-surface-variant/60 italic">
+                  No items in this category.
+                </td>
+              </tr>
+            ) : (
+              filtered.map((row) => {
+                if (row.source === 'org_service') {
+                  const svc = row.service;
+                  return (
+                    <tr key={`svc-${svc.id}`} className="hover:bg-surface-container/10 transition-colors">
+                      <td className="px-6 py-4">
+                        <span className="font-bold text-on-surface block">{svc.name}</span>
+                        {svc.description && (
+                          <span className="text-[10px] text-on-surface-variant/50 block line-clamp-1">
+                            {svc.description}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="font-semibold text-on-surface capitalize">service</span>
+                        <span className="inline-flex ml-1.5 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-violet-500/10 text-violet-400 border border-violet-500/20">
+                          Org service
                         </span>
-                        {isLowStock && (
-                          <span className="flex items-center gap-1 text-[9px] font-bold text-destructive bg-destructive/5 border border-destructive/20 px-2 py-0.5 rounded-lg w-max">
-                            <ShieldAlert className="w-3 h-3" />
-                            Low Stock (Limit {prod.reorder_level})
+                      </td>
+                      <td className="px-6 py-4 font-medium text-on-surface-variant/80">
+                        {formatCurrency(Number(svc.price))}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-on-surface-variant/50 italic font-semibold">No stock</span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Link
+                          href="/dashboard/settings"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold border border-outline-variant text-on-surface-variant hover:text-primary hover:border-primary/30 transition-colors"
+                        >
+                          <Settings className="w-3 h-3" />
+                          Edit in Settings
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                }
+
+                const prod = row.product;
+                const isLowStock =
+                  prod.type !== 'service' && prod.stock_quantity <= prod.reorder_level;
+                const manageable = canManageRow(role, userId, prod.created_by);
+
+                return (
+                  <tr key={prod.id} className="hover:bg-surface-container/10 transition-colors">
+                    <td className="px-6 py-4">
+                      <span className="font-bold text-on-surface block">{prod.name}</span>
+                      <span className="text-[10px] text-on-surface-variant/50 block">
+                        {prod.brand && `Brand: ${prod.brand}`} {prod.sku && `• SKU: ${prod.sku}`}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 capitalize text-on-surface-variant/70">
+                      <span className="font-semibold text-on-surface">{prod.type}</span>
+                      {prod.type === 'service' && (
+                        <span className="inline-flex ml-1.5 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-primary/10 text-primary border border-primary/20">
+                          Catalog
+                        </span>
+                      )}
+                      {prod.product_categories && (
+                        <span className="text-on-surface-variant/60 block text-[10px]">
+                          Category: {prod.product_categories.name}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 space-y-0.5 text-on-surface-variant/80 font-medium">
+                      <div>Sell: {formatCurrency(Number(prod.selling_price))}</div>
+                      <div className="text-[10px] text-on-surface-variant/50">
+                        Buy: {formatCurrency(Number(prod.purchase_price))}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {prod.type === 'service' ? (
+                        <span className="text-on-surface-variant/50 italic font-semibold">
+                          Virtual Service
+                        </span>
+                      ) : (
+                        <div className="space-y-1">
+                          <span
+                            className={`font-bold ${isLowStock ? 'text-destructive' : 'text-on-surface'}`}
+                          >
+                            {prod.stock_quantity} {prod.unit || 'pcs'}
+                          </span>
+                          {isLowStock && (
+                            <span className="flex items-center gap-1 text-[9px] font-bold text-destructive bg-destructive/5 border border-destructive/20 px-2 py-0.5 rounded-lg w-max">
+                              <ShieldAlert className="w-3 h-3" />
+                              Low Stock (Limit {prod.reorder_level})
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="inline-flex flex-col items-end gap-2">
+                        {manageable && (
+                          <div className="flex items-center gap-2">
+                            <ProductEditModal
+                              product={prod}
+                              categories={categories}
+                              branches={branches}
+                              activeBranchId={activeBranchId}
+                            />
+                            <button
+                              type="button"
+                              disabled={deletingId !== null}
+                              onClick={() => handleDelete(prod.id, prod.name)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold border border-destructive/30 text-destructive hover:bg-destructive/5 transition-colors disabled:opacity-50"
+                            >
+                              {deletingId === prod.id ? (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                              ) : (
+                                <Trash2 className="w-3 h-3" />
+                              )}
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                        {prod.type !== 'service' ? (
+                          <StockAdjustmentForm
+                            productId={prod.id}
+                            productName={prod.name}
+                            branchId={activeBranchId}
+                            currentStock={prod.stock_quantity}
+                          />
+                        ) : (
+                          <span className="text-[10px] text-on-surface-variant/40 italic">
+                            Billed Service
                           </span>
                         )}
                       </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="inline-flex flex-col items-end gap-2">
-                      {manageable && (
-                        <div className="flex items-center gap-2">
-                          <ProductEditModal
-                            product={prod}
-                            categories={categories}
-                            branches={branches}
-                            activeBranchId={activeBranchId}
-                          />
-                          <button
-                            type="button"
-                            disabled={deletingId !== null}
-                            onClick={() => handleDelete(prod.id, prod.name)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold border border-destructive/30 text-destructive hover:bg-destructive/5 transition-colors disabled:opacity-50"
-                          >
-                            {deletingId === prod.id ? (
-                              <Loader2 className="w-3 h-3 animate-spin" />
-                            ) : (
-                              <Trash2 className="w-3 h-3" />
-                            )}
-                            Delete
-                          </button>
-                        </div>
-                      )}
-                      {prod.type !== 'service' ? (
-                        <StockAdjustmentForm
-                          productId={prod.id}
-                          productName={prod.name}
-                          branchId={activeBranchId}
-                          currentStock={prod.stock_quantity}
-                        />
-                      ) : (
-                        <span className="text-[10px] text-on-surface-variant/40 italic">
-                          Billed Service
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>

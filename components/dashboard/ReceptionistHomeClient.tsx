@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import AppLink from '@/components/layout/AppLink';
 import { useMemo, useState } from 'react';
 import {
   Calendar,
@@ -16,6 +16,7 @@ import {
   UserPlus,
   Printer,
   FileText,
+  ShoppingBag,
 } from 'lucide-react';
 import { useVisibilityPolling } from '@/lib/hooks/useVisibilityPolling';
 import DateRangeQuickFilter from '@/components/dashboard/DateRangeQuickFilter';
@@ -46,12 +47,15 @@ export type VisitRecordRow = {
   id: string;
   invoiceNumber: string;
   visitId: string | null;
+  saleType: 'clinical' | 'retail';
   customerName: string;
   petName: string;
   total: number;
   paymentStatus: string;
   createdAt: string;
 };
+
+type RecordTypeFilter = 'all' | 'clinical' | 'retail';
 
 export interface ReceptionistHomeClientProps {
   todayAppointments: number;
@@ -70,6 +74,7 @@ const WORKFLOW_STEPS = [
   { step: 2, label: 'Book / Check-in', href: '/dashboard/appointments?new=1' },
   { step: 3, label: 'Doctor visit', href: '/dashboard/walk-ins' },
   { step: 4, label: 'Checkout & print', href: '/dashboard/walk-ins' },
+  { step: 5, label: 'Retail sale', href: '/dashboard/sales/new' },
 ];
 
 export default function ReceptionistHomeClient({
@@ -88,10 +93,12 @@ export default function ReceptionistHomeClient({
   const [recordSearch, setRecordSearch] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [recordTypeFilter, setRecordTypeFilter] = useState<RecordTypeFilter>('all');
 
   const filteredRecords = useMemo(() => {
     const q = recordSearch.trim().toLowerCase();
     return visitRecords.filter((r) => {
+      if (recordTypeFilter !== 'all' && r.saleType !== recordTypeFilter) return false;
       if (dateFrom && r.createdAt.slice(0, 10) < dateFrom) return false;
       if (dateTo && r.createdAt.slice(0, 10) > dateTo) return false;
       if (!q) return true;
@@ -101,7 +108,7 @@ export default function ReceptionistHomeClient({
         r.invoiceNumber.toLowerCase().includes(q)
       );
     });
-  }, [visitRecords, recordSearch, dateFrom, dateTo]);
+  }, [visitRecords, recordSearch, dateFrom, dateTo, recordTypeFilter]);
 
   return (
     <div className="space-y-6">
@@ -118,12 +125,12 @@ export default function ReceptionistHomeClient({
             </p>
           </div>
           {checkoutVisits[0] && (
-            <Link
+            <AppLink
               href={`/dashboard/invoices/create/${checkoutVisits[0].id}`}
               className="shrink-0 bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold"
             >
               Start checkout →
-            </Link>
+            </AppLink>
           )}
         </div>
       )}
@@ -159,14 +166,24 @@ export default function ReceptionistHomeClient({
         </div>
       )}
 
-      <Link
-        href="/dashboard/walk-ins?new=1"
-        className="flex items-center justify-center gap-3 w-full py-4 px-6 rounded-2xl bg-primary text-on-primary font-bold text-sm shadow-premium hover:opacity-90 transition-all"
-      >
-        <UserPlus className="w-5 h-5" />
-        Quick walk-in — patient just arrived
-        <ArrowRight className="w-4 h-4 opacity-80" />
-      </Link>
+      <div className="grid sm:grid-cols-2 gap-3">
+        <AppLink
+          href="/dashboard/walk-ins?new=1"
+          className="flex items-center justify-center gap-3 w-full py-4 px-6 rounded-2xl bg-primary text-on-primary font-bold text-sm shadow-premium hover:opacity-90 transition-all"
+        >
+          <UserPlus className="w-5 h-5" />
+          Quick walk-in — patient just arrived
+          <ArrowRight className="w-4 h-4 opacity-80" />
+        </AppLink>
+        <AppLink
+          href="/dashboard/sales/new"
+          className="flex items-center justify-center gap-3 w-full py-4 px-6 rounded-2xl bg-violet-600 text-white font-bold text-sm shadow-premium hover:opacity-90 transition-all"
+        >
+          <ShoppingBag className="w-5 h-5" />
+          Retail sale — products & services
+          <ArrowRight className="w-4 h-4 opacity-80" />
+        </AppLink>
+      </div>
 
       <div className="glass-panel rounded-2xl p-5 border border-outline-variant/40">
         <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider mb-4">
@@ -195,11 +212,27 @@ export default function ReceptionistHomeClient({
       <div className="glass-panel rounded-2xl p-5 border border-outline-variant/40">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider">
-            Visit records — invoices & treatments
+            Sales & visit records
           </h3>
-          <Link href="/dashboard/invoices" className="text-[10px] text-primary font-bold hover:underline">
+          <AppLink href="/dashboard/invoices" className="text-[10px] text-primary font-bold hover:underline">
             Full billing ledger →
-          </Link>
+          </AppLink>
+        </div>
+        <div className="flex flex-wrap gap-2 mb-3">
+          {(['all', 'clinical', 'retail'] as const).map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setRecordTypeFilter(t)}
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold capitalize transition-colors ${
+                recordTypeFilter === t
+                  ? 'bg-primary text-white'
+                  : 'bg-surface-container border border-outline-variant text-on-surface-variant'
+              }`}
+            >
+              {t}
+            </button>
+          ))}
         </div>
         <div className="flex flex-wrap gap-2 mb-3">
           <input
@@ -248,9 +281,18 @@ export default function ReceptionistHomeClient({
                     </td>
                     <td className="py-2.5 pr-3">
                       <span className="font-semibold text-on-surface block">{r.customerName}</span>
-                      <span className="text-[10px] text-on-surface-variant">{r.petName}</span>
+                      <span className="text-[10px] text-on-surface-variant">
+                        {r.saleType === 'retail' ? '—' : r.petName}
+                      </span>
                     </td>
-                    <td className="py-2.5 pr-3 font-mono text-[10px]">{r.invoiceNumber}</td>
+                    <td className="py-2.5 pr-3 font-mono text-[10px]">
+                      {r.invoiceNumber}
+                      {r.saleType === 'retail' && (
+                        <span className="ml-1 inline-flex px-1 py-0.5 rounded text-[8px] font-bold uppercase bg-violet-500/10 text-violet-400 border border-violet-500/20">
+                          Retail
+                        </span>
+                      )}
+                    </td>
                     <td className="py-2.5 pr-3 capitalize">{r.paymentStatus}</td>
                     <td className="py-2.5 text-right">
                       <div className="flex items-center justify-end gap-1">
@@ -290,7 +332,7 @@ export default function ReceptionistHomeClient({
         </h3>
         <div className="flex flex-wrap gap-2">
           {WORKFLOW_STEPS.map((s, i) => (
-            <Link
+            <AppLink
               key={s.step}
               href={s.href}
               className="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-container/50 border border-outline-variant/50 text-xs font-semibold text-on-surface hover:border-primary/40 hover:bg-primary/5 transition-colors"
@@ -302,7 +344,7 @@ export default function ReceptionistHomeClient({
               {i < WORKFLOW_STEPS.length - 1 && (
                 <ArrowRight className="w-3 h-3 text-on-surface-variant/40 hidden sm:block" />
               )}
-            </Link>
+            </AppLink>
           ))}
         </div>
       </div>
@@ -315,7 +357,7 @@ export default function ReceptionistHomeClient({
           isEmpty={upcomingAppointments.length === 0}
         >
           {upcomingAppointments.map((a) => (
-            <Link
+            <AppLink
               key={a.id}
               href="/dashboard/appointments"
               className="block px-4 py-3 hover:bg-surface-container/30 border-b border-outline-variant/20 last:border-0"
@@ -333,13 +375,13 @@ export default function ReceptionistHomeClient({
                 {a.customerName} · <Phone className="w-2.5 h-2.5 inline" /> {a.customerPhone}
               </span>
               <span className="text-[10px] text-primary font-semibold">{a.preferredTime}</span>
-            </Link>
+            </AppLink>
           ))}
         </QueuePanel>
 
         <QueuePanel title="Waiting walk-ins" empty="No patients waiting." href="/dashboard/walk-ins" isEmpty={waitingVisits.length === 0}>
           {waitingVisits.map((v) => (
-            <Link
+            <AppLink
               key={v.id}
               href="/dashboard/walk-ins"
               className="block px-4 py-3 hover:bg-surface-container/30 border-b border-outline-variant/20 last:border-0"
@@ -350,13 +392,13 @@ export default function ReceptionistHomeClient({
               </span>
               <span className="text-[10px] text-on-surface-variant block">{v.customerName}</span>
               <span className="text-[10px] text-on-surface-variant/70 line-clamp-1">{v.reason}</span>
-            </Link>
+            </AppLink>
           ))}
         </QueuePanel>
 
         <QueuePanel title="Ready for checkout" empty="No patients awaiting billing." href="/dashboard/walk-ins" isEmpty={checkoutVisits.length === 0}>
           {checkoutVisits.map((v) => (
-            <Link
+            <AppLink
               key={v.id}
               href={`/dashboard/invoices/create/${v.id}`}
               className="block px-4 py-3 hover:bg-surface-container/30 border-b border-outline-variant/20 last:border-0"
@@ -364,12 +406,13 @@ export default function ReceptionistHomeClient({
               <span className="text-xs font-bold text-on-surface">{v.petName}</span>
               <span className="text-[10px] text-on-surface-variant block">{v.customerName}</span>
               <span className="text-[10px] text-emerald-500 font-bold">Open checkout hub →</span>
-            </Link>
+            </AppLink>
           ))}
         </QueuePanel>
       </div>
 
       <div className="flex flex-wrap gap-2">
+        <QuickChip href="/dashboard/sales/new" icon={ShoppingBag} label="Retail sale" />
         <QuickChip href="/dashboard/walk-ins?new=1" icon={UserPlus} label="Quick walk-in" primary />
         <QuickChip href="/dashboard/customers?focus=phone" icon={Search} label="Search by phone" />
         <QuickChip href="/dashboard/inventory?tab=intake" icon={Layers} label="Stock invoice intake" />
@@ -394,7 +437,7 @@ function GlanceCard({
   highlight?: boolean;
 }) {
   return (
-    <Link
+    <AppLink
       href={href}
       className={`rounded-xl p-3 border transition-colors hover:border-primary/30 ${
         highlight ? 'border-amber-500/30 bg-amber-500/5' : 'border-outline-variant/40 bg-surface-container/30'
@@ -403,7 +446,7 @@ function GlanceCard({
       <Icon className="w-4 h-4 text-primary mb-1" />
       <span className="text-lg font-black text-on-surface block">{value}</span>
       <span className="text-[10px] text-on-surface-variant font-semibold">{label}</span>
-    </Link>
+    </AppLink>
   );
 }
 
@@ -424,9 +467,9 @@ function QueuePanel({
     <div className="glass-panel rounded-2xl border border-outline-variant/40 overflow-hidden">
       <div className="px-4 py-3 border-b border-outline-variant/30 flex items-center justify-between">
         <h4 className="text-[10px] font-bold text-on-surface uppercase tracking-wider">{title}</h4>
-        <Link href={href} className="text-[10px] text-primary font-bold hover:underline">
+        <AppLink href={href} className="text-[10px] text-primary font-bold hover:underline">
           View all
-        </Link>
+        </AppLink>
       </div>
       {!isEmpty ? (
         <div>{children}</div>
@@ -449,7 +492,7 @@ function QuickChip({
   primary?: boolean;
 }) {
   return (
-    <Link
+    <AppLink
       href={href}
       className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors ${
         primary
@@ -459,6 +502,6 @@ function QuickChip({
     >
       <Icon className="w-3.5 h-3.5 text-primary" />
       {label}
-    </Link>
+    </AppLink>
   );
 }

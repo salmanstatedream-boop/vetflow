@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { adjustStockAction } from '@/lib/services/inventory-actions';
+import { useGlobalLoadingOptional } from '@/components/layout/NavigationLoadingProvider';
 import { StockAdjustmentSchema, type StockAdjustmentInput } from '@/lib/validations/schemas';
 import Modal from '@/components/ui/premium/Modal';
 import Button from '@/components/ui/premium/Button';
@@ -27,6 +28,7 @@ export default function StockAdjustmentForm({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const globalLoading = useGlobalLoadingOptional();
 
   const {
     register,
@@ -45,6 +47,7 @@ export default function StockAdjustmentForm({
   const onSubmit = async (data: StockAdjustmentInput) => {
     setIsLoading(true);
     setError(null);
+    globalLoading?.startLoading();
     try {
       const res = await adjustStockAction(data);
       if (res.success) {
@@ -58,6 +61,7 @@ export default function StockAdjustmentForm({
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
       setIsLoading(false);
+      globalLoading?.stopLoading();
     }
   };
 

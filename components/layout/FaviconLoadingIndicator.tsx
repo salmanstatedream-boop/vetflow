@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useNavigationLoadingOptional } from '@/components/layout/NavigationLoadingProvider';
+import { useGlobalLoadingOptional } from '@/components/layout/NavigationLoadingProvider';
 
 const STATIC_ICON = '/icon';
 let spinnerFrame = 0;
@@ -40,7 +40,7 @@ function setFavicon(href: string) {
 }
 
 export default function FaviconLoadingIndicator() {
-  const nav = useNavigationLoadingOptional();
+  const nav = useGlobalLoadingOptional();
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {

@@ -90,6 +90,7 @@ const RECEPTION_QABS: QabItem[] = [
 const DOCTOR_QABS: QabItem[] = [
   { id: 'queue', label: 'Queue', description: 'Today\'s patient queue', icon: ClipboardList, launcher: 'page', href: '/dashboard/doctors', capability: 'clinical_queue' },
   { id: 'appointments', label: 'Appointments', description: 'Schedule & follow-ups', icon: Calendar, launcher: 'page', href: '/dashboard/appointments', capability: 'manage_appointments', feature: 'appointments' },
+  { id: 'prescriptions', label: 'Prescriptions', description: 'Treatment records', icon: FileText, launcher: 'page', href: '/dashboard/prescriptions', capability: 'manage_prescriptions' },
   { id: 'patient', label: 'Pet Patient Profile', description: 'Search patient history', icon: Heart, launcher: 'modal', modalId: 'patient_profile', capability: 'view_patient_history' },
   { id: 'treatment', label: 'Treatment Record', description: 'Today\'s treatments', icon: FileCheck2, launcher: 'modal', modalId: 'treatment_record', capability: 'clinical_queue' },
   { id: 'consultation', label: 'Consultation', description: 'Open clinical queue', icon: BriefcaseMedical, launcher: 'page', href: '/dashboard/doctors', capability: 'clinical_queue' },

@@ -21,6 +21,7 @@ import {
   resendInvoiceEmailAction,
 } from '@/lib/services/billing-actions';
 import { useCurrency } from '@/lib/context/CurrencyContext';
+import { useGlobalLoadingOptional } from '@/components/layout/NavigationLoadingProvider';
 
 export type InvoiceRow = {
   id: string;
@@ -52,6 +53,7 @@ export default function InvoicesListClient({
   initialStatus = 'all',
 }: InvoicesListClientProps) {
   const { formatCurrency } = useCurrency();
+  const globalLoading = useGlobalLoadingOptional();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(initialStatus);
   const [saleTypeFilter, setSaleTypeFilter] = useState<SaleTypeFilter>('all');
   const [search, setSearch] = useState('');
@@ -102,6 +104,8 @@ export default function InvoicesListClient({
     setActingId(invoiceId);
     setMessage(null);
     startTransition(async () => {
+      globalLoading?.startLoading();
+      try {
       const res = await updateInvoicePaymentStatusAction({
         invoiceId,
         paymentMethod: 'cash',
@@ -113,7 +117,10 @@ export default function InvoicesListClient({
       } else {
         setMessage(res.error || 'Failed to mark paid');
       }
+      } finally {
+      globalLoading?.stopLoading();
       setActingId(null);
+      }
     });
   };
 
@@ -121,9 +128,14 @@ export default function InvoicesListClient({
     setActingId(invoiceId);
     setMessage(null);
     startTransition(async () => {
+      globalLoading?.startLoading();
+      try {
       const res = await resendInvoiceEmailAction(invoiceId);
       setMessage(res.success ? 'Receipt email sent.' : res.error || 'Email failed');
+      } finally {
+      globalLoading?.stopLoading();
       setActingId(null);
+      }
     });
   };
 
