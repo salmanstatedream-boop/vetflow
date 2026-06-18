@@ -1,9 +1,15 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown, Check, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  computeFloatingDropdownPosition,
+  floatingDropdownStyle,
+  parseMaxHeightClass,
+  type FloatingDropdownPosition,
+} from '@/lib/ui/floating-dropdown';
 
 export type CreatableOption = { value: string; label: string };
 
@@ -25,6 +31,7 @@ interface CreatableSelectProps {
   size?: 'default' | 'compact';
   listMaxHeightClass?: string;
   searchPlaceholder?: string;
+  preferPlacement?: 'auto' | 'top' | 'bottom';
 }
 
 export default function CreatableSelect({
@@ -45,10 +52,11 @@ export default function CreatableSelect({
   size = 'default',
   listMaxHeightClass,
   searchPlaceholder = 'Search or type new…',
+  preferPlacement = 'auto',
 }: CreatableSelectProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
+  const [pos, setPos] = useState<FloatingDropdownPosition | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -70,13 +78,40 @@ export default function CreatableSelect({
     !options.some((o) => o.label.toLowerCase() === query.trim().toLowerCase());
 
   const isCompact = size === 'compact';
-  const listHeightClass = listMaxHeightClass ?? (isCompact ? 'max-h-72' : 'max-h-56');
+  const preferredListMaxPx = parseMaxHeightClass(
+    listMaxHeightClass ?? (isCompact ? 'max-h-72' : 'max-h-56')
+  );
+  const footerPx = allowCreate && showAddButton ? (isCompact ? 28 : 36) : 0;
+  const searchHeaderPx = isCompact ? 44 : 52;
+
+  const updatePosition = useCallback(() => {
+    if (!triggerRef.current) return;
+    setPos(
+      computeFloatingDropdownPosition(triggerRef.current, {
+        searchHeaderPx,
+        footerPx,
+        preferredListMaxPx,
+        preferPlacement,
+      })
+    );
+  }, [footerPx, preferredListMaxPx, preferPlacement, searchHeaderPx]);
 
   useEffect(() => {
-    if (!open || !triggerRef.current) return;
-    const rect = triggerRef.current.getBoundingClientRect();
-    setPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
-  }, [open, query]);
+    if (!open) {
+      setPos(null);
+      return;
+    }
+    updatePosition();
+    const raf = requestAnimationFrame(updatePosition);
+    const onLayout = () => updatePosition();
+    window.addEventListener('resize', onLayout);
+    window.addEventListener('scroll', onLayout, true);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', onLayout);
+      window.removeEventListener('scroll', onLayout, true);
+    };
+  }, [open, query, updatePosition]);
 
   useEffect(() => {
     if (!open) return;
@@ -153,13 +188,14 @@ export default function CreatableSelect({
       {error && <p className="text-[10px] text-destructive">{error}</p>}
 
       {open &&
+        pos &&
         createPortal(
           <div
             ref={listRef}
-            style={{ position: 'fixed', top: pos.top, left: pos.left, width: pos.width, zIndex: 9999 }}
-            className="rounded-xl border border-outline-variant bg-surface shadow-premium overflow-hidden"
+            style={floatingDropdownStyle(pos)}
+            className="rounded-xl border border-outline-variant bg-surface shadow-premium overflow-hidden flex flex-col"
           >
-            <div className="p-2 border-b border-outline-variant/40">
+            <div className="p-2 border-b border-outline-variant/40 shrink-0">
               <input
                 ref={searchRef}
                 autoFocus
@@ -169,7 +205,10 @@ export default function CreatableSelect({
                 className="w-full px-2 py-1.5 text-xs bg-surface-container/40 border border-outline-variant rounded-lg outline-none focus:border-primary"
               />
             </div>
-            <div className={cn(listHeightClass, 'overflow-y-auto py-1')}>
+            <div
+              className="overflow-y-auto py-1 min-h-0 overscroll-contain"
+              style={{ maxHeight: pos.maxListHeight }}
+            >
               {filtered.map((o) => (
                 <button
                   key={o.value}
@@ -206,7 +245,7 @@ export default function CreatableSelect({
                 type="button"
                 onClick={focusSearch}
                 className={cn(
-                  'w-full flex items-center gap-2 text-primary hover:bg-primary/5 font-semibold border-t border-outline-variant/40',
+                  'w-full flex items-center gap-2 text-primary hover:bg-primary/5 font-semibold border-t border-outline-variant/40 shrink-0',
                   isCompact ? 'px-2 py-1.5 text-[10px]' : 'px-3 py-2 text-xs'
                 )}
               >

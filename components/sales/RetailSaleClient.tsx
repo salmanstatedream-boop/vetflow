@@ -393,6 +393,7 @@ export default function RetailSaleClient({
             showAddButton={false}
             searchPlaceholder="Search catalog…"
             listMaxHeightClass="max-h-72"
+            preferPlacement="top"
             value={selectedCatalogId}
             onChange={setSelectedCatalogId}
             options={[
