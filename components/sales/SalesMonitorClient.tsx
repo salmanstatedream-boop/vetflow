@@ -10,6 +10,11 @@ import {
   type PaymentFilter,
   type PaymentMethod,
 } from '@/lib/billing/payment-method';
+import {
+  addDaysToYmd,
+  getTodayYmdInTimezone,
+  toLocalDateKey,
+} from '@/lib/utils/timezones';
 import { DollarSign, ShoppingBag, TrendingUp, Printer } from 'lucide-react';
 
 export type RetailSaleRow = {
@@ -19,22 +24,19 @@ export type RetailSaleRow = {
   customerName: string;
   total: number;
   itemSummary: string;
+  itemLines: { name: string; quantity: number }[];
   soldByName: string;
   paymentMethods: PaymentMethod[];
 };
 
 interface SalesMonitorClientProps {
-  todayRevenue: number;
-  todayCount: number;
-  topProducts: { name: string; qty: number }[];
   sales: RetailSaleRow[];
+  clinicTimezone: string;
 }
 
 export default function SalesMonitorClient({
-  todayRevenue,
-  todayCount,
-  topProducts,
   sales,
+  clinicTimezone,
 }: SalesMonitorClientProps) {
   const { formatCurrency } = useCurrency();
   const [dateFrom, setDateFrom] = useState('');
@@ -42,10 +44,16 @@ export default function SalesMonitorClient({
   const [search, setSearch] = useState('');
   const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>('all');
 
+  const todayYmd = useMemo(() => getTodayYmdInTimezone(clinicTimezone), [clinicTimezone]);
+  const thirtyDaysAgoYmd = useMemo(
+    () => addDaysToYmd(todayYmd, -30),
+    [todayYmd]
+  );
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return sales.filter((s) => {
-      const d = s.createdAt.slice(0, 10);
+      const d = toLocalDateKey(s.createdAt, clinicTimezone);
       if (dateFrom && d < dateFrom) return false;
       if (dateTo && d > dateTo) return false;
       if (!matchesPaymentFilter(paymentFilter, s.paymentMethods)) return false;
@@ -56,7 +64,38 @@ export default function SalesMonitorClient({
         s.itemSummary.toLowerCase().includes(q)
       );
     });
-  }, [sales, dateFrom, dateTo, search, paymentFilter]);
+  }, [sales, dateFrom, dateTo, search, paymentFilter, clinicTimezone]);
+
+  const todaySales = useMemo(
+    () => sales.filter((s) => toLocalDateKey(s.createdAt, clinicTimezone) === todayYmd),
+    [sales, todayYmd, clinicTimezone]
+  );
+
+  const todayRevenue = useMemo(
+    () => todaySales.reduce((sum, s) => sum + s.total, 0),
+    [todaySales]
+  );
+
+  const topProducts = useMemo(() => {
+    const productQty = new Map<string, number>();
+    for (const sale of sales) {
+      if (toLocalDateKey(sale.createdAt, clinicTimezone) < thirtyDaysAgoYmd) continue;
+      for (const item of sale.itemLines) {
+        productQty.set(item.name, (productQty.get(item.name) || 0) + item.quantity);
+      }
+    }
+    return [...productQty.entries()]
+      .map(([name, qty]) => ({ name, qty }))
+      .sort((a, b) => b.qty - a.qty)
+      .slice(0, 5);
+  }, [sales, thirtyDaysAgoYmd, clinicTimezone]);
+
+  const filteredRevenue = useMemo(
+    () => filtered.reduce((sum, s) => sum + s.total, 0),
+    [filtered]
+  );
+
+  const usingDateFilter = Boolean(dateFrom || dateTo);
 
   return (
     <div className="space-y-6">
@@ -64,16 +103,29 @@ export default function SalesMonitorClient({
         <div className="glass-panel rounded-2xl border border-outline-variant/40 p-5">
           <div className="flex items-center gap-2 text-on-surface-variant mb-2">
             <DollarSign className="w-4 h-4 text-primary" />
-            <span className="text-[10px] font-bold uppercase">Today&apos;s retail revenue</span>
+            <span className="text-[10px] font-bold uppercase">
+              {usingDateFilter ? 'Filtered retail revenue' : "Today's retail revenue"}
+            </span>
           </div>
-          <p className="text-2xl font-black text-on-surface">{formatCurrency(todayRevenue)}</p>
+          <p className="text-2xl font-black text-on-surface">
+            {formatCurrency(usingDateFilter ? filteredRevenue : todayRevenue)}
+          </p>
+          {usingDateFilter && (
+            <p className="text-[10px] text-on-surface-variant mt-1">
+              {filtered.length} transaction{filtered.length === 1 ? '' : 's'} in range
+            </p>
+          )}
         </div>
         <div className="glass-panel rounded-2xl border border-outline-variant/40 p-5">
           <div className="flex items-center gap-2 text-on-surface-variant mb-2">
             <ShoppingBag className="w-4 h-4 text-primary" />
-            <span className="text-[10px] font-bold uppercase">Transactions today</span>
+            <span className="text-[10px] font-bold uppercase">
+              {usingDateFilter ? 'Transactions in range' : 'Transactions today'}
+            </span>
           </div>
-          <p className="text-2xl font-black text-on-surface">{todayCount}</p>
+          <p className="text-2xl font-black text-on-surface">
+            {usingDateFilter ? filtered.length : todaySales.length}
+          </p>
         </div>
         <div className="glass-panel rounded-2xl border border-outline-variant/40 p-5">
           <div className="flex items-center gap-2 text-on-surface-variant mb-2">
@@ -84,10 +136,10 @@ export default function SalesMonitorClient({
             <p className="text-xs text-on-surface-variant/60 italic">No data yet</p>
           ) : (
             <ul className="text-xs space-y-1">
-              {topProducts.slice(0, 3).map((p) => (
-                <li key={p.name} className="flex justify-between">
+              {topProducts.slice(0, 5).map((p) => (
+                <li key={p.name} className="flex justify-between gap-2">
                   <span className="truncate">{p.name}</span>
-                  <span className="font-bold">{p.qty}</span>
+                  <span className="font-bold shrink-0">{p.qty}</span>
                 </li>
               ))}
             </ul>
@@ -112,16 +164,40 @@ export default function SalesMonitorClient({
         ))}
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
         <input
           type="search"
           placeholder="Search customer, invoice #…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 px-3 py-2 border border-outline-variant rounded-xl text-xs"
+          className="flex-1 min-w-[200px] px-3 py-2 border border-outline-variant rounded-xl text-xs"
         />
-        <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="px-3 py-2 border rounded-xl text-xs" />
-        <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="px-3 py-2 border rounded-xl text-xs" />
+        <input
+          type="date"
+          value={dateFrom}
+          onChange={(e) => setDateFrom(e.target.value)}
+          className="px-3 py-2 border border-outline-variant rounded-xl text-xs"
+          title="From date"
+        />
+        <input
+          type="date"
+          value={dateTo}
+          onChange={(e) => setDateTo(e.target.value)}
+          className="px-3 py-2 border border-outline-variant rounded-xl text-xs"
+          title="To date"
+        />
+        {(dateFrom || dateTo) && (
+          <button
+            type="button"
+            onClick={() => {
+              setDateFrom('');
+              setDateTo('');
+            }}
+            className="px-3 py-2 rounded-xl text-xs font-bold border border-outline-variant text-on-surface-variant hover:text-on-surface"
+          >
+            Clear dates
+          </button>
+        )}
         <Link
           href="/dashboard/sales/new"
           className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold text-center"
@@ -155,7 +231,7 @@ export default function SalesMonitorClient({
               filtered.map((s) => (
                 <tr key={s.id} className="hover:bg-surface-container/20">
                   <td className="px-5 py-3 text-on-surface-variant">
-                    {new Date(s.createdAt).toLocaleString()}
+                    {new Date(s.createdAt).toLocaleString(undefined, { timeZone: clinicTimezone })}
                   </td>
                   <td className="px-5 py-3 font-mono font-bold">{s.invoiceNumber}</td>
                   <td className="px-5 py-3">{s.customerName}</td>

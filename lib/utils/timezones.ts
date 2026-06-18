@@ -50,3 +50,28 @@ export function getClinicTimezoneShortLabel(value: string): string {
   if (dash >= 0) return full.slice(dash + 3);
   return full;
 }
+
+/** Calendar date YYYY-MM-DD for an instant in a given IANA timezone. */
+export function toLocalDateKey(iso: string, timeZone: string): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date(iso));
+}
+
+/** Today's calendar date in a clinic timezone. */
+export function getTodayYmdInTimezone(timeZone: string): string {
+  return toLocalDateKey(new Date().toISOString(), timeZone);
+}
+
+/** Add calendar days to a YYYY-MM-DD string (timezone-neutral calendar math). */
+export function addDaysToYmd(ymd: string, days: number): string {
+  const [y, m, d] = ymd.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d + days, 12, 0, 0));
+  const yy = dt.getUTCFullYear();
+  const mm = String(dt.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(dt.getUTCDate()).padStart(2, '0');
+  return `${yy}-${mm}-${dd}`;
+}

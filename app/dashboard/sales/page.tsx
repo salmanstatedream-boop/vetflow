@@ -7,6 +7,11 @@ import DeniedState from '@/components/ui/premium/DeniedState';
 import PageHeader from '@/components/ui/premium/PageHeader';
 import SalesMonitorClient from '@/components/sales/SalesMonitorClient';
 import { getInvoicePaymentMethods } from '@/lib/billing/payment-method';
+import {
+  addDaysToYmd,
+  getTodayYmdInTimezone,
+  normalizeClinicTimezone,
+} from '@/lib/utils/timezones';
 import { BarChart3 } from 'lucide-react';
 
 export const metadata = {
@@ -46,10 +51,17 @@ export default async function SalesMonitorPage() {
   }
 
   const supabase = await createClient();
-  const today = new Date().toISOString().slice(0, 10);
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  const since = thirtyDaysAgo.toISOString().slice(0, 10);
+
+  const { data: appSettings } = await supabase
+    .from('app_settings')
+    .select('timezone')
+    .eq('organization_id', ctx.organizationId!)
+    .maybeSingle();
+
+  const clinicTimezone = normalizeClinicTimezone(appSettings?.timezone);
+  const todayYmd = getTodayYmdInTimezone(clinicTimezone);
+  const sinceYmd = addDaysToYmd(todayYmd, -95);
+  const sinceIso = new Date(`${sinceYmd}T00:00:00`).toISOString();
 
   const { data: retailInvoices } = await supabase
     .from('invoices')
@@ -65,9 +77,8 @@ export default async function SalesMonitorPage() {
     `)
     .eq('branch_id', activeBranchId)
     .eq('sale_type', 'retail')
-    .gte('created_at', `${since}T00:00:00`)
-    .order('created_at', { ascending: false })
-    .limit(200);
+    .gte('created_at', sinceIso)
+    .order('created_at', { ascending: false });
 
   const creatorIds = [
     ...new Set(
@@ -87,26 +98,15 @@ export default async function SalesMonitorPage() {
     }
   }
 
-  const todaySales = (retailInvoices || []).filter((i) => i.created_at.slice(0, 10) === today);
-  const todayRevenue = todaySales.reduce((s, i) => s + Number(i.total), 0);
-
-  const productQty = new Map<string, number>();
-  for (const inv of retailInvoices || []) {
-    const items = inv.invoice_items as { name: string; quantity: number }[] | null;
-    for (const item of items || []) {
-      productQty.set(item.name, (productQty.get(item.name) || 0) + item.quantity);
-    }
-  }
-  const topProducts = [...productQty.entries()]
-    .map(([name, qty]) => ({ name, qty }))
-    .sort((a, b) => b.qty - a.qty)
-    .slice(0, 5);
-
   const sales = (retailInvoices || []).map((inv) => {
     const cust = inv.customers as { first_name?: string; last_name?: string } | null;
     const items = inv.invoice_items as { name: string; quantity: number }[] | null;
     const payments = inv.payments as { payment_method: string; created_at: string }[] | null;
-    const itemSummary = (items || []).map((i) => `${i.name} x${i.quantity}`).join(', ');
+    const itemLines = (items || []).map((i) => ({
+      name: i.name,
+      quantity: Number(i.quantity) || 0,
+    }));
+    const itemSummary = itemLines.map((i) => `${i.name} x${i.quantity}`).join(', ');
     return {
       id: inv.id,
       invoiceNumber: inv.invoice_number,
@@ -114,6 +114,7 @@ export default async function SalesMonitorPage() {
       customerName: cust ? `${cust.first_name} ${cust.last_name}`.trim() : '—',
       total: Number(inv.total),
       itemSummary: itemSummary || '—',
+      itemLines,
       soldByName: inv.created_by ? creatorMap.get(inv.created_by as string) || '—' : '—',
       paymentMethods: getInvoicePaymentMethods(payments),
     };
@@ -126,12 +127,7 @@ export default async function SalesMonitorPage() {
         description="Track counter sales, revenue, and top-selling products."
         icon={BarChart3}
       />
-      <SalesMonitorClient
-        todayRevenue={todayRevenue}
-        todayCount={todaySales.length}
-        topProducts={topProducts}
-        sales={sales}
-      />
+      <SalesMonitorClient sales={sales} clinicTimezone={clinicTimezone} />
     </div>
   );
 }

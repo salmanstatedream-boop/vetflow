@@ -81,6 +81,18 @@ function emptyNoteForm(visit: PatientVisitRow) {
   };
 }
 
+const DOC_UPLOAD_CATEGORIES = [
+  { value: 'other', label: 'General / other' },
+  { value: 'lab_result', label: 'Lab result' },
+  { value: 'imaging', label: 'Imaging' },
+  { value: 'xray', label: 'X-ray' },
+  { value: 'prescription', label: 'Prescription' },
+  { value: 'discharge', label: 'Discharge summary' },
+  { value: 'vaccine', label: 'Vaccine record' },
+  { value: 'consent', label: 'Consent form' },
+  { value: 'referral', label: 'Referral' },
+] as const;
+
 export default function PetMedicalProfileClient({
   profile,
   variant = 'overlay',
@@ -104,6 +116,7 @@ export default function PetMedicalProfileClient({
   const [editForm, setEditForm] = useState(emptyNoteForm(profile.visits[0] ?? ({} as PatientVisitRow)));
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadVisitId, setUploadVisitId] = useState(profile.visits[0]?.id ?? '');
+  const [uploadDocCategory, setUploadDocCategory] = useState('other');
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [deletingDoc, setDeletingDoc] = useState<string | null>(null);
   const [editingCare, setEditingCare] = useState(false);
@@ -176,7 +189,7 @@ export default function PetMedicalProfileClient({
     fd.append('file', file);
     fd.append('visitId', uploadVisitId);
     fd.append('patientId', profile.petId);
-    fd.append('category', 'medical_record');
+    fd.append('category', uploadDocCategory);
     const res = await uploadVisitDocumentAction(fd);
     setUploadingDoc(false);
     e.target.value = '';
@@ -508,6 +521,15 @@ export default function PetMedicalProfileClient({
                     value={uploadVisitId}
                     onChange={setUploadVisitId}
                     options={visitOptions}
+                  />
+                  <Select
+                    label="Document category"
+                    value={uploadDocCategory}
+                    onChange={setUploadDocCategory}
+                    options={DOC_UPLOAD_CATEGORIES.map((c) => ({
+                      value: c.value,
+                      label: c.label,
+                    }))}
                   />
                   <input
                     ref={docInputRef}

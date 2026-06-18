@@ -13,6 +13,17 @@ export type HealthWeightPoint = {
   visitId?: string;
 };
 
+export type HealthMetricPoint = {
+  date: string;
+  visitId: string;
+  weightKg: number | null;
+  bodyConditionScore: number | null;
+  temperatureC: number | null;
+  heartRateBpm: number | null;
+  respiratoryRate: number | null;
+  ageYears: number | null;
+};
+
 export type HealthEventMarker = {
   date: string;
   type: HealthEventType;
@@ -22,12 +33,27 @@ export type HealthEventMarker = {
 
 export type HealthTimelineData = {
   weightPoints: HealthWeightPoint[];
+  metricPoints: HealthMetricPoint[];
   events: HealthEventMarker[];
 };
 
 function matchesKeyword(text: string, keywords: string[]): boolean {
   const lower = text.toLowerCase();
   return keywords.some((k) => lower.includes(k));
+}
+
+/** Pet age in fractional years at a visit date. */
+export function computeAgeYearsAtDate(
+  dateOfBirth: string | null | undefined,
+  atIso: string
+): number | null {
+  if (!dateOfBirth) return null;
+  const dob = new Date(`${dateOfBirth.slice(0, 10)}T12:00:00`);
+  const at = new Date(atIso);
+  if (Number.isNaN(dob.getTime()) || Number.isNaN(at.getTime())) return null;
+  const ms = at.getTime() - dob.getTime();
+  if (ms < 0) return null;
+  return Math.round((ms / (365.25 * 24 * 60 * 60 * 1000)) * 10) / 10;
 }
 
 function classifyVisitEvents(visit: PatientVisitRow): HealthEventMarker[] {
@@ -98,8 +124,15 @@ function classifyVisitEvents(visit: PatientVisitRow): HealthEventMarker[] {
   return markers;
 }
 
+function numOrNull(value: unknown): number | null {
+  if (value == null || value === '') return null;
+  const n = Number(value);
+  return Number.isNaN(n) ? null : n;
+}
+
 export function buildHealthTimeline(profile: PatientMedicalProfileData): HealthTimelineData {
   const weightPoints: HealthWeightPoint[] = [];
+  const metricPoints: HealthMetricPoint[] = [];
   const events: HealthEventMarker[] = [];
 
   const sortedVisits = [...profile.visits].sort((a, b) => {
@@ -111,11 +144,39 @@ export function buildHealthTimeline(profile: PatientMedicalProfileData): HealthT
   for (const visit of sortedVisits) {
     events.push(...classifyVisitEvents(visit));
     const date = visit.checked_in_at || visit.completed_at;
-    const weight = visit.notes?.weight_kg;
-    if (date && weight != null && Number(weight) > 0) {
+    if (!date) continue;
+
+    const note = visit.notes;
+    const weight = numOrNull(note?.weight_kg);
+    const bcs = numOrNull(note?.body_condition_score);
+    const temp = numOrNull(note?.temperature_c);
+    const hr = numOrNull(note?.heart_rate_bpm);
+    const rr = numOrNull(note?.respiratory_rate);
+
+    const hasMetric =
+      (weight != null && weight > 0) ||
+      (bcs != null && bcs >= 1) ||
+      temp != null ||
+      hr != null ||
+      rr != null;
+
+    if (hasMetric) {
+      metricPoints.push({
+        date,
+        visitId: visit.id,
+        weightKg: weight != null && weight > 0 ? weight : null,
+        bodyConditionScore: bcs != null && bcs >= 1 && bcs <= 9 ? bcs : null,
+        temperatureC: temp,
+        heartRateBpm: hr,
+        respiratoryRate: rr,
+        ageYears: computeAgeYearsAtDate(profile.dateOfBirth, date),
+      });
+    }
+
+    if (weight != null && weight > 0) {
       weightPoints.push({
         date,
-        weightKg: Number(weight),
+        weightKg: weight,
         visitId: visit.id,
       });
     }
@@ -134,11 +195,41 @@ export function buildHealthTimeline(profile: PatientMedicalProfileData): HealthT
         date: earliest,
         weightKg: profile.weightKg,
       });
+      const dateKey = earliest.slice(0, 10);
+      const existing = metricPoints.find((m) => m.date.slice(0, 10) === dateKey);
+      if (existing) {
+        existing.weightKg = profile.weightKg;
+      } else {
+        metricPoints.unshift({
+          date: earliest,
+          visitId: 'profile',
+          weightKg: profile.weightKg,
+          bodyConditionScore:
+            profile.bodyConditionScore != null ? profile.bodyConditionScore : null,
+          temperatureC: null,
+          heartRateBpm: null,
+          respiratoryRate: null,
+          ageYears: computeAgeYearsAtDate(profile.dateOfBirth, earliest),
+        });
+      }
+    }
+  }
+
+  if (profile.bodyConditionScore != null && profile.bodyConditionScore >= 1) {
+    const earliest =
+      metricPoints[0]?.date ||
+      sortedVisits[0]?.checked_in_at ||
+      new Date().toISOString();
+    const dateKey = earliest.slice(0, 10);
+    const row = metricPoints.find((m) => m.date.slice(0, 10) === dateKey);
+    if (row && row.bodyConditionScore == null) {
+      row.bodyConditionScore = profile.bodyConditionScore;
     }
   }
 
   return {
     weightPoints: weightPoints.sort((a, b) => a.date.localeCompare(b.date)),
+    metricPoints: metricPoints.sort((a, b) => a.date.localeCompare(b.date)),
     events: events.sort((a, b) => a.date.localeCompare(b.date)),
   };
 }
@@ -158,3 +249,28 @@ export const HEALTH_EVENT_LABELS: Record<HealthEventType, string> = {
   surgery: 'Surgery',
   treatment: 'Treatment',
 };
+
+export type HealthChartMetric =
+  | 'weight'
+  | 'bodyCondition'
+  | 'temperature'
+  | 'heartRate'
+  | 'respiration'
+  | 'ageWeight';
+
+export const HEALTH_CHART_METRICS: {
+  id: HealthChartMetric;
+  label: string;
+  unit: string;
+  color: string;
+  field: keyof Pick<
+    HealthMetricPoint,
+    'weightKg' | 'bodyConditionScore' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRate'
+  >;
+}[] = [
+  { id: 'weight', label: 'Weight', unit: 'kg', color: '#74f5ff', field: 'weightKg' },
+  { id: 'bodyCondition', label: 'Body condition', unit: '/9', color: '#a78bfa', field: 'bodyConditionScore' },
+  { id: 'temperature', label: 'Temperature', unit: '°C', color: '#f97316', field: 'temperatureC' },
+  { id: 'heartRate', label: 'Heart rate', unit: 'bpm', color: '#ef4444', field: 'heartRateBpm' },
+  { id: 'respiration', label: 'Respiration', unit: 'rpm', color: '#22c55e', field: 'respiratoryRate' },
+];
