@@ -50,6 +50,7 @@ interface Props {
   labOrders: LabOrder[];
   documents: DocumentItem[];
   previousDocuments?: DocumentItem[];
+  variant?: 'default' | 'sidebar';
 }
 
 const DOC_CATEGORIES = [
@@ -217,6 +218,7 @@ export default function ConsultationLabsDocsPanel({
   labOrders,
   documents: initialDocuments,
   previousDocuments = [],
+  variant = 'default',
 }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -373,9 +375,12 @@ export default function ConsultationLabsDocsPanel({
   };
 
   const displayDocuments = localDocuments.length >= initialDocuments.length ? localDocuments : initialDocuments;
+  const isSidebar = variant === 'sidebar';
+  const panelClass = isSidebar ? 'p-4 space-y-3' : 'p-6 space-y-4';
+  const gridClass = isSidebar ? 'grid grid-cols-1 gap-2' : 'grid sm:grid-cols-12 gap-3 items-end';
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-4 ${isSidebar ? 'text-left' : 'space-y-6'}`}>
       {error && (
         <div className="p-3 bg-destructive/5 border border-destructive/20 text-destructive text-xs rounded-xl">
           {error}
@@ -387,14 +392,14 @@ export default function ConsultationLabsDocsPanel({
         </div>
       )}
 
-      <div className="glass-panel rounded-2xl border border-outline-variant/40 p-6 shadow-premium space-y-4">
-        <h3 className="text-sm font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5 border-b border-outline-variant/30 pb-4">
+      <div className={`glass-panel rounded-2xl border border-outline-variant/40 shadow-premium ${panelClass}`}>
+        <h3 className={`text-sm font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5 border-b border-outline-variant/30 ${isSidebar ? 'pb-2 text-xs' : 'pb-4'}`}>
           <FlaskConical className="w-4 h-4 text-primary" />
           Lab tests
         </h3>
 
-        <div className="grid sm:grid-cols-12 gap-3 items-end">
-          <div className="sm:col-span-4">
+        <div className={gridClass}>
+          <div className={isSidebar ? '' : 'sm:col-span-4'}>
             <label className="block text-[9px] font-bold text-on-surface-variant/40 uppercase mb-1">
               From catalog
             </label>
@@ -411,7 +416,7 @@ export default function ConsultationLabsDocsPanel({
               ))}
             </select>
           </div>
-          <div className="sm:col-span-4">
+          <div className={isSidebar ? '' : 'sm:col-span-4'}>
             <label className="block text-[9px] font-bold text-on-surface-variant/40 uppercase mb-1">
               Test name
             </label>
@@ -422,7 +427,7 @@ export default function ConsultationLabsDocsPanel({
               className="w-full px-2.5 py-1.5 glass-panel border border-outline-variant rounded-lg text-[11px] text-on-surface outline-none"
             />
           </div>
-          <div className="sm:col-span-3">
+          <div className={isSidebar ? '' : 'sm:col-span-3'}>
             <label className="block text-[9px] font-bold text-on-surface-variant/40 uppercase mb-1">
               Notes
             </label>
@@ -433,12 +438,12 @@ export default function ConsultationLabsDocsPanel({
               className="w-full px-2.5 py-1.5 glass-panel border border-outline-variant rounded-lg text-[11px] text-on-surface outline-none"
             />
           </div>
-          <div className="sm:col-span-1">
+          <div className={isSidebar ? '' : 'sm:col-span-1'}>
             <button
               type="button"
               onClick={submitLabOrder}
               disabled={orderingLab}
-              className="w-full inline-flex items-center justify-center gap-1 text-[10px] font-bold text-white bg-primary px-2 py-2 rounded-lg hover:opacity-90 transition-all disabled:opacity-60"
+              className={`w-full inline-flex items-center justify-center gap-1 text-[10px] font-bold text-white bg-primary px-2 rounded-lg hover:opacity-90 transition-all disabled:opacity-60 ${isSidebar ? 'py-2.5' : 'py-2'}`}
             >
               {orderingLab ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
             </button>
@@ -516,14 +521,14 @@ export default function ConsultationLabsDocsPanel({
         )}
       </div>
 
-      <div className="glass-panel rounded-2xl border border-outline-variant/40 p-6 shadow-premium space-y-4">
-        <h3 className="text-sm font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5 border-b border-outline-variant/30 pb-4">
+      <div className={`glass-panel rounded-2xl border border-outline-variant/40 shadow-premium ${panelClass}`}>
+        <h3 className={`text-sm font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5 border-b border-outline-variant/30 ${isSidebar ? 'pb-2 text-xs' : 'pb-4'}`}>
           <Paperclip className="w-4 h-4 text-primary" />
           Medical documents
         </h3>
 
-        <div className="grid sm:grid-cols-12 gap-3 items-end">
-          <div className="sm:col-span-4">
+        <div className={gridClass}>
+          <div className={isSidebar ? '' : 'sm:col-span-4'}>
             <label className="block text-[9px] font-bold text-on-surface-variant/40 uppercase mb-1">
               File (PDF/image, max 15MB)
             </label>
@@ -534,7 +539,7 @@ export default function ConsultationLabsDocsPanel({
               className="w-full text-[10px] text-on-surface file:mr-2 file:py-1.5 file:px-2 file:rounded-lg file:border-0 file:bg-primary/10 file:text-primary file:font-bold"
             />
           </div>
-          <div className="sm:col-span-3">
+          <div className={isSidebar ? '' : 'sm:col-span-3'}>
             <label className="block text-[9px] font-bold text-on-surface-variant/40 uppercase mb-1">
               Category
             </label>
@@ -550,7 +555,7 @@ export default function ConsultationLabsDocsPanel({
               ))}
             </select>
           </div>
-          <div className="sm:col-span-3">
+          <div className={isSidebar ? '' : 'sm:col-span-3'}>
             <label className="block text-[9px] font-bold text-on-surface-variant/40 uppercase mb-1">
               Description
             </label>
@@ -561,12 +566,12 @@ export default function ConsultationLabsDocsPanel({
               className="w-full px-2.5 py-1.5 glass-panel border border-outline-variant rounded-lg text-[11px] text-on-surface outline-none"
             />
           </div>
-          <div className="sm:col-span-2">
+          <div className={isSidebar ? '' : 'sm:col-span-2'}>
             <button
               type="button"
               onClick={submitUpload}
               disabled={uploading}
-              className="w-full inline-flex items-center justify-center gap-1 text-[10px] font-bold text-white bg-primary px-2 py-2 rounded-lg hover:opacity-90 transition-all disabled:opacity-60"
+              className={`w-full inline-flex items-center justify-center gap-1 text-[10px] font-bold text-white bg-primary px-2 rounded-lg hover:opacity-90 transition-all disabled:opacity-60 ${isSidebar ? 'py-2.5' : 'py-2'}`}
             >
               {uploading ? (
                 <>

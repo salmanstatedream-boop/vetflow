@@ -9,12 +9,13 @@ import { CompleteConsultationSchema, type CompleteConsultationInput } from '@/li
 import { completeConsultationAction, saveConsultationDraftAction } from '@/lib/services/clinical-actions';
 import { pauseConsultationAction, resumeConsultationAction } from '@/lib/services/visit-actions';
 import ConsultationLabsDocsPanel from '@/components/forms/ConsultationLabsDocsPanel';
+import ConsultationStepProgressBar from '@/components/consultation/ConsultationStepProgressBar';
 import CatalogItemQuickAddModal from '@/components/inventory/CatalogItemQuickAddModal';
 import Select from '@/components/ui/premium/Select';
 import CreatableSelect from '@/components/ui/premium/CreatableSelect';
 import RequiredLabel from '@/components/ui/RequiredLabel';
 import type { ProductType } from '@/lib/inventory/product-types';
-import { SoapTabBar, SOAP_TAB_ORDER, getSoapTabTitle, type SoapTab } from '@/components/consultation/SoapTabBar';
+import { SoapTabBar, SOAP_TAB_ORDER, getSoapTabTitle, type SoapFlowTab } from '@/components/consultation/SoapTabBar';
 import { validateSoapTab, validateAllSoapSteps, isPrescriptionLineComplete } from '@/lib/consultation/soap-validation';
 import { getFirstValidationIssue } from '@/lib/consultation/consultation-form-errors';
 import {
@@ -44,6 +45,7 @@ import {
   Pill,
   ExternalLink,
   FileText,
+  FlaskConical,
 } from 'lucide-react';
 
 interface Product {
@@ -160,7 +162,8 @@ export default function ConsultationWorkspaceClient({
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [quickAddType, setQuickAddType] = useState<ProductType>('medicine');
   const [quickAddTarget, setQuickAddTarget] = useState<{ kind: 'product'; index: number } | null>(null);
-  const [activeSoapTab, setActiveSoapTab] = useState<SoapTab>('S');
+  const [activeSoapTab, setActiveSoapTab] = useState<SoapFlowTab>('S');
+  const [tabTransitioning, setTabTransitioning] = useState(false);
   const [maxUnlockedIndex, setMaxUnlockedIndex] = useState(() => {
     if (!initialDraft) return 0;
     let max = 0;
@@ -175,7 +178,6 @@ export default function ConsultationWorkspaceClient({
     }
     if (max >= 2 && (initialDraft.diagnosis?.trim().length ?? 0) >= 3) max = 3;
     if (max >= 3 && (initialDraft.treatmentPlan?.trim().length ?? 0) >= 3) max = 4;
-    if (max >= 4) max = 5;
     return Math.min(max, SOAP_TAB_ORDER.length - 1);
   });
   const [tabError, setTabError] = useState<string | null>(null);
@@ -206,6 +208,8 @@ export default function ConsultationWorkspaceClient({
   const [showCompleteSuccess, setShowCompleteSuccess] = useState(false);
   const [completedPrescriptionId, setCompletedPrescriptionId] = useState<string | null>(null);
   const tabErrorRef = useRef<HTMLDivElement>(null);
+  const soapWorkspaceRef = useRef<HTMLFormElement>(null);
+  const diagnosticsPanelRef = useRef<HTMLDivElement>(null);
 
   const {
     register,
@@ -277,15 +281,37 @@ export default function ConsultationWorkspaceClient({
   const diagnosisWatch = watch('diagnosis');
   const treatmentPlanWatch = watch('treatmentPlan');
 
-  const soapCompleted: Partial<Record<SoapTab, boolean>> = {
+  const soapCompleted: Partial<Record<SoapFlowTab, boolean>> = {
     S: Boolean(chiefComplaintWatch?.trim()),
     O: Boolean(examinationWatch?.trim()) || Boolean(watch('temperatureC')),
     A: Boolean(diagnosisWatch?.trim()),
     P: Boolean(treatmentPlanWatch?.trim()) || serviceFields.length > 0,
-    D: labOrders.length > 0 || documents.length > 0,
     Rx:
       noPrescriptionNeeded ||
       prescriptionItemsWatch.some((line) => isPrescriptionLineComplete(line)),
+  };
+
+  const scrollSoapToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    soapWorkspaceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const focusDiagnosticsPanel = () => {
+    setShowHistory(false);
+    requestAnimationFrame(() => {
+      diagnosticsPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
+
+  const navigateToSoapTab = (tab: SoapFlowTab) => {
+    if (tab === activeSoapTab) return;
+    setTabTransitioning(true);
+    setTabError(null);
+    scrollSoapToTop();
+    window.setTimeout(() => {
+      setActiveSoapTab(tab);
+      setTabTransitioning(false);
+    }, 280);
   };
 
   useEffect(() => {
@@ -361,21 +387,19 @@ export default function ConsultationWorkspaceClient({
   const goToPrevSoapTab = () => {
     const idx = SOAP_TAB_ORDER.indexOf(activeSoapTab);
     if (idx > 0) {
-      setTabError(null);
-      setActiveSoapTab(SOAP_TAB_ORDER[idx - 1]);
+      navigateToSoapTab(SOAP_TAB_ORDER[idx - 1]);
     }
   };
 
-  const validateTab = (tab: SoapTab): string | null =>
+  const validateTab = (tab: SoapFlowTab): string | null =>
     validateSoapTab(tab, getValues(), soapContext);
 
-  const validateAndAdvanceTab = async (targetTab: SoapTab) => {
+  const validateAndAdvanceTab = async (targetTab: SoapFlowTab) => {
     const currentIdx = SOAP_TAB_ORDER.indexOf(activeSoapTab);
     const targetIdx = SOAP_TAB_ORDER.indexOf(targetTab);
 
     if (targetIdx <= currentIdx) {
-      setTabError(null);
-      setActiveSoapTab(targetTab);
+      navigateToSoapTab(targetTab);
       return;
     }
     if (targetIdx > maxUnlockedIndex + 1) return;
@@ -386,12 +410,14 @@ export default function ConsultationWorkspaceClient({
       return;
     }
 
+    setTabTransitioning(true);
     setSavingDraft(true);
     setTabError(null);
     const res = await saveConsultationDraftAction(visitId, buildSubmitPayload(getValues()));
     setSavingDraft(false);
 
     if (!res.success) {
+      setTabTransitioning(false);
       setTabError(res.error || 'Failed to save draft.');
       return;
     }
@@ -400,14 +426,18 @@ export default function ConsultationWorkspaceClient({
     setTimeout(() => setDraftSaved(false), 2500);
     const nextUnlocked = Math.max(maxUnlockedIndex, currentIdx + 1);
     setMaxUnlockedIndex(nextUnlocked);
-    setActiveSoapTab(targetIdx <= nextUnlocked ? targetTab : SOAP_TAB_ORDER[nextUnlocked]);
+    const nextTab = targetIdx <= nextUnlocked ? targetTab : SOAP_TAB_ORDER[nextUnlocked];
+    scrollSoapToTop();
+    window.setTimeout(() => {
+      setActiveSoapTab(nextTab);
+      setTabTransitioning(false);
+    }, 320);
   };
 
-  const handleSoapTabChange = (tab: SoapTab) => {
+  const handleSoapTabChange = (tab: SoapFlowTab) => {
     const targetIdx = SOAP_TAB_ORDER.indexOf(tab);
     if (targetIdx <= maxUnlockedIndex) {
-      setTabError(null);
-      setActiveSoapTab(tab);
+      navigateToSoapTab(tab);
       return;
     }
     void validateAndAdvanceTab(tab);
@@ -415,7 +445,7 @@ export default function ConsultationWorkspaceClient({
 
   const onInvalidSubmit = (fieldErrors: FieldErrors<CompleteConsultationInput>) => {
     const issue = getFirstValidationIssue(fieldErrors);
-    setActiveSoapTab(issue.tab);
+    navigateToSoapTab(issue.tab);
     setTabError(issue.message);
     requestAnimationFrame(() => {
       tabErrorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -573,7 +603,11 @@ export default function ConsultationWorkspaceClient({
     const payload = buildSubmitPayload(data);
     const validationFailure = validateAllSoapSteps(payload, soapContext);
     if (validationFailure) {
-      setActiveSoapTab(validationFailure.tab);
+      if (validationFailure.focusDiagnostics) {
+        focusDiagnosticsPanel();
+      } else {
+        navigateToSoapTab(validationFailure.tab);
+      }
       setTabError(validationFailure.message);
       return;
     }
@@ -639,7 +673,7 @@ export default function ConsultationWorkspaceClient({
     setVisitType(type);
     setValue('visitType', type);
     if (type === 'lab') {
-      setActiveSoapTab('D');
+      focusDiagnosticsPanel();
     }
     if (type === 'surgery') {
       const surgerySvc = catalogServices.find((s) => s.name.toLowerCase().includes('surgery'));
@@ -683,6 +717,7 @@ export default function ConsultationWorkspaceClient({
 
   return (
     <div className="space-y-6">
+      <ConsultationStepProgressBar active={tabTransitioning || savingDraft} />
       {isEmergency && (
         <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-2xl flex items-center gap-3">
           <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0" />
@@ -1021,10 +1056,42 @@ export default function ConsultationWorkspaceClient({
           </div>
         )}
 
+        <div
+          ref={diagnosticsPanelRef}
+          className="glass-panel rounded-2xl border border-outline-variant/40 p-4 shadow-premium space-y-3 max-h-[min(70vh,720px)] overflow-y-auto"
+        >
+          <div className="flex items-center justify-between gap-2 border-b border-outline-variant/30 pb-3 sticky top-0 bg-surface/95 backdrop-blur-sm z-[1] -mx-1 px-1">
+            <div>
+              <h3 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
+                <FlaskConical className="w-4 h-4" />
+                Diagnostics
+              </h3>
+              <p className="text-[10px] text-on-surface-variant/60 mt-0.5">
+                Lab tests &amp; documents — available anytime during this consult.
+              </p>
+            </div>
+            {(labOrders.length > 0 || documents.length > 0) && (
+              <span className="text-[9px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full shrink-0">
+                {labOrders.length} lab · {documents.length} doc
+              </span>
+            )}
+          </div>
+          <ConsultationLabsDocsPanel
+            variant="sidebar"
+            visitId={visitId}
+            patientId={patientId}
+            labCatalog={labCatalog}
+            labOrders={labOrders}
+            documents={documents}
+            previousDocuments={previousDocuments}
+          />
+        </div>
+
       </div>
 
-      {/* RIGHT: SOAPDRx WORKSPACE */}
+      {/* RIGHT: SOAP → Rx WORKSPACE */}
       <form
+        ref={soapWorkspaceRef}
         onSubmit={onFormSubmit}
         onKeyDown={handleFormKeyDown}
         className="md:col-span-8 space-y-6 pb-28"
@@ -1060,7 +1127,7 @@ export default function ConsultationWorkspaceClient({
             </div>
           </div>
 
-          {/* SOAPDRx TAB BAR */}
+          {/* SOAP → Rx TAB BAR */}
           <SoapTabBar
             active={activeSoapTab}
             onChange={handleSoapTabChange}
@@ -1078,9 +1145,16 @@ export default function ConsultationWorkspaceClient({
             </div>
           )}
 
+          <div
+            key={activeSoapTab}
+            className={`min-h-[12rem] transition-opacity duration-300 ${
+              tabTransitioning ? 'opacity-0 pointer-events-none' : 'opacity-100 consult-soap-panel-enter'
+            }`}
+          >
+
           {/* S — Subjective */}
           {activeSoapTab === 'S' && (
-          <div className="glass-panel rounded-2xl border border-outline-variant/40 p-6 shadow-premium space-y-5 animate-in fade-in duration-200">
+          <div className="glass-panel rounded-2xl border border-outline-variant/40 p-6 shadow-premium space-y-5">
             <div>
               <h3 className="text-sm font-bold text-primary uppercase tracking-wider">SOAP Subjective</h3>
               <p className="text-[10px] text-on-surface-variant/60 mt-1">Chief complaint and patient-reported history.</p>
@@ -1116,7 +1190,7 @@ export default function ConsultationWorkspaceClient({
 
           {/* O — Objective */}
           {activeSoapTab === 'O' && (
-          <div className="glass-panel rounded-2xl border border-outline-variant/40 p-6 shadow-premium space-y-5 animate-in fade-in duration-200">
+          <div className="glass-panel rounded-2xl border border-outline-variant/40 p-6 shadow-premium space-y-5">
             <div>
               <h3 className="text-sm font-bold text-primary uppercase tracking-wider">SOAP Objective</h3>
               <p className="text-[10px] text-on-surface-variant/60 mt-1">Physical exam findings and structured vitals.</p>
@@ -1165,7 +1239,7 @@ export default function ConsultationWorkspaceClient({
 
           {/* A — Assessment */}
           {activeSoapTab === 'A' && (
-          <div className="glass-panel rounded-2xl border border-outline-variant/40 p-6 shadow-premium space-y-5 animate-in fade-in duration-200">
+          <div className="glass-panel rounded-2xl border border-outline-variant/40 p-6 shadow-premium space-y-5">
             <div>
               <h3 className="text-sm font-bold text-primary uppercase tracking-wider">SOAP Assessment</h3>
               <p className="text-[10px] text-on-surface-variant/60 mt-1">Clinical diagnosis and assessment.</p>
@@ -1191,7 +1265,7 @@ export default function ConsultationWorkspaceClient({
 
           {/* P — Plan */}
           {activeSoapTab === 'P' && (
-          <div className="space-y-6 animate-in fade-in duration-200">
+          <div className="space-y-6">
           <div className="glass-panel rounded-2xl border border-outline-variant/40 p-6 shadow-premium space-y-5">
             <div>
               <h3 className="text-sm font-bold text-primary uppercase tracking-wider">SOAP Plan</h3>
@@ -1466,27 +1540,9 @@ export default function ConsultationWorkspaceClient({
           </div>
           )}
 
-          {/* D — Diagnostics */}
-          {activeSoapTab === 'D' && (
-          <div className="animate-in fade-in duration-200">
-            <div className="mb-4">
-              <h3 className="text-sm font-bold text-primary uppercase tracking-wider">SOAP Diagnostics</h3>
-              <p className="text-[10px] text-on-surface-variant/60 mt-1">Lab orders, results, and clinical documents.</p>
-            </div>
-            <ConsultationLabsDocsPanel
-              visitId={visitId}
-              patientId={patientId}
-              labCatalog={labCatalog}
-              labOrders={labOrders}
-              documents={documents}
-              previousDocuments={previousDocuments}
-            />
-          </div>
-          )}
-
           {/* Rx — Prescription */}
           {activeSoapTab === 'Rx' && (
-          <div className="glass-panel rounded-2xl border border-outline-variant/40 p-6 shadow-premium space-y-5 animate-in fade-in duration-200">
+          <div className="glass-panel rounded-2xl border border-outline-variant/40 p-6 shadow-premium space-y-5">
             <div>
               <h3 className="text-sm font-bold text-primary uppercase tracking-wider">Prescription (Rx)</h3>
               <p className="text-[10px] text-on-surface-variant/60 mt-1">Medicines and items to dispense at checkout.</p>
@@ -1698,6 +1754,8 @@ export default function ConsultationWorkspaceClient({
           </div>
           )}
 
+          </div>
+
           {/* Internal notes — visible on all tabs */}
           <div className="glass-panel rounded-xl border border-outline-variant/30 p-4">
             <label className="block text-[10px] font-semibold text-on-surface/80 uppercase tracking-wider mb-1.5">
@@ -1729,10 +1787,10 @@ export default function ConsultationWorkspaceClient({
                 <button
                   type="button"
                   onClick={() => void goToNextSoapTab()}
-                  disabled={activeSoapTab === 'Rx' || savingDraft}
+                  disabled={activeSoapTab === 'Rx' || savingDraft || tabTransitioning}
                   className="px-4 py-2 rounded-xl text-xs font-bold border border-outline-variant text-on-surface disabled:opacity-40"
                 >
-                  Next
+                  {savingDraft || tabTransitioning ? 'Loading…' : 'Next'}
                 </button>
               </div>
               <div className="flex items-center gap-2 flex-wrap justify-end">

@@ -13,6 +13,7 @@ import { listServicesAction } from '@/lib/services/service-catalog-actions';
 import PageHeader from '@/components/ui/premium/PageHeader';
 import { isBrandedPdfsEnabled, isCameraFeedEnabled } from '@/lib/auth/features';
 import { Settings } from 'lucide-react';
+import { normalizeClinicTimezone } from '@/lib/utils/timezones';
 
 export const metadata = {
   title: 'Clinic Settings',
@@ -83,7 +84,7 @@ export default async function SettingsPage() {
   }>;
 
   const defaultValues = {
-    timezone: appSettings?.timezone || 'UTC',
+    timezone: normalizeClinicTimezone(appSettings?.timezone),
     currency: appSettings?.currency || 'USD',
     isTaxEnabled: taxSettings?.is_enabled ?? true,
     taxName: taxSettings?.tax_name || 'VAT',

@@ -7,6 +7,7 @@ import PageHeader from '@/components/ui/premium/PageHeader';
 import ScheduleDayCalendarClient from '@/components/schedule/ScheduleDayCalendarClient';
 import { resolveDateFromParam } from '@/lib/utils/date-filters';
 import { formatAppointmentTime, normalizeDateYmd } from '@/lib/utils/time-parse';
+import { normalizeClinicTimezone } from '@/lib/utils/timezones';
 import { Calendar } from 'lucide-react';
 
 export const metadata = {
@@ -46,7 +47,7 @@ export default async function SchedulePage({
 
   const supabase = await createClient();
 
-  const [{ data: doctorsData }, { data: appointmentsRaw }] = await Promise.all([
+  const [{ data: doctorsData }, { data: appointmentsRaw }, { data: appSettings }] = await Promise.all([
     supabase
       .from('organization_members')
       .select('user_id, user_profiles ( first_name, last_name )')
@@ -68,6 +69,11 @@ export default async function SchedulePage({
       }
       return query;
     })(),
+    supabase
+      .from('app_settings')
+      .select('timezone')
+      .eq('organization_id', ctx.organizationId!)
+      .maybeSingle(),
   ]);
 
   const doctors =
@@ -110,6 +116,7 @@ export default async function SchedulePage({
         currentUserId={ctx.userId}
         currentRole={ctx.role}
         activeBranchId={activeBranchId}
+        clinicTimezone={normalizeClinicTimezone(appSettings?.timezone)}
         />
       </div>
     </div>

@@ -7,6 +7,9 @@ import { useRouter } from 'next/navigation';
 import { updateSettingsAction } from '@/lib/services/settings-actions';
 import { SettingsSchema, type SettingsInput } from '@/lib/validations/schemas';
 import { normalizeCurrencyCode } from '@/lib/utils/currency';
+import {
+  CLINIC_TIMEZONES,
+} from '@/lib/utils/timezones';
 import { Loader2, Save } from 'lucide-react';
 
 const PRESET_CURRENCIES = ['USD', 'PKR', 'EUR', 'GBP', 'AED', 'SAR', 'INR'] as const;
@@ -84,10 +87,19 @@ export default function SettingsForm({ defaultValues, brandedPdfsAllowed = false
             <label className="block text-[10px] font-semibold text-on-surface/80 uppercase tracking-wider mb-1.5">
               Timezone
             </label>
-            <input
+            <select
               {...register('timezone')}
               className="w-full px-4 py-2.5 bg-surface-container/30 border border-outline-variant/80 rounded-xl text-sm text-on-surface outline-none focus:border-primary"
-            />
+            >
+              {CLINIC_TIMEZONES.map((tz) => (
+                <option key={tz.value} value={tz.value}>
+                  {tz.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-[10px] text-on-surface-variant mt-1">
+              Appointment times on the schedule calendar use this timezone.
+            </p>
             {errors.timezone && (
               <span className="text-xs text-destructive mt-1 block">{errors.timezone.message}</span>
             )}

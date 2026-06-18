@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, type KeyboardEvent } from 'react';
-import type { SoapTab } from '@/components/consultation/SoapTabBar';
+import type { SoapFlowTab } from '@/components/consultation/SoapTabBar';
 
 function isFieldEmpty(el: HTMLElement): boolean {
   if (el instanceof HTMLInputElement) {
@@ -13,7 +13,7 @@ function isFieldEmpty(el: HTMLElement): boolean {
 }
 
 export function useSoapFieldNavigation(
-  activeTab: SoapTab,
+  activeTab: SoapFlowTab,
   onAdvanceTab: () => void | Promise<void>
 ) {
   const handleFormKeyDown = useCallback(

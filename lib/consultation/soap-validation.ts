@@ -1,4 +1,4 @@
-import type { SoapTab } from '@/components/consultation/SoapTabBar';
+import type { SoapFlowTab } from '@/components/consultation/SoapTabBar';
 import { SOAP_TAB_ORDER } from '@/components/consultation/SoapTabBar';
 import type { CompleteConsultationInput } from '@/lib/validations/schemas';
 
@@ -9,8 +9,9 @@ export type SoapValidationContext = {
 };
 
 export type SoapValidationResult = {
-  tab: SoapTab;
+  tab: SoapFlowTab;
   message: string;
+  focusDiagnostics?: boolean;
 } | null;
 
 function hasVital(values: CompleteConsultationInput): boolean {
@@ -33,7 +34,7 @@ export function isPrescriptionLineComplete(item: CompleteConsultationInput['pres
 }
 
 export function validateSoapTab(
-  tab: SoapTab,
+  tab: SoapFlowTab,
   values: CompleteConsultationInput,
   context: SoapValidationContext
 ): string | null {
@@ -60,11 +61,6 @@ export function validateSoapTab(
         return 'Enter a treatment plan (at least 3 characters) before continuing.';
       }
       return null;
-    case 'D':
-      if (context.visitType === 'lab' && context.labOrderCount === 0) {
-        return 'Lab-focused visit: order at least one lab test before continuing.';
-      }
-      return null;
     case 'Rx':
       if (context.noPrescriptionNeeded) return null;
       if (!values.prescriptionItems?.length) {
@@ -81,6 +77,17 @@ export function validateSoapTab(
   }
 }
 
+export function validateLabVisitRequirement(context: SoapValidationContext): SoapValidationResult {
+  if (context.visitType === 'lab' && context.labOrderCount === 0) {
+    return {
+      tab: 'P',
+      message: 'Lab-focused visit: order at least one lab test in Diagnostics before finalizing.',
+      focusDiagnostics: true,
+    };
+  }
+  return null;
+}
+
 export function validateAllSoapSteps(
   values: CompleteConsultationInput,
   context: SoapValidationContext
@@ -93,11 +100,12 @@ export function validateAllSoapSteps(
     const message = validateSoapTab(tab, values, context);
     if (message) return { tab, message };
   }
-  return null;
+
+  return validateLabVisitRequirement(context);
 }
 
 export function getRequiredFieldsForTab(
-  tab: SoapTab,
+  tab: SoapFlowTab,
   context: SoapValidationContext
 ): string[] {
   switch (tab) {
@@ -109,8 +117,6 @@ export function getRequiredFieldsForTab(
       return ['diagnosis'];
     case 'P':
       return ['treatmentPlan'];
-    case 'D':
-      return context.visitType === 'lab' ? [] : [];
     case 'Rx':
       if (context.noPrescriptionNeeded) return [];
       return ['prescription-medicine', 'prescription-dosage', 'prescription-frequency', 'prescription-duration', 'prescription-qty'];

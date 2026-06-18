@@ -1,8 +1,8 @@
 import type { FieldError, FieldErrors } from 'react-hook-form';
-import type { SoapTab } from '@/components/consultation/SoapTabBar';
+import type { SoapFlowTab } from '@/components/consultation/SoapTabBar';
 import type { CompleteConsultationInput } from '@/lib/validations/schemas';
 
-const FIELD_TAB_MAP: Record<string, SoapTab> = {
+const FIELD_TAB_MAP: Record<string, SoapFlowTab> = {
   chiefComplaint: 'S',
   history: 'S',
   examinationFindings: 'O',
@@ -24,7 +24,7 @@ const FIELD_TAB_MAP: Record<string, SoapTab> = {
   noPrescriptionNeeded: 'Rx',
 };
 
-export function mapZodIssueToTab(path: string[]): SoapTab {
+export function mapZodIssueToTab(path: string[]): SoapFlowTab {
   const root = path[0];
   if (!root) return 'S';
   if (root === 'prescriptionItems') return 'Rx';
@@ -76,7 +76,7 @@ function findFirstError(
 
 export function getFirstValidationIssue(
   errors: FieldErrors<CompleteConsultationInput>
-): { tab: SoapTab; message: string } {
+): { tab: SoapFlowTab; message: string } {
   const found = findFirstError(errors);
   if (!found) {
     return {

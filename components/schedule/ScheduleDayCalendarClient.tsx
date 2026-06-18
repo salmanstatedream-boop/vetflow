@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import DateRangeQuickFilter from '@/components/dashboard/DateRangeQuickFilter';
@@ -22,11 +22,13 @@ import {
   normalizeDateYmd,
   parseAppointmentTimeToMinutes,
 } from '@/lib/utils/time-parse';
+import { getClinicTimezoneShortLabel } from '@/lib/utils/timezones';
 
-const START_HOUR = 7;
-const END_HOUR = 19;
+const START_HOUR = 0;
+const END_HOUR = 24;
 const SLOT_MINUTES = 15;
 const ROW_HEIGHT = 28;
+const DEFAULT_SCROLL_HOUR = 7;
 
 export interface ScheduleDoctor {
   id: string;
@@ -54,6 +56,7 @@ interface ScheduleDayCalendarClientProps {
   currentUserId: string;
   currentRole: string | null;
   activeBranchId: string;
+  clinicTimezone?: string;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -103,8 +106,10 @@ export default function ScheduleDayCalendarClient({
   currentUserId,
   currentRole,
   activeBranchId,
+  clinicTimezone = 'UTC',
 }: ScheduleDayCalendarClientProps) {
   const router = useRouter();
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [doctorFilter, setDoctorFilter] = useState<string>(
     currentRole === 'doctor' ? currentUserId : 'all'
   );
@@ -167,6 +172,21 @@ export default function ScheduleDayCalendarClient({
 
   const gridHeight = slots.length * ROW_HEIGHT;
 
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const todayYmd = formatDateYmd(startOfToday());
+    const isToday = normalizeDateYmd(selectedDate) === todayYmd;
+    const scrollHour = isToday
+      ? Math.max(START_HOUR, Math.min(new Date().getHours() - 1, END_HOUR - 2))
+      : DEFAULT_SCROLL_HOUR;
+    const scrollTop = ((scrollHour - START_HOUR) * 60) / SLOT_MINUTES * ROW_HEIGHT;
+    el.scrollTop = scrollTop;
+  }, [selectedDate]);
+
+  const timezoneLabel = getClinicTimezoneShortLabel(clinicTimezone);
+
   return (
     <div className="flex flex-col gap-6 min-h-0 flex-1">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 shrink-0">
@@ -182,6 +202,8 @@ export default function ScheduleDayCalendarClient({
             <p className="text-sm font-black text-on-surface">{formatDisplayDate(selectedDate)}</p>
             <p className="text-[10px] text-on-surface-variant">
               {dayAppointments.length} appointment{dayAppointments.length !== 1 ? 's' : ''}
+              <span className="mx-1.5 text-outline-variant">·</span>
+              {timezoneLabel}
             </p>
           </div>
           <button
@@ -250,7 +272,7 @@ export default function ScheduleDayCalendarClient({
           ))}
         </div>
 
-        <div className="overflow-y-auto overflow-x-auto flex-1 min-h-0">
+        <div ref={scrollRef} className="overflow-y-auto overflow-x-auto flex-1 min-h-0">
           <div
             className="grid min-w-[720px]"
             style={{

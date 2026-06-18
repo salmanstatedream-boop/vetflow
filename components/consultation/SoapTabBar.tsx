@@ -2,21 +2,20 @@
 
 import { Lock } from 'lucide-react';
 
-export type SoapTab = 'S' | 'O' | 'A' | 'P' | 'D' | 'Rx';
+export type SoapFlowTab = 'S' | 'O' | 'A' | 'P' | 'Rx';
 
-const TABS: { id: SoapTab; label: string; title: string }[] = [
+const TABS: { id: SoapFlowTab; label: string; title: string }[] = [
   { id: 'S', label: 'S', title: 'Subjective' },
   { id: 'O', label: 'O', title: 'Objective' },
   { id: 'A', label: 'A', title: 'Assessment' },
   { id: 'P', label: 'P', title: 'Plan' },
-  { id: 'D', label: 'D', title: 'Diagnostics' },
   { id: 'Rx', label: 'Rx', title: 'Prescription' },
 ];
 
 interface SoapTabBarProps {
-  active: SoapTab;
-  onChange: (tab: SoapTab) => void;
-  completed?: Partial<Record<SoapTab, boolean>>;
+  active: SoapFlowTab;
+  onChange: (tab: SoapFlowTab) => void;
+  completed?: Partial<Record<SoapFlowTab, boolean>>;
   maxUnlockedIndex?: number;
   draftSaved?: boolean;
 }
@@ -65,8 +64,11 @@ export function SoapTabBar({
   );
 }
 
-export const SOAP_TAB_ORDER: SoapTab[] = ['S', 'O', 'A', 'P', 'D', 'Rx'];
+export const SOAP_TAB_ORDER: SoapFlowTab[] = ['S', 'O', 'A', 'P', 'Rx'];
 
-export function getSoapTabTitle(tab: SoapTab): string {
+/** @deprecated Use SoapFlowTab — kept for gradual migration */
+export type SoapTab = SoapFlowTab;
+
+export function getSoapTabTitle(tab: SoapFlowTab): string {
   return TABS.find((t) => t.id === tab)?.title ?? tab;
 }

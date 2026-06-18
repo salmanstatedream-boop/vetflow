@@ -128,9 +128,16 @@ export const UpdateDocumentSchema = z.object({
 });
 export type UpdateDocumentInput = z.infer<typeof UpdateDocumentSchema>;
 
+import { CLINIC_TIMEZONE_VALUES } from '@/lib/utils/timezones';
+
 // --- CLINIC / APP SETTINGS ---
 export const SettingsSchema = z.object({
-  timezone: z.string().min(1, { message: 'Timezone is required' }),
+  timezone: z
+    .string()
+    .min(1, { message: 'Timezone is required' })
+    .refine((tz) => (CLINIC_TIMEZONE_VALUES as readonly string[]).includes(tz), {
+      message: 'Select a timezone from the list',
+    }),
   currency: z
     .string()
     .trim()
