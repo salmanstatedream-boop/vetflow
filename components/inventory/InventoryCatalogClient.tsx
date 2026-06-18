@@ -54,14 +54,8 @@ function isLowStockProduct(product: ProductRow): boolean {
   return product.type !== 'service' && product.stock_quantity <= product.reorder_level;
 }
 
-function canManageRow(
-  role: UserSessionDetails['role'],
-  userId: string,
-  createdBy: string | null
-): boolean {
-  if (role === 'clinic_admin') return true;
-  if (role === 'receptionist') return createdBy === userId;
-  return false;
+function canManageRow(role: UserSessionDetails['role']): boolean {
+  return role === 'clinic_admin' || role === 'receptionist';
 }
 
 export default function InventoryCatalogClient({
@@ -312,7 +306,7 @@ export default function InventoryCatalogClient({
 
                 const prod = row.product;
                 const isLowStock = isLowStockProduct(prod);
-                const manageable = canManageRow(role, userId, prod.created_by);
+                const manageable = canManageRow(role);
 
                 return (
                   <tr key={prod.id} className="hover:bg-surface-container/10 transition-colors">

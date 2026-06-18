@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCurrency } from '@/lib/context/CurrencyContext';
 import {
   formatPaymentMethods,
@@ -13,9 +14,11 @@ import {
 import {
   addDaysToYmd,
   getTodayYmdInTimezone,
+  isDateWithinRange,
+  normalizeDateRange,
   toLocalDateKey,
 } from '@/lib/utils/timezones';
-import { DollarSign, ShoppingBag, TrendingUp, Printer } from 'lucide-react';
+import { DollarSign, ShoppingBag, TrendingUp, Printer, Calendar } from 'lucide-react';
 
 export type RetailSaleRow = {
   id: string;
@@ -32,30 +35,46 @@ export type RetailSaleRow = {
 interface SalesMonitorClientProps {
   sales: RetailSaleRow[];
   clinicTimezone: string;
+  initialDateFrom?: string;
+  initialDateTo?: string;
 }
 
 export default function SalesMonitorClient({
   sales,
   clinicTimezone,
+  initialDateFrom = '',
+  initialDateTo = '',
 }: SalesMonitorClientProps) {
   const { formatCurrency } = useCurrency();
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  const router = useRouter();
+  const normalizedInitial = normalizeDateRange(initialDateFrom, initialDateTo);
+  const [dateFrom, setDateFrom] = useState(normalizedInitial.from);
+  const [dateTo, setDateTo] = useState(normalizedInitial.to);
   const [search, setSearch] = useState('');
   const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>('all');
 
   const todayYmd = useMemo(() => getTodayYmdInTimezone(clinicTimezone), [clinicTimezone]);
-  const thirtyDaysAgoYmd = useMemo(
-    () => addDaysToYmd(todayYmd, -30),
-    [todayYmd]
+  const thirtyDaysAgoYmd = useMemo(() => addDaysToYmd(todayYmd, -30), [todayYmd]);
+
+  const syncDateParams = useCallback(
+    (from: string, to: string) => {
+      const next = normalizeDateRange(from, to);
+      setDateFrom(next.from);
+      setDateTo(next.to);
+      const params = new URLSearchParams();
+      if (next.from) params.set('dateFrom', next.from);
+      if (next.to) params.set('dateTo', next.to);
+      const qs = params.toString();
+      router.replace(qs ? `/dashboard/sales?${qs}` : '/dashboard/sales', { scroll: false });
+    },
+    [router]
   );
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return sales.filter((s) => {
       const d = toLocalDateKey(s.createdAt, clinicTimezone);
-      if (dateFrom && d < dateFrom) return false;
-      if (dateTo && d > dateTo) return false;
+      if (!isDateWithinRange(d, dateFrom || undefined, dateTo || undefined)) return false;
       if (!matchesPaymentFilter(paymentFilter, s.paymentMethods)) return false;
       if (!q) return true;
       return (
@@ -164,46 +183,71 @@ export default function SalesMonitorClient({
         ))}
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
-        <input
-          type="search"
-          placeholder="Search customer, invoice #…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 min-w-[200px] px-3 py-2 border border-outline-variant rounded-xl text-xs"
-        />
-        <input
-          type="date"
-          value={dateFrom}
-          onChange={(e) => setDateFrom(e.target.value)}
-          className="px-3 py-2 border border-outline-variant rounded-xl text-xs"
-          title="From date"
-        />
-        <input
-          type="date"
-          value={dateTo}
-          onChange={(e) => setDateTo(e.target.value)}
-          className="px-3 py-2 border border-outline-variant rounded-xl text-xs"
-          title="To date"
-        />
-        {(dateFrom || dateTo) && (
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-col sm:flex-row gap-3 flex-wrap items-end">
+          <input
+            type="search"
+            placeholder="Search customer, invoice #…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 min-w-[200px] px-3 py-2 border border-outline-variant rounded-xl text-xs bg-surface-container/30"
+          />
+          <div>
+            <label className="block text-[9px] font-bold text-on-surface-variant uppercase mb-1">
+              From
+            </label>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => syncDateParams(e.target.value, dateTo)}
+              className="px-3 py-2 border border-outline-variant rounded-xl text-xs bg-surface-container/30"
+            />
+          </div>
+          <div>
+            <label className="block text-[9px] font-bold text-on-surface-variant uppercase mb-1">
+              To
+            </label>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => syncDateParams(dateFrom, e.target.value)}
+              className="px-3 py-2 border border-outline-variant rounded-xl text-xs bg-surface-container/30"
+            />
+          </div>
           <button
             type="button"
-            onClick={() => {
-              setDateFrom('');
-              setDateTo('');
-            }}
-            className="px-3 py-2 rounded-xl text-xs font-bold border border-outline-variant text-on-surface-variant hover:text-on-surface"
+            onClick={() => syncDateParams(todayYmd, todayYmd)}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border border-outline-variant text-on-surface-variant hover:text-on-surface hover:border-primary/40"
           >
-            Clear dates
+            <Calendar className="w-3.5 h-3.5" />
+            Today
           </button>
+          {(dateFrom || dateTo) && (
+            <button
+              type="button"
+              onClick={() => syncDateParams('', '')}
+              className="px-3 py-2 rounded-xl text-xs font-bold border border-outline-variant text-on-surface-variant hover:text-on-surface"
+            >
+              Clear dates
+            </button>
+          )}
+          <Link
+            href="/dashboard/sales/new"
+            className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold text-center"
+          >
+            New sale
+          </Link>
+        </div>
+        {usingDateFilter && (
+          <p className="text-[10px] text-on-surface-variant">
+            Showing sales dated{' '}
+            {dateFrom && dateTo && dateFrom === dateTo
+              ? dateFrom
+              : `${dateFrom || '…'} → ${dateTo || '…'}`}{' '}
+            ({clinicTimezone.replace('_', ' ')}) · {filtered.length} match
+            {filtered.length === 1 ? '' : 'es'}
+          </p>
         )}
-        <Link
-          href="/dashboard/sales/new"
-          className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold text-center"
-        >
-          New sale
-        </Link>
       </div>
 
       <div className="glass-panel rounded-2xl border border-outline-variant/40 overflow-hidden">
@@ -230,8 +274,19 @@ export default function SalesMonitorClient({
             ) : (
               filtered.map((s) => (
                 <tr key={s.id} className="hover:bg-surface-container/20">
-                  <td className="px-5 py-3 text-on-surface-variant">
-                    {new Date(s.createdAt).toLocaleString(undefined, { timeZone: clinicTimezone })}
+                  <td className="px-5 py-3 text-on-surface-variant whitespace-nowrap">
+                    <span className="block">
+                      {new Date(s.createdAt).toLocaleDateString(undefined, {
+                        timeZone: clinicTimezone,
+                      })}
+                    </span>
+                    <span className="block text-[10px] opacity-80">
+                      {new Date(s.createdAt).toLocaleTimeString(undefined, {
+                        timeZone: clinicTimezone,
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
                   </td>
                   <td className="px-5 py-3 font-mono font-bold">{s.invoiceNumber}</td>
                   <td className="px-5 py-3">{s.customerName}</td>

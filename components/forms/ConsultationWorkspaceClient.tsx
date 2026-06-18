@@ -881,13 +881,13 @@ export default function ConsultationWorkspaceClient({
         </div>
       )}
 
-    <div className="grid md:grid-cols-12 gap-8 items-start">
+    <div className="grid md:grid-cols-12 gap-6 lg:gap-8 items-stretch h-full min-h-0">
       
-      {/* LEFT: MEDICAL BRIEF / TABS */}
-      <div className="md:col-span-4 space-y-6">
+      {/* LEFT: patient brief + diagnostics (sticky scroll column) */}
+      <div className="md:col-span-4 flex flex-col gap-3 min-h-0 h-full max-h-full pb-32 overflow-hidden">
         
         {/* PATIENT PROFILE BRIEF */}
-        <div className="glass-panel rounded-2xl border border-outline-variant/40 p-5 shadow-premium">
+        <div className="glass-panel rounded-2xl border border-outline-variant/40 p-4 shadow-premium shrink-0">
           <div className="flex items-center justify-between border-b border-outline-variant/35 pb-4 mb-4">
             <div>
               <span className="text-[9px] font-black text-primary uppercase tracking-wider block">Patient Brief</span>
@@ -951,7 +951,7 @@ export default function ConsultationWorkspaceClient({
         </div>
 
         {showPriorVisitsCard && (
-          <div className="glass-panel rounded-2xl border border-outline-variant/40 p-5 shadow-premium space-y-3">
+          <div className="glass-panel rounded-2xl border border-outline-variant/40 p-4 shadow-premium space-y-3 shrink-0 max-h-28 overflow-y-auto overscroll-contain">
             <div className="flex items-center gap-2 border-b border-outline-variant/35 pb-3">
               <History className="w-4 h-4 text-primary" />
               <h3 className="text-sm font-bold text-on-surface">Previous visits</h3>
@@ -990,7 +990,7 @@ export default function ConsultationWorkspaceClient({
         )}
 
         {/* NAVIGATION: History sidebar */}
-        <div className="flex glass-panel p-1 rounded-xl border border-outline-variant/40 shadow-sm">
+        <div className="flex glass-panel p-1 rounded-xl border border-outline-variant/40 shadow-sm shrink-0">
           <button
             type="button"
             onClick={() => setShowHistory(false)}
@@ -1017,7 +1017,7 @@ export default function ConsultationWorkspaceClient({
         </div>
 
         {showHistory && (
-          <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-1">
+          <div className="space-y-3 shrink-0 max-h-36 overflow-y-auto overscroll-contain pr-0.5 rounded-xl">
             {history.length > 0 ? (
               history.map((h) => (
                 <div key={h.id} className="glass-panel rounded-xl border border-outline-variant/40 p-4 shadow-sm space-y-2">
@@ -1058,9 +1058,9 @@ export default function ConsultationWorkspaceClient({
 
         <div
           ref={diagnosticsPanelRef}
-          className="flex flex-col min-h-0 max-h-[min(56vh,600px)] rounded-2xl border border-outline-variant/40 bg-surface-container/10 shadow-premium overflow-hidden"
+          className="flex flex-col flex-1 min-h-[12rem] min-w-0 rounded-2xl border border-outline-variant/40 bg-surface-container/10 shadow-premium overflow-hidden"
         >
-          <div className="shrink-0 px-3.5 py-3 border-b border-outline-variant/30 bg-surface-container/25">
+          <div className="shrink-0 px-3.5 py-2.5 border-b border-outline-variant/30 bg-surface-container/25">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <h3 className="text-[11px] font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
@@ -1078,7 +1078,7 @@ export default function ConsultationWorkspaceClient({
               )}
             </div>
           </div>
-          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3.5 py-3">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3.5 py-3 scroll-smooth [scrollbar-gutter:stable]">
             <ConsultationLabsDocsPanel
               variant="sidebar"
               visitId={visitId}

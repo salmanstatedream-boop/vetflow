@@ -450,7 +450,7 @@ export default function ConsultationLabsDocsPanel({
           </div>
 
           {labOrders.length > 0 ? (
-            <div className="space-y-2 max-h-44 overflow-y-auto overscroll-contain pr-0.5">
+            <div className="space-y-2">
               {labOrders.map((o) => (
                 <div
                   key={o.id}
@@ -576,7 +576,7 @@ export default function ConsultationLabsDocsPanel({
           </div>
 
           {displayDocuments.length > 0 ? (
-            <div className="space-y-1.5 max-h-36 overflow-y-auto overscroll-contain pr-0.5">
+            <div className="space-y-1.5">
               <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider">
                 This visit
               </p>
@@ -591,7 +591,7 @@ export default function ConsultationLabsDocsPanel({
           )}
 
           {previousDocuments.length > 0 && (
-            <div className="space-y-1.5 max-h-28 overflow-y-auto overscroll-contain pr-0.5 pt-1 border-t border-outline-variant/25">
+            <div className="space-y-1.5 pt-1 border-t border-outline-variant/25">
               <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider">
                 Previous files
               </p>

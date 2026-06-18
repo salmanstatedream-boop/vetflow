@@ -23,10 +23,9 @@ import { calcSellingPrice, DEFAULT_PRODUCT_MARKUP_PERCENT } from '@/lib/inventor
 
 function canManageProduct(
   ctx: { role?: string | null; userId: string },
-  product: { created_by: string | null }
+  _product: { created_by: string | null }
 ): boolean {
-  if (ctx.role === 'clinic_admin') return true;
-  if (ctx.role === 'receptionist') return product.created_by === ctx.userId;
+  if (ctx.role === 'clinic_admin' || ctx.role === 'receptionist') return true;
   return false;
 }
 

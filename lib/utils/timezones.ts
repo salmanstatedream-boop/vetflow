@@ -75,3 +75,20 @@ export function addDaysToYmd(ymd: string, days: number): string {
   const dd = String(dt.getUTCDate()).padStart(2, '0');
   return `${yy}-${mm}-${dd}`;
 }
+
+/** Inclusive calendar-date range check (YYYY-MM-DD strings). */
+export function isDateWithinRange(
+  dateKey: string,
+  from?: string,
+  to?: string
+): boolean {
+  if (from && dateKey < from) return false;
+  if (to && dateKey > to) return false;
+  return true;
+}
+
+/** Normalize a from/to pair so from <= to when both are set. */
+export function normalizeDateRange(from: string, to: string): { from: string; to: string } {
+  if (from && to && from > to) return { from: to, to: from };
+  return { from, to };
+}

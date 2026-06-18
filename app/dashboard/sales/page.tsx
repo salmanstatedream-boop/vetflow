@@ -19,7 +19,12 @@ export const metadata = {
   description: 'Monitor counter sales and retail revenue.',
 };
 
-export default async function SalesMonitorPage() {
+export default async function SalesMonitorPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ dateFrom?: string; dateTo?: string }>;
+}) {
+  const { dateFrom, dateTo } = await searchParams;
   const ctx = await resolveServerAuthContext();
   if (!ctx) redirect('/login');
 
@@ -127,7 +132,12 @@ export default async function SalesMonitorPage() {
         description="Track counter sales, revenue, and top-selling products."
         icon={BarChart3}
       />
-      <SalesMonitorClient sales={sales} clinicTimezone={clinicTimezone} />
+      <SalesMonitorClient
+        sales={sales}
+        clinicTimezone={clinicTimezone}
+        initialDateFrom={dateFrom ?? ''}
+        initialDateTo={dateTo ?? ''}
+      />
     </div>
   );
 }
