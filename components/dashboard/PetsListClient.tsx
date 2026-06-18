@@ -18,6 +18,9 @@ export type PetListRow = {
   medical_notes: string | null;
   ownerFirstName: string | null;
   ownerLastName: string | null;
+  ageLabel: string | null;
+  displayWeightKg: number | null;
+  displayBodyConditionScore: number | null;
 };
 
 interface PetsListClientProps {
@@ -70,18 +73,25 @@ export default function PetsListClient({ pets, isAdmin }: PetsListClientProps) {
                 </td>
                 <td className="px-6 py-4 text-on-surface-variant/70">{pet.gender}</td>
                 <td className="px-6 py-4 space-y-1 text-[11px] text-on-surface-variant/65">
-                  {pet.date_of_birth && (
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      <span>DOB: {pet.date_of_birth}</span>
-                    </div>
-                  )}
-                  {pet.weight_kg && (
-                    <div className="flex items-center gap-1">
-                      <Weight className="w-3 h-3" />
-                      <span>Weight: {pet.weight_kg} kg</span>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-3 h-3 shrink-0" />
+                    <span>Age: {pet.ageLabel ?? '—'}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Weight className="w-3 h-3 shrink-0" />
+                    <span>
+                      Weight:{' '}
+                      {pet.displayWeightKg != null ? `${pet.displayWeightKg} kg` : '—'}
+                    </span>
+                  </div>
+                  <div>
+                    <span>
+                      BCS:{' '}
+                      {pet.displayBodyConditionScore != null
+                        ? `${pet.displayBodyConditionScore} / 9`
+                        : '—'}
+                    </span>
+                  </div>
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex flex-wrap justify-end items-center gap-2">

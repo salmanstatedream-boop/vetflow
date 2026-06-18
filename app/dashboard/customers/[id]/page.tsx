@@ -7,6 +7,11 @@ import PetForm from '@/components/forms/PetForm';
 import CustomerDetailAdminBar, { PetRowAdminActions } from '@/components/dashboard/CustomerDetailAdminBar';
 import PageHeader from '@/components/ui/premium/PageHeader';
 import { formatMoney } from '@/lib/utils/currency';
+import { computePetAgeLabel } from '@/lib/utils/pet-species-avatar';
+import {
+  buildLatestVisitMetricsByPatient,
+  resolvePatientDisplayMetrics,
+} from '@/lib/patients/display-metrics';
 import { 
   User, 
   Phone, 
@@ -69,6 +74,41 @@ export default async function CustomerDetailPage({
     .order('created_at', { ascending: false });
 
   const isAdmin = session.role === 'clinic_admin';
+
+  const petIds = (pets ?? []).map((p) => p.id);
+  let visitMetricsByPatient = new Map<
+    string,
+    { weight_kg: number | null; body_condition_score: number | null }
+  >();
+  if (petIds.length > 0) {
+    const { data: visitRows } = await supabase
+      .from('visits')
+      .select(`
+        patient_id,
+        checked_in_at,
+        clinical_notes ( weight_kg, body_condition_score )
+      `)
+      .eq('organization_id', session.organizationId)
+      .in('patient_id', petIds)
+      .order('checked_in_at', { ascending: false });
+    visitMetricsByPatient = buildLatestVisitMetricsByPatient(visitRows ?? []);
+  }
+
+  const petsWithMetrics = (pets ?? []).map((pet) => {
+    const profileWeight = pet.weight_kg != null ? Number(pet.weight_kg) : null;
+    const profileBcs =
+      pet.body_condition_score != null ? Number(pet.body_condition_score) : null;
+    const { weightKg, bodyConditionScore } = resolvePatientDisplayMetrics(
+      { weightKg: profileWeight, bodyConditionScore: profileBcs },
+      visitMetricsByPatient.get(pet.id)
+    );
+    return {
+      ...pet,
+      ageLabel: computePetAgeLabel(pet.date_of_birth),
+      displayWeightKg: weightKg,
+      displayBodyConditionScore: bodyConditionScore,
+    };
+  });
 
   const { data: purchaseInvoices } = await supabase
     .from('invoices')
@@ -170,12 +210,12 @@ export default async function CustomerDetailPage({
         {/* PET LIST CARD */}
         <div className="md:col-span-2 space-y-4">
           <h3 className="text-sm font-bold text-on-surface uppercase tracking-wider">
-            Registered Patients ({pets?.length || 0})
+            Registered Patients ({petsWithMetrics.length})
           </h3>
 
-          {pets && pets.length > 0 ? (
+          {petsWithMetrics.length > 0 ? (
             <div className="grid sm:grid-cols-2 gap-4">
-              {pets.map((pet) => (
+              {petsWithMetrics.map((pet) => (
                 <div 
                   key={pet.id} 
                   className="glass-panel p-5 hover:shadow-premium-hover transition-all duration-200 flex flex-col justify-between"
@@ -199,18 +239,25 @@ export default async function CustomerDetailPage({
                         <span className="font-semibold text-on-surface">Gender:</span>
                         <span>{pet.gender}</span>
                       </div>
-                      {pet.date_of_birth && (
-                        <div className="flex items-center gap-1.5">
-                          <Calendar className="w-3.5 h-3.5 text-primary/60" />
-                          <span>{pet.date_of_birth}</span>
-                        </div>
-                      )}
-                      {pet.weight_kg && (
-                        <div className="flex items-center gap-1.5">
-                          <Weight className="w-3.5 h-3.5 text-primary/60" />
-                          <span>{pet.weight_kg} kg</span>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-primary/60" />
+                        <span>Age: {pet.ageLabel ?? '—'}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Weight className="w-3.5 h-3.5 text-primary/60" />
+                        <span>
+                          Weight:{' '}
+                          {pet.displayWeightKg != null ? `${pet.displayWeightKg} kg` : '—'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold text-on-surface">BCS:</span>
+                        <span>
+                          {pet.displayBodyConditionScore != null
+                            ? `${pet.displayBodyConditionScore} / 9`
+                            : '—'}
+                        </span>
+                      </div>
                     </div>
 
                     {pet.allergies && pet.allergies !== 'None' && (

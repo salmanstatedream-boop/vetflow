@@ -5,6 +5,11 @@ import { createClient } from '@/lib/supabase/server';
 import PageHeader from '@/components/ui/premium/PageHeader';
 import PetsListClient from '@/components/dashboard/PetsListClient';
 import { Heart } from 'lucide-react';
+import { computePetAgeLabel } from '@/lib/utils/pet-species-avatar';
+import {
+  buildLatestVisitMetricsByPatient,
+  resolvePatientDisplayMetrics,
+} from '@/lib/patients/display-metrics';
 
 export const metadata = {
   title: 'Patient Registry',
@@ -31,6 +36,7 @@ export default async function PetsPage() {
       gender,
       date_of_birth,
       weight_kg,
+      body_condition_score,
       customer_id,
       allergies,
       medical_notes,
@@ -51,8 +57,28 @@ export default async function PetsPage() {
     );
   }
 
+  const { data: visitRows } = await supabase
+    .from('visits')
+    .select(`
+      patient_id,
+      checked_in_at,
+      clinical_notes ( weight_kg, body_condition_score )
+    `)
+    .eq('organization_id', session.organizationId)
+    .order('checked_in_at', { ascending: false });
+
+  const visitMetricsByPatient = buildLatestVisitMetricsByPatient(visitRows ?? []);
+
   const rows = (pets || []).map((pet) => {
     const owner = pet.customers as { first_name: string; last_name: string } | null;
+    const profileWeight = pet.weight_kg != null ? Number(pet.weight_kg) : null;
+    const profileBcs =
+      pet.body_condition_score != null ? Number(pet.body_condition_score) : null;
+    const { weightKg, bodyConditionScore } = resolvePatientDisplayMetrics(
+      { weightKg: profileWeight, bodyConditionScore: profileBcs },
+      visitMetricsByPatient.get(pet.id)
+    );
+
     return {
       id: pet.id,
       name: pet.name,
@@ -66,6 +92,9 @@ export default async function PetsPage() {
       medical_notes: pet.medical_notes,
       ownerFirstName: owner?.first_name ?? null,
       ownerLastName: owner?.last_name ?? null,
+      ageLabel: computePetAgeLabel(pet.date_of_birth),
+      displayWeightKg: weightKg,
+      displayBodyConditionScore: bodyConditionScore,
     };
   });
 
