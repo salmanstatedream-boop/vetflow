@@ -168,8 +168,8 @@ export default function ScheduleDayCalendarClient({
   const gridHeight = slots.length * ROW_HEIGHT;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+    <div className="flex flex-col gap-6 min-h-0 flex-1">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 shrink-0">
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -224,40 +224,42 @@ export default function ScheduleDayCalendarClient({
         </div>
       </div>
 
-      <div className="glass-panel rounded-2xl border border-outline-variant/40 overflow-hidden shadow-premium">
-        <div className="overflow-x-auto">
+      <div className="glass-panel rounded-2xl border border-outline-variant/40 overflow-hidden shadow-premium flex flex-col min-h-0 max-h-[calc(100vh-14rem)]">
+        <div
+          className="grid min-w-[720px] shrink-0 border-b border-outline-variant/30"
+          style={{
+            gridTemplateColumns: `64px repeat(${columns.length}, minmax(140px, 1fr))`,
+          }}
+        >
+          <div className="bg-surface-container/40 border-r border-outline-variant/30" />
+          {columns.map((col) => (
+            <div
+              key={col.id}
+              className="px-3 py-3 border-r border-outline-variant/30 bg-surface-container/30 text-[10px] font-bold text-on-surface uppercase tracking-wider"
+            >
+              {col.label}
+              <span className="block text-[9px] font-semibold text-primary normal-case mt-0.5">
+                {
+                  dayAppointments.filter((a) =>
+                    col.id === 'unassigned' ? !a.doctorId : a.doctorId === col.id
+                  ).length
+                }{' '}
+                appts
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div className="overflow-y-auto overflow-x-auto flex-1 min-h-0">
           <div
             className="grid min-w-[720px]"
             style={{
               gridTemplateColumns: `64px repeat(${columns.length}, minmax(140px, 1fr))`,
-              gridTemplateRows: 'auto 1fr',
             }}
           >
             <div
-              className="bg-surface-container/40 border-b border-r border-outline-variant/30"
-              style={{ gridColumn: 1, gridRow: 1 }}
-            />
-            {columns.map((col, colIndex) => (
-              <div
-                key={col.id}
-                style={{ gridColumn: colIndex + 2, gridRow: 1 }}
-                className="px-3 py-3 border-b border-r border-outline-variant/30 bg-surface-container/30 text-[10px] font-bold text-on-surface uppercase tracking-wider"
-              >
-                {col.label}
-                <span className="block text-[9px] font-semibold text-primary normal-case mt-0.5">
-                  {
-                    dayAppointments.filter((a) =>
-                      col.id === 'unassigned' ? !a.doctorId : a.doctorId === col.id
-                    ).length
-                  }{' '}
-                  appts
-                </span>
-              </div>
-            ))}
-
-            <div
-              className="relative border-r border-outline-variant/20"
-              style={{ gridColumn: 1, gridRow: 2, height: gridHeight }}
+              className="relative border-r border-outline-variant/20 sticky left-0 z-10 bg-surface-container/95"
+              style={{ height: gridHeight }}
             >
               {slots.map((m, i) => (
                 <div
@@ -270,7 +272,7 @@ export default function ScheduleDayCalendarClient({
               ))}
             </div>
 
-            {columns.map((col, colIndex) => {
+            {columns.map((col) => {
               const colAppts = dayAppointments.filter((a) =>
                 col.id === 'unassigned' ? !a.doctorId : a.doctorId === col.id
               );
@@ -278,7 +280,7 @@ export default function ScheduleDayCalendarClient({
                 <div
                   key={col.id}
                   className="relative border-r border-outline-variant/20 bg-surface/30"
-                  style={{ gridColumn: colIndex + 2, gridRow: 2, height: gridHeight }}
+                  style={{ height: gridHeight }}
                 >
                   {slots.map((m, i) => (
                     <button

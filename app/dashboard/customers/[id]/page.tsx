@@ -144,20 +144,26 @@ export default async function CustomerDetailPage({
               <Phone className="w-4 h-4 text-primary/70" />
               <span>{customer.phone}</span>
             </div>
-            
-            {customer.email && (
+
+            <div>
+              <span className="text-[9px] font-semibold text-on-surface-variant uppercase block mb-0.5">
+                Email address
+              </span>
               <div className="flex items-center gap-2.5 text-on-surface-variant/70">
                 <Mail className="w-4 h-4 text-primary/70" />
-                <span className="truncate">{customer.email}</span>
+                <span className="truncate">{customer.email || '—'}</span>
               </div>
-            )}
+            </div>
 
-            {customer.address && (
+            <div>
+              <span className="text-[9px] font-semibold text-on-surface-variant uppercase block mb-0.5">
+                Home address
+              </span>
               <div className="flex items-start gap-2.5 text-on-surface-variant/70">
                 <MapPin className="w-4 h-4 text-primary/70 mt-0.5" />
-                <span>{customer.address}</span>
+                <span>{customer.address || '—'}</span>
               </div>
-            )}
+            </div>
           </div>
         </div>
 

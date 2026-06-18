@@ -265,6 +265,7 @@ export async function completeConsultationAction(payload: unknown) {
       heart_rate_bpm: numOrNull(parsed.heartRateBpm),
       respiratory_rate: numOrNull(parsed.respiratoryRate),
       weight_kg: numOrNull(parsed.weightKg),
+      body_condition_score: numOrNull(parsed.bodyConditionScore),
     };
 
     const { data: existingNotes } = await supabase

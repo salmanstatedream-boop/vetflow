@@ -25,6 +25,7 @@ export type ClinicalNoteRow = {
   heart_rate_bpm: number | null;
   respiratory_rate: number | null;
   weight_kg: number | null;
+  body_condition_score: number | null;
 };
 
 export type PrescriptionItemRow = {
@@ -72,6 +73,7 @@ export type PatientVisitRow = {
   prescriptions: VisitPrescriptionRow | null;
   labOrders: LabOrderRow[];
   documents: PatientDocumentRow[];
+  services: { name: string }[];
 };
 
 export type PatientOwnerRow = {
@@ -90,6 +92,7 @@ export type PatientMedicalProfileData = {
   gender: string | null;
   dateOfBirth: string | null;
   weightKg: number | null;
+  bodyConditionScore: number | null;
   allergies: string | null;
   medicalNotes: string | null;
   photoUrl: string | null;

@@ -19,6 +19,7 @@ import {
   type StockAdjustmentInput,
 } from '@/lib/validations/schemas';
 import { normalizeProductTypeSlug } from '@/lib/inventory/product-types';
+import { calcSellingPrice, DEFAULT_PRODUCT_MARKUP_PERCENT } from '@/lib/inventory/pricing';
 
 function canManageProduct(
   ctx: { role?: string | null; userId: string },
@@ -224,6 +225,19 @@ export async function adjustStockAction(payload: unknown) {
   }
 }
 
+async function getProductMarkupPercent(
+  supabase: Awaited<ReturnType<typeof createAdminClient>>,
+  organizationId: string
+): Promise<number> {
+  const { data } = await supabase
+    .from('app_settings')
+    .select('product_markup_percent')
+    .eq('organization_id', organizationId)
+    .maybeSingle();
+  const value = Number(data?.product_markup_percent);
+  return Number.isFinite(value) ? value : DEFAULT_PRODUCT_MARKUP_PERCENT;
+}
+
 export async function confirmStockIntakeAction(payload: unknown) {
   try {
     const ctx = await resolveServerAuthContext();
@@ -245,6 +259,8 @@ export async function confirmStockIntakeAction(payload: unknown) {
     ]
       .filter(Boolean)
       .join(' · ');
+
+    const markupPercent = await getProductMarkupPercent(adminClient, ctx.organizationId!);
 
     for (const line of parsed.lines) {
       if (line.productId) {
@@ -286,7 +302,7 @@ export async function confirmStockIntakeAction(payload: unknown) {
             type: productType,
             category_id: null,
             purchase_price: line.unitPrice,
-            selling_price: line.unitPrice * 1.2,
+            selling_price: calcSellingPrice(line.unitPrice, markupPercent),
             stock_quantity: line.quantity,
             reorder_level: 5,
             is_active: true,

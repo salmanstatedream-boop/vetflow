@@ -889,6 +889,9 @@ export default async function DashboardOverview({
           consultingVisits={receptionistConsulting}
           checkoutVisits={receptionistCheckout}
           visitRecords={receptionistVisitRecords}
+          activeBranchId={activeBranchId}
+          branches={ctx.branches}
+          doctors={doctors}
         />
       )}
 
@@ -1060,7 +1063,7 @@ function buildQuickLinks(
     ];
   } else if (role === 'receptionist') {
     links = [
-      { key: 'walkin', href: '/dashboard/walk-ins?new=1', label: 'Quick walk-in' },
+      { key: 'walkin', href: '/dashboard/walk-ins', label: 'Walk-ins queue' },
       { key: 'appt', href: '/dashboard/appointments', label: 'Appointments' },
       {
         key: 'checkout',

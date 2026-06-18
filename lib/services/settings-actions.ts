@@ -37,6 +37,7 @@ export async function updateSettingsAction(payload: unknown) {
           pdf_branding_enabled: parsed.pdfBrandingEnabled ?? false,
           pdf_accent_color: parsed.pdfAccentColor || null,
           pdf_footer_text: parsed.pdfFooterText || null,
+          product_markup_percent: parsed.productMarkupPercent ?? 20,
         },
         { onConflict: 'organization_id' }
       );

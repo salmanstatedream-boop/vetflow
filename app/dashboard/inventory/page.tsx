@@ -96,6 +96,14 @@ export default async function InventoryPage({
     .eq('is_active', true)
     .order('name');
 
+  const { data: appSettings } = await supabase
+    .from('app_settings')
+    .select('product_markup_percent')
+    .eq('organization_id', session.organizationId!)
+    .maybeSingle();
+
+  const defaultMarkupPercent = Number(appSettings?.product_markup_percent ?? 20);
+
   // Compute stats
   const totalItems = (products?.length || 0) + (orgServices?.length || 0);
   const lowStockItems = products?.filter((p) => p.type !== 'service' && p.stock_quantity <= p.reorder_level) || [];
@@ -120,6 +128,7 @@ export default async function InventoryPage({
               categories={categories || []}
               branches={session.branches}
               activeBranchId={activeBranchId}
+              defaultMarkupPercent={defaultMarkupPercent}
             />
           ) : undefined
         }
@@ -186,6 +195,7 @@ export default async function InventoryPage({
                 categories={categories || []}
                 branches={session.branches}
                 activeBranchId={activeBranchId}
+                defaultMarkupPercent={defaultMarkupPercent}
               />
             </div>
           )}

@@ -2,6 +2,7 @@
 
 import AppLink from '@/components/layout/AppLink';
 import { useMemo, useState } from 'react';
+import QuickWalkInModal from '@/components/reception/QuickWalkInModal';
 import {
   Calendar,
   ClipboardList,
@@ -67,6 +68,9 @@ export interface ReceptionistHomeClientProps {
   consultingVisits?: ReceptionistVisitRow[];
   checkoutVisits: ReceptionistVisitRow[];
   visitRecords: VisitRecordRow[];
+  activeBranchId: string;
+  branches: { id: string; name: string }[];
+  doctors: { id: string; firstName: string; lastName: string }[];
 }
 
 const WORKFLOW_STEPS = [
@@ -87,9 +91,13 @@ export default function ReceptionistHomeClient({
   consultingVisits = [],
   checkoutVisits,
   visitRecords,
+  activeBranchId,
+  branches,
+  doctors,
 }: ReceptionistHomeClientProps) {
   useVisibilityPolling(15000, true);
 
+  const [walkInOpen, setWalkInOpen] = useState(false);
   const [recordSearch, setRecordSearch] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -167,14 +175,15 @@ export default function ReceptionistHomeClient({
       )}
 
       <div className="grid sm:grid-cols-2 gap-3">
-        <AppLink
-          href="/dashboard/walk-ins?new=1"
+        <button
+          type="button"
+          onClick={() => setWalkInOpen(true)}
           className="flex items-center justify-center gap-3 w-full py-4 px-6 rounded-2xl bg-primary text-on-primary font-bold text-sm shadow-premium hover:opacity-90 transition-all"
         >
           <UserPlus className="w-5 h-5" />
           Quick walk-in — patient just arrived
           <ArrowRight className="w-4 h-4 opacity-80" />
-        </AppLink>
+        </button>
         <AppLink
           href="/dashboard/sales/new"
           className="flex items-center justify-center gap-3 w-full py-4 px-6 rounded-2xl bg-violet-600 text-white font-bold text-sm shadow-premium hover:opacity-90 transition-all"
@@ -413,12 +422,20 @@ export default function ReceptionistHomeClient({
 
       <div className="flex flex-wrap gap-2">
         <QuickChip href="/dashboard/sales/new" icon={ShoppingBag} label="Retail sale" />
-        <QuickChip href="/dashboard/walk-ins?new=1" icon={UserPlus} label="Quick walk-in" primary />
+        <QuickChip onClick={() => setWalkInOpen(true)} icon={UserPlus} label="Quick walk-in" primary />
         <QuickChip href="/dashboard/customers?focus=phone" icon={Search} label="Search by phone" />
         <QuickChip href="/dashboard/inventory?tab=intake" icon={Layers} label="Stock invoice intake" />
         <QuickChip href="/dashboard/invoices?status=unpaid" icon={Banknote} label="Unpaid invoices" />
         <QuickChip href="/dashboard/appointments?new=1" icon={Calendar} label="New appointment" />
       </div>
+
+      <QuickWalkInModal
+        isOpen={walkInOpen}
+        onClose={() => setWalkInOpen(false)}
+        activeBranchId={activeBranchId}
+        branches={branches}
+        doctors={doctors}
+      />
     </div>
   );
 }
@@ -482,24 +499,34 @@ function QueuePanel({
 
 function QuickChip({
   href,
+  onClick,
   icon: Icon,
   label,
   primary,
 }: {
-  href: string;
+  href?: string;
+  onClick?: () => void;
   icon: typeof Search;
   label: string;
   primary?: boolean;
 }) {
+  const className = `inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors ${
+    primary
+      ? 'bg-primary/15 border-primary/30 text-primary hover:bg-primary/25'
+      : 'border-outline-variant/50 text-on-surface hover:bg-surface-container-high'
+  }`;
+
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className={className}>
+        <Icon className="w-3.5 h-3.5 text-primary" />
+        {label}
+      </button>
+    );
+  }
+
   return (
-    <AppLink
-      href={href}
-      className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors ${
-        primary
-          ? 'bg-primary/15 border-primary/30 text-primary hover:bg-primary/25'
-          : 'border-outline-variant/50 text-on-surface hover:bg-surface-container-high'
-      }`}
-    >
+    <AppLink href={href!} className={className}>
       <Icon className="w-3.5 h-3.5 text-primary" />
       {label}
     </AppLink>

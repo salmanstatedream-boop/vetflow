@@ -53,6 +53,7 @@ export const PetSchema = z.object({
   gender: z.string().min(1, { message: 'Gender is required' }), // Male, Female, Spayed, Neutered
   dateOfBirth: z.string().optional().or(z.literal('')),
   weightKg: z.number().nonnegative().optional().or(z.nan()),
+  bodyConditionScore: z.number().int().min(1).max(9).optional().or(z.nan()),
   microchipNumber: z.string().optional().or(z.literal('')),
   allergies: z.string().optional().or(z.literal('')),
   medicalNotes: z.string().optional().or(z.literal('')),
@@ -152,6 +153,7 @@ export const SettingsSchema = z.object({
     .optional()
     .or(z.literal('')),
   pdfFooterText: z.string().max(300).optional().or(z.literal('')),
+  productMarkupPercent: z.number().min(0).max(500),
 });
 
 // --- BRANCHES ---
@@ -299,6 +301,7 @@ export const CompleteConsultationSchema = z
     heartRateBpm: z.number().int().nonnegative().optional().or(z.nan()),
     respiratoryRate: z.number().int().nonnegative().optional().or(z.nan()),
     weightKg: z.number().nonnegative().optional().or(z.nan()),
+    bodyConditionScore: z.number().int().min(1).max(9).optional().or(z.nan()),
     prescriptionItems: z.array(PrescriptionItemSchema),
     serviceItems: z.array(VisitServiceItemSchema),
   })
@@ -441,6 +444,7 @@ export const UpdateClinicalNoteSchema = z.object({
   heartRateBpm: z.number().int().nonnegative().optional().or(z.nan()),
   respiratoryRate: z.number().int().nonnegative().optional().or(z.nan()),
   weightKg: z.number().nonnegative().optional().or(z.nan()),
+  bodyConditionScore: z.number().int().min(1).max(9).optional().or(z.nan()),
 });
 
 export const UpdatePatientCareNotesSchema = z.object({
@@ -448,6 +452,7 @@ export const UpdatePatientCareNotesSchema = z.object({
   allergies: z.string().optional().or(z.literal('')),
   medicalNotes: z.string().optional().or(z.literal('')),
   weightKg: z.number().nonnegative().optional().or(z.nan()),
+  bodyConditionScore: z.number().int().min(1).max(9).optional().or(z.nan()),
 });
 
 export const PrescriptionItemEditSchema = z.object({

@@ -116,6 +116,7 @@ function mapClinicalNote(raw: Record<string, unknown> | null): ClinicalNoteRow |
     heart_rate_bpm: (raw.heart_rate_bpm as number) ?? null,
     respiratory_rate: (raw.respiratory_rate as number) ?? null,
     weight_kg: (raw.weight_kg as number) ?? null,
+    body_condition_score: (raw.body_condition_score as number) ?? null,
   };
 }
 
@@ -276,7 +277,7 @@ export async function getPatientMedicalProfileAction(petId: string) {
     const { data: pet, error: petError } = await supabase
       .from('patients')
       .select(`
-        id, name, species, breed, gender, date_of_birth, weight_kg,
+        id, name, species, breed, gender, date_of_birth, weight_kg, body_condition_score,
         allergies, medical_notes, patient_number,
         customers ( id, first_name, last_name, phone, email )
       `)
@@ -297,8 +298,9 @@ export async function getPatientMedicalProfileAction(petId: string) {
           id, visit_type, chief_complaint, history, examination_findings, diagnosis,
           treatment_plan, procedure_notes, post_op_medication, internal_notes,
           follow_up_recommendation, follow_up_days,
-          temperature_c, heart_rate_bpm, respiratory_rate, weight_kg
+          temperature_c, heart_rate_bpm, respiratory_rate, weight_kg, body_condition_score
         ),
+        visit_services ( name ),
         prescriptions (
           id, is_finalized,
           user_profiles ( first_name, last_name ),
@@ -404,6 +406,9 @@ export async function getPatientMedicalProfileAction(petId: string) {
       const visitDocs = ((v.documents as PatientDocumentRow[]) ?? []).filter(
         (d) => d.category !== 'profile_photo'
       );
+      const visitServices = ((v.visit_services as { name: string }[]) ?? []).map((s) => ({
+        name: s.name,
+      }));
 
       return {
         id: v.id,
@@ -417,6 +422,7 @@ export async function getPatientMedicalProfileAction(petId: string) {
         prescriptions: prescription,
         labOrders: labsByVisit.get(v.id) ?? [],
         documents: visitDocs,
+        services: visitServices,
       };
     });
 
@@ -456,6 +462,8 @@ export async function getPatientMedicalProfileAction(petId: string) {
       gender: pet.gender,
       dateOfBirth: pet.date_of_birth,
       weightKg: pet.weight_kg != null ? Number(pet.weight_kg) : null,
+      bodyConditionScore:
+        pet.body_condition_score != null ? Number(pet.body_condition_score) : null,
       allergies: pet.allergies,
       medicalNotes: pet.medical_notes,
       photoUrl: profilePhoto?.id ? `/api/documents/${profilePhoto.id}` : null,
@@ -621,6 +629,8 @@ export async function updatePatientCareNotesAction(payload: unknown) {
     };
     const weight = numOrNull(parsed.weightKg);
     if (weight !== null) updatePayload.weight_kg = weight;
+    const bcs = numOrNull(parsed.bodyConditionScore);
+    if (bcs !== null) updatePayload.body_condition_score = bcs;
 
     const { error } = await supabase
       .from('patients')

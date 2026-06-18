@@ -13,12 +13,7 @@ export const metadata = {
   description: 'Manage walk-in consultations and active doctor assignments.',
 };
 
-export default async function WalkInsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ new?: string }>;
-}) {
-  const { new: openIntake } = await searchParams;
+export default async function WalkInsPage() {
   const ctx = await resolveServerAuthContext();
   if (!ctx) {
     redirect('/login');
@@ -50,30 +45,7 @@ export default async function WalkInsPage({
 
   const supabase = await createClient();
 
-  // 2. Fetch doctors in organization
-  const { data: doctorsData } = await supabase
-    .from('organization_members')
-    .select(`
-      user_id,
-      user_profiles ( first_name, last_name )
-    `)
-    .eq('organization_id', session.organizationId)
-    .eq('role', 'doctor')
-    .eq('is_active', true);
-
-  const doctors =
-    doctorsData
-      ?.filter((d) => d.user_profiles)
-      .map((d) => {
-        const profile = d.user_profiles as { first_name: string; last_name: string };
-        return {
-          id: d.user_id,
-          firstName: profile.first_name || '',
-          lastName: profile.last_name || '',
-        };
-      }) || [];
-
-  // 3. Fetch current waiting / consulting visits
+  // 2. Fetch current waiting / consulting visits
   const { data: visitsData } = await supabase
     .from('visits')
     .select(`
@@ -160,18 +132,13 @@ export default async function WalkInsPage({
       
       <PageHeader
         title="Walk-in queue board"
-        description="Check in walk-in clients and monitor room queue allocations."
+        description="Monitor waiting patients and active consultations."
         icon={ClipboardList}
       />
 
-      {/* DASHBOARD GRID CONTENT */}
       <WalkInDashboardClient
-        doctors={doctors}
-        activeBranchId={activeBranchId}
-        branches={session.branches}
         initialVisits={visits}
         checkoutVisits={checkoutVisits}
-        highlightIntake={openIntake === '1'}
       />
 
     </div>

@@ -99,6 +99,7 @@ interface ConsultationWorkspaceClientProps {
     gender: string;
     allergies: string | null;
     weightKg: number | null;
+    bodyConditionScore?: number | null;
   };
   customer: {
     firstName: string;
@@ -236,6 +237,8 @@ export default function ConsultationWorkspaceClient({
       heartRateBpm: initialDraft?.heartRateBpm ?? undefined,
       respiratoryRate: initialDraft?.respiratoryRate ?? undefined,
       weightKg: initialDraft?.weightKg ?? pet.weightKg ?? undefined,
+      bodyConditionScore:
+        initialDraft?.bodyConditionScore ?? pet.bodyConditionScore ?? undefined,
       prescriptionItems: initialDraft?.prescriptionItems ?? [],
       serviceItems: initialDraft?.serviceItems?.length
         ? initialDraft.serviceItems
@@ -860,13 +863,19 @@ export default function ConsultationWorkspaceClient({
               <span className="font-semibold text-on-surface">Gender</span>
               <span>{pet.gender}</span>
             </div>
-            {pet.weightKg && (
+            {pet.weightKg != null && (
               <div className="flex items-center justify-between text-on-surface-variant/70">
                 <span className="font-semibold text-on-surface flex items-center gap-1">
                   <Weight className="w-3.5 h-3.5 text-primary/70" />
                   Weight
                 </span>
                 <span>{pet.weightKg} kg</span>
+              </div>
+            )}
+            {pet.bodyConditionScore != null && (
+              <div className="flex items-center justify-between text-on-surface-variant/70">
+                <span className="font-semibold text-on-surface">Body condition</span>
+                <span>{pet.bodyConditionScore} / 9</span>
               </div>
             )}
             <div className="flex items-center justify-between text-on-surface-variant/70">
@@ -1109,7 +1118,7 @@ export default function ConsultationWorkspaceClient({
                 className="w-full px-3 py-2.5 bg-surface-container/20 border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary rounded-xl text-sm text-on-surface outline-none"
               />
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-surface-container/20 border border-outline-variant/30">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 p-4 rounded-xl bg-surface-container/20 border border-outline-variant/30">
               <p className="col-span-full text-[10px] font-bold text-primary uppercase tracking-wider">
                 Vitals <span className="text-on-surface-variant/50 font-normal normal-case">(at least one required if no exam notes)</span>
               </p>
@@ -1128,6 +1137,10 @@ export default function ConsultationWorkspaceClient({
               <div>
                 <label className="block text-[9px] font-semibold text-on-surface-variant uppercase mb-1">Weight (kg)</label>
                 <input type="number" step="0.1" data-soap-tab="O" data-soap-field="weightKg" {...register('weightKg', { valueAsNumber: true })} className="w-full px-2 py-2 bg-surface border border-outline-variant rounded-lg text-sm" />
+              </div>
+              <div>
+                <label className="block text-[9px] font-semibold text-on-surface-variant uppercase mb-1">Body condition (1–9)</label>
+                <input type="number" min={1} max={9} step={1} data-soap-tab="O" data-soap-field="bodyConditionScore" {...register('bodyConditionScore', { valueAsNumber: true })} className="w-full px-2 py-2 bg-surface border border-outline-variant rounded-lg text-sm" />
               </div>
             </div>
           </div>

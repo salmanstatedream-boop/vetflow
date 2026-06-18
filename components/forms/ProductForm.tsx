@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import type { FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { createProductAction, createCategoryAction } from '@/lib/services/inventory-actions';
 import { ProductSchema, type ProductInput } from '@/lib/validations/schemas';
 import { PRODUCT_TYPE_OPTIONS } from '@/lib/inventory/product-types';
+import { calcSellingPrice, DEFAULT_PRODUCT_MARKUP_PERCENT } from '@/lib/inventory/pricing';
 import { useCreatableOptions } from '@/lib/hooks/useCreatableOptions';
 import Modal from '@/components/ui/premium/Modal';
 import Button from '@/components/ui/premium/Button';
@@ -20,6 +21,7 @@ interface ProductFormProps {
   branches: { id: string; name: string }[];
   activeBranchId?: string;
   variant?: 'default' | 'embedded';
+  defaultMarkupPercent?: number;
 }
 
 export default function ProductForm({
@@ -27,6 +29,7 @@ export default function ProductForm({
   branches,
   activeBranchId,
   variant = 'default',
+  defaultMarkupPercent = DEFAULT_PRODUCT_MARKUP_PERCENT,
 }: ProductFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -59,6 +62,18 @@ export default function ProductForm({
   const typeWatch = watch('type');
   const branchIdWatch = watch('branchId');
   const categoryNameWatch = watch('categoryName');
+  const purchasePriceWatch = watch('purchasePrice');
+  const sellingPriceManuallySet = useRef(false);
+
+  useEffect(() => {
+    if (sellingPriceManuallySet.current) return;
+    const purchase = Number(purchasePriceWatch);
+    if (purchase > 0) {
+      setValue('sellingPrice', calcSellingPrice(purchase, defaultMarkupPercent), {
+        shouldValidate: true,
+      });
+    }
+  }, [purchasePriceWatch, defaultMarkupPercent, setValue]);
 
   const onCreateCategory = useCallback(async (label: string) => {
     const res = await createCategoryAction(label);
@@ -74,6 +89,7 @@ export default function ProductForm({
   const openModal = () => {
     setError(null);
     setSuccessMessage(null);
+    sellingPriceManuallySet.current = false;
     setIsOpen(true);
   };
 
@@ -196,7 +212,12 @@ export default function ProductForm({
                 <input
                   type="number"
                   step="0.01"
-                  {...register('sellingPrice', { valueAsNumber: true })}
+                  {...register('sellingPrice', {
+                    valueAsNumber: true,
+                    onChange: () => {
+                      sellingPriceManuallySet.current = true;
+                    },
+                  })}
                   className="w-full px-3 py-2 bg-surface-container/30 border border-outline-variant focus:border-primary rounded-xl outline-none text-xs text-on-surface font-bold"
                 />
                 {errors.sellingPrice && (

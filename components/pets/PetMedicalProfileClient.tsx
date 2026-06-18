@@ -11,6 +11,7 @@ import {
 } from '@/lib/services/patient-medical-actions';
 import { uploadVisitDocumentAction, deleteDocumentAction } from '@/lib/services/document-actions';
 import MedicalRecordActivityPanel from '@/components/dashboard/MedicalRecordActivityPanel';
+import PatientHealthGraph from '@/components/pets/PatientHealthGraph';
 import Button from '@/components/ui/premium/Button';
 import Select from '@/components/ui/premium/Select';
 import Textarea from '@/components/ui/premium/Textarea';
@@ -38,7 +39,7 @@ import {
   User,
 } from 'lucide-react';
 
-type TabKey = 'history' | 'labs' | 'billing' | 'care' | 'recommendations';
+type TabKey = 'history' | 'health' | 'labs' | 'billing' | 'care' | 'recommendations';
 
 interface PetMedicalProfileClientProps {
   profile: PatientMedicalProfileData;
@@ -52,6 +53,7 @@ interface PetMedicalProfileClientProps {
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'history', label: 'Medical History' },
+  { key: 'health', label: 'Health timeline' },
   { key: 'labs', label: 'Lab Reports' },
   { key: 'billing', label: 'Billing' },
   { key: 'care', label: 'Special Care & Allergies' },
@@ -110,6 +112,7 @@ export default function PetMedicalProfileClient({
     allergies: profile.allergies || '',
     medicalNotes: profile.medicalNotes || '',
     weightKg: profile.weightKg?.toString() ?? '',
+    bodyConditionScore: profile.bodyConditionScore?.toString() ?? '',
   });
   const [photoUrl, setPhotoUrl] = useState(profile.photoUrl);
 
@@ -119,6 +122,19 @@ export default function PetMedicalProfileClient({
   const statusInfo = formatVisitStatusLabel(profile.latestVisitStatus);
   const ageLabel = computePetAgeLabel(profile.dateOfBirth);
   const fallbackAvatar = getPetSpeciesAvatarSrc(profile.species);
+
+  const latestVisitWeight = profile.visits.find(
+    (v) => v.notes?.weight_kg != null
+  )?.notes?.weight_kg;
+  const displayWeightKg =
+    profile.weightKg ?? (latestVisitWeight != null ? Number(latestVisitWeight) : null);
+
+  const latestVisitBcs = profile.visits.find(
+    (v) => v.notes?.body_condition_score != null
+  )?.notes?.body_condition_score;
+  const displayBodyConditionScore =
+    profile.bodyConditionScore ??
+    (latestVisitBcs != null ? Number(latestVisitBcs) : null);
 
   const refresh = () => onRefresh?.();
 
@@ -236,6 +252,7 @@ export default function PetMedicalProfileClient({
       allergies: careForm.allergies.trim(),
       medicalNotes: careForm.medicalNotes.trim(),
       weightKg: parseNum(careForm.weightKg),
+      bodyConditionScore: parseNum(careForm.bodyConditionScore),
     });
     setSavingCare(false);
     if (res.success) {
@@ -334,7 +351,7 @@ export default function PetMedicalProfileClient({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 border-t border-outline-variant/20 pt-6">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mt-6 border-t border-outline-variant/20 pt-6">
               <div>
                 <p className="text-[10px] font-bold text-on-surface-variant uppercase mb-1">Age</p>
                 <p className="text-sm font-medium text-on-surface">{ageLabel || '—'}</p>
@@ -342,7 +359,13 @@ export default function PetMedicalProfileClient({
               <div>
                 <p className="text-[10px] font-bold text-on-surface-variant uppercase mb-1">Weight</p>
                 <p className="text-sm font-medium text-on-surface">
-                  {profile.weightKg != null ? `${profile.weightKg} kg` : '—'}
+                  {displayWeightKg != null ? `${displayWeightKg} kg` : '—'}
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-on-surface-variant uppercase mb-1">Body condition</p>
+                <p className="text-sm font-medium text-on-surface">
+                  {displayBodyConditionScore != null ? `${displayBodyConditionScore} / 9` : '—'}
                 </p>
               </div>
               <div>
@@ -421,6 +444,12 @@ export default function PetMedicalProfileClient({
       {error && (
         <div className="bg-destructive/10 border border-destructive/30 text-destructive text-xs p-4 rounded-xl">
           {error}
+        </div>
+      )}
+
+      {activeTab === 'health' && (
+        <div className="glass-panel rounded-xl p-6">
+          <PatientHealthGraph profile={profile} />
         </div>
       )}
 
@@ -952,6 +981,14 @@ export default function PetMedicalProfileClient({
                   onChange={(e) => setCareForm((f) => ({ ...f, weightKg: e.target.value }))}
                   className="min-h-[44px]"
                 />
+                <Textarea
+                  label="Body condition (1–9)"
+                  value={careForm.bodyConditionScore}
+                  onChange={(e) =>
+                    setCareForm((f) => ({ ...f, bodyConditionScore: e.target.value }))
+                  }
+                  className="min-h-[44px]"
+                />
                 <div className="flex gap-2">
                   <Button type="button" loading={savingCare} onClick={onSaveCare}>
                     Save
@@ -965,6 +1002,7 @@ export default function PetMedicalProfileClient({
                         allergies: profile.allergies || '',
                         medicalNotes: profile.medicalNotes || '',
                         weightKg: profile.weightKg?.toString() ?? '',
+                        bodyConditionScore: profile.bodyConditionScore?.toString() ?? '',
                       });
                     }}
                   >

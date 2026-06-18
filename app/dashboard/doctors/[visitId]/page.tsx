@@ -54,7 +54,8 @@ export default async function ConsultationRoomPage({
         breed,
         gender,
         allergies,
-        weight_kg
+        weight_kg,
+        body_condition_score
       ),
       customers (
         first_name,
@@ -96,7 +97,8 @@ export default async function ConsultationRoomPage({
       clinical_notes ( diagnosis, treatment_plan )
     `)
     .eq('patient_id', visit.pet_id)
-    .eq('status', 'ready_for_checkout') // Or 'completed'
+    .in('status', ['ready_for_checkout', 'completed'])
+    .neq('id', visitId)
     .order('checked_in_at', { ascending: false });
 
   const history = historyData?.map((h) => ({
@@ -263,6 +265,9 @@ export default async function ConsultationRoomPage({
           gender: petDetails.gender,
           allergies: petDetails.allergies,
           weightKg: petDetails.weight_kg ? Number(petDetails.weight_kg) : null,
+          bodyConditionScore: petDetails.body_condition_score
+            ? Number(petDetails.body_condition_score)
+            : null,
         }}
         customer={{
           firstName: customerDetails.first_name,

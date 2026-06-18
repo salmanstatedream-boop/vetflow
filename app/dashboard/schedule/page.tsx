@@ -96,20 +96,22 @@ export default async function SchedulePage({
   }));
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col gap-8 min-h-[calc(100vh-6rem)]">
       <PageHeader
         title="Clinic schedule"
         description="Day view by provider — click a slot to book or an appointment for details."
         icon={Calendar}
       />
-      <ScheduleDayCalendarClient
+      <div className="flex flex-col flex-1 min-h-0">
+        <ScheduleDayCalendarClient
         doctors={doctors}
         appointments={appointments}
         selectedDate={selectedDate}
         currentUserId={ctx.userId}
         currentRole={ctx.role}
         activeBranchId={activeBranchId}
-      />
+        />
+      </div>
     </div>
   );
 }

@@ -141,6 +141,25 @@ export default function SettingsForm({ defaultValues, brandedPdfsAllowed = false
             )}
           </div>
         </div>
+        <div>
+          <label className="block text-[10px] font-semibold text-on-surface/80 uppercase tracking-wider mb-1.5">
+            Default product markup %
+          </label>
+          <input
+            type="number"
+            step="0.1"
+            min={0}
+            max={500}
+            {...register('productMarkupPercent', { valueAsNumber: true })}
+            className="w-full max-w-xs px-4 py-2.5 bg-surface-container/30 border border-outline-variant/80 rounded-xl text-sm text-on-surface outline-none focus:border-primary"
+          />
+          <p className="text-[10px] text-on-surface-variant mt-1">
+            Applied when adding new catalog items from purchase/cost price (e.g. invoice intake).
+          </p>
+          {errors.productMarkupPercent && (
+            <span className="text-xs text-destructive mt-1 block">{errors.productMarkupPercent.message}</span>
+          )}
+        </div>
       </div>
 
       <div className="glass-panel rounded-2xl border border-outline-variant/40 p-6 shadow-premium space-y-5">

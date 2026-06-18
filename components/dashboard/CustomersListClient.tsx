@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Phone, Mail, ChevronRight, Heart, Calendar, Search } from 'lucide-react';
+import { Phone, ChevronRight, Heart, Calendar, Search } from 'lucide-react';
 import { normalizePhoneInput, looksLikePhone } from '@/lib/reception/phone';
 import CustomerForm, { CustomerDeleteButton } from '@/components/forms/CustomerForm';
 import type { CustomerInput } from '@/lib/validations/schemas';
@@ -90,7 +90,6 @@ export default function CustomersListClient({
               <th className="px-6 py-4">Customer Name</th>
               <th className="px-6 py-4">Phone</th>
               <th className="px-6 py-4">Pets</th>
-              <th className="px-6 py-4">Contact</th>
               <th className="px-6 py-4 text-right">Actions</th>
             </tr>
           </thead>
@@ -111,15 +110,6 @@ export default function CustomersListClient({
                     <Heart className="w-3 h-3" />
                     {cust.petCount} {cust.petCount === 1 ? 'Pet' : 'Pets'}
                   </span>
-                </td>
-                <td className="px-6 py-4 space-y-1">
-                  {cust.email && (
-                    <div className="flex items-center gap-1.5 text-on-surface-variant/70">
-                      <Mail className="w-3.5 h-3.5 text-primary/60" />
-                      <span>{cust.email}</span>
-                    </div>
-                  )}
-                  <span className="text-on-surface-variant/60">{cust.address || '—'}</span>
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex flex-wrap justify-end items-center gap-2">

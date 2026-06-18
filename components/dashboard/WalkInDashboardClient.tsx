@@ -1,30 +1,14 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useVisibilityPolling } from '@/lib/hooks/useVisibilityPolling';
-import Select from '@/components/ui/premium/Select';
-import { createWalkInVisitAction } from '@/lib/services/visit-actions';
-import PatientLookupPanel, {
-  type SelectedPatient,
-} from '@/components/reception/PatientLookupPanel';
 import {
-  Loader2,
   Clock,
-  UserCheck,
   BriefcaseMedical,
-  ClipboardList,
   AlertTriangle,
   Receipt,
 } from 'lucide-react';
 import VisitStatusBadge from '@/components/dashboard/VisitStatusBadge';
-
-interface Doctor {
-  id: string;
-  firstName: string;
-  lastName: string;
-}
 
 interface Visit {
   id: string;
@@ -48,258 +32,42 @@ interface CheckoutVisit {
 }
 
 interface WalkInDashboardClientProps {
-  doctors: Doctor[];
-  activeBranchId: string;
-  branches: { id: string; name: string }[];
   initialVisits: Visit[];
   checkoutVisits: CheckoutVisit[];
-  highlightIntake?: boolean;
 }
 
 export default function WalkInDashboardClient({
-  doctors,
-  activeBranchId,
-  branches,
   initialVisits,
   checkoutVisits,
-  highlightIntake = false,
 }: WalkInDashboardClientProps) {
-  const router = useRouter();
   useVisibilityPolling(15000, true);
-  const intakeRef = useRef<HTMLDivElement>(null);
-  const [selectedPatient, setSelectedPatient] = useState<SelectedPatient | null>(null);
 
-  // Form states
-  const [reason, setReason] = useState('');
-  const [isEmergency, setIsEmergency] = useState(false);
-  const [triageNotes, setTriageNotes] = useState('');
-  const [doctorId, setDoctorId] = useState(doctors.length > 0 ? doctors[0].id : '');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (highlightIntake && intakeRef.current) {
-      intakeRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, [highlightIntake]);
-
-  const handleCheckIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedPatient || !doctorId || !reason) return;
-    setIsSubmitting(true);
-    setError(null);
-    try {
-      const res = await createWalkInVisitAction({
-        petId: selectedPatient.pet.id,
-        customerId: selectedPatient.customer.id,
-        doctorId,
-        reason,
-        branchId: activeBranchId,
-        isEmergency,
-        triageNotes: triageNotes.trim() || undefined,
-      });
-
-      if (res.success) {
-        setSelectedPatient(null);
-        setReason('');
-        setIsEmergency(false);
-        setTriageNotes('');
-        router.refresh();
-      } else {
-        setError(res.error || 'Failed to check-in patient');
-      }
-    } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Group visits
   const waitingVisits = initialVisits.filter((v) => v.status === 'waiting');
   const consultingVisits = initialVisits.filter((v) => v.status === 'consulting');
 
   return (
     <div className="space-y-6">
-    {checkoutVisits.length > 0 && (
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 animate-pulse-once">
-        <div>
-          <p className="text-sm font-bold text-emerald-700">
-            {checkoutVisits.length} patient{checkoutVisits.length > 1 ? 's' : ''} ready for checkout
-          </p>
-          <p className="text-xs text-emerald-600/80">
-            Doctor completed consultation — proceed to billing and discharge.
-          </p>
-        </div>
-        <Link
-          href={`/dashboard/invoices/create/${checkoutVisits[0].id}`}
-          className="shrink-0 bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5"
-        >
-          <Receipt className="w-4 h-4" />
-          Start checkout
-        </Link>
-      </div>
-    )}
-    <div className="grid md:grid-cols-12 gap-8 items-start">
-      
-      {/* LEFT: INTAKE & PATIENT SELECTOR */}
-      <div className="md:col-span-4 space-y-6">
-        
-        {/* PATIENT INTAKE CARD */}
-        <div
-          ref={intakeRef}
-          className={`glass-panel rounded-2xl border p-6 shadow-premium ${
-            highlightIntake ? 'border-primary/50 ring-2 ring-primary/20' : 'border-outline-variant/40'
-          }`}
-        >
-          <span className="text-[10px] font-black text-primary uppercase tracking-wider block mb-1">
-            Intake Console
-          </span>
-          <h3 className="text-base font-bold text-on-surface mb-4">Patient Check-In</h3>
-
-          {!selectedPatient ? (
-            <PatientLookupPanel
-              activeBranchId={activeBranchId}
-              branches={branches}
-              selected={selectedPatient}
-              onSelect={setSelectedPatient}
-              onClear={() => setSelectedPatient(null)}
-            />
-          ) : (
-            /* INTAKE FORM (When pet is selected) */
-            <form onSubmit={handleCheckIn} className="space-y-4">
-              
-              {/* Patient brief info card */}
-              <div className="bg-surface-container/30 p-3 rounded-xl border border-outline-variant/35 flex items-center justify-between">
-                <div>
-                  <span className="text-[9px] font-bold text-on-surface-variant/40 uppercase block">Selected Patient</span>
-                  <span className="text-xs font-bold text-on-surface">{selectedPatient.pet.name}</span>
-                  <span className="text-[10px] text-on-surface-variant/60 block">
-                    Owner: {selectedPatient.customer.firstName} {selectedPatient.customer.lastName}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setSelectedPatient(null)}
-                  className="text-[10px] text-destructive font-bold hover:underline"
-                >
-                  Cancel
-                </button>
-              </div>
-
-              {error && (
-                <div className="p-2.5 bg-destructive/5 border border-destructive/20 text-destructive text-[11px] rounded-lg">
-                  {error}
-                </div>
-              )}
-
-              <div>
-                <label className="block text-[10px] font-semibold text-on-surface/80 uppercase tracking-wider mb-1.5">
-                  Reason for Visit
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Vaccination, skin rash, ear infection"
-                  className="w-full px-3 py-2 bg-surface-container/20 border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary rounded-xl text-xs text-on-surface outline-none"
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-semibold text-on-surface/80 uppercase tracking-wider mb-1.5">
-                  Initial history / triage (optional)
-                </label>
-                <textarea
-                  placeholder="Presenting complaint, symptoms, duration..."
-                  className="w-full px-3 py-2 bg-surface-container/20 border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary rounded-xl text-xs text-on-surface outline-none resize-none"
-                  rows={3}
-                  value={triageNotes}
-                  onChange={(e) => setTriageNotes(e.target.value)}
-                />
-              </div>
-
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isEmergency}
-                  onChange={(e) => setIsEmergency(e.target.checked)}
-                  className="rounded border-outline-variant"
-                />
-                <AlertTriangle className="w-4 h-4 text-destructive" />
-                <span className="text-xs font-bold text-destructive">Mark as emergency</span>
-              </label>
-
-              <div>
-                <Select
-                  label="Assign Attending Vet"
-                  value={doctorId}
-                  onChange={setDoctorId}
-                  options={doctors.map((doc) => ({
-                    value: doc.id,
-                    label: `Dr. ${doc.firstName} ${doc.lastName}`,
-                  }))}
-                  onAddNew={() => router.push('/dashboard/staff')}
-                  addNewLabel="Add staff member"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-primary hover:bg-primary/95 text-white py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-1.5 disabled:opacity-75"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    Checking in...
-                  </>
-                ) : (
-                  'Check-In Patient'
-                )}
-              </button>
-
-            </form>
-          )}
-
-        </div>
-
-      </div>
-
-      {/* RIGHT: QUEUE MONITOR (WAITING / CONSULTING) */}
-      <div className="md:col-span-8 space-y-6">
-
-        {checkoutVisits.length > 0 && (
-          <div className="glass-panel rounded-2xl border border-emerald-500/30 overflow-hidden shadow-premium">
-            <div className="p-5 border-b border-outline-variant/30 bg-emerald-500/5 flex items-center justify-between">
-              <h3 className="text-sm font-bold text-on-surface uppercase tracking-wider">
-                Ready for checkout ({checkoutVisits.length})
-              </h3>
-            </div>
-            <ul className="divide-y divide-border/20">
-              {checkoutVisits.map((v) => (
-                <li
-                  key={v.id}
-                  className="px-6 py-4 flex items-center justify-between gap-4 text-xs hover:bg-surface-container/10"
-                >
-                  <div>
-                    <span className="font-bold text-on-surface block">{v.petName}</span>
-                    <span className="text-on-surface-variant/60">{v.customerName} · {v.reason}</span>
-                  </div>
-                  <Link
-                    href={`/dashboard/invoices/create/${v.id}`}
-                    className="shrink-0 inline-flex items-center gap-1 bg-primary text-white px-3 py-1.5 rounded-lg text-[10px] font-bold hover:bg-primary/95"
-                  >
-                    <Receipt className="w-3 h-3" />
-                    Open checkout hub
-                  </Link>
-                </li>
-              ))}
-            </ul>
+      {checkoutVisits.length > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 animate-pulse-once">
+          <div>
+            <p className="text-sm font-bold text-emerald-700">
+              {checkoutVisits.length} patient{checkoutVisits.length > 1 ? 's' : ''} ready for checkout
+            </p>
+            <p className="text-xs text-emerald-600/80">
+              Doctor completed consultation — proceed to billing and discharge.
+            </p>
           </div>
-        )}
+          <Link
+            href={`/dashboard/invoices/create/${checkoutVisits[0].id}`}
+            className="shrink-0 bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5"
+          >
+            <Receipt className="w-4 h-4" />
+            Start checkout
+          </Link>
+        </div>
+      )}
 
+      <div className="grid md:grid-cols-2 gap-6 items-start">
         {/* WAITING QUEUE */}
         <div className="glass-panel rounded-2xl border border-outline-variant/40 overflow-hidden shadow-premium">
           <div className="p-5 border-b border-outline-variant/30 bg-surface-container/20 flex items-center justify-between">
@@ -333,16 +101,16 @@ export default function WalkInDashboardClient({
                           </span>
                         )}
                       </div>
-                      <span className="text-[10px] text-on-surface-variant/60">{(v.pet.species)} • Owner: {v.customer.first_name} {v.customer.last_name}</span>
+                      <span className="text-[10px] text-on-surface-variant/60">
+                        {v.pet.species} · Owner: {v.customer.first_name} {v.customer.last_name}
+                      </span>
                       {v.triageNotes && (
                         <span className="text-[10px] text-on-surface-variant block mt-0.5 line-clamp-1" title={v.triageNotes}>
                           Triage: {v.triageNotes}
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-on-surface-variant/80 font-medium">
-                      {v.reason}
-                    </td>
+                    <td className="px-6 py-4 text-on-surface-variant/80 font-medium">{v.reason}</td>
                     <td className="px-6 py-4">
                       <span className="font-semibold text-on-surface">
                         {v.doctor ? `Dr. ${v.doctor.first_name} ${v.doctor.last_name}` : 'Unassigned'}
@@ -365,7 +133,7 @@ export default function WalkInDashboardClient({
           )}
         </div>
 
-        {/* CONSULTING BOARD */}
+        {/* ATTENDING CONSULTATIONS */}
         <div className="glass-panel rounded-2xl border border-outline-variant/40 overflow-hidden shadow-premium">
           <div className="p-5 border-b border-outline-variant/30 bg-surface-container/20">
             <h3 className="text-sm font-bold text-on-surface uppercase tracking-wider flex items-center gap-2">
@@ -379,8 +147,8 @@ export default function WalkInDashboardClient({
               <thead>
                 <tr className="bg-surface-container/10 border-b border-outline-variant/40 text-[9px] font-bold text-on-surface/80 uppercase tracking-wider">
                   <th className="px-6 py-3">Patient / Owner</th>
-                  <th className="px-6 py-3">attending Vet</th>
-                  <th className="px-6 py-3">reason</th>
+                  <th className="px-6 py-3">Attending Vet</th>
+                  <th className="px-6 py-3">Reason</th>
                   <th className="px-6 py-3">State</th>
                 </tr>
               </thead>
@@ -397,16 +165,16 @@ export default function WalkInDashboardClient({
                           </span>
                         )}
                       </div>
-                      <span className="text-[10px] text-on-surface-variant/60">Owner: {v.customer.first_name} {v.customer.last_name}</span>
+                      <span className="text-[10px] text-on-surface-variant/60">
+                        Owner: {v.customer.first_name} {v.customer.last_name}
+                      </span>
                     </td>
                     <td className="px-6 py-4">
                       <span className="font-bold text-primary">
                         Dr. {v.doctor?.first_name} {v.doctor?.last_name}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-on-surface-variant/80">
-                      {v.reason}
-                    </td>
+                    <td className="px-6 py-4 text-on-surface-variant/80">{v.reason}</td>
                     <td className="px-6 py-4">
                       <VisitStatusBadge
                         status={v.status}
@@ -427,11 +195,7 @@ export default function WalkInDashboardClient({
             </div>
           )}
         </div>
-
       </div>
-
-    </div>
     </div>
   );
 }
-

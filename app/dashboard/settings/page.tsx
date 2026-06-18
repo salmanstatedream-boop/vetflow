@@ -50,7 +50,7 @@ export default async function SettingsPage() {
     supabase
       .from('app_settings')
       .select(
-        'timezone, currency, clinic_logo_url, clinic_address, clinic_phone, clinic_email, pdf_branding_enabled, pdf_accent_color, pdf_footer_text'
+        'timezone, currency, clinic_logo_url, clinic_address, clinic_phone, clinic_email, pdf_branding_enabled, pdf_accent_color, pdf_footer_text, product_markup_percent'
       )
       .eq('organization_id', session.organizationId)
       .maybeSingle(),
@@ -97,6 +97,7 @@ export default async function SettingsPage() {
     pdfBrandingEnabled: appSettings?.pdf_branding_enabled ?? false,
     pdfAccentColor: appSettings?.pdf_accent_color || '#0b132b',
     pdfFooterText: appSettings?.pdf_footer_text || '',
+    productMarkupPercent: Number(appSettings?.product_markup_percent ?? 20),
   };
 
   return (
