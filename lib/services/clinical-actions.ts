@@ -1,13 +1,18 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import {
   assertCapability,
   assertOrganization,
   resolveServerAuthContext,
 } from '@/lib/auth/context';
 import { writeAuditLog } from '@/lib/services/audit';
-import { CompleteConsultationSchema, EntityIdSchema } from '@/lib/validations/schemas';
+import {
+  CompleteConsultationSchema,
+  EntityIdSchema,
+  type CompleteConsultationInput,
+} from '@/lib/validations/schemas';
+import { NO_PRESCRIPTION_MARKED_NOTES } from '@/lib/prescriptions/constants';
 import { z } from 'zod';
 import type { FollowUpScheduleInput } from '@/lib/consultation/follow-up-schedule';
 import { followUpPreviewsToDates, computeFollowUpPreviews } from '@/lib/consultation/follow-up-schedule';
@@ -195,6 +200,122 @@ async function createFollowUpAppointments(
   }
 }
 
+async function persistVisitPrescription(
+  params: {
+    organizationId: string;
+    branchId: string;
+    visitId: string;
+    patientId: string;
+    doctorId: string;
+    prescriptionItems: CompleteConsultationInput['prescriptionItems'];
+    treatmentPlan: string | null | undefined;
+    noPrescriptionNeeded?: boolean;
+    activityBase: { visit_id: string; patient_name: string; visit_reason: string };
+    actorRole: string;
+  }
+): Promise<string> {
+  const admin = await createAdminClient();
+  const notes = params.noPrescriptionNeeded
+    ? NO_PRESCRIPTION_MARKED_NOTES
+    : params.treatmentPlan?.trim() || null;
+
+  const { data: existing } = await admin
+    .from('prescriptions')
+    .select('id, revision_number')
+    .eq('visit_id', params.visitId)
+    .eq('organization_id', params.organizationId)
+    .maybeSingle();
+
+  let prescriptionId: string;
+  let isUpdate = false;
+
+  if (existing) {
+    isUpdate = true;
+    prescriptionId = existing.id;
+    const { error: updateErr } = await admin
+      .from('prescriptions')
+      .update({
+        doctor_id: params.doctorId,
+        is_finalized: true,
+        notes,
+      })
+      .eq('id', prescriptionId);
+
+    if (updateErr) {
+      throw new Error(updateErr.message || 'Failed to update prescription.');
+    }
+
+    const { error: deleteItemsErr } = await admin
+      .from('prescription_items')
+      .delete()
+      .eq('prescription_id', prescriptionId);
+
+    if (deleteItemsErr) {
+      throw new Error(deleteItemsErr.message || 'Failed to update prescription items.');
+    }
+  } else {
+    const { data: prescription, error: presError } = await admin
+      .from('prescriptions')
+      .insert({
+        organization_id: params.organizationId,
+        branch_id: params.branchId,
+        visit_id: params.visitId,
+        patient_id: params.patientId,
+        doctor_id: params.doctorId,
+        is_finalized: true,
+        revision_number: 1,
+        notes,
+      })
+      .select('id')
+      .single();
+
+    if (presError || !prescription) {
+      throw new Error(presError?.message || 'Failed to initialize prescription.');
+    }
+    prescriptionId = prescription.id;
+  }
+
+  if (params.prescriptionItems.length > 0) {
+    const itemInserts = params.prescriptionItems.map((item) => ({
+      prescription_id: prescriptionId,
+      product_id: item.productId || null,
+      medicine_name: item.medicineName,
+      dosage: item.dosage,
+      frequency: item.frequency,
+      duration: item.duration,
+      instructions: item.instructions || null,
+      quantity_requested: item.quantityRequested,
+    }));
+
+    const { error: itemsError } = await admin.from('prescription_items').insert(itemInserts);
+
+    if (itemsError) {
+      if (!isUpdate) {
+        await admin.from('prescriptions').delete().eq('id', prescriptionId);
+      }
+      throw new Error(itemsError.message || 'Failed to add prescription items.');
+    }
+  }
+
+  await writeAuditLog({
+    organizationId: params.organizationId,
+    branchId: params.branchId,
+    actorUserId: params.doctorId,
+    actorRole: params.actorRole,
+    action: isUpdate ? 'PRESCRIPTION_UPDATED' : 'PRESCRIPTION_CREATED',
+    resourceType: 'PRESCRIPTION',
+    resourceId: prescriptionId,
+    afterData: {
+      ...params.activityBase,
+      no_prescription_needed: Boolean(params.noPrescriptionNeeded),
+      medicine_names: params.prescriptionItems.map((item) => item.medicineName),
+      medicine_count: params.prescriptionItems.length,
+    },
+  });
+
+  return prescriptionId;
+}
+
 /**
  * Saves clinical notes, services, prescriptions, follow-up appointments,
  * and sets visit to ready_for_checkout.
@@ -324,60 +445,29 @@ export async function completeConsultationAction(payload: unknown) {
 
     let prescriptionId: string | null = null;
     if (parsed.prescriptionItems.length > 0) {
-      const { data: prescription, error: presError } = await supabase
-        .from('prescriptions')
-        .insert({
-          organization_id: ctx.organizationId,
-          branch_id: visit.branch_id,
-          visit_id: visit.id,
-          patient_id: visit.patient_id,
-          doctor_id: ctx.userId,
-          is_finalized: true,
-          revision_number: 1,
-        })
-        .select()
-        .single();
-
-      if (presError || !prescription) {
-        throw new Error(presError?.message || 'Failed to initialize prescription.');
-      }
-
-      prescriptionId = prescription.id;
-
-      const itemInserts = parsed.prescriptionItems.map((item) => ({
-        prescription_id: prescriptionId,
-        product_id: item.productId || null,
-        medicine_name: item.medicineName,
-        dosage: item.dosage,
-        frequency: item.frequency,
-        duration: item.duration,
-        instructions: item.instructions || null,
-        quantity_requested: item.quantityRequested,
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('prescription_items')
-        .insert(itemInserts);
-
-      if (itemsError) {
-        await supabase.from('prescriptions').delete().eq('id', prescriptionId);
-        throw new Error(itemsError.message || 'Failed to add prescription items.');
-      }
-
-      await writeAuditLog({
-        organizationId: ctx.organizationId,
+      prescriptionId = await persistVisitPrescription({
+        organizationId: ctx.organizationId!,
         branchId: visit.branch_id,
-        actorUserId: ctx.userId,
+        visitId: visit.id,
+        patientId: visit.patient_id,
+        doctorId: ctx.userId,
+        prescriptionItems: parsed.prescriptionItems,
+        treatmentPlan: parsed.treatmentPlan,
+        activityBase,
         actorRole: ctx.role || 'doctor',
-        action: 'PRESCRIPTION_CREATED',
-        resourceType: 'PRESCRIPTION',
-        resourceId: prescriptionId || undefined,
-        afterData: {
-          ...prescription,
-          ...activityBase,
-          medicine_names: parsed.prescriptionItems.map((item) => item.medicineName),
-          medicine_count: parsed.prescriptionItems.length,
-        },
+      });
+    } else if (parsed.noPrescriptionNeeded) {
+      prescriptionId = await persistVisitPrescription({
+        organizationId: ctx.organizationId!,
+        branchId: visit.branch_id,
+        visitId: visit.id,
+        patientId: visit.patient_id,
+        doctorId: ctx.userId,
+        prescriptionItems: [],
+        treatmentPlan: parsed.treatmentPlan,
+        noPrescriptionNeeded: true,
+        activityBase,
+        actorRole: ctx.role || 'doctor',
       });
     }
 
@@ -412,6 +502,7 @@ export async function completeConsultationAction(payload: unknown) {
       .update({
         status: 'ready_for_checkout',
         completed_at: new Date().toISOString(),
+        consult_draft: null,
       })
       .eq('id', visit.id)
       .select('id, status')

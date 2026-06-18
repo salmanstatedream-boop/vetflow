@@ -43,6 +43,7 @@ import {
   Play,
   Pill,
   ExternalLink,
+  FileText,
 } from 'lucide-react';
 
 interface Product {
@@ -494,9 +495,14 @@ export default function ConsultationWorkspaceClient({
   };
 
   const buildSubmitPayload = (data: CompleteConsultationInput): CompleteConsultationInput => {
+    const hasCompleteRx = (data.prescriptionItems ?? []).some((line) =>
+      isPrescriptionLineComplete(line)
+    );
+    const noRxNeeded = hasCompleteRx ? false : Boolean(data.noPrescriptionNeeded);
     const base: CompleteConsultationInput = {
       ...data,
-      prescriptionItems: data.noPrescriptionNeeded ? [] : (data.prescriptionItems ?? []),
+      noPrescriptionNeeded: noRxNeeded,
+      prescriptionItems: noRxNeeded ? [] : (data.prescriptionItems ?? []),
     };
     const mode = base.followUpMode ?? 'none';
     if (mode === 'consecutive') {
@@ -586,7 +592,11 @@ export default function ConsultationWorkspaceClient({
   const submitConsultation = handleSubmit(onSubmit, onInvalidSubmit);
 
   const onFormSubmit = (event: FormEvent<HTMLFormElement>) => {
-    if (getValues('noPrescriptionNeeded')) {
+    const items = getValues('prescriptionItems') ?? [];
+    const hasCompleteRx = items.some((line) => isPrescriptionLineComplete(line));
+    if (hasCompleteRx) {
+      setValue('noPrescriptionNeeded', false);
+    } else if (getValues('noPrescriptionNeeded')) {
       setValue('prescriptionItems', []);
     }
     const mode = getValues('followUpMode') ?? 'none';
@@ -810,6 +820,13 @@ export default function ConsultationWorkspaceClient({
                   Print prescription
                 </a>
               )}
+              <Link
+                href="/dashboard/prescriptions"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold border border-outline-variant hover:bg-surface-container/40"
+              >
+                <FileText className="w-4 h-4" />
+                View prescriptions
+              </Link>
               <Link
                 href={`/dashboard/doctors/patients/${patientId}`}
                 className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold border border-outline-variant hover:bg-surface-container/40"

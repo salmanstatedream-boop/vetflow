@@ -10,6 +10,104 @@ import {
 } from '@/lib/auth/context';
 import { writeAuditLog } from '@/lib/services/audit';
 import { PrescriptionEditSchema } from '@/lib/validations/schemas';
+import { normalizeOneToOne } from '@/lib/supabase/embed';
+import { isNoPrescriptionMarked } from '@/lib/prescriptions/constants';
+
+export type BranchPrescriptionRow = {
+  id: string;
+  revisionNumber: number;
+  isFinalized: boolean;
+  createdAt: string;
+  petId: string | null;
+  petName: string;
+  petSpecies: string;
+  doctorFirstName: string | null;
+  doctorLastName: string | null;
+  visitReason: string | null;
+  isEmergency: boolean;
+  medicineSummary: string | null;
+  noPrescriptionMarked: boolean;
+};
+
+export async function listBranchPrescriptionsAction(branchId: string) {
+  try {
+    const ctx = await resolveServerAuthContext();
+    if (!ctx) throw new Error('Unauthorized');
+    assertOrganization(ctx);
+    assertCapability(ctx, 'manage_prescriptions');
+    assertBranchAccess(ctx, branchId);
+
+    const admin = await createAdminClient();
+    const { data, error } = await admin
+      .from('prescriptions')
+      .select(`
+        id,
+        revision_number,
+        is_finalized,
+        created_at,
+        notes,
+        patients ( id, name, species ),
+        visits ( reason, is_emergency ),
+        user_profiles ( first_name, last_name ),
+        prescription_items ( medicine_name )
+      `)
+      .eq('organization_id', ctx.organizationId!)
+      .eq('branch_id', branchId)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error) {
+      throw new Error(error.message || 'Failed to load prescriptions.');
+    }
+
+    const prescriptions: BranchPrescriptionRow[] = (data ?? []).map((rx) => {
+      const pet = normalizeOneToOne(
+        rx.patients as { id: string; name: string; species: string } | null
+      );
+      const visit = normalizeOneToOne(
+        rx.visits as { reason: string | null; is_emergency: boolean } | null
+      );
+      const doctor = normalizeOneToOne(
+        rx.user_profiles as { first_name: string; last_name: string } | null
+      );
+      const items = (rx.prescription_items as { medicine_name: string }[] | null) ?? [];
+      const names = items.map((i) => i.medicine_name).filter(Boolean);
+      const noPrescriptionMarked = isNoPrescriptionMarked(rx.notes as string | null, names.length);
+      let medicineSummary: string | null = null;
+      if (noPrescriptionMarked) {
+        medicineSummary = 'No prescription marked';
+      } else if (names.length > 0) {
+        const preview = names.slice(0, 2).join(', ');
+        medicineSummary =
+          names.length > 2 ? `${preview} +${names.length - 2} more` : preview;
+      }
+
+      return {
+        id: rx.id,
+        revisionNumber: rx.revision_number,
+        isFinalized: rx.is_finalized,
+        createdAt: rx.created_at,
+        petId: pet?.id ?? null,
+        petName: pet?.name || 'Unknown patient',
+        petSpecies: pet?.species || 'N/A',
+        doctorFirstName: doctor?.first_name ?? null,
+        doctorLastName: doctor?.last_name ?? null,
+        visitReason: visit?.reason ?? null,
+        isEmergency: visit?.is_emergency ?? false,
+        medicineSummary,
+        noPrescriptionMarked,
+      };
+    });
+
+    return { success: true as const, prescriptions };
+  } catch (err: unknown) {
+    return {
+      success: false as const,
+      error: err instanceof Error ? err.message : 'Failed to load prescriptions.',
+      prescriptions: [] as BranchPrescriptionRow[],
+    };
+  }
+}
 
 export async function getPrescriptionForEditAction(prescriptionId: string) {
   try {

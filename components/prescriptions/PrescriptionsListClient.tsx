@@ -8,20 +8,9 @@ import { getPatientMedicalProfileAction } from '@/lib/services/patient-medical-a
 import type { PatientMedicalProfileData } from '@/lib/types/patient-medical';
 import { FileText, Download, ExternalLink, AlertTriangle, Loader2, ChevronRight } from 'lucide-react';
 import PrescriptionEditModal, { PrescriptionDeleteButton } from '@/components/prescriptions/PrescriptionEditModal';
+import type { BranchPrescriptionRow } from '@/lib/services/prescription-actions';
 
-export type PrescriptionListRow = {
-  id: string;
-  revisionNumber: number;
-  isFinalized: boolean;
-  createdAt: string;
-  petId: string | null;
-  petName: string;
-  petSpecies: string;
-  doctorFirstName: string | null;
-  doctorLastName: string | null;
-  visitReason: string | null;
-  isEmergency: boolean;
-};
+export type PrescriptionListRow = BranchPrescriptionRow;
 
 interface PrescriptionsListClientProps {
   prescriptions: PrescriptionListRow[];
@@ -121,16 +110,27 @@ export default function PrescriptionsListClient({
                   Visit: {rx.visitReason.substring(0, 60)}
                 </span>
               )}
+              {rx.medicineSummary && (
+                <span className="text-[10px] text-on-surface-variant/60 block mt-0.5">
+                  {rx.medicineSummary}
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <span
                 className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                  rx.isFinalized
-                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                    : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                  rx.noPrescriptionMarked
+                    ? 'bg-surface-container text-on-surface-variant border border-outline-variant/40'
+                    : rx.isFinalized
+                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                      : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                 }`}
               >
-                {rx.isFinalized ? 'Finalized' : 'Draft'}
+                {rx.noPrescriptionMarked
+                  ? 'No prescription'
+                  : rx.isFinalized
+                    ? 'Finalized'
+                    : 'Draft'}
               </span>
               {rx.petId && (
                 <button
@@ -141,6 +141,7 @@ export default function PrescriptionsListClient({
                   Medical file <ExternalLink className="w-3 h-3" />
                 </button>
               )}
+              {!rx.noPrescriptionMarked && (
               <a
                 href={`/api/prescriptions/${rx.id}/pdf`}
                 target="_blank"
@@ -150,6 +151,7 @@ export default function PrescriptionsListClient({
                 <Download className="w-3 h-3" />
                 PDF
               </a>
+              )}
               {userRole === 'clinic_admin' && (
                 <>
                   <PrescriptionEditModal prescriptionId={rx.id} />

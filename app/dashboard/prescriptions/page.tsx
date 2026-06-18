@@ -1,15 +1,12 @@
 import { redirect } from 'next/navigation';
 import { resolveServerAuthContext } from '@/lib/auth/context';
 import { guardRoute } from '@/lib/auth/page-guards';
-import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import PageHeader from '@/components/ui/premium/PageHeader';
-import PrescriptionsListClient, {
-  type PrescriptionListRow,
-} from '@/components/prescriptions/PrescriptionsListClient';
+import PrescriptionsListClient from '@/components/prescriptions/PrescriptionsListClient';
+import { listBranchPrescriptionsAction } from '@/lib/services/prescription-actions';
 import { FileText } from 'lucide-react';
-import { normalizeOneToOne } from '@/lib/supabase/embed';
 
 export const metadata = {
   title: 'Prescriptions',
@@ -43,54 +40,17 @@ export default async function PrescriptionsPage() {
     );
   }
 
-  const supabase = await createClient();
+  const result = await listBranchPrescriptionsAction(activeBranchId);
 
-  const { data: prescriptions, error } = await supabase
-    .from('prescriptions')
-    .select(`
-      id,
-      revision_number,
-      is_finalized,
-      created_at,
-      notes,
-      pets:patients ( id, name, species ),
-      visits ( reason, is_emergency ),
-      user_profiles ( first_name, last_name )
-    `)
-    .eq('branch_id', activeBranchId)
-    .order('created_at', { ascending: false })
-    .limit(50);
-
-  if (error) {
+  if (!result.success) {
     return (
       <div className="bg-destructive/5 border border-destructive/20 text-destructive text-sm p-6 rounded-2xl">
-        Failed to load prescriptions: {error.message}
+        Failed to load prescriptions: {result.error}
       </div>
     );
   }
 
-  const rows: PrescriptionListRow[] = (prescriptions ?? []).map((rx) => {
-    const pet = normalizeOneToOne(rx.pets as { id: string; name: string; species: string } | null);
-    const visit = normalizeOneToOne(
-      rx.visits as { reason: string | null; is_emergency: boolean } | null
-    );
-    const doctor = normalizeOneToOne(
-      rx.user_profiles as { first_name: string; last_name: string } | null
-    );
-    return {
-      id: rx.id,
-      revisionNumber: rx.revision_number,
-      isFinalized: rx.is_finalized,
-      createdAt: rx.created_at,
-      petId: pet?.id ?? null,
-      petName: pet?.name || 'Unknown patient',
-      petSpecies: pet?.species || 'N/A',
-      doctorFirstName: doctor?.first_name ?? null,
-      doctorLastName: doctor?.last_name ?? null,
-      visitReason: visit?.reason ?? null,
-      isEmergency: visit?.is_emergency ?? false,
-    };
-  });
+  const rows = result.prescriptions;
 
   return (
     <div className="space-y-8">
