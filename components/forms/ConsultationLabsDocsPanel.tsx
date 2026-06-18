@@ -112,7 +112,7 @@ function DocumentRow({
   };
 
   return (
-    <div className="p-3 bg-surface-container/20 border border-outline-variant/40 rounded-xl space-y-2">
+    <div className="p-2.5 bg-surface-container/25 border border-outline-variant/35 rounded-lg space-y-1.5">
       {editing ? (
         <div className="space-y-2">
           <input
@@ -376,11 +376,240 @@ export default function ConsultationLabsDocsPanel({
 
   const displayDocuments = localDocuments.length >= initialDocuments.length ? localDocuments : initialDocuments;
   const isSidebar = variant === 'sidebar';
-  const panelClass = isSidebar ? 'p-4 space-y-3' : 'p-6 space-y-4';
-  const gridClass = isSidebar ? 'grid grid-cols-1 gap-2' : 'grid sm:grid-cols-12 gap-3 items-end';
+
+  const fieldClass =
+    'w-full px-2.5 py-2 bg-surface-container/40 border border-outline-variant/60 rounded-lg text-[11px] text-on-surface outline-none focus:border-primary/50';
+  const labelClass = 'block text-[9px] font-bold text-on-surface-variant/70 uppercase tracking-wide mb-1';
+
+  if (isSidebar) {
+    return (
+      <div className="space-y-4">
+        {error && (
+          <div className="p-2.5 bg-destructive/5 border border-destructive/20 text-destructive text-[10px] rounded-lg">
+            {error}
+          </div>
+        )}
+        {uploadSuccess && (
+          <div className="p-2.5 bg-primary/5 border border-primary/20 text-primary text-[10px] rounded-lg">
+            File uploaded successfully.
+          </div>
+        )}
+
+        <section className="space-y-2.5">
+          <h4 className="text-[10px] font-bold uppercase tracking-wider text-on-surface flex items-center gap-1.5">
+            <FlaskConical className="w-3.5 h-3.5 text-primary shrink-0" />
+            Lab tests
+          </h4>
+          <div className="space-y-2 rounded-xl border border-outline-variant/35 bg-surface/40 p-2.5">
+            <div>
+              <label className={labelClass}>From catalog</label>
+              <select
+                value={labTestId}
+                onChange={(e) => onSelectCatalog(e.target.value)}
+                className={fieldClass}
+              >
+                <option value="">— Custom —</option>
+                {labCatalog.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>Test name</label>
+              <input
+                value={testName}
+                onChange={(e) => setTestName(e.target.value)}
+                placeholder="e.g. CBC, Urinalysis"
+                className={fieldClass}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Notes (optional)</label>
+              <input
+                value={labNotes}
+                onChange={(e) => setLabNotes(e.target.value)}
+                placeholder="Optional notes"
+                className={fieldClass}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={submitLabOrder}
+              disabled={orderingLab}
+              className="w-full inline-flex items-center justify-center gap-1.5 text-[10px] font-bold text-white bg-primary px-3 py-2 rounded-lg hover:opacity-90 transition-all disabled:opacity-60"
+            >
+              {orderingLab ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Plus className="w-3.5 h-3.5" />
+              )}
+              Add lab test
+            </button>
+          </div>
+
+          {labOrders.length > 0 ? (
+            <div className="space-y-2 max-h-44 overflow-y-auto overscroll-contain pr-0.5">
+              {labOrders.map((o) => (
+                <div
+                  key={o.id}
+                  className="p-2.5 bg-surface-container/25 border border-outline-variant/35 rounded-lg space-y-2"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] font-bold text-on-surface truncate">{o.testName}</p>
+                      <p className="text-[9px] text-on-surface-variant/60 capitalize">
+                        {o.status.replace('_', ' ')}
+                      </p>
+                    </div>
+                    <select
+                      value={o.status}
+                      disabled={savingLabId === o.id}
+                      onChange={(e) => changeLabStatus(o, e.target.value)}
+                      className="max-w-[7rem] px-1.5 py-1 bg-surface border border-outline-variant/60 rounded-md text-[9px] font-bold text-on-surface outline-none capitalize disabled:opacity-60 shrink-0"
+                    >
+                      <option value="ordered">Demanded</option>
+                      <option value="in_progress">Uploaded</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
+                  <textarea
+                    value={getResultDraft(o)}
+                    onChange={(e) =>
+                      setResultDrafts((prev) => ({ ...prev, [o.id]: e.target.value }))
+                    }
+                    rows={2}
+                    placeholder="Result findings…"
+                    className={fieldClass}
+                  />
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => saveLabResult(o)}
+                      disabled={savingLabId === o.id}
+                      className="text-[9px] font-bold bg-primary text-white px-2.5 py-1 rounded-md inline-flex items-center gap-1 disabled:opacity-60"
+                    >
+                      {savingLabId === o.id ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                      Save
+                    </button>
+                    {o.status === 'completed' && (
+                      <a
+                        href={`/api/lab-orders/${o.id}/pdf`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[9px] font-bold text-primary border border-primary/20 px-2.5 py-1 rounded-md"
+                      >
+                        PDF
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-[10px] text-on-surface-variant/50 italic text-center py-2 rounded-lg border border-dashed border-outline-variant/30">
+              No lab tests ordered yet.
+            </p>
+          )}
+        </section>
+
+        <div className="border-t border-outline-variant/25" />
+
+        <section className="space-y-2.5">
+          <h4 className="text-[10px] font-bold uppercase tracking-wider text-on-surface flex items-center gap-1.5">
+            <Paperclip className="w-3.5 h-3.5 text-primary shrink-0" />
+            Medical documents
+          </h4>
+          <div className="space-y-2 rounded-xl border border-outline-variant/35 bg-surface/40 p-2.5">
+            <div>
+              <label className={labelClass}>File (PDF/image, max 15MB)</label>
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.txt,image/*,application/pdf,text/plain"
+                className="w-full text-[10px] text-on-surface file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:bg-primary/10 file:text-primary file:font-bold"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Category</label>
+              <select
+                value={docCategory}
+                onChange={(e) => setDocCategory(e.target.value)}
+                className={`${fieldClass} capitalize`}
+              >
+                {DOC_CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {categoryLabel(c)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>Description (optional)</label>
+              <input
+                value={docDescription}
+                onChange={(e) => setDocDescription(e.target.value)}
+                placeholder="Optional description"
+                className={fieldClass}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={submitUpload}
+              disabled={uploading}
+              className="w-full inline-flex items-center justify-center gap-1.5 text-[10px] font-bold text-white bg-primary px-3 py-2 rounded-lg hover:opacity-90 transition-all disabled:opacity-60"
+            >
+              {uploading ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Uploading…
+                </>
+              ) : (
+                <>
+                  <FileUp className="w-3.5 h-3.5" />
+                  Upload document
+                </>
+              )}
+            </button>
+          </div>
+
+          {displayDocuments.length > 0 ? (
+            <div className="space-y-1.5 max-h-36 overflow-y-auto overscroll-contain pr-0.5">
+              <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider">
+                This visit
+              </p>
+              {displayDocuments.map((d) => (
+                <DocumentRow key={d.id} doc={d} editable onDelete={removeDoc} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-[10px] text-on-surface-variant/50 italic text-center py-2 rounded-lg border border-dashed border-outline-variant/30">
+              No documents uploaded yet.
+            </p>
+          )}
+
+          {previousDocuments.length > 0 && (
+            <div className="space-y-1.5 max-h-28 overflow-y-auto overscroll-contain pr-0.5 pt-1 border-t border-outline-variant/25">
+              <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider">
+                Previous files
+              </p>
+              {previousDocuments.map((d) => (
+                <DocumentRow key={d.id} doc={d} editable={false} onDelete={removeDoc} />
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+    );
+  }
+
+  const panelClass = 'p-6 space-y-4';
+  const gridClass = 'grid sm:grid-cols-12 gap-3 items-end';
 
   return (
-    <div className={`space-y-4 ${isSidebar ? 'text-left' : 'space-y-6'}`}>
+    <div className="space-y-6">
       {error && (
         <div className="p-3 bg-destructive/5 border border-destructive/20 text-destructive text-xs rounded-xl">
           {error}
@@ -393,13 +622,13 @@ export default function ConsultationLabsDocsPanel({
       )}
 
       <div className={`glass-panel rounded-2xl border border-outline-variant/40 shadow-premium ${panelClass}`}>
-        <h3 className={`text-sm font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5 border-b border-outline-variant/30 ${isSidebar ? 'pb-2 text-xs' : 'pb-4'}`}>
+        <h3 className="text-sm font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5 border-b border-outline-variant/30 pb-4">
           <FlaskConical className="w-4 h-4 text-primary" />
           Lab tests
         </h3>
 
         <div className={gridClass}>
-          <div className={isSidebar ? '' : 'sm:col-span-4'}>
+          <div className="sm:col-span-4">
             <label className="block text-[9px] font-bold text-on-surface-variant/40 uppercase mb-1">
               From catalog
             </label>
@@ -416,7 +645,7 @@ export default function ConsultationLabsDocsPanel({
               ))}
             </select>
           </div>
-          <div className={isSidebar ? '' : 'sm:col-span-4'}>
+          <div className="sm:col-span-4">
             <label className="block text-[9px] font-bold text-on-surface-variant/40 uppercase mb-1">
               Test name
             </label>
@@ -427,7 +656,7 @@ export default function ConsultationLabsDocsPanel({
               className="w-full px-2.5 py-1.5 glass-panel border border-outline-variant rounded-lg text-[11px] text-on-surface outline-none"
             />
           </div>
-          <div className={isSidebar ? '' : 'sm:col-span-3'}>
+          <div className="sm:col-span-3">
             <label className="block text-[9px] font-bold text-on-surface-variant/40 uppercase mb-1">
               Notes
             </label>
@@ -438,12 +667,12 @@ export default function ConsultationLabsDocsPanel({
               className="w-full px-2.5 py-1.5 glass-panel border border-outline-variant rounded-lg text-[11px] text-on-surface outline-none"
             />
           </div>
-          <div className={isSidebar ? '' : 'sm:col-span-1'}>
+          <div className="sm:col-span-1">
             <button
               type="button"
               onClick={submitLabOrder}
               disabled={orderingLab}
-              className={`w-full inline-flex items-center justify-center gap-1 text-[10px] font-bold text-white bg-primary px-2 rounded-lg hover:opacity-90 transition-all disabled:opacity-60 ${isSidebar ? 'py-2.5' : 'py-2'}`}
+              className="w-full inline-flex items-center justify-center gap-1 text-[10px] font-bold text-white bg-primary px-2 py-2 rounded-lg hover:opacity-90 transition-all disabled:opacity-60"
             >
               {orderingLab ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
             </button>
@@ -522,13 +751,13 @@ export default function ConsultationLabsDocsPanel({
       </div>
 
       <div className={`glass-panel rounded-2xl border border-outline-variant/40 shadow-premium ${panelClass}`}>
-        <h3 className={`text-sm font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5 border-b border-outline-variant/30 ${isSidebar ? 'pb-2 text-xs' : 'pb-4'}`}>
+        <h3 className="text-sm font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5 border-b border-outline-variant/30 pb-4">
           <Paperclip className="w-4 h-4 text-primary" />
           Medical documents
         </h3>
 
         <div className={gridClass}>
-          <div className={isSidebar ? '' : 'sm:col-span-4'}>
+          <div className="sm:col-span-4">
             <label className="block text-[9px] font-bold text-on-surface-variant/40 uppercase mb-1">
               File (PDF/image, max 15MB)
             </label>
@@ -539,7 +768,7 @@ export default function ConsultationLabsDocsPanel({
               className="w-full text-[10px] text-on-surface file:mr-2 file:py-1.5 file:px-2 file:rounded-lg file:border-0 file:bg-primary/10 file:text-primary file:font-bold"
             />
           </div>
-          <div className={isSidebar ? '' : 'sm:col-span-3'}>
+          <div className="sm:col-span-3">
             <label className="block text-[9px] font-bold text-on-surface-variant/40 uppercase mb-1">
               Category
             </label>
@@ -555,7 +784,7 @@ export default function ConsultationLabsDocsPanel({
               ))}
             </select>
           </div>
-          <div className={isSidebar ? '' : 'sm:col-span-3'}>
+          <div className="sm:col-span-3">
             <label className="block text-[9px] font-bold text-on-surface-variant/40 uppercase mb-1">
               Description
             </label>
@@ -566,12 +795,12 @@ export default function ConsultationLabsDocsPanel({
               className="w-full px-2.5 py-1.5 glass-panel border border-outline-variant rounded-lg text-[11px] text-on-surface outline-none"
             />
           </div>
-          <div className={isSidebar ? '' : 'sm:col-span-2'}>
+          <div className="sm:col-span-2">
             <button
               type="button"
               onClick={submitUpload}
               disabled={uploading}
-              className={`w-full inline-flex items-center justify-center gap-1 text-[10px] font-bold text-white bg-primary px-2 rounded-lg hover:opacity-90 transition-all disabled:opacity-60 ${isSidebar ? 'py-2.5' : 'py-2'}`}
+              className="w-full inline-flex items-center justify-center gap-1 text-[10px] font-bold text-white bg-primary px-2 py-2 rounded-lg hover:opacity-90 transition-all disabled:opacity-60"
             >
               {uploading ? (
                 <>

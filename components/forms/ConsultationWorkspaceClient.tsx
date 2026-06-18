@@ -1058,33 +1058,37 @@ export default function ConsultationWorkspaceClient({
 
         <div
           ref={diagnosticsPanelRef}
-          className="glass-panel rounded-2xl border border-outline-variant/40 p-4 shadow-premium space-y-3 max-h-[min(70vh,720px)] overflow-y-auto"
+          className="flex flex-col min-h-0 max-h-[min(56vh,600px)] rounded-2xl border border-outline-variant/40 bg-surface-container/10 shadow-premium overflow-hidden"
         >
-          <div className="flex items-center justify-between gap-2 border-b border-outline-variant/30 pb-3 sticky top-0 bg-surface/95 backdrop-blur-sm z-[1] -mx-1 px-1">
-            <div>
-              <h3 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
-                <FlaskConical className="w-4 h-4" />
-                Diagnostics
-              </h3>
-              <p className="text-[10px] text-on-surface-variant/60 mt-0.5">
-                Lab tests &amp; documents — available anytime during this consult.
-              </p>
+          <div className="shrink-0 px-3.5 py-3 border-b border-outline-variant/30 bg-surface-container/25">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <h3 className="text-[11px] font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
+                  <FlaskConical className="w-3.5 h-3.5 shrink-0" />
+                  Diagnostics
+                </h3>
+                <p className="text-[10px] text-on-surface-variant/60 mt-0.5 leading-snug">
+                  Labs &amp; files — add anytime during this consult.
+                </p>
+              </div>
+              {(labOrders.length > 0 || documents.length > 0) && (
+                <span className="text-[9px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap">
+                  {labOrders.length} lab · {documents.length} doc
+                </span>
+              )}
             </div>
-            {(labOrders.length > 0 || documents.length > 0) && (
-              <span className="text-[9px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full shrink-0">
-                {labOrders.length} lab · {documents.length} doc
-              </span>
-            )}
           </div>
-          <ConsultationLabsDocsPanel
-            variant="sidebar"
-            visitId={visitId}
-            patientId={patientId}
-            labCatalog={labCatalog}
-            labOrders={labOrders}
-            documents={documents}
-            previousDocuments={previousDocuments}
-          />
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3.5 py-3">
+            <ConsultationLabsDocsPanel
+              variant="sidebar"
+              visitId={visitId}
+              patientId={patientId}
+              labCatalog={labCatalog}
+              labOrders={labOrders}
+              documents={documents}
+              previousDocuments={previousDocuments}
+            />
+          </div>
         </div>
 
       </div>

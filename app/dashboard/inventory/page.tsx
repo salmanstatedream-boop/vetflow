@@ -8,6 +8,7 @@ import ProductForm from '@/components/forms/ProductForm';
 import StockInvoiceIntakeClient from '@/components/inventory/StockInvoiceIntakeClient';
 import InventoryTabsClient from '@/components/inventory/InventoryTabsClient';
 import InventoryCatalogClient from '@/components/inventory/InventoryCatalogClient';
+import Link from 'next/link';
 import PageHeader from '@/components/ui/premium/PageHeader';
 import { Layers, AlertCircle, ShoppingBag } from 'lucide-react';
 
@@ -19,9 +20,9 @@ export const metadata = {
 export default async function InventoryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; lowStock?: string }>;
 }) {
-  const { tab } = await searchParams;
+  const { tab, lowStock } = await searchParams;
   const ctx = await resolveServerAuthContext();
   if (!ctx) {
     redirect('/login');
@@ -155,15 +156,21 @@ export default async function InventoryPage({
           <span className="text-[10px] font-bold text-on-surface-variant/40 uppercase block">Total Catalog Items</span>
           <span className="text-lg font-black text-on-surface mt-1 block">{totalItems}</span>
         </div>
-        <div className="glass-panel rounded-2xl border border-outline-variant/40 p-4 shadow-premium">
+        <Link
+          href="/dashboard/inventory?lowStock=1"
+          className="glass-panel rounded-2xl border border-outline-variant/40 p-4 shadow-premium hover:border-destructive/40 hover:bg-destructive/5 transition-colors group"
+        >
           <span className="text-[10px] font-bold text-destructive uppercase block flex items-center gap-1">
             <AlertCircle className="w-3.5 h-3.5" />
             Low Stock Alerts
+            <span className="ml-auto text-[9px] font-bold text-destructive/70 opacity-0 group-hover:opacity-100 transition-opacity">
+              View →
+            </span>
           </span>
           <span className="text-lg font-black text-destructive mt-1 block">
             {lowStockItems.length} {lowStockItems.length === 1 ? 'item' : 'items'}
           </span>
-        </div>
+        </Link>
       </div>
 
       {/* PRODUCT LIST TABLE */}
@@ -181,6 +188,8 @@ export default async function InventoryPage({
           userId={session.userId}
           categories={categories || []}
           branches={session.branches}
+          initialLowStockOnly={lowStock === '1'}
+          lowStockCount={lowStockItems.length}
         />
       ) : (
         <div className="glass-panel rounded-2xl border border-outline-variant/40 p-12 text-center space-y-4">

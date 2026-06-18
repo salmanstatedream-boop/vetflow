@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import StockAdjustmentForm from '@/components/forms/StockAdjustmentForm';
@@ -8,7 +8,7 @@ import ProductEditModal from '@/components/inventory/ProductEditModal';
 import Select from '@/components/ui/premium/Select';
 import { deleteProductAction } from '@/lib/services/inventory-actions';
 import { useCurrency } from '@/lib/context/CurrencyContext';
-import { ShieldAlert, Trash2, Loader2, Settings } from 'lucide-react';
+import { ShieldAlert, Trash2, Loader2, Settings, Search, X } from 'lucide-react';
 import type { UserSessionDetails } from '@/lib/services/auth';
 import { formatProductTypeLabel } from '@/lib/inventory/product-types';
 
@@ -46,6 +46,12 @@ interface InventoryCatalogClientProps {
   userId: string;
   categories: { id: string; name: string }[];
   branches: { id: string; name: string }[];
+  initialLowStockOnly?: boolean;
+  lowStockCount?: number;
+}
+
+function isLowStockProduct(product: ProductRow): boolean {
+  return product.type !== 'service' && product.stock_quantity <= product.reorder_level;
 }
 
 function canManageRow(
@@ -66,11 +72,25 @@ export default function InventoryCatalogClient({
   userId,
   categories,
   branches,
+  initialLowStockOnly = false,
+  lowStockCount = 0,
 }: InventoryCatalogClientProps) {
   const { formatCurrency } = useCurrency();
   const [typeFilter, setTypeFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [lowStockOnly, setLowStockOnly] = useState(initialLowStockOnly);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const router = useRouter();
+  const tableRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (initialLowStockOnly) {
+      setLowStockOnly(true);
+      requestAnimationFrame(() => {
+        tableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+  }, [initialLowStockOnly]);
 
   const typeFilterOptions = useMemo(() => {
     const slugs = new Set<string>();
@@ -96,14 +116,47 @@ export default function InventoryCatalogClient({
   }, [products, orgServices]);
 
   const filtered = useMemo(() => {
-    if (typeFilter === 'all') return catalogRows;
+    let rows = catalogRows;
+
     if (typeFilter === 'service') {
-      return catalogRows.filter(
+      rows = rows.filter(
         (r) => r.source === 'org_service' || (r.source === 'product' && r.product.type === 'service')
       );
+    } else if (typeFilter !== 'all') {
+      rows = rows.filter((r) => r.source === 'product' && r.product.type === typeFilter);
     }
-    return catalogRows.filter((r) => r.source === 'product' && r.product.type === typeFilter);
-  }, [catalogRows, typeFilter]);
+
+    if (lowStockOnly) {
+      rows = rows.filter((r) => r.source === 'product' && isLowStockProduct(r.product));
+    }
+
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      rows = rows.filter((r) => {
+        if (r.source === 'org_service') {
+          return (
+            r.service.name.toLowerCase().includes(q) ||
+            (r.service.description?.toLowerCase().includes(q) ?? false)
+          );
+        }
+        const p = r.product;
+        return (
+          p.name.toLowerCase().includes(q) ||
+          (p.brand?.toLowerCase().includes(q) ?? false) ||
+          (p.sku?.toLowerCase().includes(q) ?? false)
+        );
+      });
+    }
+
+    return rows;
+  }, [catalogRows, typeFilter, lowStockOnly, searchQuery]);
+
+  const showLowStock = () => {
+    setLowStockOnly(true);
+    requestAnimationFrame(() => {
+      tableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
 
   const handleDelete = async (productId: string, name: string) => {
     if (!confirm(`Remove "${name}" from the catalog?`)) return;
@@ -121,16 +174,82 @@ export default function InventoryCatalogClient({
 
   return (
     <div className="space-y-4">
-      <div className="max-w-xs">
-        <Select
-          label="Filter by type"
-          value={typeFilter}
-          onChange={setTypeFilter}
-          options={typeFilterOptions}
-        />
+      <div className="flex flex-col lg:flex-row lg:items-end gap-3 flex-wrap">
+        <div className="w-full sm:w-52 shrink-0">
+          <Select
+            label="Filter by type"
+            value={typeFilter}
+            onChange={setTypeFilter}
+            options={typeFilterOptions}
+          />
+        </div>
+        <div className="flex-1 min-w-[200px]">
+          <label className="block text-[10px] font-semibold text-on-surface/80 uppercase tracking-wider mb-1.5">
+            Search by name
+          </label>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-on-surface-variant/50 pointer-events-none" />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Product or service name…"
+              className="w-full pl-9 pr-9 py-2.5 bg-surface-container/30 border border-outline-variant/80 rounded-xl text-sm text-on-surface outline-none focus:border-primary"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50"
+                aria-label="Clear search"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={showLowStock}
+            className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold border transition-colors ${
+              lowStockOnly
+                ? 'bg-destructive/10 border-destructive/40 text-destructive'
+                : 'border-destructive/30 text-destructive hover:bg-destructive/5'
+            }`}
+          >
+            <ShieldAlert className="w-3.5 h-3.5" />
+            Low stock
+            {lowStockCount > 0 && (
+              <span className="bg-destructive/15 px-1.5 py-0.5 rounded-md text-[10px]">
+                {lowStockCount}
+              </span>
+            )}
+          </button>
+          {lowStockOnly && (
+            <button
+              type="button"
+              onClick={() => setLowStockOnly(false)}
+              className="text-[10px] font-bold text-on-surface-variant hover:text-on-surface underline"
+            >
+              Show all
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="glass-panel rounded-2xl border border-outline-variant/40 overflow-hidden shadow-premium">
+      {(searchQuery || lowStockOnly) && (
+        <p className="text-[11px] text-on-surface-variant">
+          Showing {filtered.length} of {catalogRows.length} catalog items
+          {lowStockOnly ? ' (low stock only)' : ''}
+          {searchQuery ? ` matching “${searchQuery.trim()}”` : ''}
+        </p>
+      )}
+
+      <div
+        ref={tableRef}
+        className="glass-panel rounded-2xl border border-outline-variant/40 overflow-hidden shadow-premium"
+      >
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-surface-container/40 border-b border-outline-variant/40 text-[10px] font-semibold text-on-surface/80 uppercase tracking-wider">
@@ -145,7 +264,11 @@ export default function InventoryCatalogClient({
             {filtered.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-6 py-8 text-center text-on-surface-variant/60 italic">
-                  No items in this category.
+                  {lowStockOnly
+                    ? 'No low-stock items match your filters.'
+                    : searchQuery
+                      ? 'No products match your search.'
+                      : 'No items in this category.'}
                 </td>
               </tr>
             ) : (
@@ -188,8 +311,7 @@ export default function InventoryCatalogClient({
                 }
 
                 const prod = row.product;
-                const isLowStock =
-                  prod.type !== 'service' && prod.stock_quantity <= prod.reorder_level;
+                const isLowStock = isLowStockProduct(prod);
                 const manageable = canManageRow(role, userId, prod.created_by);
 
                 return (
