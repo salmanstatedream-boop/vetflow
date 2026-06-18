@@ -18,7 +18,7 @@ import { Loader2, Phone, Heart, UserPlus, Plus } from 'lucide-react';
 
 export type SelectedPatient = {
   customer: CustomerSearchResult;
-  pet: { id: string; name: string; species: string; breed: string };
+  pet: { id: string; name: string; species: string; breed: string; dateOfBirth?: string | null };
 };
 
 interface PatientLookupPanelProps {
@@ -150,6 +150,7 @@ export default function PatientLookupPanel({
           name: res.pet.name,
           species: res.pet.species,
           breed: res.pet.breed || '',
+          dateOfBirth: (res.pet.date_of_birth as string | null) ?? null,
         };
         onSelect({
           customer: {

@@ -20,7 +20,7 @@ export type CustomerSearchResult = {
   phone: string;
   email: string;
   address?: string;
-  pets: { id: string; name: string; species: string; breed: string }[];
+  pets: { id: string; name: string; species: string; breed: string; dateOfBirth: string | null }[];
 };
 
 function formatCustomerRow(
@@ -31,7 +31,13 @@ function formatCustomerRow(
     phone: string;
     email: string | null;
     address?: string | null;
-    pets: { id: string; name: string; species: string; breed: string | null }[] | null;
+    pets: {
+      id: string;
+      name: string;
+      species: string;
+      breed: string | null;
+      date_of_birth: string | null;
+    }[] | null;
   }
 ): CustomerSearchResult {
   return {
@@ -46,6 +52,7 @@ function formatCustomerRow(
       name: p.name,
       species: p.species,
       breed: p.breed || '',
+      dateOfBirth: p.date_of_birth,
     })),
   };
 }
@@ -285,7 +292,7 @@ export async function lookupCustomerByPhoneAction(phone: string) {
     const supabase = await createClient();
     let q = supabase
       .from('customers')
-      .select('id, first_name, last_name, phone, email, pets:patients ( id, name, species, breed )')
+      .select('id, first_name, last_name, phone, email, pets:patients ( id, name, species, breed, date_of_birth )')
       .eq('organization_id', ctx.organizationId)
       .is('deleted_at', null);
 
@@ -326,7 +333,7 @@ export async function getCustomerByIdAction(customerId: string) {
     const supabase = await createClient();
     let q = supabase
       .from('customers')
-      .select('id, first_name, last_name, phone, email, address, pets:patients ( id, name, species, breed )')
+      .select('id, first_name, last_name, phone, email, address, pets:patients ( id, name, species, breed, date_of_birth )')
       .eq('id', customerId)
       .eq('organization_id', ctx.organizationId)
       .is('deleted_at', null);
@@ -371,7 +378,7 @@ export async function searchCustomersAction(query: string) {
     const normalized = normalizePhoneInput(trimmed);
 
     const baseSelect =
-      'id, first_name, last_name, phone, email, pets:patients ( id, name, species, breed )';
+      'id, first_name, last_name, phone, email, pets:patients ( id, name, species, breed, date_of_birth )';
 
     let formatted: CustomerSearchResult[] = [];
 

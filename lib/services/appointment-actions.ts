@@ -18,6 +18,7 @@ import {
 } from '@/lib/email';
 import { createCustomerAction } from '@/lib/services/customer-actions';
 import { createPetAction } from '@/lib/services/pet-actions';
+import { resolvePetDateOfBirthFromAgeInput } from '@/lib/pets/age';
 import {
   AppointmentRequestSchema,
   AppointmentWithPatientSchema,
@@ -342,12 +343,17 @@ export async function createAppointmentWithPatientAction(payload: unknown) {
       if (!parsed.pet) {
         throw new Error('Pet details are required.');
       }
+      const petDob =
+        parsed.pet.dateOfBirth?.trim() ||
+        resolvePetDateOfBirthFromAgeInput(parsed.pet.ageYears, parsed.pet.ageMonths) ||
+        '';
       const petRes = await createPetAction({
         customerId: customerId!,
         name: parsed.pet.name,
         species: parsed.pet.species,
         breed: parsed.pet.breed || '',
         gender: parsed.pet.gender || 'Male',
+        dateOfBirth: petDob,
       });
       if (!petRes.success || !petRes.pet) {
         throw new Error(petRes.error || 'Failed to create pet.');

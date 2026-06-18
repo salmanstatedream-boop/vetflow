@@ -5,26 +5,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import StockAdjustmentForm from '@/components/forms/StockAdjustmentForm';
 import ProductEditModal from '@/components/inventory/ProductEditModal';
+import Select from '@/components/ui/premium/Select';
 import { deleteProductAction } from '@/lib/services/inventory-actions';
 import { useCurrency } from '@/lib/context/CurrencyContext';
 import { ShieldAlert, Trash2, Loader2, Settings } from 'lucide-react';
 import type { UserSessionDetails } from '@/lib/services/auth';
-import { PRODUCT_TYPE_OPTIONS } from '@/lib/inventory/product-types';
-
-const TYPE_TAB_LABELS: Record<string, string> = {
-  medicine: 'Medicine',
-  food: 'Food',
-  treats: 'Treats',
-  accessory: 'Accessories',
-  service: 'Services',
-};
-
-const TYPE_TABS = [
-  { id: 'all', label: 'All' },
-  ...PRODUCT_TYPE_OPTIONS.map((o) => ({ id: o.value, label: TYPE_TAB_LABELS[o.value] ?? o.label })),
-] as const;
-
-type TypeTab = (typeof TYPE_TABS)[number]['id'];
+import { formatProductTypeLabel } from '@/lib/inventory/product-types';
 
 interface ProductRow {
   id: string;
@@ -82,9 +68,26 @@ export default function InventoryCatalogClient({
   branches,
 }: InventoryCatalogClientProps) {
   const { formatCurrency } = useCurrency();
-  const [typeTab, setTypeTab] = useState<TypeTab>('all');
+  const [typeFilter, setTypeFilter] = useState('all');
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const router = useRouter();
+
+  const typeFilterOptions = useMemo(() => {
+    const slugs = new Set<string>();
+    for (const p of products) {
+      if (p.type) slugs.add(p.type);
+    }
+    if (orgServices.length > 0 || products.some((p) => p.type === 'service')) {
+      slugs.add('service');
+    }
+    const sorted = [...slugs].sort((a, b) =>
+      formatProductTypeLabel(a).localeCompare(formatProductTypeLabel(b))
+    );
+    return [
+      { value: 'all', label: 'All types' },
+      ...sorted.map((slug) => ({ value: slug, label: formatProductTypeLabel(slug) })),
+    ];
+  }, [products, orgServices]);
 
   const catalogRows = useMemo((): CatalogRow[] => {
     const productRows: CatalogRow[] = products.map((p) => ({ source: 'product', product: p }));
@@ -93,14 +96,14 @@ export default function InventoryCatalogClient({
   }, [products, orgServices]);
 
   const filtered = useMemo(() => {
-    if (typeTab === 'all') return catalogRows;
-    if (typeTab === 'service') {
+    if (typeFilter === 'all') return catalogRows;
+    if (typeFilter === 'service') {
       return catalogRows.filter(
         (r) => r.source === 'org_service' || (r.source === 'product' && r.product.type === 'service')
       );
     }
-    return catalogRows.filter((r) => r.source === 'product' && r.product.type === typeTab);
-  }, [catalogRows, typeTab]);
+    return catalogRows.filter((r) => r.source === 'product' && r.product.type === typeFilter);
+  }, [catalogRows, typeFilter]);
 
   const handleDelete = async (productId: string, name: string) => {
     if (!confirm(`Remove "${name}" from the catalog?`)) return;
@@ -118,21 +121,13 @@ export default function InventoryCatalogClient({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
-        {TYPE_TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setTypeTab(t.id)}
-            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-colors ${
-              typeTab === t.id
-                ? 'bg-primary text-white'
-                : 'bg-surface-container border border-outline-variant text-on-surface-variant'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div className="max-w-xs">
+        <Select
+          label="Filter by type"
+          value={typeFilter}
+          onChange={setTypeFilter}
+          options={typeFilterOptions}
+        />
       </div>
 
       <div className="glass-panel rounded-2xl border border-outline-variant/40 overflow-hidden shadow-premium">
@@ -206,7 +201,9 @@ export default function InventoryCatalogClient({
                       </span>
                     </td>
                     <td className="px-6 py-4 capitalize text-on-surface-variant/70">
-                      <span className="font-semibold text-on-surface">{prod.type}</span>
+                      <span className="font-semibold text-on-surface">
+                        {formatProductTypeLabel(prod.type)}
+                      </span>
                       {prod.type === 'service' && (
                         <span className="inline-flex ml-1.5 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-primary/10 text-primary border border-primary/20">
                           Catalog

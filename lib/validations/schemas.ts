@@ -367,6 +367,9 @@ const AppointmentPetFieldsSchema = z.object({
   species: z.string().min(1, { message: 'Species is required' }),
   breed: z.string().optional().or(z.literal('')),
   gender: z.string().optional().or(z.literal('')),
+  dateOfBirth: z.string().optional().or(z.literal('')),
+  ageYears: z.number().int().min(0).max(40).optional(),
+  ageMonths: z.number().int().min(0).max(11).optional(),
 });
 
 export const AppointmentWithPatientSchema = z

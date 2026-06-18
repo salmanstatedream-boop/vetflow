@@ -12,6 +12,8 @@ import { normalizePhoneInput, looksLikePhone } from '@/lib/reception/phone';
 import Select from '@/components/ui/premium/Select';
 import CreatableSelect from '@/components/ui/premium/CreatableSelect';
 import { SPECIES_OPTIONS } from '@/lib/pets/species-options';
+import { computePetAgeLabel } from '@/lib/utils/pet-species-avatar';
+import { formatAgeInputLabel } from '@/lib/pets/age';
 import { useCreatableOptions } from '@/lib/hooks/useCreatableOptions';
 import {
   X,
@@ -72,6 +74,8 @@ export default function NewAppointmentWizard({
   const [petName, setPetName] = useState('');
   const [petSpecies, setPetSpecies] = useState('Dog');
   const [petBreed, setPetBreed] = useState('');
+  const [petAgeYears, setPetAgeYears] = useState('');
+  const [petAgeMonths, setPetAgeMonths] = useState('');
 
   const { options: speciesOptions, handleCreate: handleCreateSpecies } = useCreatableOptions(
     SPECIES_OPTIONS,
@@ -91,11 +95,24 @@ export default function NewAppointmentWizard({
   const [prefillDone, setPrefillDone] = useState(false);
 
   const phoneValid = normalizePhoneInput(phone).replace(/^\+/, '').length >= 7;
-  const petReady =
-    selectedPetId != null ||
-    (isNewPet && petName.trim().length > 0 && petSpecies.trim().length > 0);
   const ownerReady = phoneValid && firstName.trim() && lastName.trim();
   const visitReady = preferredDate && preferredTime && reason.trim();
+
+  const pets = existingCustomer?.pets || [];
+  const needsNewPetDetails =
+    isNewPet || (!existingCustomer && phoneValid) || (existingCustomer != null && pets.length === 0);
+  const parsedAgeYears = parseInt(petAgeYears, 10);
+  const parsedAgeMonths = parseInt(petAgeMonths, 10);
+  const hasAgeInput =
+    (!Number.isNaN(parsedAgeYears) && parsedAgeYears > 0) ||
+    (!Number.isNaN(parsedAgeMonths) && parsedAgeMonths > 0);
+  const petReady =
+    (selectedPetId != null && !isNewPet) ||
+    (needsNewPetDetails &&
+      petName.trim().length > 0 &&
+      petSpecies.trim().length > 0 &&
+      hasAgeInput);
+  const selectedPet = pets.find((p) => p.id === selectedPetId);
 
   const runPhoneLookup = useCallback(async (phoneValue: string) => {
     if (!looksLikePhone(phoneValue)) {
@@ -194,6 +211,8 @@ export default function NewAppointmentWizard({
     setPetName('');
     setPetSpecies('Dog');
     setPetBreed('');
+    setPetAgeYears('');
+    setPetAgeMonths('');
     setPreferredDate('');
     setPreferredTime('');
     setReason('');
@@ -240,6 +259,9 @@ export default function NewAppointmentWizard({
                 species: petSpecies,
                 breed: petBreed.trim() || '',
                 gender: 'Male',
+                ageYears: !Number.isNaN(parsedAgeYears) && parsedAgeYears > 0 ? parsedAgeYears : undefined,
+                ageMonths:
+                  !Number.isNaN(parsedAgeMonths) && parsedAgeMonths > 0 ? parsedAgeMonths : undefined,
               },
         doctorId: doctorId || '',
         preferredDate,
@@ -263,8 +285,6 @@ export default function NewAppointmentWizard({
   };
 
   if (!isOpen) return null;
-
-  const pets = existingCustomer?.pets || [];
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-12 px-4 bg-black/60 backdrop-blur-sm">
@@ -407,6 +427,9 @@ export default function NewAppointmentWizard({
                       <span className="text-[10px] text-on-surface-variant">
                         {pet.species}
                         {pet.breed ? ` · ${pet.breed}` : ''}
+                        {pet.dateOfBirth && computePetAgeLabel(pet.dateOfBirth)
+                          ? ` · Age: ${computePetAgeLabel(pet.dateOfBirth)}`
+                          : ''}
                       </span>
                     </button>
                   ))}
@@ -427,6 +450,17 @@ export default function NewAppointmentWizard({
                   <Plus className="w-3 h-3" />
                   {existingCustomer ? 'Add new pet for this owner' : 'Register new pet'}
                 </button>
+              )}
+
+              {selectedPet && !isNewPet && (
+                <p className="text-[10px] text-on-surface-variant bg-surface-container/40 rounded-lg px-3 py-2">
+                  Selected: <span className="font-semibold text-on-surface">{selectedPet.name}</span>
+                  {selectedPet.dateOfBirth && computePetAgeLabel(selectedPet.dateOfBirth) ? (
+                    <span> · Age: {computePetAgeLabel(selectedPet.dateOfBirth)}</span>
+                  ) : (
+                    <span> · Age not on file</span>
+                  )}
+                </p>
               )}
 
               {(isNewPet || (!existingCustomer && phoneValid) || (existingCustomer && pets.length === 0)) && (
@@ -459,6 +493,36 @@ export default function NewAppointmentWizard({
                       onChange={(e) => setPetBreed(e.target.value)}
                       className="px-3 py-2 bg-surface-container border border-outline-variant rounded-xl text-xs"
                     />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-on-surface-variant uppercase block mb-1">
+                      Pet age <span className="text-destructive">*</span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="number"
+                        min={0}
+                        max={40}
+                        placeholder="Years"
+                        value={petAgeYears}
+                        onChange={(e) => setPetAgeYears(e.target.value)}
+                        className="px-3 py-2 bg-surface-container border border-outline-variant rounded-xl text-xs"
+                      />
+                      <input
+                        type="number"
+                        min={0}
+                        max={11}
+                        placeholder="Months (optional)"
+                        value={petAgeMonths}
+                        onChange={(e) => setPetAgeMonths(e.target.value)}
+                        className="px-3 py-2 bg-surface-container border border-outline-variant rounded-xl text-xs"
+                      />
+                    </div>
+                    {hasAgeInput && (
+                      <p className="text-[10px] text-on-surface-variant/60 mt-1">
+                        Approx. age: {formatAgeInputLabel(parsedAgeYears, parsedAgeMonths)}
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
