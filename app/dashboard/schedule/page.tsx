@@ -6,9 +6,10 @@ import { createClient } from '@/lib/supabase/server';
 import PageHeader from '@/components/ui/premium/PageHeader';
 import { fetchAssignableClinicians } from '@/lib/clinical/assignable-clinicians';
 import ScheduleDayCalendarClient from '@/components/schedule/ScheduleDayCalendarClient';
-import { resolveDateFromParam } from '@/lib/utils/date-filters';
+import { resolveDashboardFilterDate } from '@/lib/utils/date-filters';
 import { formatAppointmentTime, normalizeDateYmd } from '@/lib/utils/time-parse';
 import { normalizeClinicTimezone } from '@/lib/utils/timezones';
+import { UPCOMING_APPOINTMENT_STATUSES } from '@/lib/appointments/status';
 import { Calendar } from 'lucide-react';
 
 export const metadata = {
@@ -22,7 +23,6 @@ export default async function SchedulePage({
   searchParams: Promise<{ date?: string }>;
 }) {
   const { date: dateParam } = await searchParams;
-  const selectedDate = resolveDateFromParam(dateParam);
 
   const ctx = await resolveServerAuthContext();
   if (!ctx) redirect('/login');
@@ -48,30 +48,33 @@ export default async function SchedulePage({
 
   const supabase = await createClient();
 
-  const clinicians = await fetchAssignableClinicians(ctx.organizationId!);
-
-  const [{ data: appointmentsRaw }, { data: appSettings }] = await Promise.all([
-    (() => {
-      let query = supabase
-        .from('appointments')
-        .select(
-          'id, patient_name, customer_name, reason, status, preferred_date, preferred_time, doctor_id, is_emergency, duration_minutes'
-        )
-        .eq('branch_id', activeBranchId)
-        .eq('preferred_date', selectedDate)
-        .in('status', ['requested', 'confirmed', 'rescheduled', 'checked_in'])
-        .order('preferred_time', { ascending: true });
-      if (ctx.role === 'doctor') {
-        query = query.eq('doctor_id', ctx.userId);
-      }
-      return query;
-    })(),
+  const [{ data: appSettings }, clinicians] = await Promise.all([
     supabase
       .from('app_settings')
       .select('timezone')
       .eq('organization_id', ctx.organizationId!)
       .maybeSingle(),
+    fetchAssignableClinicians(ctx.organizationId!),
   ]);
+
+  const clinicTimezone = normalizeClinicTimezone(appSettings?.timezone);
+  const selectedDate = resolveDashboardFilterDate(dateParam, clinicTimezone);
+
+  let appointmentsQuery = supabase
+    .from('appointments')
+    .select(
+      'id, patient_name, customer_name, reason, status, preferred_date, preferred_time, doctor_id, is_emergency, duration_minutes'
+    )
+    .eq('branch_id', activeBranchId)
+    .eq('preferred_date', selectedDate)
+    .in('status', [...UPCOMING_APPOINTMENT_STATUSES])
+    .order('preferred_time', { ascending: true });
+
+  if (ctx.role === 'doctor') {
+    appointmentsQuery = appointmentsQuery.eq('doctor_id', ctx.userId);
+  }
+
+  const { data: appointmentsRaw } = await appointmentsQuery;
 
   const doctors = clinicians.map((d) => ({
     id: d.id,
@@ -107,7 +110,7 @@ export default async function SchedulePage({
         currentUserId={ctx.userId}
         currentRole={ctx.role}
         activeBranchId={activeBranchId}
-        clinicTimezone={normalizeClinicTimezone(appSettings?.timezone)}
+        clinicTimezone={clinicTimezone}
         />
       </div>
     </div>

@@ -1,7 +1,8 @@
 'use client';
 
 import AppLink from '@/components/layout/AppLink';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   AlertTriangle,
   Heart,
@@ -13,6 +14,8 @@ import { useVisibilityPolling } from '@/lib/hooks/useVisibilityPolling';
 import DateRangeQuickFilter from '@/components/dashboard/DateRangeQuickFilter';
 import VisitStatusBadge from '@/components/dashboard/VisitStatusBadge';
 import { isConsultPaused } from '@/lib/utils/visit-status';
+import { resolveDashboardFilterDate } from '@/lib/utils/date-filters';
+import type { ClinicTimezone } from '@/lib/utils/timezones';
 
 export type ReceptionistAppointmentRow = {
   id: string;
@@ -57,6 +60,7 @@ export interface ReceptionistHomeClientProps {
   activeBranchId: string;
   branches: { id: string; name: string }[];
   doctors: { id: string; firstName: string; lastName: string }[];
+  clinicTimezone: ClinicTimezone;
 }
 
 export default function ReceptionistHomeClient({
@@ -65,13 +69,23 @@ export default function ReceptionistHomeClient({
   consultingVisits = [],
   checkoutVisits,
   visitRecords,
+  clinicTimezone,
 }: ReceptionistHomeClientProps) {
   useVisibilityPolling(15000, true);
 
+  const searchParams = useSearchParams();
+  const urlDate = searchParams.get('date');
+  const selectedDate = resolveDashboardFilterDate(urlDate, clinicTimezone);
+
   const [recordSearch, setRecordSearch] = useState('');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  const [dateFrom, setDateFrom] = useState(selectedDate);
+  const [dateTo, setDateTo] = useState(selectedDate);
   const [recordTypeFilter, setRecordTypeFilter] = useState<RecordTypeFilter>('all');
+
+  useEffect(() => {
+    setDateFrom(selectedDate);
+    setDateTo(selectedDate);
+  }, [selectedDate]);
 
   const filteredRecords = useMemo(() => {
     const q = recordSearch.trim().toLowerCase();
@@ -90,6 +104,8 @@ export default function ReceptionistHomeClient({
 
   return (
     <div className="space-y-6">
+      <DateRangeQuickFilter showWeek={false} clinicTimezone={clinicTimezone} />
+
       <div className="grid md:grid-cols-3 gap-4">
         <QueuePanel
           title="Upcoming appointments"
@@ -184,8 +200,7 @@ export default function ReceptionistHomeClient({
       )}
 
       <div className="glass-panel rounded-2xl p-5 border border-outline-variant/40">
-        <DateRangeQuickFilter showWeek={false} />
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 mt-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider">
             Sales & visit records
           </h3>

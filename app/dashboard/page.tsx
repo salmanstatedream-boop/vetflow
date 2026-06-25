@@ -61,7 +61,9 @@ import {
 import type { UserSessionDetails } from '@/lib/services/auth';
 import { getTimeGreeting } from '@/lib/utils/greeting';
 import { normalizeOneToOne } from '@/lib/supabase/embed';
-import { resolveDateFromParam } from '@/lib/utils/date-filters';
+import { resolveDashboardFilterDate } from '@/lib/utils/date-filters';
+import { DEFAULT_CLINIC_TIMEZONE, normalizeClinicTimezone } from '@/lib/utils/timezones';
+import { UPCOMING_APPOINTMENT_STATUSES } from '@/lib/appointments/status';
 import { formatMoney } from '@/lib/utils/currency';
 import DashboardQabShell from '@/components/dashboard/DashboardQabShell';
 import StaffDashboardGate from '@/components/dashboard/StaffDashboardGate';
@@ -90,13 +92,18 @@ type VisitRow = {
   customers: { first_name: string; last_name: string } | null;
 };
 
+function logDashboardQueryError(label: string, error: unknown) {
+  if (process.env.NODE_ENV === 'development') {
+    console.error(`[dashboard] ${label}:`, error);
+  }
+}
+
 export default async function DashboardOverview({
   searchParams,
 }: {
   searchParams: Promise<{ date?: string }>;
 }) {
   const { date: dateParam } = await searchParams;
-  const filterDate = resolveDateFromParam(dateParam);
   const ctx = await resolveServerAuthContext();
   if (!ctx) redirect('/login');
   if (ctx.isSuperAdmin && !ctx.isImpersonating) redirect('/super-admin/dashboard');
@@ -105,6 +112,9 @@ export default async function DashboardOverview({
   const activeBranchId = ctx.activeBranchId;
   const role = session.role;
   const greeting = getTimeGreeting();
+
+  let clinicTimezone = DEFAULT_CLINIC_TIMEZONE;
+  let filterDate = resolveDashboardFilterDate(dateParam, clinicTimezone);
 
   if (!activeBranchId) {
     return (
@@ -136,7 +146,7 @@ export default async function DashboardOverview({
     );
   }
 
-  const today = filterDate;
+  let today = filterDate;
 
   let todayAppointments = 0;
   let waitingWalkIns = 0;
@@ -219,6 +229,16 @@ export default async function DashboardOverview({
     }
   } else {
     const supabase = await createClient();
+
+    const { data: appSettings } = await supabase
+      .from('app_settings')
+      .select('timezone')
+      .eq('organization_id', session.organizationId || '')
+      .maybeSingle();
+    clinicTimezone = normalizeClinicTimezone(appSettings?.timezone);
+    filterDate = resolveDashboardFilterDate(dateParam, clinicTimezone);
+    today = filterDate;
+
     const queries: Promise<void>[] = [];
 
     if (canShowWidget(role, 'todayAppointments')) {
@@ -229,6 +249,10 @@ export default async function DashboardOverview({
           .eq('branch_id', activeBranchId)
           .eq('preferred_date', today)
           .then((r) => {
+            if (r.error) {
+              logDashboardQueryError('todayAppointments', r.error);
+              return;
+            }
             todayAppointments = r.count || 0;
           })
       );
@@ -242,6 +266,10 @@ export default async function DashboardOverview({
           .eq('branch_id', activeBranchId)
           .in('status', ['waiting', 'consulting'])
           .then((r) => {
+            if (r.error) {
+              logDashboardQueryError('waitingWalkIns', r.error);
+              return;
+            }
             waitingWalkIns = r.count || 0;
           })
       );
@@ -255,6 +283,10 @@ export default async function DashboardOverview({
           .eq('branch_id', activeBranchId)
           .eq('status', 'ready_for_checkout')
           .then((r) => {
+            if (r.error) {
+              logDashboardQueryError('readyForCheckout', r.error);
+              return;
+            }
             readyForCheckout = r.count || 0;
           })
       );
@@ -327,6 +359,10 @@ export default async function DashboardOverview({
           .order('is_emergency', { ascending: false })
           .order('checked_in_at', { ascending: true })
           .then((r) => {
+            if (r.error) {
+              logDashboardQueryError('doctorQueue', r.error);
+              return;
+            }
             const mapped =
               r.data?.map((v) => ({
                 id: v.id,
@@ -441,10 +477,14 @@ export default async function DashboardOverview({
           .select('id, patient_name, customer_name, customer_phone, preferred_time, is_emergency')
           .eq('branch_id', activeBranchId)
           .eq('preferred_date', today)
-          .in('status', ['confirmed', 'rescheduled', 'requested'])
+          .in('status', [...UPCOMING_APPOINTMENT_STATUSES])
           .order('preferred_time', { ascending: true })
           .limit(5)
           .then((r) => {
+            if (r.error) {
+              logDashboardQueryError('receptionistUpcoming', r.error);
+              return;
+            }
             receptionistUpcoming =
               r.data?.map((a) => ({
                 id: a.id,
@@ -465,6 +505,10 @@ export default async function DashboardOverview({
           .order('checked_in_at', { ascending: true })
           .limit(5)
           .then((r) => {
+            if (r.error) {
+              logDashboardQueryError('receptionistWaiting', r.error);
+              return;
+            }
             receptionistWaiting = (r.data || []).map(mapVisit);
           })
       );
@@ -482,6 +526,10 @@ export default async function DashboardOverview({
           .order('consult_started_at', { ascending: false })
           .limit(5)
           .then((r) => {
+            if (r.error) {
+              logDashboardQueryError('receptionistConsulting', r.error);
+              return;
+            }
             receptionistConsulting = (r.data || []).map((v) => {
               const base = mapVisit(v);
               const assignment = normalizeOneToOne(
@@ -509,6 +557,10 @@ export default async function DashboardOverview({
           .order('checked_in_at', { ascending: true })
           .limit(5)
           .then((r) => {
+            if (r.error) {
+              logDashboardQueryError('receptionistCheckout', r.error);
+              return;
+            }
             receptionistCheckout = (r.data || []).map(mapVisit);
           })
       );
@@ -522,6 +574,10 @@ export default async function DashboardOverview({
           .order('created_at', { ascending: false })
           .limit(50)
           .then((r) => {
+            if (r.error) {
+              logDashboardQueryError('receptionistVisitRecords', r.error);
+              return;
+            }
             receptionistVisitRecords =
               r.data?.map((inv) => {
                 const cust = Array.isArray(inv.customers) ? inv.customers[0] : inv.customers;
@@ -685,16 +741,19 @@ export default async function DashboardOverview({
     }
 
     if (showAttendance && session.organizationId) {
-      const todayDate = new Date().toISOString().slice(0, 10);
       queries.push(
         supabase
           .from('attendance_records')
           .select('status, check_in_at, check_out_at')
           .eq('organization_id', session.organizationId)
           .eq('user_id', session.userId)
-          .eq('work_date', todayDate)
+          .eq('work_date', today)
           .maybeSingle()
           .then((r) => {
+            if (r.error) {
+              logDashboardQueryError('myAttendance', r.error);
+              return;
+            }
             const rec = r.data as
               | { status: string | null; check_in_at: string | null; check_out_at: string | null }
               | null;
@@ -842,7 +901,7 @@ export default async function DashboardOverview({
       {role === 'clinic_admin' && (
         <StaffAttendanceOverviewPanel
           rows={staffAttendanceRows}
-          attendanceDate={new Date().toISOString().slice(0, 10)}
+          attendanceDate={filterDate}
         />
       )}
 
@@ -856,6 +915,7 @@ export default async function DashboardOverview({
           activeBranchId={activeBranchId}
           branches={ctx.branches}
           doctors={doctors}
+          clinicTimezone={clinicTimezone}
         />
       )}
 

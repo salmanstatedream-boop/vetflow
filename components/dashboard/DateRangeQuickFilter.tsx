@@ -1,46 +1,62 @@
 'use client';
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  formatDateYmd,
   parseDateYmd,
+  resolveDashboardFilterDate,
   resolveDateFromParam,
+  formatDateYmd,
   startOfToday,
   addDaysToDate,
   type DateFilterPreset,
 } from '@/lib/utils/date-filters';
+import { addDaysToYmd, getTodayYmdInTimezone } from '@/lib/utils/timezones';
 
 interface DateRangeQuickFilterProps {
   paramKey?: string;
   className?: string;
   showWeek?: boolean;
+  clinicTimezone?: string;
 }
 
 export default function DateRangeQuickFilter({
   paramKey = 'date',
   className = '',
   showWeek = true,
+  clinicTimezone,
 }: DateRangeQuickFilterProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const paramValue = searchParams.get(paramKey);
-  const selectedDate = resolveDateFromParam(paramValue);
+
+  const clinicToday = useMemo(() => {
+    if (clinicTimezone) return getTodayYmdInTimezone(clinicTimezone);
+    return formatDateYmd(startOfToday());
+  }, [clinicTimezone]);
+
+  const selectedDate = useMemo(() => {
+    if (clinicTimezone) return resolveDashboardFilterDate(paramValue, clinicTimezone);
+    return resolveDateFromParam(paramValue);
+  }, [paramValue, clinicTimezone]);
+
+  const tomorrowDate = useMemo(() => {
+    if (clinicTimezone) return addDaysToYmd(clinicToday, 1);
+    return formatDateYmd(addDaysToDate(startOfToday(), 1));
+  }, [clinicTimezone, clinicToday]);
 
   const [customDate, setCustomDate] = useState(selectedDate);
 
+  useEffect(() => {
+    setCustomDate(selectedDate);
+  }, [selectedDate]);
+
   const activePreset = useMemo((): DateFilterPreset => {
-    const today = formatDateYmd(startOfToday());
-    const tomorrow = formatDateYmd(addDaysToDate(startOfToday(), 1));
-    if (selectedDate === today) return 'today';
-    if (selectedDate === tomorrow) return 'tomorrow';
-    const weekEnd = formatDateYmd(addDaysToDate(startOfToday(), 6));
-    if (selectedDate >= today && selectedDate <= weekEnd && showWeek) {
-      // only highlight week if not today/tomorrow — use custom for specific days in week
-    }
+    if (selectedDate === clinicToday) return 'today';
+    if (selectedDate === tomorrowDate) return 'tomorrow';
     return 'custom';
-  }, [selectedDate, showWeek]);
+  }, [selectedDate, clinicToday, tomorrowDate]);
 
   const pushDate = useCallback(
     (date: string) => {
@@ -62,14 +78,14 @@ export default function DateRangeQuickFilter({
     <div className={`flex flex-wrap items-center gap-2 ${className}`}>
       <button
         type="button"
-        onClick={() => pushDate(formatDateYmd(startOfToday()))}
+        onClick={() => pushDate(clinicToday)}
         className={pillClass(activePreset === 'today')}
       >
         Today
       </button>
       <button
         type="button"
-        onClick={() => pushDate(formatDateYmd(addDaysToDate(startOfToday(), 1)))}
+        onClick={() => pushDate(tomorrowDate)}
         className={pillClass(activePreset === 'tomorrow')}
       >
         Tomorrow
@@ -77,7 +93,7 @@ export default function DateRangeQuickFilter({
       {showWeek && (
         <button
           type="button"
-          onClick={() => pushDate(formatDateYmd(startOfToday()))}
+          onClick={() => pushDate(clinicToday)}
           className={pillClass(false)}
           title="Shows today; use list filters for full week"
         >

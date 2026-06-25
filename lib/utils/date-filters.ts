@@ -1,3 +1,5 @@
+import { getTodayYmdInTimezone } from '@/lib/utils/timezones';
+
 export type DateFilterPreset = 'today' | 'tomorrow' | 'week' | 'custom';
 
 export function formatDateYmd(d: Date): string {
@@ -28,6 +30,15 @@ export function addDaysToDate(base: Date, days: number): Date {
 export function resolveDateFromParam(param: string | null | undefined): string {
   if (param && parseDateYmd(param)) return param;
   return formatDateYmd(startOfToday());
+}
+
+/** Server-side dashboard date: explicit ?date= param or clinic-local today. */
+export function resolveDashboardFilterDate(
+  param: string | null | undefined,
+  clinicTimezone: string
+): string {
+  if (param && parseDateYmd(param)) return param;
+  return getTodayYmdInTimezone(clinicTimezone);
 }
 
 export function getDateRangeForPreset(
