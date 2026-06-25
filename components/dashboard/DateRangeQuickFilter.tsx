@@ -17,34 +17,34 @@ interface DateRangeQuickFilterProps {
   paramKey?: string;
   className?: string;
   showWeek?: boolean;
-  clinicTimezone?: string;
+  deviceTimezone?: string;
 }
 
 export default function DateRangeQuickFilter({
   paramKey = 'date',
   className = '',
   showWeek = true,
-  clinicTimezone,
+  deviceTimezone,
 }: DateRangeQuickFilterProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const paramValue = searchParams.get(paramKey);
 
-  const clinicToday = useMemo(() => {
-    if (clinicTimezone) return getTodayYmdInTimezone(clinicTimezone);
+  const deviceToday = useMemo(() => {
+    if (deviceTimezone) return getTodayYmdInTimezone(deviceTimezone);
     return formatDateYmd(startOfToday());
-  }, [clinicTimezone]);
+  }, [deviceTimezone]);
 
   const selectedDate = useMemo(() => {
-    if (clinicTimezone) return resolveDashboardFilterDate(paramValue, clinicTimezone);
+    if (deviceTimezone) return resolveDashboardFilterDate(paramValue, deviceTimezone);
     return resolveDateFromParam(paramValue);
-  }, [paramValue, clinicTimezone]);
+  }, [paramValue, deviceTimezone]);
 
   const tomorrowDate = useMemo(() => {
-    if (clinicTimezone) return addDaysToYmd(clinicToday, 1);
+    if (deviceTimezone) return addDaysToYmd(deviceToday, 1);
     return formatDateYmd(addDaysToDate(startOfToday(), 1));
-  }, [clinicTimezone, clinicToday]);
+  }, [deviceTimezone, deviceToday]);
 
   const [customDate, setCustomDate] = useState(selectedDate);
 
@@ -53,10 +53,10 @@ export default function DateRangeQuickFilter({
   }, [selectedDate]);
 
   const activePreset = useMemo((): DateFilterPreset => {
-    if (selectedDate === clinicToday) return 'today';
+    if (selectedDate === deviceToday) return 'today';
     if (selectedDate === tomorrowDate) return 'tomorrow';
     return 'custom';
-  }, [selectedDate, clinicToday, tomorrowDate]);
+  }, [selectedDate, deviceToday, tomorrowDate]);
 
   const pushDate = useCallback(
     (date: string) => {
@@ -78,7 +78,7 @@ export default function DateRangeQuickFilter({
     <div className={`flex flex-wrap items-center gap-2 ${className}`}>
       <button
         type="button"
-        onClick={() => pushDate(clinicToday)}
+        onClick={() => pushDate(deviceToday)}
         className={pillClass(activePreset === 'today')}
       >
         Today
@@ -93,7 +93,7 @@ export default function DateRangeQuickFilter({
       {showWeek && (
         <button
           type="button"
-          onClick={() => pushDate(clinicToday)}
+          onClick={() => pushDate(deviceToday)}
           className={pillClass(false)}
           title="Shows today; use list filters for full week"
         >

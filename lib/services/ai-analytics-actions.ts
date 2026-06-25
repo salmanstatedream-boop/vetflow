@@ -10,6 +10,7 @@ import { chatCompletion } from '@/lib/ai/llm-client';
 import { createClient } from '@/lib/supabase/server';
 import { writeAuditLog } from '@/lib/services/audit';
 import { formatMoney } from '@/lib/utils/currency';
+import { getDeviceTodayYmd } from '@/lib/utils/device-timezone.server';
 
 export async function generateAiAnalyticsReportAction() {
   try {
@@ -23,10 +24,8 @@ export async function generateAiAnalyticsReportAction() {
     const branchId = ctx.activeBranchId;
     if (!branchId) throw new Error('Select a branch first.');
 
-    const today = new Date().toISOString().slice(0, 10);
-    const monthStart = new Date();
-    monthStart.setDate(1);
-    const monthStartStr = monthStart.toISOString().slice(0, 10);
+    const today = await getDeviceTodayYmd();
+    const monthStartStr = `${today.slice(0, 7)}-01`;
 
     const [
       revenueRes,

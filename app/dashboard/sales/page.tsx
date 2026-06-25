@@ -10,8 +10,8 @@ import { getInvoicePaymentMethods } from '@/lib/billing/payment-method';
 import {
   addDaysToYmd,
   getTodayYmdInTimezone,
-  normalizeClinicTimezone,
 } from '@/lib/utils/timezones';
+import { getDeviceTimezoneFromCookies } from '@/lib/utils/device-timezone.server';
 import { BarChart3 } from 'lucide-react';
 
 export const metadata = {
@@ -57,14 +57,8 @@ export default async function SalesMonitorPage({
 
   const supabase = await createClient();
 
-  const { data: appSettings } = await supabase
-    .from('app_settings')
-    .select('timezone')
-    .eq('organization_id', ctx.organizationId!)
-    .maybeSingle();
-
-  const clinicTimezone = normalizeClinicTimezone(appSettings?.timezone);
-  const todayYmd = getTodayYmdInTimezone(clinicTimezone);
+  const deviceTimezone = await getDeviceTimezoneFromCookies();
+  const todayYmd = getTodayYmdInTimezone(deviceTimezone);
   const sinceYmd = addDaysToYmd(todayYmd, -95);
   const sinceIso = new Date(`${sinceYmd}T00:00:00`).toISOString();
 
@@ -134,7 +128,7 @@ export default async function SalesMonitorPage({
       />
       <SalesMonitorClient
         sales={sales}
-        clinicTimezone={clinicTimezone}
+        deviceTimezone={deviceTimezone}
         initialDateFrom={dateFrom ?? ''}
         initialDateTo={dateTo ?? ''}
       />

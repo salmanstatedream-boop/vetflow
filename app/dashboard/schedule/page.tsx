@@ -8,7 +8,8 @@ import { fetchAssignableClinicians } from '@/lib/clinical/assignable-clinicians'
 import ScheduleDayCalendarClient from '@/components/schedule/ScheduleDayCalendarClient';
 import { resolveDashboardFilterDate } from '@/lib/utils/date-filters';
 import { formatAppointmentTime, normalizeDateYmd } from '@/lib/utils/time-parse';
-import { normalizeClinicTimezone } from '@/lib/utils/timezones';
+import { getDeviceTimezoneFromCookies } from '@/lib/utils/device-timezone.server';
+import { getClinicTimezoneShortLabel, normalizeClinicTimezone } from '@/lib/utils/timezones';
 import { UPCOMING_APPOINTMENT_STATUSES } from '@/lib/appointments/status';
 import { Calendar } from 'lucide-react';
 
@@ -47,6 +48,8 @@ export default async function SchedulePage({
   }
 
   const supabase = await createClient();
+  const deviceTimezone = await getDeviceTimezoneFromCookies();
+  const selectedDate = resolveDashboardFilterDate(dateParam, deviceTimezone);
 
   const [{ data: appSettings }, clinicians] = await Promise.all([
     supabase
@@ -58,7 +61,6 @@ export default async function SchedulePage({
   ]);
 
   const clinicTimezone = normalizeClinicTimezone(appSettings?.timezone);
-  const selectedDate = resolveDashboardFilterDate(dateParam, clinicTimezone);
 
   let appointmentsQuery = supabase
     .from('appointments')
@@ -99,7 +101,7 @@ export default async function SchedulePage({
     <div className="flex flex-col gap-8 min-h-[calc(100vh-6rem)]">
       <PageHeader
         title="Clinic schedule"
-        description="Day view by provider — click a slot to book or an appointment for details."
+        description={`Day view by provider · dates use your local timezone (${getClinicTimezoneShortLabel(deviceTimezone)})`}
         icon={Calendar}
       />
       <div className="flex flex-col flex-1 min-h-0">

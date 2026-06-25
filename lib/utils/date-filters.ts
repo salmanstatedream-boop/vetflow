@@ -32,13 +32,13 @@ export function resolveDateFromParam(param: string | null | undefined): string {
   return formatDateYmd(startOfToday());
 }
 
-/** Server-side dashboard date: explicit ?date= param or clinic-local today. */
+/** Server-side filter date: explicit ?date= param or today in the given IANA timezone (device TZ). */
 export function resolveDashboardFilterDate(
   param: string | null | undefined,
-  clinicTimezone: string
+  timezone: string
 ): string {
   if (param && parseDateYmd(param)) return param;
-  return getTodayYmdInTimezone(clinicTimezone);
+  return getTodayYmdInTimezone(timezone);
 }
 
 export function getDateRangeForPreset(

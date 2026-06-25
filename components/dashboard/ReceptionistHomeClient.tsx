@@ -15,7 +15,6 @@ import DateRangeQuickFilter from '@/components/dashboard/DateRangeQuickFilter';
 import VisitStatusBadge from '@/components/dashboard/VisitStatusBadge';
 import { isConsultPaused } from '@/lib/utils/visit-status';
 import { resolveDashboardFilterDate } from '@/lib/utils/date-filters';
-import type { ClinicTimezone } from '@/lib/utils/timezones';
 
 export type ReceptionistAppointmentRow = {
   id: string;
@@ -60,7 +59,7 @@ export interface ReceptionistHomeClientProps {
   activeBranchId: string;
   branches: { id: string; name: string }[];
   doctors: { id: string; firstName: string; lastName: string }[];
-  clinicTimezone: ClinicTimezone;
+  deviceTimezone: string;
 }
 
 export default function ReceptionistHomeClient({
@@ -69,13 +68,13 @@ export default function ReceptionistHomeClient({
   consultingVisits = [],
   checkoutVisits,
   visitRecords,
-  clinicTimezone,
+  deviceTimezone,
 }: ReceptionistHomeClientProps) {
   useVisibilityPolling(15000, true);
 
   const searchParams = useSearchParams();
   const urlDate = searchParams.get('date');
-  const selectedDate = resolveDashboardFilterDate(urlDate, clinicTimezone);
+  const selectedDate = resolveDashboardFilterDate(urlDate, deviceTimezone);
 
   const [recordSearch, setRecordSearch] = useState('');
   const [dateFrom, setDateFrom] = useState(selectedDate);
@@ -104,7 +103,7 @@ export default function ReceptionistHomeClient({
 
   return (
     <div className="space-y-6">
-      <DateRangeQuickFilter showWeek={false} clinicTimezone={clinicTimezone} />
+      <DateRangeQuickFilter showWeek={false} deviceTimezone={deviceTimezone} />
 
       <div className="grid md:grid-cols-3 gap-4">
         <QueuePanel

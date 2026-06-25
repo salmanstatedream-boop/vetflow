@@ -7,6 +7,7 @@ import { resolveClinicLogoSrc } from '@/lib/branding/clinic-logo';
 import { cn } from '@/lib/utils';
 import type { DashboardNotification } from '@/lib/dashboard/notifications';
 import DashboardNotificationsPanel from '@/components/layout/DashboardNotificationsPanel';
+import DeviceLocalDate from '@/components/layout/DeviceLocalDate';
 
 function UserAvatar({
   hasAvatar,
@@ -77,7 +78,6 @@ interface DashboardTopBarProps {
   firstName: string;
   organizationName?: string | null;
   clinicLogoUrl?: string | null;
-  displayDate: string;
   notificationCount?: number;
   notifications?: DashboardNotification[];
   onClearNotifications?: () => void;
@@ -95,7 +95,6 @@ export default function DashboardTopBar({
   firstName,
   organizationName,
   clinicLogoUrl,
-  displayDate,
   notificationCount = 0,
   notifications = [],
   onClearNotifications,
@@ -165,7 +164,7 @@ export default function DashboardTopBar({
           />
 
           <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl border border-outline-variant/40 bg-surface-container/30 text-xs text-on-surface-variant">
-            {displayDate}
+            <DeviceLocalDate />
           </div>
 
           {themeToggle}

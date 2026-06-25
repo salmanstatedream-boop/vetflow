@@ -34,14 +34,14 @@ export type RetailSaleRow = {
 
 interface SalesMonitorClientProps {
   sales: RetailSaleRow[];
-  clinicTimezone: string;
+  deviceTimezone: string;
   initialDateFrom?: string;
   initialDateTo?: string;
 }
 
 export default function SalesMonitorClient({
   sales,
-  clinicTimezone,
+  deviceTimezone,
   initialDateFrom = '',
   initialDateTo = '',
 }: SalesMonitorClientProps) {
@@ -53,7 +53,7 @@ export default function SalesMonitorClient({
   const [search, setSearch] = useState('');
   const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>('all');
 
-  const todayYmd = useMemo(() => getTodayYmdInTimezone(clinicTimezone), [clinicTimezone]);
+  const todayYmd = useMemo(() => getTodayYmdInTimezone(deviceTimezone), [deviceTimezone]);
   const thirtyDaysAgoYmd = useMemo(() => addDaysToYmd(todayYmd, -30), [todayYmd]);
 
   const syncDateParams = useCallback(
@@ -73,7 +73,7 @@ export default function SalesMonitorClient({
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return sales.filter((s) => {
-      const d = toLocalDateKey(s.createdAt, clinicTimezone);
+      const d = toLocalDateKey(s.createdAt, deviceTimezone);
       if (!isDateWithinRange(d, dateFrom || undefined, dateTo || undefined)) return false;
       if (!matchesPaymentFilter(paymentFilter, s.paymentMethods)) return false;
       if (!q) return true;
@@ -83,11 +83,11 @@ export default function SalesMonitorClient({
         s.itemSummary.toLowerCase().includes(q)
       );
     });
-  }, [sales, dateFrom, dateTo, search, paymentFilter, clinicTimezone]);
+  }, [sales, dateFrom, dateTo, search, paymentFilter, deviceTimezone]);
 
   const todaySales = useMemo(
-    () => sales.filter((s) => toLocalDateKey(s.createdAt, clinicTimezone) === todayYmd),
-    [sales, todayYmd, clinicTimezone]
+    () => sales.filter((s) => toLocalDateKey(s.createdAt, deviceTimezone) === todayYmd),
+    [sales, todayYmd, deviceTimezone]
   );
 
   const todayRevenue = useMemo(
@@ -98,7 +98,7 @@ export default function SalesMonitorClient({
   const topProducts = useMemo(() => {
     const productQty = new Map<string, number>();
     for (const sale of sales) {
-      if (toLocalDateKey(sale.createdAt, clinicTimezone) < thirtyDaysAgoYmd) continue;
+      if (toLocalDateKey(sale.createdAt, deviceTimezone) < thirtyDaysAgoYmd) continue;
       for (const item of sale.itemLines) {
         productQty.set(item.name, (productQty.get(item.name) || 0) + item.quantity);
       }
@@ -107,7 +107,7 @@ export default function SalesMonitorClient({
       .map(([name, qty]) => ({ name, qty }))
       .sort((a, b) => b.qty - a.qty)
       .slice(0, 5);
-  }, [sales, thirtyDaysAgoYmd, clinicTimezone]);
+  }, [sales, thirtyDaysAgoYmd, deviceTimezone]);
 
   const filteredRevenue = useMemo(
     () => filtered.reduce((sum, s) => sum + s.total, 0),
@@ -244,7 +244,7 @@ export default function SalesMonitorClient({
             {dateFrom && dateTo && dateFrom === dateTo
               ? dateFrom
               : `${dateFrom || '…'} → ${dateTo || '…'}`}{' '}
-            ({clinicTimezone.replace('_', ' ')}) · {filtered.length} match
+            ({deviceTimezone.replace('_', ' ')}) · {filtered.length} match
             {filtered.length === 1 ? '' : 'es'}
           </p>
         )}
@@ -277,12 +277,12 @@ export default function SalesMonitorClient({
                   <td className="px-5 py-3 text-on-surface-variant whitespace-nowrap">
                     <span className="block">
                       {new Date(s.createdAt).toLocaleDateString(undefined, {
-                        timeZone: clinicTimezone,
+                        timeZone: deviceTimezone,
                       })}
                     </span>
                     <span className="block text-[10px] opacity-80">
                       {new Date(s.createdAt).toLocaleTimeString(undefined, {
-                        timeZone: clinicTimezone,
+                        timeZone: deviceTimezone,
                         hour: '2-digit',
                         minute: '2-digit',
                       })}

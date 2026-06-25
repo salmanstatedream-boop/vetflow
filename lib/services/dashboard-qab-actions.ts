@@ -8,6 +8,8 @@ import {
   resolveServerAuthContext,
 } from '@/lib/auth/context';
 
+import { getDeviceTodayYmd } from '@/lib/utils/device-timezone.server';
+
 export async function getDoctorTreatmentRecordsTodayAction() {
   try {
     const ctx = await resolveServerAuthContext();
@@ -17,7 +19,7 @@ export async function getDoctorTreatmentRecordsTodayAction() {
     assertActiveBranch(ctx);
 
     const supabase = await createClient();
-    const today = new Date().toISOString().slice(0, 10);
+    const today = await getDeviceTodayYmd();
 
     const { data: visits } = await supabase
       .from('visits')
@@ -61,7 +63,7 @@ export async function getFollowUpAppointmentsTodayAction() {
     assertCapability(ctx, 'manage_appointments');
 
     const supabase = await createClient();
-    const today = new Date().toISOString().slice(0, 10);
+    const today = await getDeviceTodayYmd();
 
     let query = supabase
       .from('appointments')
@@ -98,7 +100,7 @@ export async function getBranchSummaryAction() {
       .eq('organization_id', ctx.organizationId)
       .eq('is_active', true);
 
-    const today = new Date().toISOString().slice(0, 10);
+    const today = await getDeviceTodayYmd();
     const summaries = await Promise.all(
       (branches || []).map(async (b) => {
         const [appt, queue, checkout] = await Promise.all([

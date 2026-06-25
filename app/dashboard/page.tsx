@@ -62,11 +62,12 @@ import type { UserSessionDetails } from '@/lib/services/auth';
 import { getTimeGreeting } from '@/lib/utils/greeting';
 import { normalizeOneToOne } from '@/lib/supabase/embed';
 import { resolveDashboardFilterDate } from '@/lib/utils/date-filters';
-import { DEFAULT_CLINIC_TIMEZONE, normalizeClinicTimezone } from '@/lib/utils/timezones';
+import { getDeviceTimezoneFromCookies } from '@/lib/utils/device-timezone.server';
 import { UPCOMING_APPOINTMENT_STATUSES } from '@/lib/appointments/status';
 import { formatMoney } from '@/lib/utils/currency';
 import DashboardQabShell from '@/components/dashboard/DashboardQabShell';
-import StaffDashboardGate from '@/components/dashboard/StaffDashboardGate';
+import StaffDashboardGateClient from '@/components/dashboard/StaffDashboardGateClient';
+import { AttendanceProvider } from '@/lib/context/AttendanceContext';
 import StaffAttendanceOverviewPanel, {
   type StaffAttendanceOverviewRow,
 } from '@/components/dashboard/StaffAttendanceOverviewPanel';
@@ -113,8 +114,8 @@ export default async function DashboardOverview({
   const role = session.role;
   const greeting = getTimeGreeting();
 
-  let clinicTimezone = DEFAULT_CLINIC_TIMEZONE;
-  let filterDate = resolveDashboardFilterDate(dateParam, clinicTimezone);
+  const deviceTimezone = await getDeviceTimezoneFromCookies();
+  let filterDate = resolveDashboardFilterDate(dateParam, deviceTimezone);
 
   if (!activeBranchId) {
     return (
@@ -230,13 +231,7 @@ export default async function DashboardOverview({
   } else {
     const supabase = await createClient();
 
-    const { data: appSettings } = await supabase
-      .from('app_settings')
-      .select('timezone')
-      .eq('organization_id', session.organizationId || '')
-      .maybeSingle();
-    clinicTimezone = normalizeClinicTimezone(appSettings?.timezone);
-    filterDate = resolveDashboardFilterDate(dateParam, clinicTimezone);
+    filterDate = resolveDashboardFilterDate(dateParam, deviceTimezone);
     today = filterDate;
 
     const queries: Promise<void>[] = [];
@@ -827,21 +822,8 @@ export default async function DashboardOverview({
   const staffGateLocked =
     role !== 'clinic_admin' && role !== 'doctor' && showAttendance && !myAttendance.checkedIn;
 
-  return (
-    <div className="space-y-8">
-      <RoleDashboardHero
-        firstName={session.firstName || 'User'}
-        greeting={greeting}
-        organizationName={session.organizationName}
-        role={role}
-        variant={role === 'clinic_admin' ? 'compact' : 'default'}
-      />
-
-      {showAttendance && role !== 'clinic_admin' && (
-        <AttendanceWidgetClient initial={myAttendance} />
-      )}
-
-      <StaffDashboardGate locked={staffGateLocked}>
+  const dashboardBody = (
+    <>
       {role === 'clinic_admin' && adminOverview ? (
         <ClinicAdminDashboardClient
           {...adminOverview}
@@ -915,7 +897,7 @@ export default async function DashboardOverview({
           activeBranchId={activeBranchId}
           branches={ctx.branches}
           doctors={doctors}
-          clinicTimezone={clinicTimezone}
+          deviceTimezone={deviceTimezone}
         />
       )}
 
@@ -1070,7 +1052,29 @@ export default async function DashboardOverview({
       )}
         </>
       )}
-      </StaffDashboardGate>
+    </>
+  );
+
+  return (
+    <div className="space-y-8">
+      <RoleDashboardHero
+        firstName={session.firstName || 'User'}
+        greeting={greeting}
+        organizationName={session.organizationName}
+        role={role}
+        variant={role === 'clinic_admin' ? 'compact' : 'default'}
+      />
+
+      {showAttendance && role !== 'clinic_admin' ? (
+        <AttendanceProvider initial={myAttendance}>
+          <AttendanceWidgetClient initial={myAttendance} />
+          <StaffDashboardGateClient initialLocked={staffGateLocked}>
+            {dashboardBody}
+          </StaffDashboardGateClient>
+        </AttendanceProvider>
+      ) : (
+        dashboardBody
+      )}
     </div>
   );
 }

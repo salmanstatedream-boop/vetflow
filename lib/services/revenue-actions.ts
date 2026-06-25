@@ -9,6 +9,7 @@ import {
   resolveServerAuthContext,
 } from '@/lib/auth/context';
 import { writeAuditLog } from '@/lib/services/audit';
+import { getDeviceTodayYmd } from '@/lib/utils/device-timezone.server';
 
 const DEFAULT_CATEGORIES = [
   { name: 'Clinic bills', sort_order: 1 },
@@ -352,7 +353,7 @@ export async function recordStockIntakeExpense(params: {
 
   if (!category?.id) return;
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = await getDeviceTodayYmd();
   await admin.from('expenses').insert({
     organization_id: params.organizationId,
     branch_id: params.branchId,

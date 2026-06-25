@@ -18,6 +18,7 @@ import DashboardNotificationsSync from '@/components/layout/DashboardNotificatio
 import DashboardCheckoutAlertBar from '@/components/layout/DashboardCheckoutAlertBar';
 import DashboardBranchSearchCluster from '@/components/layout/DashboardBranchSearchCluster';
 import DashboardAiAssistantWidget from '@/components/layout/DashboardAiAssistantWidget';
+import DeviceTimezoneSync from '@/components/layout/DeviceTimezoneSync';
 import { resolveClinicLogoSrc } from '@/lib/branding/clinic-logo';
 import { Stethoscope, Search, Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -134,12 +135,6 @@ export default function DashboardShellClient({
     session.branches.find((b) => b.id === activeBranchId) || session.branches[0];
   const displayName = [session.firstName || 'User', session.lastName].filter(Boolean).join(' ');
   const avatarInitial = (session.firstName?.charAt(0) || session.email?.charAt(0) || 'U').toUpperCase();
-  const displayDate = new Date().toLocaleDateString(undefined, {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -212,6 +207,7 @@ export default function DashboardShellClient({
 
   return (
     <DashboardShellProvider key={activeBranchId}>
+      <DeviceTimezoneSync />
       <DashboardNotificationsSync />
     <div className="min-h-screen bg-surface flex flex-col dashboard-shell">
       {session.isImpersonating && session.organizationName && (
@@ -338,7 +334,6 @@ export default function DashboardShellClient({
               firstName={session.firstName || 'User'}
               organizationName={session.organizationName}
               clinicLogoUrl={session.clinicLogoUrl}
-              displayDate={displayDate}
               hasAvatar={session.hasAvatar}
               avatarInitial={avatarInitial}
               roleLabel={formatRoleLabel(session.role)}

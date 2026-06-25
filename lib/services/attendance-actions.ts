@@ -10,9 +10,10 @@ import {
   resolveServerAuthContext,
 } from '@/lib/auth/context';
 import { writeAuditLog } from '@/lib/services/audit';
+import { getDeviceTodayYmd } from '@/lib/utils/device-timezone.server';
 
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+async function deviceTodayYmd(): Promise<string> {
+  return getDeviceTodayYmd();
 }
 
 function nowTimeHms(): string {
@@ -160,7 +161,7 @@ export async function checkInAction() {
     }
 
     const adminClient = await createAdminClient();
-    const work_date = todayIso();
+    const work_date = await deviceTodayYmd();
     const now = new Date().toISOString();
 
     const { data: existing } = await adminClient
@@ -220,7 +221,7 @@ export async function checkOutAction() {
     assertCapability(ctx, 'mark_attendance');
 
     const adminClient = await createAdminClient();
-    const work_date = todayIso();
+    const work_date = await deviceTodayYmd();
 
     const { data: existing } = await adminClient
       .from('attendance_records')
@@ -418,7 +419,7 @@ export async function syncDailyAttendanceAction() {
     assertCapability(ctx, 'manage_attendance');
 
     const adminClient = await createAdminClient();
-    const work_date = todayIso();
+    const work_date = await deviceTodayYmd();
     const nowTime = nowTimeHms();
 
     const { data: shifts, error: shiftError } = await adminClient

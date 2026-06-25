@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { checkInAction, checkOutAction } from '@/lib/services/attendance-actions';
+import { useAttendance } from '@/lib/context/AttendanceContext';
 import { LogIn, LogOut, Loader2, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export type MyAttendance = {
@@ -20,26 +21,53 @@ function fmt(iso: string | null): string {
 
 export default function AttendanceWidgetClient({ initial }: { initial: MyAttendance }) {
   const router = useRouter();
+  const attendanceCtx = useAttendance();
+  const attendance = attendanceCtx?.attendance ?? initial;
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const run = (fn: () => Promise<{ success: boolean; error?: string }>) => {
+  const run = (action: 'checkIn' | 'checkOut') => {
     setError(null);
-    startTransition(async () => {
-      const res = await fn();
-      if (res.success) router.refresh();
-      else setError(res.error || 'Action failed.');
+    startTransition(() => {
+      void (async () => {
+        try {
+          const res =
+            action === 'checkIn' ? await checkInAction() : await checkOutAction();
+          if (res.success) {
+            if (action === 'checkIn') {
+              const now = new Date().toISOString();
+              attendanceCtx?.setAttendance({
+                ...attendance,
+                checkedIn: true,
+                checkInAt: now,
+                status: 'present',
+              });
+            } else {
+              attendanceCtx?.setAttendance({
+                ...attendance,
+                checkedOut: true,
+                checkOutAt: new Date().toISOString(),
+              });
+            }
+            router.refresh();
+          } else {
+            setError(res.error || 'Action failed.');
+          }
+        } catch {
+          setError('Action failed.');
+        }
+      })();
     });
   };
 
-  const isLate = initial.status === 'late';
+  const isLate = attendance.status === 'late';
 
   return (
     <div className="glass-panel rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div className="flex items-center gap-4">
         <div
           className={`w-11 h-11 rounded-xl flex items-center justify-center ${
-            initial.checkedIn ? 'bg-emerald-500/10 text-emerald-500' : 'bg-primary/10 text-primary'
+            attendance.checkedIn ? 'bg-emerald-500/10 text-emerald-500' : 'bg-primary/10 text-primary'
           }`}
         >
           <Clock className="w-5 h-5" />
@@ -48,16 +76,16 @@ export default function AttendanceWidgetClient({ initial }: { initial: MyAttenda
           <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block">
             My attendance · today
           </span>
-          {initial.checkedIn ? (
+          {attendance.checkedIn ? (
             <span className="text-xs font-semibold text-on-surface flex items-center gap-2 flex-wrap">
               <span className="inline-flex items-center gap-1 text-emerald-600">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                In {fmt(initial.checkInAt)}
+                In {fmt(attendance.checkInAt)}
               </span>
-              {initial.checkedOut && (
+              {attendance.checkedOut && (
                 <span className="inline-flex items-center gap-1 text-on-surface-variant">
                   <LogOut className="w-3.5 h-3.5" />
-                  Out {fmt(initial.checkOutAt)}
+                  Out {fmt(attendance.checkOutAt)}
                 </span>
               )}
               {isLate && (
@@ -75,19 +103,19 @@ export default function AttendanceWidgetClient({ initial }: { initial: MyAttenda
       </div>
 
       <div>
-        {!initial.checkedIn ? (
+        {!attendance.checkedIn ? (
           <button
             disabled={isPending}
-            onClick={() => run(checkInAction)}
+            onClick={() => run('checkIn')}
             className="inline-flex items-center gap-1.5 bg-primary hover:opacity-90 text-white py-2.5 px-5 rounded-xl text-xs font-bold disabled:opacity-70"
           >
             {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogIn className="w-4 h-4" />}
             Check in
           </button>
-        ) : !initial.checkedOut ? (
+        ) : !attendance.checkedOut ? (
           <button
             disabled={isPending}
-            onClick={() => run(checkOutAction)}
+            onClick={() => run('checkOut')}
             className="inline-flex items-center gap-1.5 border border-outline-variant hover:bg-surface-container text-on-surface py-2.5 px-5 rounded-xl text-xs font-bold disabled:opacity-70"
           >
             {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}

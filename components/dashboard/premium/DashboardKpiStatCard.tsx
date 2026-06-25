@@ -40,18 +40,21 @@ export default function DashboardKpiStatCard({
   const positive = deltaPercent != null && deltaPercent >= 0;
   const hasDelta = deltaPercent != null && Number.isFinite(deltaPercent);
   const showSparkline = Boolean(sparkline && sparkline.length > 1);
+  const valueStr = String(value);
 
   const content = (
     <div
       className={cn(
         'dashboard-card flex flex-col h-full',
-        compact ? cn('p-3 gap-2', DASHBOARD_DENSITY.kpiCompactH) : cn('p-4 md:p-5 gap-3', DASHBOARD_DENSITY.kpiDefaultH),
+        compact
+          ? cn('p-3.5 md:p-4 gap-2.5', DASHBOARD_DENSITY.kpiCompactH)
+          : cn('p-4 md:p-5 gap-3', DASHBOARD_DENSITY.kpiDefaultH),
         href && 'hover:border-primary/30 cursor-pointer transition-colors',
         className
       )}
     >
       <div className="flex items-start justify-between gap-2 shrink-0">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant leading-tight">
+        <span className="text-[11px] font-bold uppercase tracking-wide text-on-surface-variant leading-snug line-clamp-2 min-h-[2rem]">
           {label}
         </span>
         <div
@@ -66,48 +69,52 @@ export default function DashboardKpiStatCard({
       </div>
       <p
         className={cn(
-          'font-bold text-on-surface font-[family-name:var(--font-display)] tracking-tight shrink-0 truncate',
-          compact ? 'text-xl' : 'text-2xl'
+          'font-bold text-on-surface font-[family-name:var(--font-display)] tracking-tight shrink-0 tabular-nums break-words leading-tight',
+          compact
+            ? valueStr.length > 10
+              ? 'text-lg'
+              : 'text-xl md:text-2xl'
+            : 'text-2xl'
         )}
       >
         {value}
       </p>
       <div
         className={cn(
-          'flex items-end justify-between gap-2 mt-auto shrink-0',
+          'mt-auto shrink-0 flex flex-col gap-1.5 2xl:flex-row 2xl:items-end 2xl:justify-between 2xl:gap-2',
           DASHBOARD_DENSITY.kpiFooterH
         )}
       >
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0">
           {hasDelta ? (
             <div
               className={cn(
-                'inline-flex items-center gap-0.5 text-[10px] font-bold',
+                'inline-flex flex-wrap items-center gap-0.5 text-[10px] font-bold leading-snug',
                 positive ? 'text-emerald-400' : 'text-red-400'
               )}
             >
-              {positive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+              {positive ? <TrendingUp className="w-3 h-3 shrink-0" /> : <TrendingDown className="w-3 h-3 shrink-0" />}
               {positive ? '+' : ''}
               {deltaPercent!.toFixed(0)}%
               {deltaLabel && (
-                <span className="text-on-surface-variant font-medium ml-0.5 hidden sm:inline">{deltaLabel}</span>
+                <span className="text-on-surface-variant font-medium">{deltaLabel}</span>
               )}
             </div>
           ) : (
-            <span className="text-[10px] text-on-surface-variant truncate block">
+            <span className="text-[10px] text-on-surface-variant line-clamp-2 leading-snug block">
               {deltaLabel || '\u00a0'}
             </span>
           )}
         </div>
-        <div className={cn('shrink-0', DASHBOARD_DENSITY.kpiSparklineW, DASHBOARD_DENSITY.kpiFooterH)}>
-          {showSparkline && (
+        {showSparkline && (
+          <div className={cn('shrink-0 w-full 2xl:w-auto', DASHBOARD_DENSITY.kpiSparklineW, 'h-7')}>
             <DashboardSparkline
               data={sparkline!}
               stroke={sparklineStroke}
-              className={cn('h-full w-full', compact ? 'max-h-6' : 'max-h-7')}
+              className="h-full w-full max-h-7"
             />
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

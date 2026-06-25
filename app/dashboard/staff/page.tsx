@@ -13,6 +13,7 @@ import StaffScheduleClient, {
   type DayTemplate,
 } from '@/components/dashboard/StaffScheduleClient';
 import { syncDailyAttendanceAction } from '@/lib/services/attendance-actions';
+import { getDeviceTodayYmd } from '@/lib/utils/device-timezone.server';
 import StaffTabsClient from '@/components/dashboard/StaffTabsClient';
 import PageHeader from '@/components/ui/premium/PageHeader';
 import { Users } from 'lucide-react';
@@ -115,7 +116,7 @@ export default async function StaffPage() {
   await syncDailyAttendanceAction();
 
   const branchNameById = new Map((branches || []).map((b) => [b.id, b.name]));
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayIso = await getDeviceTodayYmd();
   const todayWeekday = new Date().getDay();
 
   const { data: shiftsData } = await supabase
