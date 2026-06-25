@@ -244,6 +244,12 @@ export function assertCapability(
   }
 }
 
+export function assertCanViewPrescriptionPdf(ctx: ServerAuthContext): void {
+  if (hasCapability(ctx.role, 'manage_prescriptions')) return;
+  if (hasCapability(ctx.role, 'billing_checkout')) return;
+  throw new AuthError('Forbidden: Missing capability.', 'FORBIDDEN');
+}
+
 export function assertFeature(
   ctx: ServerAuthContext,
   feature: Feature

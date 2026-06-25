@@ -2,7 +2,7 @@ import { renderToStream } from '@react-pdf/renderer';
 import PrescriptionPdfDocument from '@/components/pdf/PrescriptionPdfDocument';
 import { createClient } from '@/lib/supabase/server';
 import {
-  assertCapability,
+  assertCanViewPrescriptionPdf,
   resolveServerAuthContext,
 } from '@/lib/auth/context';
 import { formatDoctorNamePlain } from '@/lib/utils/doctor-display';
@@ -24,7 +24,7 @@ export async function GET(
       return new Response('Unauthorized: Session is invalid.', { status: 401 });
     }
     try {
-      assertCapability(ctx, 'manage_prescriptions');
+      assertCanViewPrescriptionPdf(ctx);
     } catch {
       return new Response('Forbidden: Insufficient permissions.', { status: 403 });
     }
