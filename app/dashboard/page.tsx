@@ -849,10 +849,6 @@ export default async function DashboardOverview({
 
       {role === 'receptionist' && (
         <ReceptionistHomeClient
-          todayAppointments={todayAppointments}
-          waitingWalkIns={waitingWalkIns}
-          readyForCheckout={readyForCheckout}
-          unpaidInvoices={unpaidInvoices}
           upcomingAppointments={receptionistUpcoming}
           waitingVisits={receptionistWaiting}
           consultingVisits={receptionistConsulting}

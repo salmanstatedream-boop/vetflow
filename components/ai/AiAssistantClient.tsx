@@ -14,7 +14,11 @@ const SUGGESTIONS = [
   'Summarize today\'s front-desk priorities.',
 ];
 
-export default function AiAssistantClient() {
+interface AiAssistantClientProps {
+  variant?: 'page' | 'widget';
+}
+
+export default function AiAssistantClient({ variant = 'page' }: AiAssistantClientProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -46,9 +50,23 @@ export default function AiAssistantClient() {
     }
   };
 
+  const isWidget = variant === 'widget';
+
   return (
-    <div className="glass-panel rounded-2xl border border-outline-variant/40 overflow-hidden flex flex-col min-h-[520px]">
-      <div className="flex-1 overflow-y-auto p-5 md:p-6 space-y-4 max-h-[60vh]">
+    <div
+      className={
+        isWidget
+          ? 'flex flex-col h-full min-h-[320px] rounded-xl border border-outline-variant/30 overflow-hidden bg-surface-container/50'
+          : 'glass-panel rounded-2xl border border-outline-variant/40 overflow-hidden flex flex-col min-h-[520px]'
+      }
+    >
+      <div
+        className={
+          isWidget
+            ? 'flex-1 overflow-y-auto p-3 space-y-3'
+            : 'flex-1 overflow-y-auto p-5 md:p-6 space-y-4 max-h-[60vh]'
+        }
+      >
         {messages.length === 0 && (
           <div className="text-center py-12">
             <div className="w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center mx-auto mb-4">
@@ -110,7 +128,7 @@ export default function AiAssistantClient() {
       )}
 
       <form
-        className="p-4 border-t border-outline-variant/40 flex gap-2"
+        className={isWidget ? 'p-2 border-t border-outline-variant/40 flex gap-2' : 'p-4 border-t border-outline-variant/40 flex gap-2'}
         onSubmit={(e) => {
           e.preventDefault();
           send(input);

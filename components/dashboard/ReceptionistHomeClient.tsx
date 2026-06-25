@@ -5,9 +5,6 @@ import { useMemo, useState } from 'react';
 import QuickWalkInModal from '@/components/reception/QuickWalkInModal';
 import {
   Calendar,
-  ClipboardList,
-  BadgeCheck,
-  Banknote,
   Search,
   Layers,
   ArrowRight,
@@ -18,6 +15,7 @@ import {
   Printer,
   FileText,
   ShoppingBag,
+  Banknote,
 } from 'lucide-react';
 import { useVisibilityPolling } from '@/lib/hooks/useVisibilityPolling';
 import DateRangeQuickFilter from '@/components/dashboard/DateRangeQuickFilter';
@@ -59,10 +57,6 @@ export type VisitRecordRow = {
 type RecordTypeFilter = 'all' | 'clinical' | 'retail';
 
 export interface ReceptionistHomeClientProps {
-  todayAppointments: number;
-  waitingWalkIns: number;
-  readyForCheckout: number;
-  unpaidInvoices: number;
   upcomingAppointments: ReceptionistAppointmentRow[];
   waitingVisits: ReceptionistVisitRow[];
   consultingVisits?: ReceptionistVisitRow[];
@@ -82,10 +76,6 @@ const WORKFLOW_STEPS = [
 ];
 
 export default function ReceptionistHomeClient({
-  todayAppointments,
-  waitingWalkIns,
-  readyForCheckout,
-  unpaidInvoices,
   upcomingAppointments,
   waitingVisits,
   consultingVisits = [],
@@ -152,30 +142,6 @@ export default function ReceptionistHomeClient({
           ))}
         </div>
       )}
-
-      <div className="glass-panel rounded-2xl p-5 border border-outline-variant/40">
-        <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider mb-4">
-          Today at a glance
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <GlanceCard label="Appointments" value={todayAppointments} icon={Calendar} href="/dashboard/appointments" />
-          <GlanceCard label="Walk-ins waiting" value={waitingWalkIns} icon={ClipboardList} href="/dashboard/walk-ins" />
-          <GlanceCard
-            label="Ready checkout"
-            value={readyForCheckout}
-            icon={BadgeCheck}
-            href="/dashboard/walk-ins"
-            highlight={readyForCheckout > 0}
-          />
-          <GlanceCard
-            label="Unpaid invoices"
-            value={unpaidInvoices}
-            icon={Banknote}
-            href="/dashboard/invoices?status=unpaid"
-            highlight={unpaidInvoices > 0}
-          />
-        </div>
-      </div>
 
       <div className="glass-panel rounded-2xl p-5 border border-outline-variant/40">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
@@ -396,33 +362,6 @@ export default function ReceptionistHomeClient({
         doctors={doctors}
       />
     </div>
-  );
-}
-
-function GlanceCard({
-  label,
-  value,
-  icon: Icon,
-  href,
-  highlight,
-}: {
-  label: string;
-  value: number;
-  icon: typeof Calendar;
-  href: string;
-  highlight?: boolean;
-}) {
-  return (
-    <AppLink
-      href={href}
-      className={`rounded-xl p-3 border transition-colors hover:border-primary/30 ${
-        highlight ? 'border-amber-500/30 bg-amber-500/5' : 'border-outline-variant/40 bg-surface-container/30'
-      }`}
-    >
-      <Icon className="w-4 h-4 text-primary mb-1" />
-      <span className="text-lg font-black text-on-surface block">{value}</span>
-      <span className="text-[10px] text-on-surface-variant font-semibold">{label}</span>
-    </AppLink>
   );
 }
 

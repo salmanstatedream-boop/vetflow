@@ -1,7 +1,7 @@
 'use client';
 
-import { useRef, useState } from 'react';
-import { Bell, Search, Stethoscope } from 'lucide-react';
+import { useRef, useState, type ReactNode } from 'react';
+import { Bell, Stethoscope } from 'lucide-react';
 import { resolvePageTitle } from '@/lib/navigation/dashboard-nav';
 import { resolveClinicLogoSrc } from '@/lib/branding/clinic-logo';
 import { cn } from '@/lib/utils';
@@ -48,7 +48,7 @@ function ClinicBrandCluster({
   const logoSrc = resolveClinicLogoSrc(clinicLogoUrl);
 
   return (
-    <div className="hidden lg:flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-outline-variant/40 bg-surface-container/30 shrink-0">
+    <div className="hidden xl:flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-outline-variant/40 bg-surface-container/30 shrink-0">
       {logoSrc ? (
         <img
           src={logoSrc}
@@ -83,8 +83,10 @@ interface DashboardTopBarProps {
   hasAvatar: boolean;
   avatarInitial: string;
   roleLabel: string;
-  onSearchOpen: () => void;
   compact?: boolean;
+  mobileMenuButton?: ReactNode;
+  branchSearchCluster?: ReactNode;
+  themeToggle?: ReactNode;
 }
 
 export default function DashboardTopBar({
@@ -98,8 +100,10 @@ export default function DashboardTopBar({
   hasAvatar,
   avatarInitial,
   roleLabel,
-  onSearchOpen,
   compact = false,
+  mobileMenuButton,
+  branchSearchCluster,
+  themeToggle,
 }: DashboardTopBarProps) {
   const pageTitle = resolvePageTitle(pathname);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -108,43 +112,30 @@ export default function DashboardTopBar({
   const showTitleBlock = !(compact && pathname === '/dashboard');
 
   return (
-    <div className="border-b border-outline-variant/40 bg-surface-container px-4 md:px-6 py-3 md:py-4">
-      <div
-        className={cn(
-          'flex gap-3',
-          showTitleBlock
-            ? 'flex-col lg:flex-row lg:items-center lg:justify-between'
-            : 'flex-row items-center justify-end'
-        )}
-      >
-        {showTitleBlock && (
-          <div className="min-w-0">
-            <h1 className="text-lg md:text-xl font-bold text-on-surface font-[family-name:var(--font-display)]">
-              {pageTitle}
-            </h1>
-            {!compact && (
-              <p className="text-xs text-on-surface-variant mt-0.5 truncate">
-                Welcome back, {firstName}! Here&apos;s what&apos;s happening at{' '}
-                {organizationName || 'your clinic'}.
-              </p>
-            )}
+    <div className="bg-transparent px-4 md:px-6 py-3 md:py-4">
+      {showTitleBlock && (
+        <div className="min-w-0 mb-3">
+          <h1 className="text-lg md:text-xl font-bold text-on-surface font-[family-name:var(--font-display)]">
+            {pageTitle}
+          </h1>
+          {!compact && (
+            <p className="text-xs text-on-surface-variant mt-0.5 truncate">
+              Welcome back, {firstName}! Here&apos;s what&apos;s happening at{' '}
+              {organizationName || 'your clinic'}.
+            </p>
+          )}
+        </div>
+      )}
+
+      <div className="flex flex-wrap items-center gap-2 md:gap-3">
+        {mobileMenuButton}
+        {branchSearchCluster && (
+          <div className="flex-1 min-w-[200px] order-first sm:order-none w-full sm:w-auto">
+            {branchSearchCluster}
           </div>
         )}
 
-        <div className="flex flex-wrap items-center gap-2 md:gap-3">
-          <button
-            type="button"
-            onClick={onSearchOpen}
-            className="flex-1 md:flex-none flex items-center gap-2 px-3 py-2 min-w-[140px] md:min-w-[200px] rounded-xl border border-outline-variant/50 bg-surface-container/40 text-xs text-on-surface-variant hover:border-primary/30 hover:text-on-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-            aria-label="Search clinic records"
-          >
-            <Search className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Search patients, appointments, invoices…</span>
-            <span className="hidden sm:inline ml-auto text-[9px] font-semibold opacity-50 border border-outline-variant/40 px-1 rounded">
-              ⌘K
-            </span>
-          </button>
-
+        <div className="flex flex-wrap items-center gap-2 md:gap-3 ml-auto">
           <ClinicBrandCluster clinicLogoUrl={clinicLogoUrl} organizationName={organizationName} />
 
           <button
@@ -173,6 +164,8 @@ export default function DashboardTopBar({
           <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl border border-outline-variant/40 bg-surface-container/30 text-xs text-on-surface-variant">
             {displayDate}
           </div>
+
+          {themeToggle}
 
           <div className="flex items-center gap-2 pl-1">
             <UserAvatar hasAvatar={hasAvatar} initial={avatarInitial} />
