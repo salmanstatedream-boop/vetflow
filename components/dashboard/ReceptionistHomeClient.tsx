@@ -122,27 +122,6 @@ export default function ReceptionistHomeClient({
     <div className="space-y-6">
       <DateRangeQuickFilter showWeek={false} />
 
-      {readyForCheckout > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
-          <div>
-            <p className="text-sm font-bold text-emerald-700">
-              {readyForCheckout} patient{readyForCheckout > 1 ? 's' : ''} ready for checkout
-            </p>
-            <p className="text-xs text-emerald-600/80">
-              Doctor completed consultation — proceed to billing.
-            </p>
-          </div>
-          {checkoutVisits[0] && (
-            <AppLink
-              href={`/dashboard/invoices/create/${checkoutVisits[0].id}`}
-              className="shrink-0 bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold"
-            >
-              Start checkout →
-            </AppLink>
-          )}
-        </div>
-      )}
-
       {consultingVisits.length > 0 && (
         <div className="glass-panel rounded-2xl border border-blue-500/30 p-4 space-y-2">
           <h3 className="text-xs font-bold text-blue-400 uppercase tracking-wider">
@@ -173,26 +152,6 @@ export default function ReceptionistHomeClient({
           ))}
         </div>
       )}
-
-      <div className="grid sm:grid-cols-2 gap-3">
-        <button
-          type="button"
-          onClick={() => setWalkInOpen(true)}
-          className="flex items-center justify-center gap-3 w-full py-4 px-6 rounded-2xl bg-primary text-on-primary font-bold text-sm shadow-premium hover:opacity-90 transition-all"
-        >
-          <UserPlus className="w-5 h-5" />
-          Quick walk-in — patient just arrived
-          <ArrowRight className="w-4 h-4 opacity-80" />
-        </button>
-        <AppLink
-          href="/dashboard/sales/new"
-          className="flex items-center justify-center gap-3 w-full py-4 px-6 rounded-2xl bg-violet-600 text-white font-bold text-sm shadow-premium hover:opacity-90 transition-all"
-        >
-          <ShoppingBag className="w-5 h-5" />
-          Retail sale — products & services
-          <ArrowRight className="w-4 h-4 opacity-80" />
-        </AppLink>
-      </div>
 
       <div className="glass-panel rounded-2xl p-5 border border-outline-variant/40">
         <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider mb-4">

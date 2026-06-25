@@ -1,15 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown, Check, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import {
-  computeFloatingDropdownPosition,
-  floatingDropdownStyle,
-  parseMaxHeightClass,
-  type FloatingDropdownPosition,
-} from '@/lib/ui/floating-dropdown';
+import { useFloatingDropdownPosition } from '@/lib/hooks/useFloatingDropdownPosition';
+import { floatingDropdownStyle, parseMaxHeightClass } from '@/lib/ui/floating-dropdown';
 
 export type CreatableOption = { value: string; label: string };
 
@@ -56,7 +52,6 @@ export default function CreatableSelect({
 }: CreatableSelectProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const [pos, setPos] = useState<FloatingDropdownPosition | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -88,34 +83,13 @@ export default function CreatableSelect({
   const footerPx = allowCreate && showAddButton ? (isCompact ? 28 : 36) : 0;
   const searchHeaderPx = isCompact ? 44 : 52;
 
-  const updatePosition = useCallback(() => {
-    if (!triggerRef.current) return;
-    setPos(
-      computeFloatingDropdownPosition(triggerRef.current, {
-        searchHeaderPx,
-        footerPx,
-        preferredListMaxPx,
-        preferPlacement,
-      })
-    );
-  }, [footerPx, preferredListMaxPx, preferPlacement, searchHeaderPx]);
-
-  useEffect(() => {
-    if (!open) {
-      setPos(null);
-      return;
-    }
-    updatePosition();
-    const raf = requestAnimationFrame(updatePosition);
-    const onLayout = () => updatePosition();
-    window.addEventListener('resize', onLayout);
-    window.addEventListener('scroll', onLayout, true);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener('resize', onLayout);
-      window.removeEventListener('scroll', onLayout, true);
-    };
-  }, [open, query, updatePosition]);
+  const pos = useFloatingDropdownPosition(open, triggerRef, {
+    searchHeaderPx,
+    footerPx,
+    preferredListMaxPx,
+    preferPlacement,
+    repositionDeps: [query],
+  });
 
   useEffect(() => {
     if (!open) return;

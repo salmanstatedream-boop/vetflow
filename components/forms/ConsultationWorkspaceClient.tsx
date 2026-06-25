@@ -211,6 +211,8 @@ export default function ConsultationWorkspaceClient({
   const tabErrorRef = useRef<HTMLDivElement>(null);
   const soapWorkspaceRef = useRef<HTMLFormElement>(null);
   const diagnosticsPanelRef = useRef<HTMLDivElement>(null);
+  const lastServiceRowRef = useRef<HTMLDivElement>(null);
+  const pendingServiceScrollRef = useRef(false);
 
   const {
     register,
@@ -272,6 +274,19 @@ export default function ConsultationWorkspaceClient({
     control,
     name: 'serviceItems',
   });
+
+  useEffect(() => {
+    if (!pendingServiceScrollRef.current) return;
+    pendingServiceScrollRef.current = false;
+    requestAnimationFrame(() => {
+      lastServiceRowRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    });
+  }, [serviceFields.length]);
+
+  const handleAddService = () => {
+    pendingServiceScrollRef.current = true;
+    appendService({ serviceId: null, name: '', unitPrice: 0, quantity: 1 });
+  };
 
   const prescriptionItemsWatch = watch('prescriptionItems');
   const noPrescriptionNeeded = watch('noPrescriptionNeeded');
@@ -1488,7 +1503,7 @@ export default function ConsultationWorkspaceClient({
               </h3>
               <button
                 type="button"
-                onClick={() => appendService({ serviceId: null, name: '', unitPrice: 0, quantity: 1 })}
+                onClick={handleAddService}
                 className="inline-flex items-center gap-1 text-[10px] font-bold text-primary border border-primary/30 px-2.5 py-1.5 rounded-lg hover:bg-primary/10 transition-all"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -1501,6 +1516,7 @@ export default function ConsultationWorkspaceClient({
                 {serviceFields.map((field, idx) => (
                   <div
                     key={field.id}
+                    ref={idx === serviceFields.length - 1 ? lastServiceRowRef : undefined}
                     className="p-4 bg-surface-container/20 border border-outline-variant/40 rounded-xl grid grid-cols-12 gap-3 items-end"
                   >
                     <div className="col-span-12 sm:col-span-5">
@@ -1509,6 +1525,7 @@ export default function ConsultationWorkspaceClient({
                       </label>
                       <Select
                         size="compact"
+                        preferPlacement="auto"
                         value={watch(`serviceItems.${idx}.serviceId`) || ''}
                         onChange={(v) => handleSelectService(idx, v)}
                         options={[

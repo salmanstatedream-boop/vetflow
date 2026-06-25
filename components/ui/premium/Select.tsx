@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown, Check, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useFloatingDropdownPosition } from '@/lib/hooks/useFloatingDropdownPosition';
+import { floatingDropdownStyle, parseMaxHeightClass } from '@/lib/ui/floating-dropdown';
 
 export type SelectOption = { value: string; label: string };
 
@@ -23,6 +25,8 @@ interface SelectProps {
   onAddNew?: () => void;
   addNewLabel?: string;
   size?: 'default' | 'compact';
+  listMaxHeightClass?: string;
+  preferPlacement?: 'auto' | 'top' | 'bottom';
 }
 
 export default function Select({
@@ -39,20 +43,24 @@ export default function Select({
   onAddNew,
   addNewLabel = 'Add new…',
   size = 'default',
+  listMaxHeightClass,
+  preferPlacement = 'auto',
 }: SelectProps) {
   const [open, setOpen] = useState(false);
-  const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
   const selected = options.find((o) => o.value === value);
   const isCompact = size === 'compact';
+  const preferredListMaxPx = parseMaxHeightClass(listMaxHeightClass ?? 'max-h-56');
+  const footerPx = onAddNew ? (isCompact ? 28 : 36) : 0;
 
-  useEffect(() => {
-    if (!open || !triggerRef.current) return;
-    const rect = triggerRef.current.getBoundingClientRect();
-    setPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
-  }, [open]);
+  const pos = useFloatingDropdownPosition(open, triggerRef, {
+    footerPx,
+    preferredListMaxPx,
+    preferPlacement,
+    repositionDeps: [options.length],
+  });
 
   useEffect(() => {
     if (!open) return;
@@ -127,42 +135,48 @@ export default function Select({
       {error && <p className="text-[10px] text-destructive">{error}</p>}
 
       {open &&
+        pos &&
         typeof document !== 'undefined' &&
         createPortal(
           <div
             ref={listRef}
             role="listbox"
-            className="fixed z-[200] max-h-56 overflow-y-auto rounded-xl border border-outline-variant/60 bg-surface-container-high shadow-premium py-1"
-            style={{ top: pos.top, left: pos.left, width: pos.width }}
+            style={floatingDropdownStyle(pos)}
+            className="rounded-xl border border-outline-variant/60 bg-surface-container-high shadow-premium flex flex-col overflow-hidden"
           >
-            {options.map((opt) => {
-              const active = opt.value === value;
-              return (
-                <button
-                  key={opt.value || '__empty'}
-                  type="button"
-                  role="option"
-                  aria-selected={active}
-                  onClick={() => pick(opt.value)}
-                  className={cn(
-                    'w-full text-left flex items-center justify-between gap-2 transition-colors',
-                    isCompact ? 'px-2 py-1.5 text-[10px]' : 'px-3 py-2.5 text-xs',
-                    active
-                      ? 'bg-primary/15 text-primary font-semibold'
-                      : 'text-on-surface hover:bg-surface-container-highest'
-                  )}
-                >
-                  <span className="truncate">{opt.label}</span>
-                  {active && <Check className="w-3.5 h-3.5 shrink-0" />}
-                </button>
-              );
-            })}
+            <div
+              className="overflow-y-auto overscroll-contain py-1 min-h-0"
+              style={{ maxHeight: pos.maxListHeight }}
+            >
+              {options.map((opt) => {
+                const active = opt.value === value;
+                return (
+                  <button
+                    key={opt.value || '__empty'}
+                    type="button"
+                    role="option"
+                    aria-selected={active}
+                    onClick={() => pick(opt.value)}
+                    className={cn(
+                      'w-full text-left flex items-center justify-between gap-2 transition-colors',
+                      isCompact ? 'px-2 py-1.5 text-[10px]' : 'px-3 py-2.5 text-xs',
+                      active
+                        ? 'bg-primary/15 text-primary font-semibold'
+                        : 'text-on-surface hover:bg-surface-container-highest'
+                    )}
+                  >
+                    <span className="truncate">{opt.label}</span>
+                    {active && <Check className="w-3.5 h-3.5 shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
             {onAddNew && (
               <button
                 type="button"
                 onClick={handleAddNew}
                 className={cn(
-                  'w-full flex items-center gap-2 text-primary hover:bg-primary/5 font-semibold border-t border-outline-variant/40',
+                  'w-full flex items-center gap-2 text-primary hover:bg-primary/5 font-semibold border-t border-outline-variant/40 shrink-0',
                   isCompact ? 'px-2 py-1.5 text-[10px]' : 'px-3 py-2.5 text-xs'
                 )}
               >

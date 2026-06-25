@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
 import Link from 'next/link';
 import {
   Calendar,
@@ -36,7 +35,6 @@ import type { AdminOverviewBundle } from '@/lib/dashboard/admin-overview.types';
 import type { UserSessionDetails } from '@/lib/services/auth';
 import type { Feature } from '@/lib/auth/features';
 import { cn } from '@/lib/utils';
-import { useDashboardShell } from '@/lib/context/DashboardShellContext';
 
 interface ClinicAdminDashboardClientProps extends AdminOverviewBundle {
   role: UserSessionDetails['role'];
@@ -83,15 +81,8 @@ export default function ClinicAdminDashboardClient({
   clinicName,
   branches,
   categories,
-  notificationCount,
 }: ClinicAdminDashboardClientProps) {
-  const shell = useDashboardShell();
   useVisibilityPolling(30_000);
-
-  useEffect(() => {
-    shell?.setNotificationCount(notificationCount);
-    return () => shell?.setNotificationCount(0);
-  }, [shell, notificationCount]);
 
   const scheduleItems = todaySchedule.slice(0, 8);
 

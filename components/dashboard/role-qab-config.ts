@@ -99,7 +99,6 @@ const ADMIN_QABS: QabItem[] = [
 const RECEPTION_QABS: QabItem[] = [
   { id: 'appointment', label: 'Appointment', description: 'Book & check-in', icon: Calendar, launcher: 'modal', modalId: 'appointment', capability: 'manage_appointments', feature: 'appointments', group: 'clinical', priority: 1 },
   { id: 'invoices', label: 'Invoices', description: 'Billing & checkout', icon: Receipt, launcher: 'modal', modalId: 'invoices', capability: 'billing_checkout', feature: 'sales', group: 'financial', priority: 1 },
-  { id: 'retail_sale', label: 'Retail Sale', description: 'Counter POS checkout', icon: ShoppingBag, launcher: 'page', href: '/dashboard/sales/new', capability: 'billing_checkout', feature: 'sales', group: 'operations', priority: 1 },
   { id: 'consultations', label: 'Consultations', description: 'Live queue status', icon: Stethoscope, launcher: 'modal', modalId: 'consultation_status', capability: 'view_consultation_status', group: 'clinical', priority: 2 },
   { id: 'inventory', label: 'Inventory Control', description: 'Stock updates', icon: Layers, launcher: 'modal', modalId: 'inventory_control', capability: 'manage_inventory', feature: 'inventory', group: 'operations', priority: 2 },
   { id: 'ai_assistant', label: 'AI Assistant', description: 'Front desk help', icon: Bot, launcher: 'slideover', modalId: 'ai_assistant', capability: 'use_ai_assistant', feature: 'ai_assistant', group: 'insights', priority: 1 },

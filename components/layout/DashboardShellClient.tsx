@@ -14,8 +14,11 @@ import DashboardTopBar from '@/components/layout/DashboardTopBar';
 import ThemeToggle from '@/components/layout/ThemeToggle';
 import { CurrencyProvider } from '@/lib/context/CurrencyContext';
 import { DashboardShellProvider, useDashboardShell } from '@/lib/context/DashboardShellContext';
+import DashboardNotificationsSync from '@/components/layout/DashboardNotificationsSync';
+import DashboardCheckoutAlertBar from '@/components/layout/DashboardCheckoutAlertBar';
 import { resolveClinicLogoSrc } from '@/lib/branding/clinic-logo';
 import { Stethoscope, MapPin, Search, Menu, X, ChevronDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 function UserAvatar({
   hasAvatar,
@@ -112,6 +115,14 @@ export default function DashboardShellClient({
     Awaited<ReturnType<typeof globalClinicSearchAction>>['results']
   >([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [headerScrolled, setHeaderScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setHeaderScrolled(window.scrollY > 4);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -222,6 +233,7 @@ export default function DashboardShellClient({
 
   return (
     <DashboardShellProvider>
+      <DashboardNotificationsSync />
     <div className="min-h-screen bg-surface flex flex-col dashboard-shell">
       {session.isImpersonating && session.organizationName && (
         <ImpersonationBanner organizationName={session.organizationName} />
@@ -336,7 +348,12 @@ export default function DashboardShellClient({
         )}
 
         <div className="flex-1 flex flex-col min-w-0">
-          <div className="sticky top-0 z-10 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/40">
+          <div
+            className={cn(
+              'sticky top-0 z-30 bg-surface border-b border-outline-variant/40',
+              headerScrolled && 'shadow-sm'
+            )}
+          >
             <div className="flex items-center justify-between gap-3 px-4 md:px-6 py-2 border-b border-outline-variant/20">
               <div className="flex items-center gap-3 min-w-0">
                 <button
@@ -361,7 +378,9 @@ export default function DashboardShellClient({
               avatarInitial={avatarInitial}
               roleLabel={formatRoleLabel(session.role)}
               onSearchOpen={() => setIsSearchOpen(true)}
+              compact={pathname === '/dashboard'}
             />
+            <DashboardCheckoutAlertBar />
           </div>
 
           <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-[1600px] w-full mx-auto relative">
@@ -377,8 +396,17 @@ export default function DashboardShellClient({
 }
 
 function ConnectedDashboardTopBar(
-  props: Omit<React.ComponentProps<typeof DashboardTopBar>, 'notificationCount'>
+  props: Omit<
+    React.ComponentProps<typeof DashboardTopBar>,
+    'notificationCount' | 'notifications'
+  >
 ) {
   const shell = useDashboardShell();
-  return <DashboardTopBar {...props} notificationCount={shell?.notificationCount ?? 0} />;
+  return (
+    <DashboardTopBar
+      {...props}
+      notificationCount={shell?.notificationCount ?? 0}
+      notifications={shell?.notifications ?? []}
+    />
+  );
 }

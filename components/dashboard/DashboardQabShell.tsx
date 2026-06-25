@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback, useTransition } from 'react';
 import RoleQuickActionsGrid, { type QabLayout } from '@/components/dashboard/RoleQuickActionsGrid';
+import ReceptionistPrimaryActions from '@/components/dashboard/ReceptionistPrimaryActions';
 import DashboardWorkflowLauncher from '@/components/dashboard/DashboardWorkflowLauncher';
 import {
   getQabsForRole,
@@ -98,13 +99,35 @@ export default function DashboardQabShell({
 
   return (
     <>
-      <RoleQuickActionsGrid
-        layout={layout}
-        showHeading={showHeading}
-        items={qabItems}
-        onAction={handleAction}
-        pendingId={pendingQabId}
-      />
+      {role === 'receptionist' ? (
+        <div className="space-y-3">
+          {showHeading && (
+            <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider">
+              Quick Actions
+            </h3>
+          )}
+          <ReceptionistPrimaryActions
+            activeBranchId={activeBranchId}
+            branches={branches}
+            doctors={doctors}
+          />
+          <RoleQuickActionsGrid
+            layout={layout}
+            showHeading={false}
+            items={qabItems}
+            onAction={handleAction}
+            pendingId={pendingQabId}
+          />
+        </div>
+      ) : (
+        <RoleQuickActionsGrid
+          layout={layout}
+          showHeading={showHeading}
+          items={qabItems}
+          onAction={handleAction}
+          pendingId={pendingQabId}
+        />
+      )}
       <DashboardWorkflowLauncher
         activeModal={activeModal}
         onClose={closeModal}

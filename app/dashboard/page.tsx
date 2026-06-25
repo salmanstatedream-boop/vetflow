@@ -827,7 +827,7 @@ export default async function DashboardOverview({
         />
       )}
 
-      {kpis.length > 0 && <DashboardWidgetGrid kpis={kpis} />}
+      {kpis.length > 0 && role !== 'receptionist' && <DashboardWidgetGrid kpis={kpis} />}
 
       {role === 'clinic_admin' && (
         <div className="grid lg:grid-cols-2 gap-6">
