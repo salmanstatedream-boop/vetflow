@@ -26,6 +26,7 @@ export const KPI_ACCENTS = {
   inClinic: { bg: 'from-pink-500/20 to-rose-600/10', text: 'text-pink-400', stroke: CHART_COLORS.pink },
   inventory: { bg: 'from-red-500/20 to-rose-600/10', text: 'text-red-400', stroke: CHART_COLORS.danger },
   clients: { bg: 'from-cyan-500/20 to-blue-600/10', text: 'text-cyan-400', stroke: CHART_COLORS.secondary },
+  vaccinations: { bg: 'from-green-500/20 to-emerald-600/10', text: 'text-green-400', stroke: CHART_COLORS.tertiary },
 } as const;
 
 export const DASHBOARD_GRID = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-3 md:gap-3.5';

@@ -307,6 +307,7 @@ export async function createStaffAppointmentAction(payload: unknown) {
         preferred_date: parsed.preferredDate,
         preferred_time: preferredTime,
         reason: parsed.reason,
+        visit_purpose: parsed.visitPurpose,
         doctor_id: doctorId,
         is_emergency: parsed.isEmergency,
         intake_notes: parsed.intakeNotes?.trim() || null,
@@ -412,6 +413,7 @@ export async function createAppointmentWithPatientAction(payload: unknown) {
       doctorId: parsed.doctorId,
       preferredDate: parsed.preferredDate,
       preferredTime: parsed.preferredTime,
+      visitPurpose: parsed.visitPurpose,
       reason: parsed.reason,
       isEmergency: parsed.isEmergency,
       intakeNotes: parsed.intakeNotes,
@@ -874,6 +876,7 @@ export async function updateAppointmentDetailsAction(payload: unknown) {
     }
 
     const patch: Record<string, string> = {};
+    if (parsed.visitPurpose !== undefined) patch.visit_purpose = parsed.visitPurpose;
     if (parsed.reason !== undefined) patch.reason = parsed.reason;
     if (parsed.preferredDate !== undefined) patch.preferred_date = parsed.preferredDate;
     if (parsed.preferredTime !== undefined) {

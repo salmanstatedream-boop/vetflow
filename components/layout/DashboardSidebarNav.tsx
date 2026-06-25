@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { ChevronDown } from 'lucide-react';
 import DashboardNavLink from '@/components/layout/DashboardNavLink';
 import {
@@ -27,6 +28,15 @@ export default function DashboardSidebarNav({
   navLinkClass,
   onNavigate,
 }: DashboardSidebarNavProps) {
+  const urlSearchParams = useSearchParams();
+  const searchParams = useMemo(() => {
+    const params: Record<string, string> = {};
+    urlSearchParams.forEach((value, key) => {
+      params[key] = value;
+    });
+    return params;
+  }, [urlSearchParams]);
+
   const groups = filterNavGroups(session.role, session.features as Feature[]);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(groups.filter((g) => g.collapsible).map((g) => [g.section, true]))
@@ -47,6 +57,7 @@ export default function DashboardSidebarNav({
           key={group.section}
           group={group}
           pathname={pathname}
+          searchParams={searchParams}
           navLinkClass={navLinkClass}
           onNavigate={onNavigate}
           collapsible={group.collapsible}
@@ -58,9 +69,9 @@ export default function DashboardSidebarNav({
         <div className="pt-2 mt-2 border-t border-outline-variant/40">
           <DashboardNavLink
             href={SETTINGS_NAV_ITEM.href}
-            className={navLinkClass(isNavItemActive(pathname, SETTINGS_NAV_ITEM.href))}
+            className={navLinkClass(isNavItemActive(pathname, SETTINGS_NAV_ITEM.href, searchParams))}
             onClick={onNavigate}
-            aria-current={isNavItemActive(pathname, SETTINGS_NAV_ITEM.href) ? 'page' : undefined}
+            aria-current={isNavItemActive(pathname, SETTINGS_NAV_ITEM.href, searchParams) ? 'page' : undefined}
           >
             <SETTINGS_NAV_ITEM.icon className="w-4 h-4" />
             {SETTINGS_NAV_ITEM.name}
@@ -74,6 +85,7 @@ export default function DashboardSidebarNav({
 function NavGroupBlock({
   group,
   pathname,
+  searchParams,
   navLinkClass,
   onNavigate,
   collapsible,
@@ -82,6 +94,7 @@ function NavGroupBlock({
 }: {
   group: DashboardNavGroup;
   pathname: string;
+  searchParams: Record<string, string>;
   navLinkClass: (active: boolean) => string;
   onNavigate?: () => void;
   collapsible?: boolean;
@@ -90,7 +103,7 @@ function NavGroupBlock({
 }) {
   if (group.section === 'Overview' && group.items.length === 1) {
     const item = group.items[0]!;
-    const active = isNavItemActive(pathname, item.href);
+    const active = isNavItemActive(pathname, item.href, searchParams);
     return (
       <DashboardNavLink
         href={item.href}
@@ -120,7 +133,7 @@ function NavGroupBlock({
       {(!collapsible || open) && (
         <div className="space-y-0.5">
           {group.items.map((item) => {
-            const active = isNavItemActive(pathname, item.href);
+            const active = isNavItemActive(pathname, item.href, searchParams);
             return (
               <DashboardNavLink
                 key={item.href}

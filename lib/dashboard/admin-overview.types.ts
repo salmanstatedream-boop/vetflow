@@ -58,6 +58,7 @@ export type AdminOverviewData = {
     inClinicNow: number;
     inventoryAlerts: number;
     newClientsMtd: number;
+    vaccinationsToday: number;
   };
   kpiTrends: Record<keyof AdminOverviewData['kpis'], number | null>;
   sparklines: {

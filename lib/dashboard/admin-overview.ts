@@ -11,6 +11,7 @@ import { normalizeOneToOne } from '@/lib/supabase/embed';
 import type { LiveConsultRow } from '@/components/dashboard/LiveOperationsPanel';
 import type { MedicalActivityRow } from '@/components/dashboard/MedicalRecordActivityPanel';
 import type { StaffAttendanceOverviewRow } from '@/components/dashboard/StaffAttendanceOverviewPanel';
+import { countLowStockProducts, fetchLowStockProductList } from '@/lib/inventory/low-stock';
 import { getDemoAdminOverviewData } from './admin-overview.demo';
 import type {
   AdminOverviewBundle,
@@ -115,6 +116,8 @@ export async function loadAdminOverviewBundle(params: {
     return d.toISOString().slice(0, 10);
   })();
 
+  const vaccWindowEnd = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
+
   const [
     settingsRes,
     subRes,
@@ -122,7 +125,8 @@ export async function loadAdminOverviewBundle(params: {
     apptYesterdayRes,
     invoicesRes,
     visitsActiveRes,
-    lowStockRes,
+    lowStockCount,
+    lowStockList,
     customersMtdRes,
     customersPrevMtdRes,
     apptsWeekRes,
@@ -133,6 +137,9 @@ export async function loadAdminOverviewBundle(params: {
     patientsRes,
     expiringRes,
     followUpsRes,
+    followUpsCountRes,
+    vaccTodayRes,
+    vaccYesterdayRes,
     vaccRes,
     missedRes,
     liveActiveRes,
@@ -147,7 +154,8 @@ export async function loadAdminOverviewBundle(params: {
     supabase.from('appointments').select('id', { count: 'exact', head: true }).eq('branch_id', branchId).eq('preferred_date', yesterday),
     supabase.from('invoices').select('total, payment_status, paid_at, created_at').eq('branch_id', branchId),
     supabase.from('visits').select('id', { count: 'exact', head: true }).eq('branch_id', branchId).in('status', ['waiting', 'consulting']),
-    supabase.from('products').select('id, name, stock_quantity, reorder_level, product_categories(name)').eq('branch_id', branchId).eq('is_active', true).filter('stock_quantity', 'lte', 'reorder_level').limit(8),
+    countLowStockProducts(supabase, branchId),
+    fetchLowStockProductList(supabase, branchId, 8),
     supabase.from('customers').select('id', { count: 'exact', head: true }).eq('branch_id', branchId).gte('created_at', `${monthStart}T00:00:00Z`),
     supabase.from('customers').select('id', { count: 'exact', head: true }).eq('branch_id', branchId).gte('created_at', `${prevMonthStart}T00:00:00Z`).lt('created_at', `${monthStart}T00:00:00Z`),
     supabase.from('appointments').select('preferred_date').eq('branch_id', branchId).in('preferred_date', days7),
@@ -158,7 +166,10 @@ export async function loadAdminOverviewBundle(params: {
     supabase.from('patients').select('species').eq('organization_id', organizationId),
     supabase.from('inventory_batches').select('id, expiry_date, quantity, products(name, branch_id)').gte('expiry_date', today).lte('expiry_date', new Date(Date.now() + 60 * 86400000).toISOString().slice(0, 10)).order('expiry_date').limit(8),
     supabase.from('appointments').select('id, patient_name, customer_name, preferred_date, reason').eq('branch_id', branchId).not('follow_up_of_visit_id', 'is', null).lte('preferred_date', today).in('status', ['requested', 'confirmed', 'rescheduled']).limit(8),
-    supabase.from('appointments').select('id, patient_name, customer_name, preferred_date, reason').eq('branch_id', branchId).ilike('reason', '%vaccin%').gte('preferred_date', today).lte('preferred_date', new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10)).limit(8),
+    supabase.from('appointments').select('id', { count: 'exact', head: true }).eq('branch_id', branchId).not('follow_up_of_visit_id', 'is', null).lte('preferred_date', today).in('status', ['requested', 'confirmed', 'rescheduled']),
+    supabase.from('appointments').select('id', { count: 'exact', head: true }).eq('branch_id', branchId).eq('visit_purpose', 'vaccination').eq('preferred_date', today),
+    supabase.from('appointments').select('id', { count: 'exact', head: true }).eq('branch_id', branchId).eq('visit_purpose', 'vaccination').eq('preferred_date', yesterday),
+    supabase.from('appointments').select('id, patient_name, customer_name, preferred_date, reason').eq('branch_id', branchId).eq('visit_purpose', 'vaccination').gte('preferred_date', today).lte('preferred_date', vaccWindowEnd).in('status', ['requested', 'confirmed', 'rescheduled']).order('preferred_date').limit(8),
     supabase.from('appointments').select('id, patient_name, customer_name, preferred_date, reason').eq('branch_id', branchId).eq('status', 'no_show').gte('preferred_date', days7[0]).limit(8),
     supabase.from('visits').select(`id, reason, status, consult_started_at, consult_paused_at, consult_pause_reason, consult_pause_accumulated_sec, checked_in_at, is_emergency, pets:patients(name, species), customers(first_name, last_name), visit_assignments(user_profiles(first_name, last_name))`).eq('branch_id', branchId).in('status', ['waiting', 'consulting']).order('checked_in_at'),
     supabase.from('visits').select(`id, reason, status, consult_started_at, consult_paused_at, consult_pause_reason, consult_pause_accumulated_sec, checked_in_at, is_emergency, pets:patients(name, species), customers(first_name, last_name), visit_assignments(user_profiles(first_name, last_name))`).eq('branch_id', branchId).eq('status', 'ready_for_checkout').order('completed_at'),
@@ -199,7 +210,9 @@ export async function loadAdminOverviewBundle(params: {
     .reduce((s, i) => s + Number(i.total || 0), 0);
 
   const unpaidCount = invoices.filter((i) => i.payment_status === 'unpaid').length;
-  const lowStock = lowStockRes.data || [];
+  const lowStockTotal = lowStockCount;
+  const followUpsTotal = followUpsCountRes.count || 0;
+  const vaccinationsToday = vaccTodayRes.count || 0;
   const checkoutCount = (todayVisitsRes.data || []).filter((v) => v.status === 'ready_for_checkout').length;
 
   const apptByDay = new Map<string, number>();
@@ -284,11 +297,11 @@ export async function loadAdminOverviewBundle(params: {
   if (revTrend != null) {
     aiInsights.push(`Today's revenue is ${revTrend >= 0 ? 'up' : 'down'} ${Math.abs(revTrend).toFixed(0)}% vs yesterday.`);
   }
-  if (lowStock.length > 0) {
-    aiInsights.push(`${lowStock.length} inventory item(s) are at or below reorder level.`);
+  if (lowStockTotal > 0) {
+    aiInsights.push(`${lowStockTotal} inventory item(s) are at or below reorder level.`);
   }
-  if ((followUpsRes.data || []).length > 0) {
-    aiInsights.push(`${followUpsRes.data!.length} follow-up appointment(s) need attention.`);
+  if (followUpsTotal > 0) {
+    aiInsights.push(`${followUpsTotal} follow-up appointment(s) need attention.`);
   }
   if (bookedToday / slotCapacity < 0.5) {
     aiInsights.push('Appointment utilization is below 50% — consider outreach or promotions.');
@@ -353,8 +366,9 @@ export async function loadAdminOverviewBundle(params: {
     todayRevenue,
     outstandingReceivables,
     inClinicNow: visitsActiveRes.count || 0,
-    inventoryAlerts: lowStock.length,
+    inventoryAlerts: lowStockTotal,
     newClientsMtd: customersMtdRes.count || 0,
+    vaccinationsToday,
   };
 
   return {
@@ -368,6 +382,7 @@ export async function loadAdminOverviewBundle(params: {
       inClinicNow: null,
       inventoryAlerts: null,
       newClientsMtd: pctChange(customersMtdRes.count || 0, customersPrevMtdRes.count || 0),
+      vaccinationsToday: pctChange(vaccinationsToday, vaccYesterdayRes.count || 0),
     },
     sparklines: {
       appointments: days7.map((d) => apptByDay.get(d) || 0),
@@ -376,15 +391,15 @@ export async function loadAdminOverviewBundle(params: {
     todaySchedule: schedule.slice(0, 12),
     actionCenter: [
       { id: 'unpaid', label: 'Unpaid invoices', count: unpaidCount, href: '/dashboard/invoices', variant: 'warning' as const },
-      { id: 'stock', label: 'Low stock items', count: lowStock.length, href: '/dashboard/inventory', variant: 'danger' as const },
+      { id: 'stock', label: 'Low stock items', count: lowStockTotal, href: '/dashboard/inventory', variant: 'danger' as const },
       { id: 'checkout', label: 'Ready for checkout', count: checkoutCount, href: '/dashboard/walk-ins', variant: 'info' as const },
-      { id: 'followups', label: 'Follow-ups due', count: (followUpsRes.data || []).length, href: '/dashboard/appointments', variant: 'purple' as const },
+      { id: 'followups', label: 'Follow-ups due', count: followUpsTotal, href: '/dashboard/appointments', variant: 'purple' as const },
     ],
     revenueTrend7d: days7.map((d) => ({ name: dayLabel(d), value: revByDay.get(d) || 0 })),
     utilization: { booked: bookedToday, total: slotCapacity },
     visitReasons,
     speciesBreakdown,
-    lowStockItems: lowStock.map((p) => {
+    lowStockItems: lowStockList.map((p) => {
       const cat = normalizeOneToOne(p.product_categories as { name: string } | null);
       return {
         id: p.id,
@@ -430,7 +445,7 @@ export async function loadAdminOverviewBundle(params: {
       reason: (a.reason as string) || 'No show',
     })),
     aiInsights,
-    notificationCount: unpaidCount + lowStock.length,
+    notificationCount: unpaidCount + lowStockTotal,
     liveActiveConsults: (liveActiveRes.data || []).map(mapLiveVisit),
     liveCheckoutQueue: (liveCheckoutRes.data || []).map(mapLiveVisit),
     showConsultTimer,

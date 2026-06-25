@@ -15,6 +15,11 @@ import { SPECIES_OPTIONS } from '@/lib/pets/species-options';
 import { computePetAgeLabel } from '@/lib/utils/pet-species-avatar';
 import { formatAgeInputLabel } from '@/lib/pets/age';
 import { formatAppointmentTime, normalizePreferredTimeForDb } from '@/lib/utils/time-parse';
+import {
+  VISIT_PURPOSE_OPTIONS,
+  defaultReasonForVisitPurpose,
+  type VisitPurpose,
+} from '@/lib/appointments/visit-purpose';
 import { useCreatableOptions } from '@/lib/hooks/useCreatableOptions';
 import {
   X,
@@ -87,6 +92,7 @@ export default function NewAppointmentWizard({
   const [preferredDate, setPreferredDate] = useState(initialPreferredDate);
   const [preferredTime, setPreferredTime] = useState(initialPreferredTime);
   const [doctorId, setDoctorId] = useState(initialDoctorId || doctors[0]?.id || '');
+  const [visitPurpose, setVisitPurpose] = useState<VisitPurpose | ''>('');
   const [reason, setReason] = useState('');
   const [intakeNotes, setIntakeNotes] = useState('');
   const [isEmergency, setIsEmergency] = useState(false);
@@ -99,7 +105,7 @@ export default function NewAppointmentWizard({
 
   const phoneValid = normalizePhoneInput(phone).replace(/^\+/, '').length >= 7;
   const ownerReady = phoneValid && firstName.trim() && lastName.trim();
-  const visitReady = preferredDate && preferredTime && reason.trim();
+  const visitReady = preferredDate && preferredTime && visitPurpose && reason.trim();
 
   const pets = existingCustomer?.pets || [];
   const needsNewPetDetails =
@@ -255,6 +261,7 @@ export default function NewAppointmentWizard({
     setPetAgeMonths('');
     setPreferredDate('');
     setPreferredTime('');
+    setVisitPurpose('');
     setReason('');
     setIntakeNotes('');
     setIsEmergency(false);
@@ -331,6 +338,7 @@ export default function NewAppointmentWizard({
         doctorId: doctorId || '',
         preferredDate,
         preferredTime: normalizedTime,
+        visitPurpose,
         reason: reason.trim(),
         isEmergency,
         intakeNotes: intakeNotes.trim() || '',
@@ -662,6 +670,30 @@ export default function NewAppointmentWizard({
                     : slotConflict}
                 </div>
               )}
+
+              <div>
+                <label className="text-[10px] font-bold text-on-surface-variant uppercase block mb-1">
+                  Visit type
+                </label>
+                <Select
+                  value={visitPurpose}
+                  onChange={(value) => {
+                    const next = value as VisitPurpose;
+                    setVisitPurpose(next);
+                    if (!reason.trim()) {
+                      setReason(defaultReasonForVisitPurpose(next));
+                    }
+                  }}
+                  placeholder="Select visit type"
+                  options={[
+                    { value: '', label: 'Select visit type' },
+                    ...VISIT_PURPOSE_OPTIONS.map((opt) => ({
+                      value: opt.value,
+                      label: opt.label,
+                    })),
+                  ]}
+                />
+              </div>
 
               <div>
                 <label className="text-[10px] font-bold text-on-surface-variant uppercase block mb-1">

@@ -8,6 +8,7 @@ import ProductForm from '@/components/forms/ProductForm';
 import StockInvoiceIntakeClient from '@/components/inventory/StockInvoiceIntakeClient';
 import InventoryTabsClient from '@/components/inventory/InventoryTabsClient';
 import InventoryCatalogClient from '@/components/inventory/InventoryCatalogClient';
+import { filterLowStockProducts } from '@/lib/inventory/low-stock';
 import Link from 'next/link';
 import PageHeader from '@/components/ui/premium/PageHeader';
 import { Layers, AlertCircle, ShoppingBag } from 'lucide-react';
@@ -107,7 +108,7 @@ export default async function InventoryPage({
 
   // Compute stats
   const totalItems = (products?.length || 0) + (orgServices?.length || 0);
-  const lowStockItems = products?.filter((p) => p.type !== 'service' && p.stock_quantity <= p.reorder_level) || [];
+  const lowStockItems = filterLowStockProducts(products);
   const existingProductTypes = Array.from(
     new Set<string>(
       (products || [])

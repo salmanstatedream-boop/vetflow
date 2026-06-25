@@ -160,14 +160,54 @@ export function filterNavGroups(
   })).filter((group) => group.items.length > 0);
 }
 
-export function isNavItemActive(pathname: string, href: string): boolean {
+export type NavSearchParams = Record<string, string | string[] | undefined>;
+
+function parseHrefQuery(href: string): { base: string; query: URLSearchParams } {
+  const [base, queryString] = href.split('?');
+  return { base: base!, query: new URLSearchParams(queryString ?? '') };
+}
+
+function searchParamsMatch(
+  hrefQuery: URLSearchParams,
+  current: NavSearchParams
+): boolean {
+  for (const [key, expected] of hrefQuery.entries()) {
+    const actual = current[key];
+    if (actual === undefined || actual === null) return false;
+    if (Array.isArray(actual)) {
+      if (!actual.includes(expected)) return false;
+    } else if (actual !== expected) {
+      return false;
+    }
+  }
+  return true;
+}
+
+export function isNavItemActive(
+  pathname: string,
+  href: string,
+  searchParams?: NavSearchParams
+): boolean {
   if (href === '/dashboard') return pathname === '/dashboard';
   if (href === '/dashboard/sales' && pathname.startsWith('/dashboard/sales/')) {
     return pathname === '/dashboard/sales';
   }
-  const base = href.split('?')[0]!;
-  if (href.includes('?')) {
-    return pathname === base || pathname.startsWith(`${base}?`);
+
+  const { base, query: hrefQuery } = parseHrefQuery(href);
+  const pathMatches = pathname === base || pathname.startsWith(`${base}/`);
+
+  if (!pathMatches) return false;
+
+  if (hrefQuery.size > 0) {
+    return searchParamsMatch(hrefQuery, searchParams ?? {});
   }
+
+  // Same path without query: active only when no conflicting query keys from sibling nav items
+  if (base === '/dashboard/inventory') {
+    const tab = searchParams?.tab;
+    const tabValue = Array.isArray(tab) ? tab[0] : tab;
+    return tabValue !== 'intake';
+  }
+
   return pathname === href || pathname.startsWith(`${href}/`);
 }

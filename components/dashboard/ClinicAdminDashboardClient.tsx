@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   Users,
   Plus,
+  Syringe,
 } from 'lucide-react';
 import { useVisibilityPolling } from '@/lib/hooks/useVisibilityPolling';
 import { formatMoney } from '@/lib/utils/currency';
@@ -97,7 +98,7 @@ export default function ClinicAdminDashboardClient({
   return (
     <div className={DASHBOARD_DENSITY.pageGap}>
       {/* Row A — KPIs */}
-      <div className={cn('grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6', DASHBOARD_DENSITY.gridGap)}>
+      <div className={cn('grid grid-cols-2 md:grid-cols-3 xl:grid-cols-7', DASHBOARD_DENSITY.gridGap)}>
         <DashboardKpiStatCard
           density="compact"
           label="Today's Appointments"
@@ -156,6 +157,16 @@ export default function ClinicAdminDashboardClient({
           iconTextClass={KPI_ACCENTS.clients.text}
           deltaPercent={kpiTrends.newClientsMtd}
           deltaLabel="vs last month"
+        />
+        <DashboardKpiStatCard
+          density="compact"
+          label="Vaccinations Today"
+          value={kpis.vaccinationsToday}
+          icon={Syringe}
+          accentClass={KPI_ACCENTS.vaccinations.bg}
+          iconTextClass={KPI_ACCENTS.vaccinations.text}
+          deltaPercent={kpiTrends.vaccinationsToday}
+          deltaLabel="vs yesterday"
         />
       </div>
 
@@ -307,7 +318,12 @@ export default function ClinicAdminDashboardClient({
           <ListColumn items={followUpsDue} empty="No follow-ups due." />
         </DashboardSectionCard>
 
-        <DashboardSectionCard density="compact" title="Vaccinations" href="/dashboard/appointments">
+        <DashboardSectionCard
+          density="compact"
+          title="Vaccinations"
+          subtitle="Upcoming in the next 14 days"
+          href="/dashboard/appointments"
+        >
           <ListColumn items={vaccinationsDue} empty="None due soon." />
         </DashboardSectionCard>
 

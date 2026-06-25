@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { VisitPurposeSchema } from '@/lib/appointments/visit-purpose';
 
 /** Postgres uuid strings, including deterministic seed IDs (Zod 4 uuid() rejects some fixtures). */
 const UUID_LIKE =
@@ -345,6 +346,7 @@ export const RescheduleAppointmentSchema = z.object({
 
 export const UpdateAppointmentDetailsSchema = z.object({
   appointmentId: z.string().uuid(),
+  visitPurpose: VisitPurposeSchema.optional(),
   reason: z.string().min(1).optional(),
   preferredDate: z.string().min(1).optional(),
   preferredTime: z.string().min(1).optional(),
@@ -357,6 +359,7 @@ export const StaffAppointmentSchema = z.object({
   doctorId: z.string().uuid().optional().or(z.literal('')),
   preferredDate: z.string().min(1, { message: 'Date is required' }),
   preferredTime: z.string().min(1, { message: 'Time is required' }),
+  visitPurpose: VisitPurposeSchema,
   reason: z.string().min(1, { message: 'Reason for visit is required' }),
   isEmergency: z.boolean().default(false),
   intakeNotes: z.string().optional().or(z.literal('')),
@@ -390,6 +393,7 @@ export const AppointmentWithPatientSchema = z
     doctorId: z.string().uuid().optional().or(z.literal('')),
     preferredDate: z.string().min(1, { message: 'Date is required' }),
     preferredTime: z.string().min(1, { message: 'Time is required' }),
+    visitPurpose: VisitPurposeSchema,
     reason: z.string().min(1, { message: 'Reason for visit is required' }),
     isEmergency: z.boolean().default(false),
     intakeNotes: z.string().optional().or(z.literal('')),

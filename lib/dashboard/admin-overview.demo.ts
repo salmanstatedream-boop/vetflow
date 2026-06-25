@@ -12,6 +12,7 @@ export function getDemoAdminOverviewData(currency = 'USD'): AdminOverviewData {
       inClinicNow: 7,
       inventoryAlerts: 6,
       newClientsMtd: 18,
+      vaccinationsToday: 5,
     },
     kpiTrends: {
       todayAppointments: 9,
@@ -20,6 +21,7 @@ export function getDemoAdminOverviewData(currency = 'USD'): AdminOverviewData {
       inClinicNow: 0,
       inventoryAlerts: 2,
       newClientsMtd: 20,
+      vaccinationsToday: 25,
     },
     sparklines: {
       appointments: [18, 20, 15, 22, 19, 21, 24],

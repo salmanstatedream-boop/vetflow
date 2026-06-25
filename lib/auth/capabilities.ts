@@ -120,13 +120,18 @@ export const ROUTE_CAPABILITIES: Record<string, Capability | undefined> = {
   '/dashboard/reports/ai': 'view_reports',
 };
 
+export function normalizeRouteHref(href: string): string {
+  return href.split('?')[0]!.split('#')[0]!;
+}
+
 export function canAccessRoute(
   role: UserSessionDetails['role'],
   href: string
 ): boolean {
+  const path = normalizeRouteHref(href);
   const base =
     Object.keys(ROUTE_CAPABILITIES)
-      .filter((r) => href === r || href.startsWith(`${r}/`))
+      .filter((r) => path === r || path.startsWith(`${r}/`))
       .sort((a, b) => b.length - a.length)[0] ?? '/dashboard';
 
   const cap = ROUTE_CAPABILITIES[base];

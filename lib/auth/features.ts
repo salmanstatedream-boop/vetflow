@@ -1,3 +1,5 @@
+import { normalizeRouteHref } from '@/lib/auth/capabilities';
+
 export type Feature =
   | 'appointments'
   | 'inventory'
@@ -122,9 +124,10 @@ export function canAccessRouteByFeature(
   features: Feature[],
   href: string
 ): boolean {
+  const path = normalizeRouteHref(href);
   const base =
     Object.keys(ROUTE_FEATURES)
-      .filter((r) => href === r || href.startsWith(`${r}/`))
+      .filter((r) => path === r || path.startsWith(`${r}/`))
       .sort((a, b) => b.length - a.length)[0] ?? null;
 
   if (!base) return true;
