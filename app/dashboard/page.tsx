@@ -783,7 +783,7 @@ export default async function DashboardOverview({
         />
       )}
 
-      {showAttendance && role !== 'doctor' && <AttendanceWidgetClient initial={myAttendance} />}
+      {showAttendance && <AttendanceWidgetClient initial={myAttendance} />}
 
       <StaffDashboardGate locked={staffGateLocked}>
       {role === 'clinic_admin' && adminOverview ? (
