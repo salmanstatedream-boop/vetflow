@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
+import { DASHBOARD_DENSITY } from '@/lib/ui/dashboard-tokens';
 import { cn } from '@/lib/utils';
 
 interface DashboardSectionCardProps {
@@ -10,6 +11,8 @@ interface DashboardSectionCardProps {
   className?: string;
   children: React.ReactNode;
   action?: React.ReactNode;
+  footer?: React.ReactNode;
+  density?: 'default' | 'compact';
 }
 
 export default function DashboardSectionCard({
@@ -20,19 +23,31 @@ export default function DashboardSectionCard({
   className,
   children,
   action,
+  footer,
+  density = 'default',
 }: DashboardSectionCardProps) {
+  const compact = density === 'compact';
+
   return (
-    <section className={cn('dashboard-card p-5 md:p-6 flex flex-col min-h-0', className)}>
-      <div className="flex items-start justify-between gap-3 mb-4 shrink-0">
-        <div>
-          <h3 className="text-sm font-bold text-on-surface">{title}</h3>
+    <section
+      className={cn(
+        'dashboard-card flex flex-col min-h-0',
+        compact ? 'dashboard-card-compact' : 'p-5 md:p-6',
+        className
+      )}
+    >
+      <div className={cn('flex items-start justify-between gap-3 shrink-0', compact ? 'mb-2.5' : 'mb-4')}>
+        <div className="min-w-0">
+          <h3 className={cn('font-bold text-on-surface', compact ? 'text-xs' : 'text-sm')}>{title}</h3>
           {subtitle && (
-            <p className="text-[11px] text-on-surface-variant mt-0.5">{subtitle}</p>
+            <p className={cn('text-on-surface-variant mt-0.5', compact ? 'text-[10px]' : 'text-[11px]')}>
+              {subtitle}
+            </p>
           )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {action}
-          {href && (
+          {href && !footer && (
             <Link
               href={href}
               className="inline-flex items-center gap-0.5 text-[10px] font-bold text-primary hover:text-primary/80 transition-colors"
@@ -44,6 +59,9 @@ export default function DashboardSectionCard({
         </div>
       </div>
       <div className="flex-1 min-h-0">{children}</div>
+      {footer && (
+        <div className="mt-2.5 pt-2.5 border-t border-outline-variant/25 shrink-0">{footer}</div>
+      )}
     </section>
   );
 }

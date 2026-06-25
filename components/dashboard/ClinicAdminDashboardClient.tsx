@@ -9,21 +9,23 @@ import {
   HeartPulse,
   AlertTriangle,
   Users,
-  Sparkles,
   Plus,
 } from 'lucide-react';
 import { useVisibilityPolling } from '@/lib/hooks/useVisibilityPolling';
 import { formatMoney } from '@/lib/utils/currency';
-import { DASHBOARD_GRID, KPI_ACCENTS } from '@/lib/ui/dashboard-tokens';
+import { DASHBOARD_DENSITY, DASHBOARD_GRID, KPI_ACCENTS } from '@/lib/ui/dashboard-tokens';
 import DashboardKpiStatCard from '@/components/dashboard/premium/DashboardKpiStatCard';
 import DashboardSectionCard from '@/components/dashboard/premium/DashboardSectionCard';
 import DashboardListRow from '@/components/dashboard/premium/DashboardListRow';
 import DashboardMiniTable, { stockStatusBadge } from '@/components/dashboard/premium/DashboardMiniTable';
+import DashboardActionCenterList from '@/components/dashboard/premium/DashboardActionCenterList';
+import DashboardAiInsightList from '@/components/dashboard/premium/DashboardAiInsightList';
+import DashboardRankedBarList from '@/components/dashboard/premium/DashboardRankedBarList';
+import DashboardCollapsibleSection from '@/components/dashboard/premium/DashboardCollapsibleSection';
 import {
   RevenueTrendChart,
   UtilizationDonut,
   SpeciesDonut,
-  VisitReasonsChart,
 } from '@/components/dashboard/premium/DashboardCharts';
 import LiveOperationsPanel from '@/components/dashboard/LiveOperationsPanel';
 import MedicalRecordActivityPanel from '@/components/dashboard/MedicalRecordActivityPanel';
@@ -47,13 +49,6 @@ interface ClinicAdminDashboardClientProps extends AdminOverviewBundle {
   branches: { id: string; name: string }[];
   categories: { id: string; name: string }[];
 }
-
-const ACTION_VARIANTS = {
-  warning: 'border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10',
-  danger: 'border-red-500/30 bg-red-500/5 hover:bg-red-500/10',
-  info: 'border-cyan-500/30 bg-cyan-500/5 hover:bg-cyan-500/10',
-  purple: 'border-violet-500/30 bg-violet-500/5 hover:bg-violet-500/10',
-};
 
 export default function ClinicAdminDashboardClient({
   currency,
@@ -97,10 +92,14 @@ export default function ClinicAdminDashboardClient({
     return () => shell?.setNotificationCount(0);
   }, [shell, notificationCount]);
 
+  const scheduleItems = todaySchedule.slice(0, 8);
+
   return (
-    <div className="space-y-5 md:space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4">
+    <div className={DASHBOARD_DENSITY.pageGap}>
+      {/* Row A — KPIs */}
+      <div className={cn('grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6', DASHBOARD_DENSITY.gridGap)}>
         <DashboardKpiStatCard
+          density="compact"
           label="Today's Appointments"
           value={kpis.todayAppointments}
           icon={Calendar}
@@ -112,6 +111,7 @@ export default function ClinicAdminDashboardClient({
           deltaLabel="vs yesterday"
         />
         <DashboardKpiStatCard
+          density="compact"
           label="Today's Revenue"
           value={formatMoney(kpis.todayRevenue, currency)}
           icon={DollarSign}
@@ -123,6 +123,7 @@ export default function ClinicAdminDashboardClient({
           deltaLabel="vs yesterday"
         />
         <DashboardKpiStatCard
+          density="compact"
           label="Outstanding Receivables"
           value={formatMoney(kpis.outstandingReceivables, currency)}
           icon={Wallet}
@@ -130,6 +131,7 @@ export default function ClinicAdminDashboardClient({
           iconTextClass={KPI_ACCENTS.receivables.text}
         />
         <DashboardKpiStatCard
+          density="compact"
           label="In Clinic Now"
           value={kpis.inClinicNow}
           icon={HeartPulse}
@@ -138,6 +140,7 @@ export default function ClinicAdminDashboardClient({
           deltaLabel="Waiting + consulting"
         />
         <DashboardKpiStatCard
+          density="compact"
           label="Inventory Alerts"
           value={kpis.inventoryAlerts}
           icon={AlertTriangle}
@@ -145,6 +148,7 @@ export default function ClinicAdminDashboardClient({
           iconTextClass={KPI_ACCENTS.inventory.text}
         />
         <DashboardKpiStatCard
+          density="compact"
           label="New Clients (MTD)"
           value={kpis.newClientsMtd}
           icon={Users}
@@ -155,56 +159,45 @@ export default function ClinicAdminDashboardClient({
         />
       </div>
 
-      <DashboardSectionCard
-        title="Quick Actions"
-        subtitle="Shortcuts to daily clinic workflows"
-        className="w-full"
-      >
-        <DashboardQabShell
-          layout="dashboard"
-          showHeading={false}
-          role={role}
-          capabilities={capabilities}
-          features={features}
-          featuresJson={featuresJson}
-          doctors={doctors}
-          activeBranchId={activeBranchId}
-          organizationId={organizationId}
-          clinicName={clinicName}
-          liveActiveConsults={liveActiveConsults}
-          liveCheckoutQueue={liveCheckoutQueue}
-          showConsultTimer={showConsultTimer}
-          branches={branches}
-          categories={categories}
-        />
-      </DashboardSectionCard>
-
+      {/* Row B — Schedule + Action Center + AI Insights */}
       <div className={DASHBOARD_GRID}>
         <DashboardSectionCard
+          density="compact"
           title="Today's Schedule"
           subtitle="Appointments and walk-ins for today"
-          href="/dashboard/schedule"
-          className="xl:col-span-8"
-          action={
-            <Link
-              href="/dashboard/appointments"
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold bg-primary/15 text-primary border border-primary/25 hover:bg-primary/20"
-            >
-              <Plus className="w-3 h-3" />
-              New
-            </Link>
+          className="xl:col-span-6"
+          footer={
+            <div className="flex items-center justify-between gap-2">
+              <Link
+                href="/dashboard/schedule"
+                className="text-[10px] font-bold text-primary hover:text-primary/80"
+              >
+                View calendar
+              </Link>
+              <Link
+                href="/dashboard/appointments"
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-primary/15 text-primary border border-primary/25 hover:bg-primary/20"
+              >
+                <Plus className="w-3 h-3" />
+                New appointment
+              </Link>
+            </div>
           }
         >
-          <div className="space-y-0.5 max-h-[320px] overflow-y-auto pr-1">
-            {todaySchedule.length === 0 ? (
-              <p className="text-xs text-on-surface-variant italic py-8 text-center">No items scheduled today.</p>
+          <div className={cn('space-y-0.5 overflow-y-auto pr-1', DASHBOARD_DENSITY.listMaxH)}>
+            {scheduleItems.length === 0 ? (
+              <p className="text-[10px] text-on-surface-variant italic py-6 text-center">No items scheduled today.</p>
             ) : (
-              todaySchedule.map((item) => (
+              scheduleItems.map((item) => (
                 <DashboardListRow
                   key={`${item.type}-${item.id}`}
+                  density="compact"
                   href={item.href}
                   title={item.petName}
-                  subtitle={`${item.customerName} · ${item.reason}`}
+                  subtitle={[
+                    item.species || 'Pet',
+                    item.doctorName || item.customerName,
+                  ].join(' · ')}
                   meta={item.time}
                   species={item.species}
                   status={item.status}
@@ -214,145 +207,159 @@ export default function ClinicAdminDashboardClient({
           </div>
         </DashboardSectionCard>
 
-        <DashboardSectionCard title="Action Center" subtitle="Items needing attention" className="xl:col-span-4">
-          <div className="space-y-2">
-            {actionCenter.map((item) => (
-              <Link
-                key={item.id}
-                href={item.href}
-                className={cn(
-                  'flex items-center justify-between px-3 py-2.5 rounded-xl border transition-colors',
-                  ACTION_VARIANTS[item.variant]
-                )}
-              >
-                <span className="text-xs font-semibold text-on-surface">{item.label}</span>
-                <span className="text-sm font-bold text-on-surface">{item.count}</span>
-              </Link>
-            ))}
-          </div>
+        <DashboardSectionCard
+          density="compact"
+          title="Action Center"
+          subtitle="Items needing attention"
+          className="xl:col-span-3"
+        >
+          <DashboardActionCenterList items={actionCenter} />
         </DashboardSectionCard>
 
         <DashboardSectionCard
+          density="compact"
           title="AI Insights"
           subtitle="Operational highlights"
-          href="/dashboard/reports/ai"
-          className="xl:col-span-4"
+          className="xl:col-span-3"
         >
-          <div className="rounded-xl bg-gradient-to-br from-violet-500/10 to-purple-900/10 border border-violet-500/20 p-4 space-y-2">
-            <div className="flex items-center gap-2 text-violet-400 mb-2">
-              <Sparkles className="w-4 h-4" />
-              <span className="text-[10px] font-bold uppercase tracking-wider">Smart summary</span>
-            </div>
-            <ul className="space-y-2">
-              {aiInsights.length === 0 ? (
-                <li className="text-xs text-on-surface-variant">No insights for today.</li>
-              ) : (
-                aiInsights.map((line, i) => (
-                  <li key={i} className="text-xs text-on-surface-variant leading-relaxed flex gap-2">
-                    <span className="text-primary shrink-0">•</span>
-                    {line}
-                  </li>
-                ))
-              )}
-            </ul>
-          </div>
+          <DashboardAiInsightList insights={aiInsights} />
         </DashboardSectionCard>
+      </div>
 
+      {/* Row C — Analytics quad */}
+      <div className={DASHBOARD_GRID}>
         <DashboardSectionCard
+          density="compact"
           title="Revenue Trend"
           subtitle="Last 7 days"
           href="/dashboard/revenue"
-          className="xl:col-span-8"
+          className="xl:col-span-5"
         >
-          <RevenueTrendChart data={revenueTrend7d} currency={currency} />
+          <RevenueTrendChart data={revenueTrend7d} currency={currency} compact />
         </DashboardSectionCard>
 
-        <DashboardSectionCard title="Appointment Utilization" subtitle="Today's booking rate" className="xl:col-span-4">
-          <UtilizationDonut booked={utilization.booked} total={utilization.total} />
-          <p className="text-[10px] text-center text-on-surface-variant mt-2">
-            {utilization.booked} of {utilization.total} slots booked
+        <DashboardSectionCard
+          density="compact"
+          title="Utilization"
+          subtitle="Today's booking rate"
+          className="xl:col-span-2"
+        >
+          <UtilizationDonut booked={utilization.booked} total={utilization.total} compact />
+          <p className="text-[9px] text-center text-on-surface-variant mt-1">
+            {utilization.booked}/{utilization.total} slots
           </p>
         </DashboardSectionCard>
 
-        <DashboardSectionCard title="Visit Reasons" subtitle="Last 7 days" className="xl:col-span-4">
-          {visitReasons.length > 0 ? (
-            <VisitReasonsChart data={visitReasons} />
-          ) : (
-            <p className="text-xs text-on-surface-variant italic py-12 text-center">No visit data yet.</p>
-          )}
+        <DashboardSectionCard
+          density="compact"
+          title="Visit Reasons"
+          subtitle="Last 7 days"
+          className="xl:col-span-3"
+        >
+          <DashboardRankedBarList data={visitReasons} />
         </DashboardSectionCard>
 
-        <DashboardSectionCard title="Species Breakdown" subtitle="Active patients" className="xl:col-span-4">
+        <DashboardSectionCard
+          density="compact"
+          title="Species"
+          subtitle="Active patients"
+          className="xl:col-span-2"
+        >
           {speciesBreakdown.length > 0 ? (
-            <>
-              <SpeciesDonut data={speciesBreakdown} />
-              <div className="flex flex-wrap gap-2 justify-center mt-2">
-                {speciesBreakdown.map((s, i) => (
-                  <span key={s.name} className="text-[9px] text-on-surface-variant">
-                    <span className="inline-block w-2 h-2 rounded-full mr-1 align-middle" style={{ background: ['#A855F7', '#06B6D4', '#10B981', '#F59E0B', '#EC4899'][i % 5] }} />
-                    {s.name} ({s.value})
-                  </span>
-                ))}
-              </div>
-            </>
+            <SpeciesDonut data={speciesBreakdown} compact inlineLegend />
           ) : (
-            <p className="text-xs text-on-surface-variant italic py-12 text-center">No patient data.</p>
+            <p className="text-[10px] text-on-surface-variant italic py-8 text-center">No patient data.</p>
           )}
         </DashboardSectionCard>
+      </div>
 
-        <DashboardSectionCard title="Top Low Stock" href="/dashboard/inventory" className="xl:col-span-6">
+      {/* Row D — Five equal bottom widgets */}
+      <div className={cn('grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5', DASHBOARD_DENSITY.gridGap)}>
+        <DashboardSectionCard density="compact" title="Low Stock" href="/dashboard/inventory">
           <DashboardMiniTable
+            density="compact"
             rows={lowStockItems}
             getRowKey={(r) => r.id}
             emptyMessage="No low stock alerts."
             columns={[
-              { key: 'name', header: 'Item', render: (r) => <span className="font-semibold text-on-surface">{r.name}</span> },
-              { key: 'cat', header: 'Category', render: (r) => r.category },
-              { key: 'stock', header: 'Stock', render: (r) => r.stock },
-              { key: 'status', header: 'Status', className: 'text-right', render: (r) => stockStatusBadge(r.stock, r.reorderLevel) },
+              { key: 'name', header: 'Item', render: (r) => <span className="font-semibold text-on-surface truncate block max-w-[80px]">{r.name}</span> },
+              { key: 'stock', header: 'Qty', render: (r) => r.stock },
+              { key: 'status', header: '', className: 'text-right', render: (r) => stockStatusBadge(r.stock, r.reorderLevel) },
             ]}
           />
         </DashboardSectionCard>
 
-        <DashboardSectionCard title="Expiring Soon" subtitle="Within 60 days" className="xl:col-span-6">
+        <DashboardSectionCard density="compact" title="Expiring Soon" subtitle="60 days">
           <DashboardMiniTable
+            density="compact"
             rows={expiringSoon}
             getRowKey={(r) => r.id}
-            emptyMessage="No batches expiring soon."
+            emptyMessage="None expiring soon."
             columns={[
-              { key: 'product', header: 'Product', render: (r) => <span className="font-semibold">{r.productName}</span> },
-              { key: 'exp', header: 'Expires', render: (r) => r.expiryDate },
+              { key: 'product', header: 'Product', render: (r) => <span className="font-semibold truncate block max-w-[80px]">{r.productName}</span> },
+              { key: 'exp', header: 'Exp', render: (r) => r.expiryDate },
               { key: 'qty', header: 'Qty', className: 'text-right', render: (r) => r.quantity },
             ]}
           />
         </DashboardSectionCard>
 
-        <DashboardSectionCard title="Follow-ups Due" href="/dashboard/appointments" className="xl:col-span-4">
+        <DashboardSectionCard density="compact" title="Follow-ups" href="/dashboard/appointments">
           <ListColumn items={followUpsDue} empty="No follow-ups due." />
         </DashboardSectionCard>
 
-        <DashboardSectionCard title="Vaccinations Due" href="/dashboard/appointments" className="xl:col-span-4">
-          <ListColumn items={vaccinationsDue} empty="No vaccinations due soon." />
+        <DashboardSectionCard density="compact" title="Vaccinations" href="/dashboard/appointments">
+          <ListColumn items={vaccinationsDue} empty="None due soon." />
         </DashboardSectionCard>
 
-        <DashboardSectionCard title="Missed Appointments" href="/dashboard/appointments" className="xl:col-span-4">
+        <DashboardSectionCard density="compact" title="Missed" href="/dashboard/appointments">
           <ListColumn items={missedAppointments} empty="No recent no-shows." status="no_show" />
         </DashboardSectionCard>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-5">
-        <LiveOperationsPanel
-          activeConsults={liveActiveConsults}
-          readyForCheckout={liveCheckoutQueue}
-          showConsultTimer={showConsultTimer}
-        />
-        <MedicalRecordActivityPanel activities={medicalActivities} />
-      </div>
+      {/* Row E — Collapsed accordions */}
+      <div className="space-y-2">
+        <DashboardCollapsibleSection
+          title="Quick Actions"
+          subtitle="Shortcuts to daily clinic workflows"
+        >
+          <DashboardQabShell
+            layout="dashboard"
+            showHeading={false}
+            role={role}
+            capabilities={capabilities}
+            features={features}
+            featuresJson={featuresJson}
+            doctors={doctors}
+            activeBranchId={activeBranchId}
+            organizationId={organizationId}
+            clinicName={clinicName}
+            liveActiveConsults={liveActiveConsults}
+            liveCheckoutQueue={liveCheckoutQueue}
+            showConsultTimer={showConsultTimer}
+            branches={branches}
+            categories={categories}
+          />
+        </DashboardCollapsibleSection>
 
-      <StaffAttendanceOverviewPanel
-        rows={staffAttendanceRows}
-        attendanceDate={new Date().toISOString().slice(0, 10)}
-      />
+        <DashboardCollapsibleSection title="Live Operations" subtitle="Active consults and checkout queue">
+          <LiveOperationsPanel
+            activeConsults={liveActiveConsults}
+            readyForCheckout={liveCheckoutQueue}
+            showConsultTimer={showConsultTimer}
+          />
+        </DashboardCollapsibleSection>
+
+        <DashboardCollapsibleSection title="Medical Record Activity" subtitle="Recent clinical updates">
+          <MedicalRecordActivityPanel activities={medicalActivities} />
+        </DashboardCollapsibleSection>
+
+        <DashboardCollapsibleSection title="Staff Attendance" subtitle="Today's roster status">
+          <StaffAttendanceOverviewPanel
+            rows={staffAttendanceRows}
+            attendanceDate={new Date().toISOString().slice(0, 10)}
+          />
+        </DashboardCollapsibleSection>
+      </div>
     </div>
   );
 }
@@ -367,13 +374,14 @@ function ListColumn({
   status?: string;
 }) {
   if (items.length === 0) {
-    return <p className="text-xs text-on-surface-variant italic py-6 text-center">{empty}</p>;
+    return <p className="text-[10px] text-on-surface-variant italic py-4 text-center">{empty}</p>;
   }
   return (
-    <div className="space-y-0.5 max-h-48 overflow-y-auto">
-      {items.map((item) => (
+    <div className={cn('space-y-0.5 overflow-y-auto', DASHBOARD_DENSITY.listMaxH)}>
+      {items.slice(0, 5).map((item) => (
         <DashboardListRow
           key={item.id}
+          density="compact"
           title={item.petName}
           subtitle={`${item.customerName} · ${item.reason}`}
           meta={item.date}

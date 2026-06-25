@@ -28,7 +28,16 @@ export const KPI_ACCENTS = {
   clients: { bg: 'from-cyan-500/20 to-blue-600/10', text: 'text-cyan-400', stroke: CHART_COLORS.secondary },
 } as const;
 
-export const DASHBOARD_GRID = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-4 md:gap-5';
+export const DASHBOARD_GRID = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-3 md:gap-3.5';
+
+export const DASHBOARD_DENSITY = {
+  pageGap: 'space-y-3 md:space-y-4',
+  gridGap: 'gap-3 md:gap-3.5',
+  kpiMinH: 'min-h-[92px]',
+  sectionPad: 'p-3.5 md:p-4',
+  listMaxH: 'max-h-[200px]',
+  chartH: 'h-[148px]',
+} as const;
 
 export const QAB_GROUP_ACCENTS = {
   clinical: {
