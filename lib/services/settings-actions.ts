@@ -98,24 +98,33 @@ export async function uploadClinicLogoAction(formData: FormData) {
     const admin = await createAdminClient();
     const storagePath = await uploadClinicLogoFile(admin, ctx.organizationId!, file);
 
-    const supabase = await createClient();
-    const { error } = await supabase
+    const { data: existing } = await admin
       .from('app_settings')
-      .upsert(
-        {
-          organization_id: ctx.organizationId,
-          clinic_logo_url: storagePath,
-        },
-        { onConflict: 'organization_id' }
-      );
+      .select('timezone, currency')
+      .eq('organization_id', ctx.organizationId)
+      .maybeSingle();
+
+    const { error } = await admin.from('app_settings').upsert(
+      {
+        organization_id: ctx.organizationId,
+        clinic_logo_url: storagePath,
+        timezone: existing?.timezone ?? 'UTC',
+        currency: existing?.currency ?? ctx.currency ?? 'USD',
+      },
+      { onConflict: 'organization_id' }
+    );
 
     if (error) throw new Error(error.message || 'Failed to save logo.');
 
     return { success: true as const, storagePath };
   } catch (err: unknown) {
-    return {
-      success: false as const,
-      error: err instanceof Error ? err.message : 'Failed to upload logo.',
-    };
+    const message = err instanceof Error ? err.message : 'Failed to upload logo.';
+    if (message.toLowerCase().includes('bucket') || message.toLowerCase().includes('not found')) {
+      return {
+        success: false as const,
+        error: 'Logo storage is not configured. Contact support or ensure clinic-logos bucket exists.',
+      };
+    }
+    return { success: false as const, error: message };
   }
 }

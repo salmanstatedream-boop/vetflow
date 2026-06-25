@@ -1,7 +1,8 @@
 'use client';
 
-import { Bell, Search } from 'lucide-react';
+import { Bell, Search, Stethoscope } from 'lucide-react';
 import { resolvePageTitle } from '@/lib/navigation/dashboard-nav';
+import { resolveClinicLogoSrc } from '@/lib/branding/clinic-logo';
 import { cn } from '@/lib/utils';
 
 function UserAvatar({
@@ -34,10 +35,45 @@ function UserAvatar({
   );
 }
 
+function ClinicBrandCluster({
+  clinicLogoUrl,
+  organizationName,
+}: {
+  clinicLogoUrl?: string | null;
+  organizationName?: string | null;
+}) {
+  const logoSrc = resolveClinicLogoSrc(clinicLogoUrl);
+
+  return (
+    <div className="hidden lg:flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-outline-variant/40 bg-surface-container/30 shrink-0">
+      {logoSrc ? (
+        <img
+          src={logoSrc}
+          alt=""
+          className="w-8 h-8 rounded-lg object-contain bg-white/10 border border-outline-variant/30"
+        />
+      ) : (
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500/30 to-purple-800/40 flex items-center justify-center border border-violet-500/20">
+          <Stethoscope className="w-4 h-4 text-primary" />
+        </div>
+      )}
+      <div className="min-w-0">
+        <span className="text-[11px] font-bold text-on-surface block font-[family-name:var(--font-display)] leading-tight">
+          VetFlow
+        </span>
+        <span className="text-[9px] text-on-surface-variant block truncate max-w-[120px]">
+          {organizationName || 'Clinic'}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 interface DashboardTopBarProps {
   pathname: string;
   firstName: string;
   organizationName?: string | null;
+  clinicLogoUrl?: string | null;
   displayDate: string;
   notificationCount?: number;
   hasAvatar: boolean;
@@ -50,6 +86,7 @@ export default function DashboardTopBar({
   pathname,
   firstName,
   organizationName,
+  clinicLogoUrl,
   displayDate,
   notificationCount = 0,
   hasAvatar,
@@ -60,8 +97,8 @@ export default function DashboardTopBar({
   const pageTitle = resolvePageTitle(pathname);
 
   return (
-    <div className="border-b border-outline-variant/40 bg-surface-container/50 backdrop-blur-xl px-4 md:px-6 py-4 md:py-5">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+    <div className="border-b border-outline-variant/40 bg-surface-container/50 backdrop-blur-xl px-4 md:px-6 py-3 md:py-4">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-lg md:text-xl font-bold text-on-surface font-[family-name:var(--font-display)]">
             {pageTitle}
@@ -76,7 +113,7 @@ export default function DashboardTopBar({
           <button
             type="button"
             onClick={onSearchOpen}
-            className="flex-1 md:flex-none flex items-center gap-2 px-3 py-2 min-w-[140px] md:min-w-[220px] rounded-xl border border-outline-variant/50 bg-surface-container/40 text-xs text-on-surface-variant hover:border-primary/30 hover:text-on-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            className="flex-1 md:flex-none flex items-center gap-2 px-3 py-2 min-w-[140px] md:min-w-[200px] rounded-xl border border-outline-variant/50 bg-surface-container/40 text-xs text-on-surface-variant hover:border-primary/30 hover:text-on-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             aria-label="Search clinic records"
           >
             <Search className="w-3.5 h-3.5 shrink-0" />
@@ -85,6 +122,8 @@ export default function DashboardTopBar({
               ⌘K
             </span>
           </button>
+
+          <ClinicBrandCluster clinicLogoUrl={clinicLogoUrl} organizationName={organizationName} />
 
           <button
             type="button"

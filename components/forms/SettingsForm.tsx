@@ -12,7 +12,7 @@ import {
   CLINIC_TIMEZONES,
 } from '@/lib/utils/timezones';
 import { Loader2, Save, Upload } from 'lucide-react';
-import { clinicLogoApiUrl, isStorageLogoPath } from '@/lib/branding/clinic-logo';
+import { clinicLogoApiUrl, isStorageLogoPath, isValidLogoPasteUrl, resolveClinicLogoSrc } from '@/lib/branding/clinic-logo';
 
 const PRESET_CURRENCIES = ['USD', 'PKR', 'EUR', 'GBP', 'AED', 'SAR', 'INR'] as const;
 
@@ -31,13 +31,11 @@ export default function SettingsForm({ defaultValues, brandedPdfsAllowed = false
   const [isLoading, setIsLoading] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
   const [markupApplying, setMarkupApplying] = useState(false);
-  const [logoPreview, setLogoPreview] = useState<string | null>(() => {
-    const url = defaultValues.clinicLogoUrl;
-    if (!url) return null;
-    if (url.startsWith('http')) return url;
-    if (isStorageLogoPath(url)) return clinicLogoApiUrl();
-    return null;
-  });
+  const [logoUrlHint, setLogoUrlHint] = useState<string | null>(null);
+  const [infoMessage, setInfoMessage] = useState<string | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(() =>
+    resolveClinicLogoSrc(defaultValues.clinicLogoUrl)
+  );
   const [currencyMode, setCurrencyMode] = useState<'preset' | 'other'>(() =>
     isPresetCurrency(defaultValues.currency) ? 'preset' : 'other'
   );
@@ -58,6 +56,8 @@ export default function SettingsForm({ defaultValues, brandedPdfsAllowed = false
   });
 
   const currencyValue = watch('currency');
+  const markupPercentValue = watch('productMarkupPercent');
+  const clinicLogoUrlValue = watch('clinicLogoUrl');
 
   const onSubmit = async (data: SettingsInput) => {
     setIsLoading(true);
@@ -87,7 +87,7 @@ export default function SettingsForm({ defaultValues, brandedPdfsAllowed = false
       )}
       {success && (
         <div className="p-4 bg-emerald-500/5 border border-emerald-500/20 text-emerald-700 text-xs rounded-2xl">
-          Settings saved successfully.
+          {infoMessage || 'Settings saved successfully.'}
         </div>
       )}
 
@@ -188,13 +188,28 @@ export default function SettingsForm({ defaultValues, brandedPdfsAllowed = false
                 if (!confirm('Recalculate selling prices for all catalog products with a cost price?')) return;
                 setMarkupApplying(true);
                 setError(null);
-                const res = await applyProductMarkupAction({ scope: 'all' });
-                setMarkupApplying(false);
-                if (res.success) {
-                  setSuccess(true);
-                  router.refresh();
-                } else {
-                  setError(res.error || 'Failed to apply markup');
+                setInfoMessage(null);
+                try {
+                  const pct = Number(markupPercentValue);
+                  const res = await applyProductMarkupAction({
+                    scope: 'all',
+                    markupPercent: Number.isFinite(pct) ? pct : undefined,
+                  });
+                  if (res.success) {
+                    setSuccess(true);
+                    if (res.updated === 0) {
+                      setInfoMessage(
+                        'No products updated. Set a purchase/cost price on inventory items first, then try again.'
+                      );
+                    } else {
+                      setInfoMessage(`Updated selling prices on ${res.updated} product(s).`);
+                    }
+                    router.refresh();
+                  } else {
+                    setError(res.error || 'Failed to apply markup');
+                  }
+                } finally {
+                  setMarkupApplying(false);
                 }
               }}
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border border-outline-variant hover:bg-surface-container-high disabled:opacity-60"
@@ -289,19 +304,27 @@ export default function SettingsForm({ defaultValues, brandedPdfsAllowed = false
                     if (!file) return;
                     setLogoUploading(true);
                     setError(null);
-                    const fd = new FormData();
-                    fd.append('file', file);
-                    const res = await uploadClinicLogoAction(fd);
-                    setLogoUploading(false);
-                    if (res.success) {
-                      setLogoPreview(clinicLogoApiUrl());
-                      setValue('clinicLogoUrl', res.storagePath);
-                      setSuccess(true);
-                      router.refresh();
-                    } else {
-                      setError(res.error || 'Logo upload failed');
+                    setInfoMessage(null);
+                    try {
+                      const fd = new FormData();
+                      fd.append('file', file);
+                      const res = await uploadClinicLogoAction(fd);
+                      if (res.success) {
+                        const bust = Date.now();
+                        setLogoPreview(clinicLogoApiUrl(bust));
+                        setValue('clinicLogoUrl', res.storagePath);
+                        setSuccess(true);
+                        setInfoMessage('Logo uploaded. It will appear in the dashboard header.');
+                        router.refresh();
+                      } else {
+                        setError(res.error || 'Logo upload failed');
+                      }
+                    } catch (err: unknown) {
+                      setError(err instanceof Error ? err.message : 'Logo upload failed');
+                    } finally {
+                      setLogoUploading(false);
+                      e.target.value = '';
                     }
-                    e.target.value = '';
                   }}
                 />
               </label>
@@ -311,9 +334,30 @@ export default function SettingsForm({ defaultValues, brandedPdfsAllowed = false
             </label>
             <input
               {...register('clinicLogoUrl')}
-              placeholder="https://... or leave blank after upload"
+              placeholder="https://example.com/logo.png or leave blank after upload"
+              onBlur={(e) => {
+                const val = e.target.value.trim();
+                if (!val) {
+                  setLogoUrlHint(null);
+                  setLogoPreview(null);
+                  return;
+                }
+                if (!isValidLogoPasteUrl(val)) {
+                  setLogoUrlHint('Use a direct image URL (https://…). Share links from Google Drive will not work.');
+                  setLogoPreview(null);
+                  return;
+                }
+                setLogoUrlHint(null);
+                setLogoPreview(val);
+              }}
               className="w-full px-4 py-2.5 bg-surface-container/30 border border-outline-variant/80 rounded-xl text-sm text-on-surface outline-none focus:border-primary"
             />
+            {logoUrlHint && (
+              <span className="text-xs text-amber-500 mt-1 block">{logoUrlHint}</span>
+            )}
+            {clinicLogoUrlValue && isStorageLogoPath(clinicLogoUrlValue) && (
+              <p className="text-[10px] text-on-surface-variant mt-1">Stored in clinic storage. Upload replaces this file.</p>
+            )}
             {errors.clinicLogoUrl && (
               <span className="text-xs text-destructive mt-1 block">{errors.clinicLogoUrl.message}</span>
             )}

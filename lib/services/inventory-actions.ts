@@ -26,6 +26,7 @@ const ApplyProductMarkupSchema = z.object({
   scope: z.enum(['selected', 'all']),
   productIds: z.array(z.string().uuid()).optional(),
   branchId: z.string().uuid().optional(),
+  markupPercent: z.number().min(0).max(500).optional(),
 });
 
 function canManageProduct(
@@ -255,7 +256,25 @@ export async function applyProductMarkupAction(payload: unknown) {
 
     const parsed = ApplyProductMarkupSchema.parse(payload);
     const adminClient = await createAdminClient();
-    const markupPercent = await getProductMarkupPercent(adminClient, ctx.organizationId!);
+    const markupPercent =
+      parsed.markupPercent ?? (await getProductMarkupPercent(adminClient, ctx.organizationId!));
+
+    if (parsed.markupPercent != null) {
+      const { data: existing } = await adminClient
+        .from('app_settings')
+        .select('timezone, currency')
+        .eq('organization_id', ctx.organizationId)
+        .maybeSingle();
+      await adminClient.from('app_settings').upsert(
+        {
+          organization_id: ctx.organizationId,
+          product_markup_percent: markupPercent,
+          timezone: existing?.timezone ?? 'UTC',
+          currency: existing?.currency ?? 'USD',
+        },
+        { onConflict: 'organization_id' }
+      );
+    }
 
     let query = adminClient
       .from('products')

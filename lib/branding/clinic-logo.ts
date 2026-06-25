@@ -14,8 +14,26 @@ export function isStorageLogoPath(value: string | null | undefined): boolean {
   return !isHttpLogoUrl(value);
 }
 
-export function clinicLogoApiUrl(): string {
-  return '/api/branding/logo';
+export function clinicLogoApiUrl(cacheBust?: number): string {
+  const base = '/api/branding/logo';
+  return cacheBust ? `${base}?v=${cacheBust}` : base;
+}
+
+/** Client-safe display URL for a stored logo path or external URL. */
+export function resolveClinicLogoSrc(
+  clinicLogoUrl: string | null | undefined,
+  cacheBust?: number
+): string | null {
+  if (!clinicLogoUrl) return null;
+  if (isHttpLogoUrl(clinicLogoUrl)) return clinicLogoUrl;
+  if (isStorageLogoPath(clinicLogoUrl)) return clinicLogoApiUrl(cacheBust);
+  return null;
+}
+
+export function isValidLogoPasteUrl(value: string): boolean {
+  const trimmed = value.trim();
+  if (!trimmed) return true;
+  return isHttpLogoUrl(trimmed);
 }
 
 export async function uploadClinicLogoFile(

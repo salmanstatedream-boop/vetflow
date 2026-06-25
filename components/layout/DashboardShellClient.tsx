@@ -14,6 +14,7 @@ import DashboardTopBar from '@/components/layout/DashboardTopBar';
 import ThemeToggle from '@/components/layout/ThemeToggle';
 import { CurrencyProvider } from '@/lib/context/CurrencyContext';
 import { DashboardShellProvider, useDashboardShell } from '@/lib/context/DashboardShellContext';
+import { resolveClinicLogoSrc } from '@/lib/branding/clinic-logo';
 import { Stethoscope, MapPin, Search, Menu, X, ChevronDown } from 'lucide-react';
 
 function UserAvatar({
@@ -56,12 +57,27 @@ function formatRoleLabel(role: string | null | undefined): string {
   }
 }
 
-function SidebarBrand({ organizationName }: { organizationName?: string | null }) {
+function SidebarBrand({
+  organizationName,
+  clinicLogoUrl,
+}: {
+  organizationName?: string | null;
+  clinicLogoUrl?: string | null;
+}) {
+  const logoSrc = resolveClinicLogoSrc(clinicLogoUrl);
   return (
     <div className="h-16 flex items-center px-5 gap-2.5 border-b border-outline-variant/50 shrink-0">
-      <div className="w-9 h-9 bg-gradient-to-br from-violet-500/30 to-purple-800/40 flex items-center justify-center rounded-xl border border-violet-500/20 neon-accent-line">
-        <Stethoscope className="w-4 h-4 text-primary" />
-      </div>
+      {logoSrc ? (
+        <img
+          src={logoSrc}
+          alt=""
+          className="w-9 h-9 rounded-xl object-contain bg-white/10 border border-outline-variant/30"
+        />
+      ) : (
+        <div className="w-9 h-9 bg-gradient-to-br from-violet-500/30 to-purple-800/40 flex items-center justify-center rounded-xl border border-violet-500/20 neon-accent-line">
+          <Stethoscope className="w-4 h-4 text-primary" />
+        </div>
+      )}
       <div className="min-w-0">
         <span className="font-bold text-sm text-on-surface block font-[family-name:var(--font-display)] truncate">
           VetFlow
@@ -267,7 +283,7 @@ export default function DashboardShellClient({
 
       <div className="flex flex-1 relative">
         <aside className="hidden lg:flex w-[17rem] bg-surface-container/80 border-r border-outline-variant/50 flex-col sticky top-0 h-screen z-20 backdrop-blur-xl">
-          <SidebarBrand organizationName={session.organizationName} />
+          <SidebarBrand organizationName={session.organizationName} clinicLogoUrl={session.clinicLogoUrl} />
           <nav className="flex-1 py-4 px-3 overflow-y-auto" aria-label="Main navigation">
             <DashboardSidebarNav session={session} pathname={pathname} navLinkClass={navLinkClass} />
           </nav>
@@ -290,7 +306,7 @@ export default function DashboardShellClient({
             <div className="fixed inset-0 bg-black/50" onClick={() => setIsMobileMenuOpen(false)} />
             <aside className="relative w-[17rem] bg-surface-container h-full z-10 border-r border-outline-variant flex flex-col">
               <div className="flex items-center justify-between pr-4">
-                <SidebarBrand organizationName={session.organizationName} />
+                <SidebarBrand organizationName={session.organizationName} clinicLogoUrl={session.clinicLogoUrl} />
                 <button type="button" onClick={() => setIsMobileMenuOpen(false)} className="absolute right-4 top-5">
                   <X className="w-5 h-5 text-on-surface-variant" />
                 </button>
@@ -339,6 +355,7 @@ export default function DashboardShellClient({
               pathname={pathname}
               firstName={session.firstName || 'User'}
               organizationName={session.organizationName}
+              clinicLogoUrl={session.clinicLogoUrl}
               displayDate={displayDate}
               hasAvatar={session.hasAvatar}
               avatarInitial={avatarInitial}

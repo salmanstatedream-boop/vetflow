@@ -10,6 +10,7 @@ import { completeConsultationAction, saveConsultationDraftAction } from '@/lib/s
 import { pauseConsultationAction, resumeConsultationAction } from '@/lib/services/visit-actions';
 import ConsultationLabsDocsPanel from '@/components/forms/ConsultationLabsDocsPanel';
 import ConsultationStepProgressBar from '@/components/consultation/ConsultationStepProgressBar';
+import ConsultationStepActions from '@/components/consultation/ConsultationStepActions';
 import CatalogItemQuickAddModal from '@/components/inventory/CatalogItemQuickAddModal';
 import Select from '@/components/ui/premium/Select';
 import CreatableSelect from '@/components/ui/premium/CreatableSelect';
@@ -716,7 +717,7 @@ export default function ConsultationWorkspaceClient({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 relative">
       <ConsultationStepProgressBar active={tabTransitioning || savingDraft} />
       {isEmergency && (
         <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-2xl flex items-center gap-3">
@@ -881,13 +882,13 @@ export default function ConsultationWorkspaceClient({
         </div>
       )}
 
-    <div className="grid md:grid-cols-12 gap-6 lg:gap-8 items-stretch h-full min-h-0">
+    <div className="grid md:grid-cols-12 gap-4 lg:gap-5 items-start">
       
-      {/* LEFT: patient brief + diagnostics (sticky scroll column) */}
-      <div className="md:col-span-4 flex flex-col gap-3 min-h-0 h-full max-h-full overflow-y-auto overscroll-contain pb-4 pr-0.5">
+      {/* LEFT: patient brief + diagnostics */}
+      <div className="md:col-span-4 flex flex-col gap-3">
         
         {/* PATIENT PROFILE BRIEF */}
-        <div className="glass-panel rounded-2xl border border-outline-variant/40 p-4 shadow-premium shrink-0">
+        <div className="glass-panel rounded-xl border border-outline-variant/40 p-3.5 shadow-premium shrink-0">
           <div className="flex items-center justify-between border-b border-outline-variant/35 pb-4 mb-4">
             <div>
               <span className="text-[9px] font-black text-primary uppercase tracking-wider block">Patient Brief</span>
@@ -1098,8 +1099,19 @@ export default function ConsultationWorkspaceClient({
         ref={soapWorkspaceRef}
         onSubmit={onFormSubmit}
         onKeyDown={handleFormKeyDown}
-        className="md:col-span-8 flex flex-col min-h-0 h-full overflow-y-auto overscroll-contain space-y-6 pb-32 scroll-smooth [scrollbar-gutter:stable]"
+        className="md:col-span-8 flex flex-col space-y-4 relative"
       >
+          {consultPausedAt && (
+            <button
+              type="button"
+              onClick={handleResumeConsult}
+              disabled={pauseLoading || isSubmitting}
+              className="absolute top-0 right-0 z-20 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border border-emerald-500/40 text-emerald-400 bg-surface/95 backdrop-blur-sm hover:bg-emerald-500/10 disabled:opacity-60 shadow-sm"
+            >
+              {pauseLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+              Resume
+            </button>
+          )}
           
           {error && (
             <div className="p-4 bg-destructive/5 border border-destructive/20 text-destructive text-xs rounded-xl">
@@ -1111,7 +1123,7 @@ export default function ConsultationWorkspaceClient({
           <input type="hidden" {...register('followUpOffsetDays')} />
 
           {/* VISIT TYPE SELECTOR */}
-          <div className="glass-panel rounded-2xl border border-outline-variant/40 p-4 shadow-premium">
+          <div className="glass-panel rounded-xl border border-outline-variant/40 p-4 shadow-premium">
             <span className="text-[10px] font-bold text-on-surface-variant uppercase block mb-2">Visit type</span>
             <div className="flex flex-wrap gap-2">
               {(['standard', 'lab', 'surgery'] as const).map((t) => (
@@ -1132,13 +1144,26 @@ export default function ConsultationWorkspaceClient({
           </div>
 
           {/* SOAP → Rx TAB BAR */}
-          <SoapTabBar
-            active={activeSoapTab}
-            onChange={handleSoapTabChange}
-            completed={soapCompleted}
-            maxUnlockedIndex={maxUnlockedIndex}
-            draftSaved={draftSaved}
-          />
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <SoapTabBar
+              active={activeSoapTab}
+              onChange={handleSoapTabChange}
+              completed={soapCompleted}
+              maxUnlockedIndex={maxUnlockedIndex}
+              draftSaved={draftSaved}
+            />
+            {!consultPausedAt ? (
+              <button
+                type="button"
+                onClick={() => setShowPauseModal(true)}
+                disabled={pauseLoading || isSubmitting}
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold border border-violet-500/30 text-violet-300 hover:bg-violet-500/10 disabled:opacity-60"
+              >
+                <Pause className="w-3 h-3" />
+                Pause
+              </button>
+            ) : null}
+          </div>
 
           {tabError && (
             <div
@@ -1158,7 +1183,7 @@ export default function ConsultationWorkspaceClient({
 
           {/* S — Subjective */}
           {activeSoapTab === 'S' && (
-          <div className="glass-panel rounded-2xl border border-outline-variant/40 p-6 shadow-premium space-y-5">
+          <div className="glass-panel rounded-xl border border-outline-variant/40 p-4 shadow-premium space-y-4">
             <div>
               <h3 className="text-sm font-bold text-primary uppercase tracking-wider">SOAP Subjective</h3>
               <p className="text-[10px] text-on-surface-variant/60 mt-1">Chief complaint and patient-reported history.</p>
@@ -1760,6 +1785,19 @@ export default function ConsultationWorkspaceClient({
 
           </div>
 
+          <ConsultationStepActions
+            activeTab={activeSoapTab}
+            tabTitle={getSoapTabTitle(activeSoapTab)}
+            onPrevious={goToPrevSoapTab}
+            onNext={() => void goToNextSoapTab()}
+            onFinalize={() => soapWorkspaceRef.current?.requestSubmit()}
+            isSubmitting={isSubmitting}
+            savingDraft={savingDraft}
+            tabTransitioning={tabTransitioning}
+            consultPaused={Boolean(consultPausedAt)}
+            showFinalize={activeSoapTab === 'Rx'}
+          />
+
           {/* Internal notes — visible on all tabs */}
           <div className="glass-panel rounded-xl border border-outline-variant/30 p-4">
             <label className="block text-[10px] font-semibold text-on-surface/80 uppercase tracking-wider mb-1.5">
@@ -1771,73 +1809,6 @@ export default function ConsultationWorkspaceClient({
               placeholder="Private findings not visible on client receipts"
               className="w-full px-3 py-2 bg-surface-container/20 border border-outline-variant rounded-xl text-xs text-on-surface outline-none"
             />
-          </div>
-
-          {/* STICKY FOOTER: nav + complete */}
-          <div className="fixed bottom-0 left-0 right-0 md:left-64 z-40 p-4 bg-surface/95 backdrop-blur-md border-t border-outline-variant/40">
-            <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={goToPrevSoapTab}
-                  disabled={activeSoapTab === 'S'}
-                  className="px-4 py-2 rounded-xl text-xs font-bold border border-outline-variant text-on-surface disabled:opacity-40"
-                >
-                  Previous
-                </button>
-                <span className="text-[10px] text-on-surface-variant font-semibold hidden sm:inline">
-                  {getSoapTabTitle(activeSoapTab)}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => void goToNextSoapTab()}
-                  disabled={activeSoapTab === 'Rx' || savingDraft || tabTransitioning}
-                  className="px-4 py-2 rounded-xl text-xs font-bold border border-outline-variant text-on-surface disabled:opacity-40"
-                >
-                  {savingDraft || tabTransitioning ? 'Loading…' : 'Next'}
-                </button>
-              </div>
-              <div className="flex items-center gap-2 flex-wrap justify-end">
-                {consultPausedAt ? (
-                  <button
-                    type="button"
-                    onClick={handleResumeConsult}
-                    disabled={pauseLoading || isSubmitting}
-                    className="border border-emerald-500/40 text-emerald-400 py-2.5 px-4 rounded-2xl font-bold text-sm flex items-center gap-2 hover:bg-emerald-500/10 disabled:opacity-60"
-                  >
-                    {pauseLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-                    Resume Consultation
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setShowPauseModal(true)}
-                    disabled={pauseLoading || isSubmitting}
-                    className="border border-violet-500/40 text-violet-300 py-2.5 px-4 rounded-2xl font-bold text-sm flex items-center gap-2 hover:bg-violet-500/10 disabled:opacity-60"
-                  >
-                    <Pause className="w-4 h-4" />
-                    Pause Consultation
-                  </button>
-                )}
-              <button
-                type="submit"
-                disabled={isSubmitting || Boolean(consultPausedAt)}
-                className="bg-primary hover:opacity-90 text-white py-2.5 px-6 rounded-2xl font-bold text-sm shadow-premium flex items-center gap-2 transition-all disabled:opacity-75"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Saving consultation…
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="w-4 h-4" />
-                    Finalize Consultation
-                  </>
-                )}
-              </button>
-              </div>
-            </div>
           </div>
 
         </form>

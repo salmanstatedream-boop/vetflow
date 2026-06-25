@@ -27,6 +27,7 @@ export interface ServerAuthContext extends UserSessionDetails {
   features: Feature[];
   subscriptionStatus: string | null;
   currency: string;
+  clinicLogoUrl: string | null;
   isImpersonating: boolean;
 }
 
@@ -101,7 +102,7 @@ async function resolveImpersonatedClinicSession(
 
   const { data: appSettings } = await adminClient
     .from('app_settings')
-    .select('currency')
+    .select('currency, clinic_logo_url')
     .eq('organization_id', targetOrgId)
     .maybeSingle();
 
@@ -122,6 +123,7 @@ async function resolveImpersonatedClinicSession(
     features: [...ALL_FEATURES],
     subscriptionStatus: 'active',
     currency: normalizeCurrencyCode(appSettings?.currency),
+    clinicLogoUrl: (appSettings?.clinic_logo_url as string | null) ?? null,
     isImpersonating: true,
   };
 }
@@ -144,15 +146,20 @@ async function loadOrganizationSubscription(
   };
 }
 
-async function loadOrganizationCurrency(organizationId: string): Promise<string> {
+async function loadOrganizationAppSettings(
+  organizationId: string
+): Promise<{ currency: string; clinicLogoUrl: string | null }> {
   const supabase = await createClient();
   const { data } = await supabase
     .from('app_settings')
-    .select('currency')
+    .select('currency, clinic_logo_url')
     .eq('organization_id', organizationId)
     .maybeSingle();
 
-  return normalizeCurrencyCode(data?.currency);
+  return {
+    currency: normalizeCurrencyCode(data?.currency),
+    clinicLogoUrl: (data?.clinic_logo_url as string | null) ?? null,
+  };
 }
 
 export async function resolveServerAuthContext(): Promise<ServerAuthContext | null> {
@@ -185,15 +192,17 @@ export async function resolveServerAuthContext(): Promise<ServerAuthContext | nu
   let features: Feature[] = [...ALL_FEATURES];
   let subscriptionStatus: string | null = null;
   let currency = 'USD';
+  let clinicLogoUrl: string | null = null;
 
   if (session.organizationId) {
-    const [sub, orgCurrency] = await Promise.all([
+    const [sub, appSettings] = await Promise.all([
       loadOrganizationSubscription(session.organizationId),
-      loadOrganizationCurrency(session.organizationId),
+      loadOrganizationAppSettings(session.organizationId),
     ]);
     features = sub.features;
     subscriptionStatus = sub.status;
-    currency = orgCurrency;
+    currency = appSettings.currency;
+    clinicLogoUrl = appSettings.clinicLogoUrl;
   }
 
   return {
@@ -204,6 +213,7 @@ export async function resolveServerAuthContext(): Promise<ServerAuthContext | nu
     features,
     subscriptionStatus,
     currency,
+    clinicLogoUrl,
     isImpersonating: false,
   };
 }

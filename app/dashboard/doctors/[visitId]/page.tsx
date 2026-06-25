@@ -238,9 +238,9 @@ export default async function ConsultationRoomPage({
   const customerDetails = visit.customers as any;
 
   return (
-    <div className="flex flex-col gap-6 min-h-0 max-h-[calc(100dvh-7rem)] md:max-h-[calc(100dvh-7rem)]">
+    <div className="flex flex-col gap-4">
       
-      <div className="shrink-0 space-y-4">
+      <div className="shrink-0 space-y-3">
       <Link
         href="/dashboard/doctors"
         className="inline-flex items-center gap-1.5 text-xs text-on-surface-variant/60 hover:text-primary font-semibold transition-colors"
@@ -256,8 +256,6 @@ export default async function ConsultationRoomPage({
       />
       </div>
 
-      {/* CORE WORKSPACE — fills remaining viewport; left diagnostics column scrolls internally */}
-      <div className="flex-1 min-h-0 overflow-hidden">
       <ConsultationWorkspaceClient
         visitId={visit.id}
         pet={{
@@ -298,7 +296,6 @@ export default async function ConsultationRoomPage({
         checkedInAt={checkedInAt}
         isFollowUpPatient={isFollowUpPatient}
       />
-      </div>
 
     </div>
   );
