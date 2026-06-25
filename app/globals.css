@@ -42,6 +42,8 @@
 
   --shadow-premium: 0 10px 40px -12px rgba(0, 0, 0, 0.45);
   --shadow-premium-hover: 0 20px 50px -15px rgba(160, 120, 255, 0.15);
+  --dashboard-glow-purple: rgba(168, 85, 247, 0.35);
+  --dashboard-border-subtle: rgba(255, 255, 255, 0.08);
 }
 
 :root {
@@ -111,6 +113,34 @@ body {
   border: 1px solid var(--color-outline-variant);
   border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-premium);
+}
+
+.dashboard-card {
+  background: rgba(33, 30, 39, 0.78);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--dashboard-border-subtle, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-premium);
+}
+
+.dashboard-kpi-icon {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.22), rgba(6, 182, 212, 0.12));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sidebar-section-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+  opacity: 0.65;
+  padding: 0.5rem 0.75rem 0.35rem;
+}
+
+.neon-accent-line {
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.35);
 }
 
 .glass {
@@ -673,15 +703,22 @@ html.light .mesh-gradient {
 
 html.dark .dashboard-shell {
   background:
+    radial-gradient(at 20% 10%, rgba(88, 28, 135, 0.25) 0px, transparent 45%),
+    radial-gradient(at 80% 0%, rgba(168, 85, 247, 0.12) 0px, transparent 50%),
     radial-gradient(at 40% 20%, rgba(160, 120, 255, 0.12) 0px, transparent 50%),
     radial-gradient(at 80% 0%, rgba(255, 184, 105, 0.08) 0px, transparent 50%),
     radial-gradient(at 0% 50%, rgba(137, 206, 255, 0.06) 0px, transparent 50%),
     radial-gradient(at 80% 80%, rgba(160, 120, 255, 0.05) 0px, transparent 50%),
-    var(--color-surface);
+    linear-gradient(180deg, #0f0b14 0%, var(--color-surface) 40%, #120e18 100%);
 }
 
 html.light .dashboard-shell {
   background-color: var(--color-surface);
+}
+
+html.light .dashboard-card {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.08);
 }
 
 html.light .nav-scrolled {

@@ -23,6 +23,13 @@ import {
   parseAppointmentTimeToMinutes,
 } from '@/lib/utils/time-parse';
 import { getClinicTimezoneShortLabel } from '@/lib/utils/timezones';
+import {
+  appointmentTimeRange,
+  rangesOverlap,
+  DEFAULT_APPOINTMENT_DURATION_MINUTES,
+} from '@/lib/appointments/slot-conflict';
+import { isUpcomingAppointment } from '@/lib/appointments/status';
+import { cn } from '@/lib/utils';
 
 const START_HOUR = 0;
 const END_HOUR = 24;
@@ -97,6 +104,96 @@ function appointmentLayout(
 
 function gridHeightFromSlots(): number {
   return ((END_HOUR - START_HOUR) * 60) / SLOT_MINUTES * ROW_HEIGHT;
+}
+
+interface ApptBlockLayout {
+  appt: ScheduleAppointment;
+  top: number;
+  height: number;
+  columnIndex: number;
+  columnCount: number;
+}
+
+function minutesToTimeInput(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+function buildOverlapGroups(appts: ScheduleAppointment[]): ScheduleAppointment[][] {
+  const upcoming = appts.filter((a) => isUpcomingAppointment(a.status));
+  const n = upcoming.length;
+  if (n === 0) return [];
+
+  const parent = upcoming.map((_, i) => i);
+  const find = (i: number): number => {
+    if (parent[i] !== i) parent[i] = find(parent[i]);
+    return parent[i];
+  };
+  const union = (a: number, b: number) => {
+    const ra = find(a);
+    const rb = find(b);
+    if (ra !== rb) parent[rb] = ra;
+  };
+
+  for (let i = 0; i < n; i++) {
+    const ri = appointmentTimeRange(upcoming[i].preferredTime, upcoming[i].durationMinutes);
+    if (!ri) continue;
+    for (let j = i + 1; j < n; j++) {
+      const rj = appointmentTimeRange(upcoming[j].preferredTime, upcoming[j].durationMinutes);
+      if (rj && rangesOverlap(ri, rj)) union(i, j);
+    }
+  }
+
+  const map = new Map<number, ScheduleAppointment[]>();
+  for (let i = 0; i < n; i++) {
+    const root = find(i);
+    const list = map.get(root) ?? [];
+    list.push(upcoming[i]);
+    map.set(root, list);
+  }
+
+  return Array.from(map.values()).map((group) =>
+    group.sort((a, b) => {
+      const am = parseAppointmentTimeToMinutes(a.preferredTime) ?? 0;
+      const bm = parseAppointmentTimeToMinutes(b.preferredTime) ?? 0;
+      return am - bm;
+    })
+  );
+}
+
+function buildApptBlockLayouts(appts: ScheduleAppointment[]): ApptBlockLayout[] {
+  const groups = buildOverlapGroups(appts);
+  const layouts: ApptBlockLayout[] = [];
+
+  for (const group of groups) {
+    const columnCount = group.length;
+    group.forEach((appt, columnIndex) => {
+      const layout = appointmentLayout(appt.preferredTime, appt.durationMinutes);
+      if (!layout) return;
+      layouts.push({ appt, ...layout, columnIndex, columnCount });
+    });
+  }
+
+  return layouts;
+}
+
+function isSlotBlockedForDoctor(
+  slotMinutes: number,
+  colAppts: ScheduleAppointment[]
+): boolean {
+  const newRange = appointmentTimeRange(
+    minutesToTimeInput(slotMinutes),
+    DEFAULT_APPOINTMENT_DURATION_MINUTES
+  );
+  if (!newRange) return false;
+
+  for (const appt of colAppts) {
+    if (!isUpcomingAppointment(appt.status)) continue;
+    const existing = appointmentTimeRange(appt.preferredTime, appt.durationMinutes);
+    if (existing && rangesOverlap(newRange, existing)) return true;
+  }
+  return false;
 }
 
 export default function ScheduleDayCalendarClient({
@@ -298,53 +395,70 @@ export default function ScheduleDayCalendarClient({
               const colAppts = dayAppointments.filter((a) =>
                 col.id === 'unassigned' ? !a.doctorId : a.doctorId === col.id
               );
+              const apptLayouts = buildApptBlockLayouts(colAppts);
+              const isDoctorCol = col.id !== 'unassigned';
               return (
                 <div
                   key={col.id}
                   className="relative border-r border-outline-variant/20 bg-surface/30"
                   style={{ height: gridHeight }}
                 >
-                  {slots.map((m, i) => (
-                    <button
-                      key={m}
-                      type="button"
-                      className="absolute left-0 right-0 z-[1] border-t border-outline-variant/10 hover:bg-primary/5 transition-colors"
-                      style={{ top: i * ROW_HEIGHT, height: ROW_HEIGHT }}
-                      onClick={() =>
-                        openSlot(m, col.id === 'unassigned' ? null : col.id)
-                      }
-                      aria-label={`Book slot ${minutesToLabel(m)}`}
-                    />
-                  ))}
-                  {colAppts.map((appt) => {
-                    const layout = appointmentLayout(appt.preferredTime, appt.durationMinutes);
+                  {slots.map((m, i) => {
+                    const occupied = isDoctorCol && isSlotBlockedForDoctor(m, colAppts);
+                    return (
+                      <button
+                        key={m}
+                        type="button"
+                        disabled={occupied}
+                        className={cn(
+                          'absolute left-0 right-0 z-[1] border-t border-outline-variant/10 transition-colors',
+                          occupied
+                            ? 'bg-destructive/5 cursor-not-allowed'
+                            : 'hover:bg-primary/5'
+                        )}
+                        style={{ top: i * ROW_HEIGHT, height: ROW_HEIGHT }}
+                        onClick={() => {
+                          if (occupied) return;
+                          openSlot(m, col.id === 'unassigned' ? null : col.id);
+                        }}
+                        aria-label={
+                          occupied
+                            ? `Slot ${minutesToLabel(m)} occupied`
+                            : `Book slot ${minutesToLabel(m)}`
+                        }
+                      />
+                    );
+                  })}
+                  {apptLayouts.map(({ appt, top, height, columnIndex, columnCount }) => {
                     const color =
                       STATUS_COLORS[appt.status] ??
                       'bg-surface-container-high border-outline-variant/40 text-on-surface';
-                    if (!layout) {
-                      return (
-                        <Link
-                          key={appt.id}
-                          href="/dashboard/appointments"
-                          className={`absolute left-1 right-1 top-1 z-[2] rounded-lg border px-2 py-1 text-left shadow-sm ${color}`}
-                        >
-                          <p className="text-[10px] font-bold truncate">
-                            {formatAppointmentTime(appt.preferredTime)} — {appt.patientName}
-                          </p>
-                        </Link>
-                      );
-                    }
+                    const widthPercent = 100 / columnCount;
+                    const leftPercent = columnIndex * widthPercent;
                     return (
                       <Link
                         key={appt.id}
                         href="/dashboard/appointments"
-                        className={`absolute left-1 right-1 z-[2] rounded-lg border px-2 py-1 overflow-hidden text-left shadow-sm ${color}`}
-                        style={{ top: layout.top, height: layout.height }}
+                        className={cn(
+                          'absolute z-[2] rounded-lg border px-1.5 py-1 overflow-hidden text-left shadow-sm',
+                          color
+                        )}
+                        style={{
+                          top,
+                          height,
+                          left: `calc(${leftPercent}% + 4px)`,
+                          width: `calc(${widthPercent}% - 6px)`,
+                        }}
                       >
                         <p className="text-[10px] font-bold truncate">
                           {formatAppointmentTime(appt.preferredTime)} · {appt.patientName}
                         </p>
                         <p className="text-[9px] opacity-80 truncate">{appt.reason}</p>
+                        {columnCount > 1 && (
+                          <span className="text-[8px] font-bold opacity-70">
+                            {columnCount} appts
+                          </span>
+                        )}
                         {appt.isEmergency && (
                           <span className="text-[8px] font-black text-destructive">ER</span>
                         )}
@@ -362,7 +476,10 @@ export default function ScheduleDayCalendarClient({
         doctors={doctors}
         activeBranchId={activeBranchId}
         isOpen={wizardOpen}
-        onClose={() => setWizardOpen(false)}
+        onClose={() => {
+          setWizardOpen(false);
+          router.refresh();
+        }}
         initialPreferredDate={wizardPrefill.date}
         initialPreferredTime={wizardPrefill.time}
         initialDoctorId={wizardPrefill.doctorId}

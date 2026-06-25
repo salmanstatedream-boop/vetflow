@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import type { FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { updateProductAction, createCategoryAction } from '@/lib/services/inventory-actions';
 import { UpdateProductSchema, type UpdateProductInput } from '@/lib/validations/schemas';
-import { PRODUCT_TYPE_OPTIONS } from '@/lib/inventory/product-types';
+import { buildProductTypeOptions, normalizeProductTypeSlug } from '@/lib/inventory/product-types';
 import { useCreatableOptions } from '@/lib/hooks/useCreatableOptions';
 import Modal from '@/components/ui/premium/Modal';
 import Button from '@/components/ui/premium/Button';
@@ -31,6 +31,7 @@ interface ProductEditModalProps {
   categories: { id: string; name: string }[];
   branches: { id: string; name: string }[];
   activeBranchId: string;
+  existingProductTypes?: string[];
 }
 
 export default function ProductEditModal({
@@ -38,6 +39,7 @@ export default function ProductEditModal({
   categories,
   branches,
   activeBranchId,
+  existingProductTypes = [],
 }: ProductEditModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -86,6 +88,15 @@ export default function ProductEditModal({
     categories,
     onCreateCategory
   );
+
+  const typeSeed = useMemo(
+    () => buildProductTypeOptions(existingProductTypes, product.type),
+    [existingProductTypes, product.type]
+  );
+
+  const { options: typeOptions, handleCreate: handleCreateType } = useCreatableOptions(typeSeed, undefined, {
+    refreshOnCreate: false,
+  });
 
   const openModal = () => {
     reset({
@@ -178,6 +189,7 @@ export default function ProductEditModal({
             <input type="hidden" {...register('branchId')} />
             <input type="hidden" {...register('unit')} />
             <input type="hidden" {...register('stockQuantity', { valueAsNumber: true })} />
+            <input type="hidden" {...register('type')} />
 
             <div>
               <label className="block text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider mb-1.5">
@@ -195,11 +207,19 @@ export default function ProductEditModal({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Select
+                <CreatableSelect
                   label="Type"
-                  value={typeWatch}
-                  onChange={(v) => setValue('type', v as UpdateProductInput['type'], { shouldValidate: true })}
-                  options={PRODUCT_TYPE_OPTIONS}
+                  value={typeWatch || ''}
+                  onChange={(v) =>
+                    setValue('type', normalizeProductTypeSlug(v), { shouldValidate: true })
+                  }
+                  options={typeOptions}
+                  onCreateOption={async (label) => {
+                    const slug = normalizeProductTypeSlug(label);
+                    await handleCreateType(slug);
+                    setValue('type', slug, { shouldValidate: true });
+                  }}
+                  placeholder="Select or create type…"
                 />
                 {errors.type && (
                   <span className="text-[10px] text-destructive mt-1 block">{errors.type.message}</span>

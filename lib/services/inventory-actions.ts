@@ -20,6 +20,13 @@ import {
 } from '@/lib/validations/schemas';
 import { normalizeProductTypeSlug } from '@/lib/inventory/product-types';
 import { calcSellingPrice, DEFAULT_PRODUCT_MARKUP_PERCENT } from '@/lib/inventory/pricing';
+import { recordStockIntakeExpense } from '@/lib/services/revenue-actions';
+
+const ApplyProductMarkupSchema = z.object({
+  scope: z.enum(['selected', 'all']),
+  productIds: z.array(z.string().uuid()).optional(),
+  branchId: z.string().uuid().optional(),
+});
 
 function canManageProduct(
   ctx: { role?: string | null; userId: string },
@@ -92,6 +99,7 @@ export async function createProductAction(payload: unknown) {
     }
 
     const supabase = await createClient();
+    const productType = normalizeProductTypeSlug(parsed.type);
 
     const { data: product, error } = await supabase
       .from('products')
@@ -103,10 +111,10 @@ export async function createProductAction(payload: unknown) {
         brand: parsed.brand || null,
         sku: parsed.sku || null,
         unit: parsed.unit,
-        type: parsed.type,
+        type: productType,
         purchase_price: parsed.purchasePrice,
         selling_price: parsed.sellingPrice,
-        stock_quantity: parsed.type === 'service' ? 9999 : parsed.stockQuantity,
+        stock_quantity: productType === 'service' ? 9999 : parsed.stockQuantity,
         reorder_level: parsed.reorderLevel,
         is_active: true,
         created_by: ctx.userId,
@@ -118,7 +126,7 @@ export async function createProductAction(payload: unknown) {
       throw new Error(error?.message || 'Failed to register catalog product.');
     }
 
-    if (parsed.type !== 'service' && parsed.stockQuantity > 0) {
+    if (productType !== 'service' && parsed.stockQuantity > 0) {
       await supabase.from('stock_movements').insert({
         organization_id: ctx.organizationId,
         branch_id: parsed.branchId,
@@ -237,6 +245,69 @@ async function getProductMarkupPercent(
   return Number.isFinite(value) ? value : DEFAULT_PRODUCT_MARKUP_PERCENT;
 }
 
+export async function applyProductMarkupAction(payload: unknown) {
+  try {
+    const ctx = await resolveServerAuthContext();
+    if (!ctx) throw new Error('Unauthorized: Session is invalid.');
+    assertOrganization(ctx);
+    assertCapability(ctx, 'manage_settings');
+    assertFeature(ctx, 'inventory');
+
+    const parsed = ApplyProductMarkupSchema.parse(payload);
+    const adminClient = await createAdminClient();
+    const markupPercent = await getProductMarkupPercent(adminClient, ctx.organizationId!);
+
+    let query = adminClient
+      .from('products')
+      .select('id, purchase_price, type')
+      .eq('organization_id', ctx.organizationId)
+      .neq('type', 'service')
+      .gt('purchase_price', 0);
+
+    if (parsed.scope === 'selected') {
+      if (!parsed.productIds?.length) {
+        throw new Error('Select at least one product.');
+      }
+      query = query.in('id', parsed.productIds);
+    } else if (parsed.branchId) {
+      query = query.eq('branch_id', parsed.branchId);
+    }
+
+    const { data: products, error: fetchErr } = await query;
+    if (fetchErr) throw new Error(fetchErr.message);
+
+    let updated = 0;
+    for (const product of products || []) {
+      const purchase = Number(product.purchase_price);
+      if (!Number.isFinite(purchase) || purchase <= 0) continue;
+      const selling = calcSellingPrice(purchase, markupPercent);
+      const { error } = await adminClient
+        .from('products')
+        .update({ selling_price: selling })
+        .eq('id', product.id);
+      if (!error) updated += 1;
+    }
+
+    await writeAuditLog({
+      organizationId: ctx.organizationId,
+      branchId: parsed.branchId || ctx.activeBranchId,
+      actorUserId: ctx.userId,
+      actorRole: ctx.role || 'clinic_admin',
+      action: 'PRODUCT_MARKUP_APPLIED',
+      resourceType: 'INVENTORY',
+      resourceId: ctx.organizationId!,
+      afterData: { scope: parsed.scope, updated, markupPercent },
+    });
+
+    return { success: true as const, updated };
+  } catch (err: unknown) {
+    return {
+      success: false as const,
+      error: err instanceof Error ? err.message : 'Failed to apply markup.',
+    };
+  }
+}
+
 export async function confirmStockIntakeAction(payload: unknown) {
   try {
     const ctx = await resolveServerAuthContext();
@@ -260,6 +331,7 @@ export async function confirmStockIntakeAction(payload: unknown) {
       .join(' · ');
 
     const markupPercent = await getProductMarkupPercent(adminClient, ctx.organizationId!);
+    let intakeTotalCost = 0;
 
     for (const line of parsed.lines) {
       if (line.productId) {
@@ -272,10 +344,18 @@ export async function confirmStockIntakeAction(payload: unknown) {
 
         if (!product || product.type === 'service') continue;
 
-        const newQty = product.stock_quantity + line.quantity;
+        const updates: { stock_quantity: number; purchase_price?: number; selling_price?: number } = {
+          stock_quantity: product.stock_quantity + line.quantity,
+        };
+        if (line.updatePrices && line.unitPrice > 0) {
+          updates.purchase_price = line.unitPrice;
+          updates.selling_price = calcSellingPrice(line.unitPrice, markupPercent);
+        }
+
+        const newQty = updates.stock_quantity;
         await adminClient
           .from('products')
-          .update({ stock_quantity: newQty })
+          .update(updates)
           .eq('id', line.productId);
 
         await adminClient.from('stock_movements').insert({
@@ -324,7 +404,23 @@ export async function confirmStockIntakeAction(payload: unknown) {
           created_by: ctx.userId,
         });
       }
+      intakeTotalCost += line.unitPrice * line.quantity;
     }
+
+    const expenseNotes = [
+      reasonBase,
+      `Lines: ${parsed.lines.length}`,
+    ]
+      .filter(Boolean)
+      .join(' · ');
+
+    await recordStockIntakeExpense({
+      organizationId: ctx.organizationId!,
+      branchId: parsed.branchId,
+      userId: ctx.userId,
+      totalCost: intakeTotalCost,
+      notes: expenseNotes || 'Stock invoice intake',
+    });
 
     await writeAuditLog({
       organizationId: ctx.organizationId,
@@ -415,6 +511,8 @@ export async function updateProductAction(payload: unknown) {
       categoryId = await findOrCreateCategory(ctx.organizationId!, parsed.categoryName.trim());
     }
 
+    const productType = normalizeProductTypeSlug(parsed.type);
+
     const { data: product, error } = await admin
       .from('products')
       .update({
@@ -424,7 +522,7 @@ export async function updateProductAction(payload: unknown) {
         brand: parsed.brand || null,
         sku: parsed.sku || null,
         unit: parsed.unit,
-        type: parsed.type,
+        type: productType,
         purchase_price: parsed.purchasePrice,
         selling_price: parsed.sellingPrice,
         reorder_level: parsed.reorderLevel,

@@ -149,7 +149,7 @@ export const SettingsSchema = z.object({
   appliesToProducts: z.boolean(),
   appliesToServices: z.boolean(),
   // Branding / PDF
-  clinicLogoUrl: z.string().url().optional().or(z.literal('')),
+  clinicLogoUrl: z.string().max(500).optional().or(z.literal('')),
   clinicAddress: z.string().optional().or(z.literal('')),
   clinicPhone: z.string().optional().or(z.literal('')),
   clinicEmail: z.string().email({ message: 'Invalid email address' }).optional().or(z.literal('')),
@@ -237,6 +237,7 @@ export const StockIntakeLineSchema = z
     productId: z.string().uuid().nullable().optional(),
     createNew: z.boolean().optional(),
     type: z.string().min(1).max(50).optional(),
+    updatePrices: z.boolean().optional(),
   })
   .superRefine((line, ctx) => {
     if (line.createNew && !line.productId && !line.type?.trim()) {

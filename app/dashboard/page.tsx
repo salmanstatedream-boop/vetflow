@@ -1,7 +1,7 @@
 import { resolveServerAuthContext } from '@/lib/auth/context';
 import { canAccessRoute, canShowWidget, hasCapability, getCapabilitiesForRole } from '@/lib/auth/capabilities';
 import { canAccessRouteByFeature } from '@/lib/auth/features';
-import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { isDemoMode } from '@/lib/demo/credentials';
 import {
   MOCK_DASHBOARD_KPIS,
@@ -44,9 +44,9 @@ import {
   Receipt,
   BadgeCheck,
   Banknote,
+  DollarSign,
   AlertTriangle,
   ArrowRight,
-  Plus,
   TrendingUp,
   Users,
   Heart,
@@ -64,6 +64,7 @@ import type { UserSessionDetails } from '@/lib/services/auth';
 import { getTimeGreeting } from '@/lib/utils/greeting';
 import { normalizeOneToOne } from '@/lib/supabase/embed';
 import { resolveDateFromParam } from '@/lib/utils/date-filters';
+import { formatMoney } from '@/lib/utils/currency';
 import DashboardQabShell from '@/components/dashboard/DashboardQabShell';
 import StaffDashboardGate from '@/components/dashboard/StaffDashboardGate';
 import StaffAttendanceOverviewPanel, {
@@ -72,6 +73,10 @@ import StaffAttendanceOverviewPanel, {
 import DoctorQueuePanel, {
   type DoctorQueueVisit,
 } from '@/components/dashboard/DoctorQueuePanel';
+import { fetchAssignableClinicians } from '@/lib/clinical/assignable-clinicians';
+import { loadAdminOverviewBundle } from '@/lib/dashboard/admin-overview';
+import type { AdminOverviewBundle } from '@/lib/dashboard/admin-overview.types';
+import ClinicAdminDashboardClient from '@/components/dashboard/ClinicAdminDashboardClient';
 
 export const metadata = {
   title: 'Dashboard — Overview',
@@ -166,10 +171,13 @@ export default async function DashboardOverview({
   let showConsultTimer = false;
   let featuresJson: Record<string, unknown> | null = null;
   let doctors: { id: string; firstName: string; lastName: string }[] = [];
-  let staffAttendanceRows: StaffAttendanceOverviewRow[] = [];
+  const staffAttendanceRows: StaffAttendanceOverviewRow[] = [];
   let doctorQueueWaiting: DoctorQueueVisit[] = [];
   let doctorQueueConsulting: DoctorQueueVisit[] = [];
   let productCategories: { id: string; name: string }[] = [];
+  let adminOverview: AdminOverviewBundle | null = null;
+  const netRevenueMtd: number | null = null;
+  const clinicCurrency = 'USD';
   const showAttendance = hasCapability(role, 'mark_attendance');
 
   if (isDemoMode()) {
@@ -549,21 +557,15 @@ export default async function DashboardOverview({
     }
 
     if (role === 'clinic_admin' || role === 'receptionist' || role === 'doctor') {
-      const { data: doctorsData } = await supabase
-        .from('organization_members')
-        .select('user_id, user_profiles ( first_name, last_name )')
-        .eq('organization_id', session.organizationId || '')
-        .eq('role', 'doctor')
-        .eq('is_active', true);
-      doctors =
-        doctorsData?.map((d) => ({
-          id: d.user_id,
-          firstName: (d.user_profiles as { first_name?: string } | null)?.first_name || '',
-          lastName: (d.user_profiles as { first_name?: string; last_name?: string } | null)?.last_name || '',
-        })) || [];
+      const clinicians = await fetchAssignableClinicians(session.organizationId || '');
+      doctors = clinicians.map((d) => ({
+        id: d.id,
+        firstName: d.firstName,
+        lastName: d.lastName,
+      }));
     }
 
-    if (role === 'clinic_admin' || role === 'receptionist') {
+    if (role === 'receptionist') {
       const mapLiveVisit = (v: {
         id: string;
         status: string;
@@ -684,69 +686,6 @@ export default async function DashboardOverview({
       );
     }
 
-    if (role === 'clinic_admin' && session.organizationId) {
-      const todayDate = new Date().toISOString().slice(0, 10);
-      queries.push(
-        (async () => {
-          const admin = await createAdminClient();
-          const { data: members } = await admin
-            .from('organization_members')
-            .select('user_id, role, is_active')
-            .eq('organization_id', session.organizationId!)
-            .eq('is_active', true)
-            .neq('role', 'clinic_admin');
-
-          const userIds = (members || []).map((m) => m.user_id);
-          if (userIds.length === 0) return;
-
-          const [{ data: profiles }, { data: attendanceData }] = await Promise.all([
-            admin
-              .from('user_profiles')
-              .select('id, first_name, last_name')
-              .in('id', userIds),
-            admin
-              .from('attendance_records')
-              .select('user_id, status, check_in_at, check_out_at')
-              .eq('organization_id', session.organizationId!)
-              .eq('work_date', todayDate),
-          ]);
-
-          const nameById = new Map(
-            (profiles || []).map((p) => [p.id, `${p.first_name || ''} ${p.last_name || ''}`.trim()])
-          );
-          const attendanceByUser = new Map<
-            string,
-            {
-              user_id: string;
-              status: string;
-              check_in_at: string | null;
-              check_out_at: string | null;
-            }
-          >((attendanceData || []).map((a) => [a.user_id, a]));
-
-          staffAttendanceRows = (members || []).map((m) => {
-            const rec = attendanceByUser.get(m.user_id);
-            let rosterStatus: StaffAttendanceOverviewRow['rosterStatus'] = 'not_scheduled';
-            if (rec?.check_in_at && !rec.check_out_at) {
-              rosterStatus = rec.status === 'late' ? 'late' : 'on_shift';
-            } else if (rec?.check_in_at && rec.check_out_at) {
-              rosterStatus = rec.status === 'late' ? 'late' : 'present';
-            } else if (rec?.status === 'absent') {
-              rosterStatus = 'absent';
-            }
-            return {
-              userId: m.user_id,
-              staffName: nameById.get(m.user_id) || 'Unknown',
-              role: m.role,
-              checkInAt: rec?.check_in_at ?? null,
-              checkOutAt: rec?.check_out_at ?? null,
-              rosterStatus,
-            };
-          });
-        })()
-      );
-    }
-
     if (showAttendance && session.organizationId) {
       const todayDate = new Date().toISOString().slice(0, 10);
       queries.push(
@@ -787,6 +726,14 @@ export default async function DashboardOverview({
     }
 
     await Promise.all(queries);
+
+    if (role === 'clinic_admin' && session.organizationId && activeBranchId) {
+      adminOverview = await loadAdminOverviewBundle({
+        organizationId: session.organizationId,
+        branchId: activeBranchId,
+        today: filterDate,
+      });
+    }
   }
 
   const features = session.features;
@@ -794,6 +741,9 @@ export default async function DashboardOverview({
     canAccessRoute(role, href) && canAccessRouteByFeature(features, href);
 
   const quickLinks = buildQuickLinks(role, readyForCheckout, canLink);
+  const netRevenueMtdLabel =
+    netRevenueMtd !== null ? formatMoney(netRevenueMtd, clinicCurrency) : null;
+
   const kpis = buildKpis(role, {
     todayAppointments,
     waitingWalkIns,
@@ -806,6 +756,7 @@ export default async function DashboardOverview({
     openPrescriptions,
     totalCustomers,
     totalPets,
+    netRevenueMtdLabel,
   }, canLink);
   const quickActions =
     role === 'clinic_admin' || role === 'receptionist' || role === 'doctor'
@@ -822,17 +773,35 @@ export default async function DashboardOverview({
 
   return (
     <div className="space-y-8">
-      <RoleDashboardHero
-        firstName={session.firstName || 'User'}
-        greeting={greeting}
-        organizationName={session.organizationName}
-        role={role}
-        quickLinks={staffGateLocked ? [] : quickLinks}
-      />
+      {role !== 'clinic_admin' && (
+        <RoleDashboardHero
+          firstName={session.firstName || 'User'}
+          greeting={greeting}
+          organizationName={session.organizationName}
+          role={role}
+          quickLinks={staffGateLocked ? [] : quickLinks}
+        />
+      )}
 
       {showAttendance && role !== 'doctor' && <AttendanceWidgetClient initial={myAttendance} />}
 
       <StaffDashboardGate locked={staffGateLocked}>
+      {role === 'clinic_admin' && adminOverview ? (
+        <ClinicAdminDashboardClient
+          {...adminOverview}
+          role={role}
+          capabilities={getCapabilitiesForRole(role)}
+          features={session.features}
+          featuresJson={featuresJson}
+          doctors={doctors}
+          activeBranchId={activeBranchId}
+          organizationId={session.organizationId || ''}
+          clinicName={session.organizationName || 'Clinic'}
+          branches={ctx.branches}
+          categories={productCategories}
+        />
+      ) : (
+        <>
       <DashboardQabShell
         role={role}
         capabilities={getCapabilitiesForRole(role)}
@@ -1044,6 +1013,8 @@ export default async function DashboardOverview({
           </Link>
         </div>
       )}
+        </>
+      )}
       </StaffDashboardGate>
     </div>
   );
@@ -1096,10 +1067,22 @@ function buildKpis(
     openPrescriptions: number;
     totalCustomers: number;
     totalPets: number;
+    netRevenueMtdLabel: string | null;
   },
   canLink: (href: string) => boolean
 ): DashboardKpi[] {
   const kpis: DashboardKpi[] = [];
+
+  if (role === 'clinic_admin' && data.netRevenueMtdLabel && canLink('/dashboard/revenue')) {
+    kpis.push({
+      key: 'net-revenue',
+      label: 'Net Revenue (MTD)',
+      value: data.netRevenueMtdLabel,
+      icon: DollarSign,
+      href: '/dashboard/revenue',
+      trend: 'Paid invoices − expenses',
+    });
+  }
 
   if (role === 'doctor') {
     if (canShowWidget(role, 'todayAppointments')) {
@@ -1190,7 +1173,7 @@ function buildKpis(
     });
   }
 
-  return kpis.filter((k) => !k.href || canLink(k.href)).slice(0, 4);
+  return kpis.filter((k) => !k.href || canLink(k.href)).slice(0, role === 'clinic_admin' ? 5 : 4);
 }
 
 type QuickActionItem = {

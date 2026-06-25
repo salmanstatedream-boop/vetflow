@@ -8,6 +8,7 @@ import {
   resolveServerAuthContext,
 } from '@/lib/auth/context';
 import { writeAuditLog } from '@/lib/services/audit';
+import { assertClinicalVisitAccess } from '@/lib/clinical/visit-access';
 import { WalkInSchema } from '@/lib/validations/schemas';
 
 /**
@@ -124,30 +125,11 @@ export async function startConsultationAction(visitId: string) {
 async function assertAssignedDoctorVisit(
   supabase: Awaited<ReturnType<typeof createClient>>,
   visitId: string,
-  organizationId: string,
-  doctorId: string
+  ctx: NonNullable<Awaited<ReturnType<typeof resolveServerAuthContext>>>
 ) {
-  const { data: visit, error } = await supabase
-    .from('visits')
-    .select(`
-      id,
-      status,
-      branch_id,
-      consult_paused_at,
-      consult_pause_accumulated_sec,
-      visit_assignments!inner ( doctor_id )
-    `)
-    .eq('id', visitId)
-    .eq('organization_id', organizationId)
-    .eq('visit_assignments.doctor_id', doctorId)
-    .single();
-
-  if (error || !visit) {
-    throw new Error('Visit not found or you are not the assigned doctor.');
-  }
-  if (visit.status !== 'consulting') {
-    throw new Error('Only active consultations can be paused or resumed.');
-  }
+  const visit = await assertClinicalVisitAccess(supabase, ctx, visitId, {
+    requireStatus: 'consulting',
+  });
   return visit;
 }
 
@@ -169,12 +151,7 @@ export async function pauseConsultationAction(visitId: string, reason: string) {
     }
 
     const supabase = await createClient();
-    const visit = await assertAssignedDoctorVisit(
-      supabase,
-      visitId,
-      ctx.organizationId!,
-      ctx.userId
-    );
+    const visit = await assertAssignedDoctorVisit(supabase, visitId, ctx);
 
     if (visit.consult_paused_at) {
       throw new Error('Consultation is already paused.');
@@ -224,12 +201,7 @@ export async function resumeConsultationAction(visitId: string) {
     assertCapability(ctx, 'clinical_queue');
 
     const supabase = await createClient();
-    const visit = await assertAssignedDoctorVisit(
-      supabase,
-      visitId,
-      ctx.organizationId!,
-      ctx.userId
-    );
+    const visit = await assertAssignedDoctorVisit(supabase, visitId, ctx);
 
     if (!visit.consult_paused_at) {
       throw new Error('Consultation is not paused.');

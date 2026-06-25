@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import type { FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { createProductAction, createCategoryAction } from '@/lib/services/inventory-actions';
 import { ProductSchema, type ProductInput } from '@/lib/validations/schemas';
-import { PRODUCT_TYPE_OPTIONS } from '@/lib/inventory/product-types';
+import { buildProductTypeOptions, normalizeProductTypeSlug } from '@/lib/inventory/product-types';
 import { calcSellingPrice, DEFAULT_PRODUCT_MARKUP_PERCENT } from '@/lib/inventory/pricing';
 import { useCreatableOptions } from '@/lib/hooks/useCreatableOptions';
 import Modal from '@/components/ui/premium/Modal';
@@ -22,6 +22,7 @@ interface ProductFormProps {
   activeBranchId?: string;
   variant?: 'default' | 'embedded';
   defaultMarkupPercent?: number;
+  existingProductTypes?: string[];
 }
 
 export default function ProductForm({
@@ -30,6 +31,7 @@ export default function ProductForm({
   activeBranchId,
   variant = 'default',
   defaultMarkupPercent = DEFAULT_PRODUCT_MARKUP_PERCENT,
+  existingProductTypes = [],
 }: ProductFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -85,6 +87,15 @@ export default function ProductForm({
     categories,
     onCreateCategory
   );
+
+  const typeSeed = useMemo(
+    () => buildProductTypeOptions(existingProductTypes),
+    [existingProductTypes]
+  );
+
+  const { options: typeOptions, handleCreate: handleCreateType } = useCreatableOptions(typeSeed, undefined, {
+    refreshOnCreate: false,
+  });
 
   const openModal = () => {
     setError(null);
@@ -177,6 +188,7 @@ export default function ProductForm({
           <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-4">
             <input type="hidden" {...register('branchId')} />
             <input type="hidden" {...register('unit')} />
+            <input type="hidden" {...register('type')} />
 
             <div>
               <label className="block text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider mb-1.5">
@@ -195,11 +207,19 @@ export default function ProductForm({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Select
+                <CreatableSelect
                   label="Type"
-                  value={typeWatch}
-                  onChange={(v) => setValue('type', v as ProductInput['type'], { shouldValidate: true })}
-                  options={PRODUCT_TYPE_OPTIONS}
+                  value={typeWatch || ''}
+                  onChange={(v) =>
+                    setValue('type', normalizeProductTypeSlug(v), { shouldValidate: true })
+                  }
+                  options={typeOptions}
+                  onCreateOption={async (label) => {
+                    const slug = normalizeProductTypeSlug(label);
+                    await handleCreateType(slug);
+                    setValue('type', slug, { shouldValidate: true });
+                  }}
+                  placeholder="Select or create type…"
                 />
                 {errors.type && (
                   <span className="text-[10px] text-destructive mt-1 block">{errors.type.message}</span>

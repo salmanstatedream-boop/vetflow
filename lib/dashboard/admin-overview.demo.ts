@@ -1,0 +1,122 @@
+import type { AdminOverviewData } from './admin-overview.types';
+
+export function getDemoAdminOverviewData(currency = 'USD'): AdminOverviewData {
+  const today = new Date().toISOString().slice(0, 10);
+  return {
+    currency,
+    today,
+    kpis: {
+      todayAppointments: 24,
+      todayRevenue: 4350,
+      outstandingReceivables: 12680,
+      inClinicNow: 7,
+      inventoryAlerts: 6,
+      newClientsMtd: 18,
+    },
+    kpiTrends: {
+      todayAppointments: 9,
+      todayRevenue: 12,
+      outstandingReceivables: 8,
+      inClinicNow: 0,
+      inventoryAlerts: 2,
+      newClientsMtd: 20,
+    },
+    sparklines: {
+      appointments: [18, 20, 15, 22, 19, 21, 24],
+      revenue: [3200, 3800, 2900, 4100, 3600, 3900, 4350],
+    },
+    todaySchedule: [
+      {
+        id: 's1',
+        type: 'appointment',
+        time: '09:00',
+        petName: 'Max',
+        species: 'Dog',
+        customerName: 'John Doe',
+        reason: 'Annual checkup',
+        status: 'checked_in',
+        doctorName: 'Dr. Sarah',
+        href: '/dashboard/appointments',
+      },
+      {
+        id: 's2',
+        type: 'visit',
+        time: '10:30',
+        petName: 'Bella',
+        species: 'Cat',
+        customerName: 'Jane Smith',
+        reason: 'Ear infection',
+        status: 'waiting',
+        doctorName: 'Dr. Mike',
+        href: '/dashboard/walk-ins',
+      },
+      {
+        id: 's3',
+        type: 'appointment',
+        time: '14:00',
+        petName: 'Rocky',
+        species: 'Dog',
+        customerName: 'Bob Johnson',
+        reason: 'Vaccination',
+        status: 'confirmed',
+        doctorName: 'Dr. Sarah',
+        href: '/dashboard/appointments',
+      },
+    ],
+    actionCenter: [
+      { id: 'a1', label: 'Unpaid invoices', count: 7, href: '/dashboard/invoices', variant: 'warning' },
+      { id: 'a2', label: 'Low stock items', count: 6, href: '/dashboard/inventory', variant: 'danger' },
+      { id: 'a3', label: 'Ready for checkout', count: 3, href: '/dashboard/walk-ins', variant: 'info' },
+      { id: 'a4', label: 'Follow-ups due', count: 4, href: '/dashboard/appointments', variant: 'purple' },
+    ],
+    revenueTrend7d: [
+      { name: 'Mon', value: 3200 },
+      { name: 'Tue', value: 3800 },
+      { name: 'Wed', value: 2900 },
+      { name: 'Thu', value: 4100 },
+      { name: 'Fri', value: 3600 },
+      { name: 'Sat', value: 3900 },
+      { name: 'Sun', value: 4350 },
+    ],
+    utilization: { booked: 18, total: 24 },
+    visitReasons: [
+      { name: 'Vaccination', value: 42 },
+      { name: 'Skin', value: 28 },
+      { name: 'Dental', value: 18 },
+      { name: 'Emergency', value: 12 },
+      { name: 'Checkup', value: 35 },
+    ],
+    speciesBreakdown: [
+      { name: 'Dogs', value: 194 },
+      { name: 'Cats', value: 87 },
+      { name: 'Birds', value: 19 },
+      { name: 'Exotic', value: 12 },
+    ],
+    lowStockItems: [
+      { id: 'p1', name: 'Amoxicillin 250mg', category: 'Medicine', stock: 2, reorderLevel: 10 },
+      { id: 'p2', name: 'Flea Collar', category: 'Accessory', stock: 5, reorderLevel: 15 },
+      { id: 'p3', name: 'IV Fluid 500ml', category: 'Supply', stock: 3, reorderLevel: 12 },
+    ],
+    expiringSoon: [
+      { id: 'b1', productName: 'Rabies Vaccine', expiryDate: '2025-07-15', quantity: 12 },
+      { id: 'b2', productName: 'Antibiotic Cream', expiryDate: '2025-08-01', quantity: 8 },
+    ],
+    followUpsDue: [
+      { id: 'f1', petName: 'Luna', customerName: 'Amy Lee', date: today, reason: 'Post-surgery check' },
+      { id: 'f2', petName: 'Charlie', customerName: 'Tom Wilson', date: today, reason: 'Lab results review' },
+    ],
+    vaccinationsDue: [
+      { id: 'v1', petName: 'Buddy', customerName: 'Kate Brown', date: '2025-05-22', reason: 'Annual vaccination' },
+    ],
+    missedAppointments: [
+      { id: 'm1', petName: 'Milo', customerName: 'Sam Green', date: '2025-05-18', reason: 'Dental cleaning' },
+    ],
+    aiInsights: [
+      'Revenue is up 12% compared to last week.',
+      '6 inventory items are below reorder level.',
+      '4 follow-up appointments are scheduled for today.',
+      'Appointment utilization is at 75% — consider opening more slots.',
+    ],
+    notificationCount: 13,
+  };
+}

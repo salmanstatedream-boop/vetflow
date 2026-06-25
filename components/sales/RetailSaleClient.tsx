@@ -259,6 +259,8 @@ export default function RetailSaleClient({
     setNotes('');
     setCompleted(null);
     setError(null);
+    setAddType('product');
+    setSelectedCatalogId('');
   };
 
   if (completed) {

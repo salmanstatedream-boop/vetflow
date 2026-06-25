@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import Link from 'next/link';
 import FullScreenOverlay from '@/components/ui/premium/FullScreenOverlay';
 import PetMedicalProfileClient from '@/components/pets/PetMedicalProfileClient';
@@ -29,10 +29,23 @@ function canEditCare(role: string | null): boolean {
   return role === 'doctor' || role === 'receptionist' || role === 'clinic_admin';
 }
 
+type PrescriptionStatusFilter = 'finalized' | 'all' | 'draft' | 'no_prescription';
+
+function matchesPrescriptionFilter(
+  rx: PrescriptionListRow,
+  filter: PrescriptionStatusFilter
+): boolean {
+  if (filter === 'all') return true;
+  if (filter === 'no_prescription') return rx.noPrescriptionMarked;
+  if (filter === 'draft') return !rx.noPrescriptionMarked && !rx.isFinalized;
+  return rx.isFinalized && !rx.noPrescriptionMarked;
+}
+
 export default function PrescriptionsListClient({
   prescriptions,
   userRole,
 }: PrescriptionsListClientProps) {
+  const [statusFilter, setStatusFilter] = useState<PrescriptionStatusFilter>('finalized');
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [activePetId, setActivePetId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -65,6 +78,22 @@ export default function PrescriptionsListClient({
     setError(null);
   };
 
+  const filtered = useMemo(
+    () => prescriptions.filter((rx) => matchesPrescriptionFilter(rx, statusFilter)),
+    [prescriptions, statusFilter]
+  );
+
+  const filterCounts = useMemo(
+    () => ({
+      all: prescriptions.length,
+      finalized: prescriptions.filter((rx) => matchesPrescriptionFilter(rx, 'finalized')).length,
+      draft: prescriptions.filter((rx) => matchesPrescriptionFilter(rx, 'draft')).length,
+      no_prescription: prescriptions.filter((rx) => matchesPrescriptionFilter(rx, 'no_prescription'))
+        .length,
+    }),
+    [prescriptions]
+  );
+
   if (prescriptions.length === 0) {
     return (
       <div className="p-10 text-center">
@@ -84,8 +113,37 @@ export default function PrescriptionsListClient({
 
   return (
     <>
+      <div className="flex flex-wrap gap-2 px-5 pt-4 pb-2 border-b border-outline-variant/20">
+        {(
+          [
+            { key: 'finalized' as const, label: 'Finalized' },
+            { key: 'all' as const, label: 'All' },
+            { key: 'draft' as const, label: 'Draft' },
+            { key: 'no_prescription' as const, label: 'No prescription' },
+          ] as const
+        ).map(({ key, label }) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setStatusFilter(key)}
+            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-colors ${
+              statusFilter === key
+                ? 'bg-primary text-white'
+                : 'bg-surface-container border border-outline-variant text-on-surface-variant'
+            }`}
+          >
+            {label} ({filterCounts[key]})
+          </button>
+        ))}
+      </div>
+      {filtered.length === 0 ? (
+        <div className="p-10 text-center">
+          <FileText className="w-8 h-8 text-on-surface-variant/20 mx-auto mb-3" />
+          <p className="text-xs text-on-surface-variant/40">No prescriptions match this filter.</p>
+        </div>
+      ) : (
       <div className="divide-y divide-border/20">
-        {prescriptions.map((rx) => (
+        {filtered.map((rx) => (
           <div
             key={rx.id}
             className="px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-surface-container/30 transition-colors"
@@ -162,6 +220,7 @@ export default function PrescriptionsListClient({
           </div>
         ))}
       </div>
+      )}
 
       <FullScreenOverlay
         open={overlayOpen}

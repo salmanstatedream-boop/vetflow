@@ -9,6 +9,8 @@ import {
 } from '@/lib/auth/context';
 import { writeAuditLog } from '@/lib/services/audit';
 import { SettingsSchema, type SettingsInput } from '@/lib/validations/schemas';
+import { uploadClinicLogoFile } from '@/lib/branding/clinic-logo';
+import { createAdminClient } from '@/lib/supabase/server';
 
 export async function updateSettingsAction(payload: unknown) {
   try {
@@ -78,5 +80,42 @@ export async function updateSettingsAction(payload: unknown) {
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err.message || 'Failed to update settings.' };
+  }
+}
+
+export async function uploadClinicLogoAction(formData: FormData) {
+  try {
+    const ctx = await resolveServerAuthContext();
+    if (!ctx) throw new Error('Unauthorized: Session is invalid.');
+    assertOrganization(ctx);
+    assertCapability(ctx, 'manage_settings');
+
+    const file = formData.get('file');
+    if (!(file instanceof File)) {
+      throw new Error('Logo file is required.');
+    }
+
+    const admin = await createAdminClient();
+    const storagePath = await uploadClinicLogoFile(admin, ctx.organizationId!, file);
+
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from('app_settings')
+      .upsert(
+        {
+          organization_id: ctx.organizationId,
+          clinic_logo_url: storagePath,
+        },
+        { onConflict: 'organization_id' }
+      );
+
+    if (error) throw new Error(error.message || 'Failed to save logo.');
+
+    return { success: true as const, storagePath };
+  } catch (err: unknown) {
+    return {
+      success: false as const,
+      error: err instanceof Error ? err.message : 'Failed to upload logo.',
+    };
   }
 }

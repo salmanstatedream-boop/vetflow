@@ -884,7 +884,7 @@ export default function ConsultationWorkspaceClient({
     <div className="grid md:grid-cols-12 gap-6 lg:gap-8 items-stretch h-full min-h-0">
       
       {/* LEFT: patient brief + diagnostics (sticky scroll column) */}
-      <div className="md:col-span-4 flex flex-col gap-3 min-h-0 h-full max-h-full pb-32 overflow-hidden">
+      <div className="md:col-span-4 flex flex-col gap-3 min-h-0 h-full max-h-full overflow-y-auto overscroll-contain pb-4 pr-0.5">
         
         {/* PATIENT PROFILE BRIEF */}
         <div className="glass-panel rounded-2xl border border-outline-variant/40 p-4 shadow-premium shrink-0">
@@ -1098,7 +1098,7 @@ export default function ConsultationWorkspaceClient({
         ref={soapWorkspaceRef}
         onSubmit={onFormSubmit}
         onKeyDown={handleFormKeyDown}
-        className="md:col-span-8 space-y-6 pb-28"
+        className="md:col-span-8 flex flex-col min-h-0 h-full overflow-y-auto overscroll-contain space-y-6 pb-32 scroll-smooth [scrollbar-gutter:stable]"
       >
           
           {error && (

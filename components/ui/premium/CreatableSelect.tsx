@@ -61,6 +61,10 @@ export default function CreatableSelect({
   const listRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    if (!value) setQuery('');
+  }, [value]);
+
   const selected = options.find((o) => o.value === value);
   const displayLabel = selected?.label || value || placeholder;
 

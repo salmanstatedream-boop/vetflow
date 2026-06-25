@@ -1,0 +1,141 @@
+'use client';
+
+import { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
+import DashboardNavLink from '@/components/layout/DashboardNavLink';
+import {
+  filterNavGroups,
+  isNavItemActive,
+  SETTINGS_NAV_ITEM,
+  type DashboardNavGroup,
+} from '@/lib/navigation/dashboard-nav';
+import type { ServerAuthContext } from '@/lib/auth/context';
+import type { Feature } from '@/lib/auth/features';
+import { canAccessRoute } from '@/lib/auth/capabilities';
+import { canAccessRouteByFeature } from '@/lib/auth/features';
+
+interface DashboardSidebarNavProps {
+  session: ServerAuthContext;
+  pathname: string;
+  navLinkClass: (active: boolean) => string;
+  onNavigate?: () => void;
+}
+
+export default function DashboardSidebarNav({
+  session,
+  pathname,
+  navLinkClass,
+  onNavigate,
+}: DashboardSidebarNavProps) {
+  const groups = filterNavGroups(session.role, session.features as Feature[]);
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(groups.filter((g) => g.collapsible).map((g) => [g.section, true]))
+  );
+
+  const toggle = (section: string) => {
+    setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  const settingsVisible =
+    canAccessRoute(session.role, SETTINGS_NAV_ITEM.href) &&
+    canAccessRouteByFeature(session.features, SETTINGS_NAV_ITEM.href);
+
+  return (
+    <>
+      {groups.map((group) => (
+        <NavGroupBlock
+          key={group.section}
+          group={group}
+          pathname={pathname}
+          navLinkClass={navLinkClass}
+          onNavigate={onNavigate}
+          collapsible={group.collapsible}
+          open={openSections[group.section] ?? true}
+          onToggle={() => toggle(group.section)}
+        />
+      ))}
+      {settingsVisible && (
+        <div className="pt-2 mt-2 border-t border-outline-variant/40">
+          <DashboardNavLink
+            href={SETTINGS_NAV_ITEM.href}
+            className={navLinkClass(isNavItemActive(pathname, SETTINGS_NAV_ITEM.href))}
+            onClick={onNavigate}
+            aria-current={isNavItemActive(pathname, SETTINGS_NAV_ITEM.href) ? 'page' : undefined}
+          >
+            <SETTINGS_NAV_ITEM.icon className="w-4 h-4" />
+            {SETTINGS_NAV_ITEM.name}
+          </DashboardNavLink>
+        </div>
+      )}
+    </>
+  );
+}
+
+function NavGroupBlock({
+  group,
+  pathname,
+  navLinkClass,
+  onNavigate,
+  collapsible,
+  open,
+  onToggle,
+}: {
+  group: DashboardNavGroup;
+  pathname: string;
+  navLinkClass: (active: boolean) => string;
+  onNavigate?: () => void;
+  collapsible?: boolean;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  if (group.section === 'Overview' && group.items.length === 1) {
+    const item = group.items[0]!;
+    const active = isNavItemActive(pathname, item.href);
+    return (
+      <DashboardNavLink
+        href={item.href}
+        className={navLinkClass(active)}
+        onClick={onNavigate}
+        aria-current={active ? 'page' : undefined}
+      >
+        <item.icon className="w-4 h-4" />
+        {item.name}
+      </DashboardNavLink>
+    );
+  }
+
+  return (
+    <div className="mb-2">
+      <button
+        type="button"
+        onClick={collapsible ? onToggle : undefined}
+        className={`sidebar-section-label w-full flex items-center justify-between ${collapsible ? 'cursor-pointer hover:text-on-surface' : 'cursor-default'}`}
+        aria-expanded={collapsible ? open : undefined}
+      >
+        {group.section}
+        {collapsible && (
+          <ChevronDown className={`w-3 h-3 transition-transform ${open ? '' : '-rotate-90'}`} />
+        )}
+      </button>
+      {(!collapsible || open) && (
+        <div className="space-y-0.5">
+          {group.items.map((item) => {
+            const active = isNavItemActive(pathname, item.href);
+            return (
+              <DashboardNavLink
+                key={item.href}
+                href={item.href}
+                className={navLinkClass(active)}
+                onClick={onNavigate}
+                aria-current={active ? 'page' : undefined}
+              >
+                <item.icon className="w-4 h-4" />
+                {item.name}
+              </DashboardNavLink>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}

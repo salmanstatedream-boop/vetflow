@@ -1,5 +1,7 @@
 import { isBrandedPdfsEnabled } from '@/lib/auth/features';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { createAdminClient } from '@/lib/supabase/server';
+import { CLINIC_LOGO_BUCKET, isHttpLogoUrl } from '@/lib/branding/clinic-logo';
 
 export interface PdfBranding {
   /** True only when the platform allows branded PDFs AND the clinic enabled them. */
@@ -15,6 +17,14 @@ export interface PdfBranding {
 }
 
 const DEFAULT_ACCENT = '#0F172A';
+
+async function resolveLogoUrl(raw: string | null | undefined): Promise<string | null> {
+  if (!raw) return null;
+  if (isHttpLogoUrl(raw)) return raw;
+  const admin = await createAdminClient();
+  const { data } = await admin.storage.from(CLINIC_LOGO_BUCKET).createSignedUrl(raw, 3600);
+  return data?.signedUrl || null;
+}
 
 /**
  * Resolves the effective PDF branding for an organization.
@@ -54,6 +64,8 @@ export async function getPdfBranding(
 
   const clinicName = fallbackClinicName || 'Clinic';
   const customFooter = appSettings?.pdf_footer_text?.trim();
+  const rawLogo = enabled ? appSettings?.clinic_logo_url || null : null;
+  const logoUrl = rawLogo ? await resolveLogoUrl(rawLogo) : null;
 
   return {
     enabled,
@@ -62,7 +74,7 @@ export async function getPdfBranding(
     address: appSettings?.clinic_address || '',
     phone: appSettings?.clinic_phone || '',
     email: appSettings?.clinic_email || '',
-    logoUrl: enabled ? appSettings?.clinic_logo_url || null : null,
+    logoUrl,
     accentColor: (enabled && appSettings?.pdf_accent_color) || DEFAULT_ACCENT,
     footerText: customFooter || 'Thank you for your visit.',
   };

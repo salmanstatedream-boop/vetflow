@@ -43,3 +43,31 @@ export function formatProductTypeLabel(slug: string): string {
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
 }
+
+/** Merge preset types, org-specific slugs, and an optional current value for edit forms. */
+export function buildProductTypeOptions(
+  existingTypes: string[],
+  currentType?: string
+): { value: string; label: string }[] {
+  const seen = new Set<string>();
+  const opts: { value: string; label: string }[] = [];
+
+  const add = (slug: string) => {
+    const normalized = normalizeProductTypeSlug(slug);
+    if (!normalized || seen.has(normalized)) return;
+    opts.push({ value: normalized, label: formatProductTypeLabel(normalized) });
+    seen.add(normalized);
+  };
+
+  for (const opt of PRODUCT_TYPE_OPTIONS) {
+    add(opt.value);
+  }
+  for (const raw of existingTypes) {
+    add(raw);
+  }
+  if (currentType) {
+    add(currentType);
+  }
+
+  return opts;
+}

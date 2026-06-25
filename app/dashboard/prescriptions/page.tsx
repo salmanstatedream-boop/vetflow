@@ -56,7 +56,7 @@ export default async function PrescriptionsPage() {
     <div className="space-y-8">
       <PageHeader
         title="Prescriptions"
-        description="Review finalized and draft prescriptions for the active branch."
+        description="Review finalized prescriptions; filter by draft or visits with no prescription."
         icon={FileText}
       />
 

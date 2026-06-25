@@ -16,6 +16,12 @@ import { NO_PRESCRIPTION_MARKED_NOTES } from '@/lib/prescriptions/constants';
 import { z } from 'zod';
 import type { FollowUpScheduleInput } from '@/lib/consultation/follow-up-schedule';
 import { followUpPreviewsToDates, computeFollowUpPreviews } from '@/lib/consultation/follow-up-schedule';
+import {
+  assertDoctorSlotAvailable,
+  DEFAULT_APPOINTMENT_DURATION_MINUTES,
+} from '@/lib/appointments/slot-conflict';
+import { normalizePreferredTimeForDb } from '@/lib/utils/time-parse';
+import { assertClinicalVisitAccess } from '@/lib/clinical/visit-access';
 
 const ConsultationDraftSchema = z.record(z.string(), z.unknown());
 
@@ -36,25 +42,9 @@ export async function saveConsultationDraftAction(visitId: string, draft: unknow
 
     const supabase = await createClient();
 
-    const { data: visit, error: visitError } = await supabase
-      .from('visits')
-      .select(`
-        id,
-        status,
-        branch_id,
-        visit_assignments!inner ( doctor_id )
-      `)
-      .eq('id', parsedVisitId)
-      .eq('organization_id', ctx.organizationId)
-      .eq('visit_assignments.doctor_id', ctx.userId)
-      .single();
-
-    if (visitError || !visit) {
-      throw new Error('Visit not found or you are not the assigned doctor.');
-    }
-    if (visit.status !== 'consulting') {
-      throw new Error('Draft can only be saved during an active consultation.');
-    }
+    const visit = await assertClinicalVisitAccess(supabase, ctx, parsedVisitId, {
+      requireStatus: 'consulting',
+    });
 
     const { error } = await supabase
       .from('visits')
@@ -163,6 +153,19 @@ async function createFollowUpAppointments(
       ? `${preview.label}: ${followUpNote}`
       : `${preview.label} — ${diagnosis}`;
 
+    const preferredTime = normalizePreferredTimeForDb(formatTime(baseTime));
+
+    if (doctorId) {
+      await assertDoctorSlotAvailable(supabase, {
+        organizationId: ctx.organizationId!,
+        branchId: visit.branch_id,
+        doctorId,
+        preferredDate,
+        preferredTime,
+        durationMinutes: DEFAULT_APPOINTMENT_DURATION_MINUTES,
+      });
+    }
+
     const { data: appt, error } = await supabase.from('appointments').insert({
       organization_id: ctx.organizationId,
       branch_id: visit.branch_id,
@@ -174,7 +177,7 @@ async function createFollowUpAppointments(
       patient_name: patient.name,
       patient_species: patient.species,
       preferred_date: preferredDate,
-      preferred_time: formatTime(baseTime),
+      preferred_time: preferredTime,
       reason,
       status: 'requested',
       doctor_id: doctorId,
@@ -183,6 +186,7 @@ async function createFollowUpAppointments(
       created_by: ctx.userId,
       created_by_role: ctx.role || 'doctor',
       follow_up_of_visit_id: visit.id,
+      duration_minutes: DEFAULT_APPOINTMENT_DURATION_MINUTES,
     }).select('id').single();
 
     if (!error && appt) {

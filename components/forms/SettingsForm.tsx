@@ -4,13 +4,15 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
-import { updateSettingsAction } from '@/lib/services/settings-actions';
+import { updateSettingsAction, uploadClinicLogoAction } from '@/lib/services/settings-actions';
+import { applyProductMarkupAction } from '@/lib/services/inventory-actions';
 import { SettingsSchema, type SettingsInput } from '@/lib/validations/schemas';
 import { normalizeCurrencyCode } from '@/lib/utils/currency';
 import {
   CLINIC_TIMEZONES,
 } from '@/lib/utils/timezones';
-import { Loader2, Save } from 'lucide-react';
+import { Loader2, Save, Upload } from 'lucide-react';
+import { clinicLogoApiUrl, isStorageLogoPath } from '@/lib/branding/clinic-logo';
 
 const PRESET_CURRENCIES = ['USD', 'PKR', 'EUR', 'GBP', 'AED', 'SAR', 'INR'] as const;
 
@@ -27,6 +29,15 @@ export default function SettingsForm({ defaultValues, brandedPdfsAllowed = false
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [markupApplying, setMarkupApplying] = useState(false);
+  const [logoPreview, setLogoPreview] = useState<string | null>(() => {
+    const url = defaultValues.clinicLogoUrl;
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    if (isStorageLogoPath(url)) return clinicLogoApiUrl();
+    return null;
+  });
   const [currencyMode, setCurrencyMode] = useState<'preset' | 'other'>(() =>
     isPresetCurrency(defaultValues.currency) ? 'preset' : 'other'
   );
@@ -166,8 +177,32 @@ export default function SettingsForm({ defaultValues, brandedPdfsAllowed = false
             className="w-full max-w-xs px-4 py-2.5 bg-surface-container/30 border border-outline-variant/80 rounded-xl text-sm text-on-surface outline-none focus:border-primary"
           />
           <p className="text-[10px] text-on-surface-variant mt-1">
-            Applied when adding new catalog items from purchase/cost price (e.g. invoice intake).
+            Used when creating new catalog items from cost price, when applying markup to existing
+            products, and on invoice intake for new lines.
           </p>
+          <div className="mt-3">
+            <button
+              type="button"
+              disabled={markupApplying}
+              onClick={async () => {
+                if (!confirm('Recalculate selling prices for all catalog products with a cost price?')) return;
+                setMarkupApplying(true);
+                setError(null);
+                const res = await applyProductMarkupAction({ scope: 'all' });
+                setMarkupApplying(false);
+                if (res.success) {
+                  setSuccess(true);
+                  router.refresh();
+                } else {
+                  setError(res.error || 'Failed to apply markup');
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border border-outline-variant hover:bg-surface-container-high disabled:opacity-60"
+            >
+              {markupApplying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+              Apply to all products
+            </button>
+          </div>
           {errors.productMarkupPercent && (
             <span className="text-xs text-destructive mt-1 block">{errors.productMarkupPercent.message}</span>
           )}
@@ -231,11 +266,52 @@ export default function SettingsForm({ defaultValues, brandedPdfsAllowed = false
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <label className="block text-[10px] font-semibold text-on-surface/80 uppercase tracking-wider mb-1.5">
-              Clinic Logo URL
+              Clinic Logo
+            </label>
+            {logoPreview && (
+              <img
+                src={logoPreview}
+                alt="Clinic logo preview"
+                className="h-12 w-auto mb-2 rounded-lg border border-outline-variant/40 bg-white/10 object-contain"
+              />
+            )}
+            <div className="flex flex-wrap gap-2 mb-2">
+              <label className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border border-outline-variant cursor-pointer hover:bg-surface-container-high">
+                <Upload className="w-3.5 h-3.5" />
+                {logoUploading ? 'Uploading…' : 'Upload file'}
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                  className="hidden"
+                  disabled={logoUploading}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setLogoUploading(true);
+                    setError(null);
+                    const fd = new FormData();
+                    fd.append('file', file);
+                    const res = await uploadClinicLogoAction(fd);
+                    setLogoUploading(false);
+                    if (res.success) {
+                      setLogoPreview(clinicLogoApiUrl());
+                      setValue('clinicLogoUrl', res.storagePath);
+                      setSuccess(true);
+                      router.refresh();
+                    } else {
+                      setError(res.error || 'Logo upload failed');
+                    }
+                    e.target.value = '';
+                  }}
+                />
+              </label>
+            </div>
+            <label className="block text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider mb-1.5">
+              Or paste logo URL
             </label>
             <input
               {...register('clinicLogoUrl')}
-              placeholder="https://..."
+              placeholder="https://... or leave blank after upload"
               className="w-full px-4 py-2.5 bg-surface-container/30 border border-outline-variant/80 rounded-xl text-sm text-on-surface outline-none focus:border-primary"
             />
             {errors.clinicLogoUrl && (

@@ -130,6 +130,7 @@ export default async function InventoryPage({
               branches={session.branches}
               activeBranchId={activeBranchId}
               defaultMarkupPercent={defaultMarkupPercent}
+              existingProductTypes={existingProductTypes}
             />
           ) : undefined
         }
@@ -190,6 +191,7 @@ export default async function InventoryPage({
           branches={session.branches}
           initialLowStockOnly={lowStock === '1'}
           lowStockCount={lowStockItems.length}
+          existingProductTypes={existingProductTypes}
         />
       ) : (
         <div className="glass-panel rounded-2xl border border-outline-variant/40 p-12 text-center space-y-4">
@@ -205,6 +207,7 @@ export default async function InventoryPage({
                 branches={session.branches}
                 activeBranchId={activeBranchId}
                 defaultMarkupPercent={defaultMarkupPercent}
+                existingProductTypes={existingProductTypes}
               />
             </div>
           )}

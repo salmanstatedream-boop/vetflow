@@ -27,11 +27,40 @@ import {
   UpdateAppointmentDetailsSchema,
   StaffAppointmentSchema,
 } from '@/lib/validations/schemas';
+import {
+  assertDoctorSlotAvailable,
+  findDoctorSlotConflict,
+  DEFAULT_APPOINTMENT_DURATION_MINUTES,
+} from '@/lib/appointments/slot-conflict';
+import { normalizePreferredTimeForDb } from '@/lib/utils/time-parse';
+import { z } from 'zod';
 
 function assertCanMutateAppointments(ctx: NonNullable<Awaited<ReturnType<typeof resolveServerAuthContext>>>) {
   if (ctx.role === 'doctor') {
     throw new Error('Doctors cannot modify appointments.');
   }
+}
+
+const CheckAppointmentSlotSchema = z.object({
+  branchId: z.string().uuid(),
+  doctorId: z.string().uuid(),
+  preferredDate: z.string().min(1),
+  preferredTime: z.string().min(1),
+  excludeAppointmentId: z.string().uuid().optional(),
+  durationMinutes: z.number().int().positive().optional(),
+});
+
+async function resolveDoctorLabel(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  doctorId: string
+): Promise<string> {
+  const { data } = await supabase
+    .from('user_profiles')
+    .select('first_name, last_name')
+    .eq('id', doctorId)
+    .maybeSingle();
+  if (!data) return 'This doctor';
+  return `Dr. ${data.first_name} ${data.last_name}`.trim();
 }
 
 async function ensureVisitAssignment(
@@ -248,6 +277,20 @@ export async function createStaffAppointmentAction(payload: unknown) {
     const doctorId =
       parsed.doctorId && parsed.doctorId.length > 0 ? parsed.doctorId : null;
 
+    const preferredTime = normalizePreferredTimeForDb(parsed.preferredTime);
+
+    if (doctorId) {
+      const doctorLabel = await resolveDoctorLabel(supabase, doctorId);
+      await assertDoctorSlotAvailable(supabase, {
+        organizationId: ctx.organizationId!,
+        branchId: parsed.branchId,
+        doctorId,
+        preferredDate: parsed.preferredDate,
+        preferredTime,
+        doctorLabel,
+      });
+    }
+
     const { data: appt, error: apptErr } = await supabase
       .from('appointments')
       .insert({
@@ -262,7 +305,7 @@ export async function createStaffAppointmentAction(payload: unknown) {
         patient_species: pet.species,
         source: 'staff',
         preferred_date: parsed.preferredDate,
-        preferred_time: parsed.preferredTime,
+        preferred_time: preferredTime,
         reason: parsed.reason,
         doctor_id: doctorId,
         is_emergency: parsed.isEmergency,
@@ -270,6 +313,7 @@ export async function createStaffAppointmentAction(payload: unknown) {
         status: 'confirmed',
         created_by: ctx.userId,
         created_by_role: ctx.role || 'receptionist',
+        duration_minutes: DEFAULT_APPOINTMENT_DURATION_MINUTES,
       })
       .select()
       .single();
@@ -481,6 +525,18 @@ export async function checkInAppointmentAction(appointmentId: string, doctorId: 
       throw new Error('Appointment is not confirmed or not found.');
     }
 
+    const doctorLabel = await resolveDoctorLabel(supabase, assignedDoctorId);
+    await assertDoctorSlotAvailable(supabase, {
+      organizationId: ctx.organizationId!,
+      branchId: appt.branch_id,
+      doctorId: assignedDoctorId,
+      preferredDate: appt.preferred_date,
+      preferredTime: appt.preferred_time,
+      durationMinutes: appt.duration_minutes ?? DEFAULT_APPOINTMENT_DURATION_MINUTES,
+      excludeAppointmentId: appt.id,
+      doctorLabel,
+    });
+
     // Guard against duplicate visit if appointment_id already linked
     const { data: preExistingVisit } = await supabase
       .from('visits')
@@ -627,7 +683,11 @@ export async function checkInAppointmentAction(appointmentId: string, doctorId: 
     // 6. Update appointment status to checked_in
     await supabase
       .from('appointments')
-      .update({ status: 'checked_in', patient_id: petId })
+      .update({
+        status: 'checked_in',
+        patient_id: petId,
+        doctor_id: assignedDoctorId,
+      })
       .eq('id', appt.id);
 
     // 7. Audit Log
@@ -753,11 +813,27 @@ export async function rescheduleAppointmentAction(payload: unknown) {
       throw new Error('This appointment cannot be rescheduled.');
     }
 
+    const preferredTime = normalizePreferredTimeForDb(parsed.preferredTime);
+
+    if (appt.doctor_id) {
+      const doctorLabel = await resolveDoctorLabel(supabase, appt.doctor_id);
+      await assertDoctorSlotAvailable(supabase, {
+        organizationId: ctx.organizationId!,
+        branchId: appt.branch_id,
+        doctorId: appt.doctor_id,
+        preferredDate: parsed.preferredDate,
+        preferredTime,
+        durationMinutes: appt.duration_minutes ?? DEFAULT_APPOINTMENT_DURATION_MINUTES,
+        excludeAppointmentId: parsed.appointmentId,
+        doctorLabel,
+      });
+    }
+
     const { error } = await supabase
       .from('appointments')
       .update({
         preferred_date: parsed.preferredDate,
-        preferred_time: parsed.preferredTime,
+        preferred_time: preferredTime,
         status: 'rescheduled',
       })
       .eq('id', parsed.appointmentId);
@@ -776,7 +852,7 @@ export async function rescheduleAppointmentAction(payload: unknown) {
       resourceId: parsed.appointmentId,
       afterData: {
         preferred_date: parsed.preferredDate,
-        preferred_time: parsed.preferredTime,
+        preferred_time: preferredTime,
         status: 'rescheduled',
       },
     });
@@ -800,10 +876,29 @@ export async function updateAppointmentDetailsAction(payload: unknown) {
     const patch: Record<string, string> = {};
     if (parsed.reason !== undefined) patch.reason = parsed.reason;
     if (parsed.preferredDate !== undefined) patch.preferred_date = parsed.preferredDate;
-    if (parsed.preferredTime !== undefined) patch.preferred_time = parsed.preferredTime;
+    if (parsed.preferredTime !== undefined) {
+      patch.preferred_time = normalizePreferredTimeForDb(parsed.preferredTime);
+    }
 
     if (Object.keys(patch).length === 0) {
       throw new Error('No changes to save.');
+    }
+
+    const nextDate = patch.preferred_date ?? appt.preferred_date;
+    const nextTime = patch.preferred_time ?? appt.preferred_time;
+
+    if (appt.doctor_id && (patch.preferred_date || patch.preferred_time)) {
+      const doctorLabel = await resolveDoctorLabel(supabase, appt.doctor_id);
+      await assertDoctorSlotAvailable(supabase, {
+        organizationId: ctx.organizationId!,
+        branchId: appt.branch_id,
+        doctorId: appt.doctor_id,
+        preferredDate: nextDate,
+        preferredTime: nextTime,
+        durationMinutes: appt.duration_minutes ?? DEFAULT_APPOINTMENT_DURATION_MINUTES,
+        excludeAppointmentId: parsed.appointmentId,
+        doctorLabel,
+      });
     }
 
     const { error } = await supabase.from('appointments').update(patch).eq('id', parsed.appointmentId);
@@ -825,5 +920,53 @@ export async function updateAppointmentDetailsAction(payload: unknown) {
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'An unexpected error occurred.';
     return { success: false, error: message };
+  }
+}
+
+/**
+ * Read-only availability check for frontend validation before booking.
+ */
+export async function checkAppointmentSlotAction(payload: unknown) {
+  try {
+    const ctx = await resolveServerAuthContext();
+    if (!ctx) {
+      throw new Error('Unauthorized: Session is invalid.');
+    }
+    assertOrganization(ctx);
+    assertCapability(ctx, 'manage_appointments');
+    assertFeature(ctx, 'appointments');
+
+    const parsed = CheckAppointmentSlotSchema.parse(payload);
+    assertBranchAccess(ctx, parsed.branchId);
+
+    const supabase = await createClient();
+    const preferredTime = normalizePreferredTimeForDb(parsed.preferredTime);
+
+    const conflict = await findDoctorSlotConflict(supabase, {
+      organizationId: ctx.organizationId!,
+      branchId: parsed.branchId,
+      doctorId: parsed.doctorId,
+      preferredDate: parsed.preferredDate,
+      preferredTime,
+      durationMinutes: parsed.durationMinutes ?? DEFAULT_APPOINTMENT_DURATION_MINUTES,
+      excludeAppointmentId: parsed.excludeAppointmentId,
+    });
+
+    if (!conflict) {
+      return { success: true as const, available: true as const };
+    }
+
+    return {
+      success: true as const,
+      available: false as const,
+      conflict: {
+        patientName: conflict.patientName,
+        preferredTime: conflict.preferredTime,
+        durationMinutes: conflict.durationMinutes,
+      },
+    };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'An unexpected error occurred.';
+    return { success: false as const, error: message };
   }
 }

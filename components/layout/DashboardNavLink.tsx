@@ -33,6 +33,14 @@ export default function DashboardNavLink({ href, onClick, className, ...props }:
     <Link
       href={href}
       onClick={(e) => {
+        if (nav?.isNavigating) {
+          e.preventDefault();
+          return;
+        }
+        if (target && !target.startsWith('http') && routePathsMatch(target, pathname)) {
+          e.preventDefault();
+          return;
+        }
         if (target && !target.startsWith('http') && !routePathsMatch(target, pathname)) {
           nav?.startNavigation(target);
         }

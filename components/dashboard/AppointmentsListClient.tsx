@@ -212,16 +212,20 @@ function AppointmentRow({
       alert('Enter date and time');
       return;
     }
-    await runAction(appt.id, () =>
-      rescheduleAppointmentAction({
-        appointmentId: appt.id,
-        preferredDate: rescheduleDate,
-        preferredTime: rescheduleTime,
-      })
+    await runAction(
+      appt.id,
+      () =>
+        rescheduleAppointmentAction({
+          appointmentId: appt.id,
+          preferredDate: rescheduleDate,
+          preferredTime: rescheduleTime,
+        }),
+      () => {
+        setRescheduleId(null);
+        setRescheduleDate('');
+        setRescheduleTime('');
+      }
     );
-    setRescheduleId(null);
-    setRescheduleDate('');
-    setRescheduleTime('');
   };
 
   const handleEditSubmit = async () => {
@@ -229,15 +233,17 @@ function AppointmentRow({
       alert('Reason is required');
       return;
     }
-    await runAction(appt.id, () =>
-      updateAppointmentDetailsAction({
-        appointmentId: appt.id,
-        reason: editReason.trim(),
-        preferredDate: editDate || undefined,
-        preferredTime: editTime || undefined,
-      })
+    await runAction(
+      appt.id,
+      () =>
+        updateAppointmentDetailsAction({
+          appointmentId: appt.id,
+          reason: editReason.trim(),
+          preferredDate: editDate || undefined,
+          preferredTime: editTime || undefined,
+        }),
+      () => setEditId(null)
     );
-    setEditId(null);
   };
 
   return (

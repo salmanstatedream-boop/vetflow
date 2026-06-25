@@ -30,6 +30,7 @@ type DraftRow = {
   productId: string | null;
   createNew: boolean;
   type: string;
+  updatePrices: boolean;
 };
 
 interface StockInvoiceIntakeClientProps {
@@ -47,6 +48,7 @@ const EMPTY_ROW: DraftRow = {
   productId: null,
   createNew: true,
   type: 'medicine',
+  updatePrices: false,
 };
 
 function fuzzyMatch(name: string, sku: string, catalog: CatalogProduct[]): string | null {
@@ -76,6 +78,7 @@ function draftToRows(draft: StockInvoiceDraft, catalog: CatalogProduct[]): Draft
       productId: matched,
       createNew: !matched,
       type: 'medicine',
+      updatePrices: false,
     };
   });
 }
@@ -222,6 +225,7 @@ export default function StockInvoiceIntakeClient({
         productId: r.productId,
         createNew: r.createNew && !r.productId,
         type: r.createNew && !r.productId ? normalizeProductTypeSlug(r.type) : undefined,
+        updatePrices: r.productId && !r.createNew ? r.updatePrices : undefined,
       })),
     });
     if (res.success) {
@@ -355,6 +359,7 @@ export default function StockInvoiceIntakeClient({
                     <th className="px-3 py-2">Qty</th>
                     <th className="px-3 py-2">Unit price</th>
                     <th className="px-3 py-2">Catalog match</th>
+                    <th className="px-3 py-2">Update prices</th>
                     <th className="px-3 py-2">Type</th>
                     <th className="px-3 py-2" />
                   </tr>
@@ -362,6 +367,7 @@ export default function StockInvoiceIntakeClient({
                 <tbody className="divide-y divide-outline-variant/30">
                   {rows.map((row, idx) => {
                     const isNew = row.createNew && !row.productId;
+                    const isMatched = Boolean(row.productId && !row.createNew);
                     return (
                       <tr key={idx}>
                         <td className="px-3 py-2">
@@ -397,6 +403,21 @@ export default function StockInvoiceIntakeClient({
                             options={catalogOptions}
                             placeholder="Match catalog…"
                           />
+                        </td>
+                        <td className="px-3 py-2">
+                          {isMatched ? (
+                            <label className="flex items-center gap-1.5 text-[10px] text-on-surface-variant whitespace-nowrap">
+                              <input
+                                type="checkbox"
+                                checked={row.updatePrices}
+                                onChange={(e) => updateRow(idx, { updatePrices: e.target.checked })}
+                                className="rounded border-outline-variant/60"
+                              />
+                              Cost & sell
+                            </label>
+                          ) : (
+                            <span className="text-on-surface-variant/40">—</span>
+                          )}
                         </td>
                         <td className="px-3 py-2 min-w-[130px]">
                           {isNew ? (

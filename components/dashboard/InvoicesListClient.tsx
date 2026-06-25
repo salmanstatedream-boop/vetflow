@@ -108,6 +108,24 @@ export default function InvoicesListClient({
     [invoices]
   );
 
+  const hasActiveFilters =
+    saleTypeFilter !== 'all' ||
+    statusFilter !== 'all' ||
+    paymentFilter !== 'all' ||
+    search.trim().length > 0 ||
+    dateFrom.length > 0 ||
+    dateTo.length > 0;
+
+  const clearFilters = () => {
+    setSaleTypeFilter('all');
+    setStatusFilter('all');
+    setPaymentFilter('all');
+    setSearch('');
+    setDateFrom('');
+    setDateTo('');
+    router.replace('/dashboard/invoices');
+  };
+
   const handleMarkPaid = (invoiceId: string) => {
     setActingId(invoiceId);
     setMessage(null);
@@ -233,6 +251,15 @@ export default function InvoicesListClient({
           className="px-3 py-2 text-xs rounded-xl bg-surface-container border border-outline-variant text-on-surface outline-none"
           aria-label="To date"
         />
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="px-3 py-2 text-xs font-bold rounded-xl border border-outline-variant text-on-surface-variant hover:bg-surface-container-high"
+          >
+            Clear filters
+          </button>
+        )}
       </div>
 
       <div className="glass-panel rounded-2xl border border-outline-variant/40 overflow-hidden shadow-premium">

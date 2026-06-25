@@ -7,13 +7,14 @@ import {
   getCustomerByIdAction,
   type CustomerSearchResult,
 } from '@/lib/services/customer-actions';
-import { createAppointmentWithPatientAction } from '@/lib/services/appointment-actions';
+import { createAppointmentWithPatientAction, checkAppointmentSlotAction } from '@/lib/services/appointment-actions';
 import { normalizePhoneInput, looksLikePhone } from '@/lib/reception/phone';
 import Select from '@/components/ui/premium/Select';
 import CreatableSelect from '@/components/ui/premium/CreatableSelect';
 import { SPECIES_OPTIONS } from '@/lib/pets/species-options';
 import { computePetAgeLabel } from '@/lib/utils/pet-species-avatar';
 import { formatAgeInputLabel } from '@/lib/pets/age';
+import { formatAppointmentTime, normalizePreferredTimeForDb } from '@/lib/utils/time-parse';
 import { useCreatableOptions } from '@/lib/hooks/useCreatableOptions';
 import {
   X,
@@ -91,6 +92,8 @@ export default function NewAppointmentWizard({
   const [isEmergency, setIsEmergency] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
+  const [slotConflict, setSlotConflict] = useState<string | null>(null);
+  const [isCheckingSlot, setIsCheckingSlot] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [prefillDone, setPrefillDone] = useState(false);
 
@@ -177,9 +180,46 @@ export default function NewAppointmentWizard({
       return;
     }
     if (initialPreferredDate) setPreferredDate(initialPreferredDate);
-    if (initialPreferredTime) setPreferredTime(initialPreferredTime);
+    if (initialPreferredTime) setPreferredTime(formatAppointmentTime(initialPreferredTime));
     if (initialDoctorId) setDoctorId(initialDoctorId);
   }, [isOpen, initialPreferredDate, initialPreferredTime, initialDoctorId]);
+
+  useEffect(() => {
+    if (!isOpen || !doctorId || !preferredDate || !preferredTime) {
+      setSlotConflict(null);
+      return;
+    }
+
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      setIsCheckingSlot(true);
+      try {
+        const res = await checkAppointmentSlotAction({
+          branchId: activeBranchId,
+          doctorId,
+          preferredDate,
+          preferredTime: normalizePreferredTimeForDb(preferredTime),
+        });
+        if (cancelled) return;
+        if (res.success && !res.available && res.conflict) {
+          setSlotConflict(
+            `This doctor already has an appointment at ${formatAppointmentTime(res.conflict.preferredTime)} (${res.conflict.patientName}).`
+          );
+        } else {
+          setSlotConflict(null);
+        }
+      } catch {
+        if (!cancelled) setSlotConflict(null);
+      } finally {
+        if (!cancelled) setIsCheckingSlot(false);
+      }
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [isOpen, activeBranchId, doctorId, preferredDate, preferredTime]);
 
   const handlePhoneChange = (val: string) => {
     setPhone(val);
@@ -219,6 +259,7 @@ export default function NewAppointmentWizard({
     setIntakeNotes('');
     setIsEmergency(false);
     setError(null);
+    setSlotConflict(null);
     setPrefillDone(false);
   };
 
@@ -233,9 +274,33 @@ export default function NewAppointmentWizard({
       setError('Complete owner, pet, and visit details.');
       return;
     }
+    if (slotConflict) {
+      setError(slotConflict);
+      return;
+    }
 
     setIsSubmitting(true);
     setError(null);
+
+    const normalizedTime = normalizePreferredTimeForDb(preferredTime);
+
+    if (doctorId) {
+      const slotRes = await checkAppointmentSlotAction({
+        branchId: activeBranchId,
+        doctorId,
+        preferredDate,
+        preferredTime: normalizedTime,
+      });
+      if (slotRes.success && !slotRes.available) {
+        const msg = slotRes.conflict
+          ? `This doctor already has an appointment at ${formatAppointmentTime(slotRes.conflict.preferredTime)} (${slotRes.conflict.patientName}).`
+          : 'This time slot is no longer available.';
+        setError(msg);
+        setSlotConflict(msg);
+        setIsSubmitting(false);
+        return;
+      }
+    }
 
     try {
       const res = await createAppointmentWithPatientAction({
@@ -265,7 +330,7 @@ export default function NewAppointmentWizard({
               },
         doctorId: doctorId || '',
         preferredDate,
-        preferredTime,
+        preferredTime: normalizedTime,
         reason: reason.trim(),
         isEmergency,
         intakeNotes: intakeNotes.trim() || '',
@@ -584,6 +649,20 @@ export default function NewAppointmentWizard({
                 />
               </div>
 
+              {doctorId && (slotConflict || isCheckingSlot) && (
+                <div
+                  className={`text-xs rounded-xl p-3 border ${
+                    slotConflict
+                      ? 'text-destructive bg-destructive/10 border-destructive/20'
+                      : 'text-on-surface-variant bg-surface-container/40 border-outline-variant/30'
+                  }`}
+                >
+                  {isCheckingSlot && !slotConflict
+                    ? 'Checking availability…'
+                    : slotConflict}
+                </div>
+              )}
+
               <div>
                 <label className="text-[10px] font-bold text-on-surface-variant uppercase block mb-1">
                   Reason for visit
@@ -629,7 +708,7 @@ export default function NewAppointmentWizard({
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || !ownerReady || !petReady || !visitReady}
+              disabled={isSubmitting || isCheckingSlot || !!slotConflict || !ownerReady || !petReady || !visitReady}
               className="flex-1 py-2.5 rounded-xl bg-primary text-on-primary text-xs font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {isSubmitting ? (

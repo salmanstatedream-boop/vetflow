@@ -4,6 +4,7 @@ import { resolveServerAuthContext } from '@/lib/auth/context';
 import { guardRoute } from '@/lib/auth/page-guards';
 import { createClient } from '@/lib/supabase/server';
 import PageHeader from '@/components/ui/premium/PageHeader';
+import { fetchAssignableClinicians } from '@/lib/clinical/assignable-clinicians';
 import ScheduleDayCalendarClient from '@/components/schedule/ScheduleDayCalendarClient';
 import { resolveDateFromParam } from '@/lib/utils/date-filters';
 import { formatAppointmentTime, normalizeDateYmd } from '@/lib/utils/time-parse';
@@ -47,13 +48,9 @@ export default async function SchedulePage({
 
   const supabase = await createClient();
 
-  const [{ data: doctorsData }, { data: appointmentsRaw }, { data: appSettings }] = await Promise.all([
-    supabase
-      .from('organization_members')
-      .select('user_id, user_profiles ( first_name, last_name )')
-      .eq('organization_id', ctx.organizationId)
-      .eq('role', 'doctor')
-      .eq('is_active', true),
+  const clinicians = await fetchAssignableClinicians(ctx.organizationId!);
+
+  const [{ data: appointmentsRaw }, { data: appSettings }] = await Promise.all([
     (() => {
       let query = supabase
         .from('appointments')
@@ -76,17 +73,11 @@ export default async function SchedulePage({
       .maybeSingle(),
   ]);
 
-  const doctors =
-    doctorsData
-      ?.filter((d) => d.user_profiles)
-      .map((d) => {
-        const p = d.user_profiles as { first_name: string; last_name: string };
-        return {
-          id: d.user_id,
-          firstName: p.first_name || '',
-          lastName: p.last_name || '',
-        };
-      }) || [];
+  const doctors = clinicians.map((d) => ({
+    id: d.id,
+    firstName: d.firstName,
+    lastName: d.lastName,
+  }));
 
   const appointments = (appointmentsRaw || []).map((a) => ({
     id: a.id,

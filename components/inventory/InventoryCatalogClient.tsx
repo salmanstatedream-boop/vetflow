@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import StockAdjustmentForm from '@/components/forms/StockAdjustmentForm';
 import ProductEditModal from '@/components/inventory/ProductEditModal';
 import Select from '@/components/ui/premium/Select';
-import { deleteProductAction } from '@/lib/services/inventory-actions';
+import { deleteProductAction, applyProductMarkupAction } from '@/lib/services/inventory-actions';
 import { useCurrency } from '@/lib/context/CurrencyContext';
 import { ShieldAlert, Trash2, Loader2, Settings, Search, X } from 'lucide-react';
 import type { UserSessionDetails } from '@/lib/services/auth';
@@ -48,6 +48,7 @@ interface InventoryCatalogClientProps {
   branches: { id: string; name: string }[];
   initialLowStockOnly?: boolean;
   lowStockCount?: number;
+  existingProductTypes?: string[];
 }
 
 function isLowStockProduct(product: ProductRow): boolean {
@@ -68,12 +69,15 @@ export default function InventoryCatalogClient({
   branches,
   initialLowStockOnly = false,
   lowStockCount = 0,
+  existingProductTypes = [],
 }: InventoryCatalogClientProps) {
   const { formatCurrency } = useCurrency();
   const [typeFilter, setTypeFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [lowStockOnly, setLowStockOnly] = useState(initialLowStockOnly);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [markupApplying, setMarkupApplying] = useState(false);
   const router = useRouter();
   const tableRef = useRef<HTMLDivElement>(null);
 
@@ -152,6 +156,36 @@ export default function InventoryCatalogClient({
     });
   };
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleApplyMarkup = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Apply default markup to ${selectedIds.size} selected product(s)?`)) return;
+    setMarkupApplying(true);
+    try {
+      const res = await applyProductMarkupAction({
+        scope: 'selected',
+        productIds: [...selectedIds],
+        branchId: activeBranchId,
+      });
+      if (res.success) {
+        setSelectedIds(new Set());
+        router.refresh();
+      } else {
+        alert(res.error || 'Failed to apply markup');
+      }
+    } finally {
+      setMarkupApplying(false);
+    }
+  };
+
   const handleDelete = async (productId: string, name: string) => {
     if (!confirm(`Remove "${name}" from the catalog?`)) return;
     setDeletingId(productId);
@@ -203,6 +237,17 @@ export default function InventoryCatalogClient({
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          {role === 'clinic_admin' && selectedIds.size > 0 && (
+            <button
+              type="button"
+              onClick={handleApplyMarkup}
+              disabled={markupApplying}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold border border-primary/40 text-primary hover:bg-primary/5 disabled:opacity-60"
+            >
+              {markupApplying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+              Apply markup ({selectedIds.size})
+            </button>
+          )}
           <button
             type="button"
             onClick={showLowStock}
@@ -247,6 +292,7 @@ export default function InventoryCatalogClient({
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-surface-container/40 border-b border-outline-variant/40 text-[10px] font-semibold text-on-surface/80 uppercase tracking-wider">
+              {role === 'clinic_admin' && <th className="px-4 py-4 w-10" />}
               <th className="px-6 py-4">Item Details</th>
               <th className="px-6 py-4">Type & Category</th>
               <th className="px-6 py-4">Pricing</th>
@@ -257,7 +303,7 @@ export default function InventoryCatalogClient({
           <tbody className="divide-y divide-border/30 text-xs">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-on-surface-variant/60 italic">
+                <td colSpan={role === 'clinic_admin' ? 6 : 5} className="px-6 py-8 text-center text-on-surface-variant/60 italic">
                   {lowStockOnly
                     ? 'No low-stock items match your filters.'
                     : searchQuery
@@ -271,6 +317,7 @@ export default function InventoryCatalogClient({
                   const svc = row.service;
                   return (
                     <tr key={`svc-${svc.id}`} className="hover:bg-surface-container/10 transition-colors">
+                      {role === 'clinic_admin' && <td className="px-4 py-4" />}
                       <td className="px-6 py-4">
                         <span className="font-bold text-on-surface block">{svc.name}</span>
                         {svc.description && (
@@ -310,6 +357,20 @@ export default function InventoryCatalogClient({
 
                 return (
                   <tr key={prod.id} className="hover:bg-surface-container/10 transition-colors">
+                    {role === 'clinic_admin' && prod.type !== 'service' && Number(prod.purchase_price) > 0 && (
+                      <td className="px-4 py-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(prod.id)}
+                          onChange={() => toggleSelect(prod.id)}
+                          className="rounded border-outline-variant/60"
+                          aria-label={`Select ${prod.name}`}
+                        />
+                      </td>
+                    )}
+                    {role === 'clinic_admin' && (prod.type === 'service' || Number(prod.purchase_price) <= 0) && (
+                      <td className="px-4 py-4" />
+                    )}
                     <td className="px-6 py-4">
                       <span className="font-bold text-on-surface block">{prod.name}</span>
                       <span className="text-[10px] text-on-surface-variant/50 block">
@@ -367,6 +428,7 @@ export default function InventoryCatalogClient({
                               categories={categories}
                               branches={branches}
                               activeBranchId={activeBranchId}
+                              existingProductTypes={existingProductTypes}
                             />
                             <button
                               type="button"

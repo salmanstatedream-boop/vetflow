@@ -1,16 +1,15 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { createProductAction, createCategoryAction } from '@/lib/services/inventory-actions';
 import { ProductSchema, type ProductInput } from '@/lib/validations/schemas';
-import { PRODUCT_TYPE_OPTIONS, type ProductType } from '@/lib/inventory/product-types';
+import { buildProductTypeOptions, normalizeProductTypeSlug, type ProductType } from '@/lib/inventory/product-types';
 import { useCreatableOptions } from '@/lib/hooks/useCreatableOptions';
 import Modal from '@/components/ui/premium/Modal';
 import Button from '@/components/ui/premium/Button';
-import Select from '@/components/ui/premium/Select';
 import CreatableSelect from '@/components/ui/premium/CreatableSelect';
 
 interface CatalogItemQuickAddModalProps {
@@ -21,6 +20,7 @@ interface CatalogItemQuickAddModalProps {
   activeBranchId: string;
   defaultType?: ProductType;
   defaultName?: string;
+  existingProductTypes?: string[];
 }
 
 export default function CatalogItemQuickAddModal({
@@ -31,6 +31,7 @@ export default function CatalogItemQuickAddModal({
   activeBranchId,
   defaultType = 'medicine',
   defaultName = '',
+  existingProductTypes = [],
 }: CatalogItemQuickAddModalProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -70,6 +71,15 @@ export default function CatalogItemQuickAddModal({
     categories,
     onCreateCategory
   );
+
+  const typeSeed = useMemo(
+    () => buildProductTypeOptions(existingProductTypes, defaultType),
+    [existingProductTypes, defaultType]
+  );
+
+  const { options: typeOptions, handleCreate: handleCreateType } = useCreatableOptions(typeSeed, undefined, {
+    refreshOnCreate: false,
+  });
 
   const handleClose = () => {
     reset({
@@ -125,6 +135,7 @@ export default function CatalogItemQuickAddModal({
       )}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <input type="hidden" {...register('branchId')} value={activeBranchId} />
+        <input type="hidden" {...register('type')} />
         <div>
           <label className="block text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider mb-1.5">
             Item name
@@ -139,11 +150,17 @@ export default function CatalogItemQuickAddModal({
           )}
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <Select
+          <CreatableSelect
             label="Type"
-            value={typeWatch}
-            onChange={(v) => setValue('type', v as ProductInput['type'])}
-            options={PRODUCT_TYPE_OPTIONS}
+            value={typeWatch || ''}
+            onChange={(v) => setValue('type', normalizeProductTypeSlug(v), { shouldValidate: true })}
+            options={typeOptions}
+            onCreateOption={async (label) => {
+              const slug = normalizeProductTypeSlug(label);
+              await handleCreateType(slug);
+              setValue('type', slug, { shouldValidate: true });
+            }}
+            placeholder="Select or create type…"
           />
           <div>
             <label className="block text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider mb-1.5">

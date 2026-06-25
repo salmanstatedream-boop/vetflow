@@ -109,6 +109,7 @@ export const ROUTE_CAPABILITIES: Record<string, Capability | undefined> = {
   '/dashboard/sales/new': 'billing_checkout',
   '/dashboard/inventory': 'manage_inventory',
   '/dashboard/reports': 'view_reports',
+  '/dashboard/revenue': 'view_reports',
   '/dashboard/branches': 'manage_branches',
   '/dashboard/staff': 'manage_staff',
   '/dashboard/settings': 'manage_settings',

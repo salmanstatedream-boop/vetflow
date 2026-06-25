@@ -44,3 +44,12 @@ export function normalizeDateYmd(raw: string | null | undefined): string {
   const d = String(parsed.getDate()).padStart(2, '0');
   return `${y}-${mo}-${d}`;
 }
+
+/** Normalize assorted time inputs to Postgres TIME (HH:MM:SS). */
+export function normalizePreferredTimeForDb(raw: string | null | undefined): string {
+  const minutes = parseAppointmentTimeToMinutes(raw);
+  if (minutes == null) return raw?.trim() || '00:00:00';
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`;
+}

@@ -31,6 +31,7 @@ interface Visit {
   pet: { id: string; name: string; species: string; breed: string | null; gender: string };
   customer: { firstName: string; lastName: string; phone: string };
   prescriptionId?: string | null;
+  assignedDoctorName?: string | null;
 }
 
 interface DoctorQueueClientProps {
@@ -40,6 +41,7 @@ interface DoctorQueueClientProps {
   doctorFirstName: string;
   doctorLastName: string;
   showConsultTimer: boolean;
+  isSupervisoryView?: boolean;
 }
 
 export default function DoctorQueueClient({
@@ -49,6 +51,7 @@ export default function DoctorQueueClient({
   doctorFirstName,
   doctorLastName,
   showConsultTimer,
+  isSupervisoryView = false,
 }: DoctorQueueClientProps) {
   useVisibilityPolling(15000, true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -162,6 +165,11 @@ export default function DoctorQueueClient({
                         <p className="font-semibold text-on-surface">
                           Reason: <span className="font-normal text-on-surface-variant/80">{v.reason}</span>
                         </p>
+                        {isSupervisoryView && v.assignedDoctorName && (
+                          <p className="text-[10px] text-primary font-semibold">
+                            Assigned: Dr. {v.assignedDoctorName}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <Link
@@ -214,6 +222,11 @@ export default function DoctorQueueClient({
                       <p className="text-xs font-semibold text-on-surface">
                         Reason: <span className="font-normal text-on-surface-variant/80">{v.reason}</span>
                       </p>
+                      {isSupervisoryView && v.assignedDoctorName && (
+                        <p className="text-[10px] text-primary font-semibold">
+                          Assigned: Dr. {v.assignedDoctorName}
+                        </p>
+                      )}
                     </div>
                     <Link
                       href={`/dashboard/doctors/${v.id}`}
@@ -284,9 +297,13 @@ export default function DoctorQueueClient({
           </h3>
           <div className="space-y-4 text-xs">
             <div className="flex items-center justify-between text-on-surface-variant/70 border-b border-outline-variant/30 pb-2">
-              <span className="font-semibold text-on-surface">Attending Doctor</span>
+              <span className="font-semibold text-on-surface">
+                {isSupervisoryView ? 'View mode' : 'Attending Doctor'}
+              </span>
               <span className="font-bold text-primary">
-                Dr. {doctorFirstName} {doctorLastName}
+                {isSupervisoryView
+                  ? 'All clinicians'
+                  : `Dr. ${doctorFirstName} ${doctorLastName}`}
               </span>
             </div>
             <div className="flex items-center justify-between text-on-surface-variant/70 border-b border-outline-variant/30 pb-2">

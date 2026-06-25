@@ -3,8 +3,9 @@ import { cookies } from 'next/headers';
 import { resolveServerAuthContext } from '@/lib/auth/context';
 import { guardRoute } from '@/lib/auth/page-guards';
 import { createClient } from '@/lib/supabase/server';
-import AppointmentsListClient from '@/components/dashboard/AppointmentsListClient';
+import { fetchAssignableClinicians } from '@/lib/clinical/assignable-clinicians';
 import AppointmentsPageHeader from '@/components/dashboard/AppointmentsPageHeader';
+import AppointmentsListClient from '@/components/dashboard/AppointmentsListClient';
 import { Suspense } from 'react';
 import DateRangeQuickFilter from '@/components/dashboard/DateRangeQuickFilter';
 
@@ -99,22 +100,12 @@ export default async function AppointmentsPage() {
     );
   }
 
-  // 3. Fetch doctors in organization (for checkout room check-ins)
-  const { data: doctorsData } = await supabase
-    .from('organization_members')
-    .select(`
-      user_id,
-      user_profiles ( first_name, last_name )
-    `)
-    .eq('organization_id', session.organizationId)
-    .eq('role', 'doctor')
-    .eq('is_active', true);
-
-  const doctors = doctorsData?.map((d) => ({
-    id: d.user_id,
-    firstName: (d.user_profiles as { first_name?: string } | null)?.first_name || '',
-    lastName: (d.user_profiles as { last_name?: string } | null)?.last_name || '',
-  })) || [];
+  const clinicians = await fetchAssignableClinicians(session.organizationId!);
+  const doctors = clinicians.map((d) => ({
+    id: d.id,
+    firstName: d.firstName,
+    lastName: d.lastName,
+  }));
 
   // 4. Resolve slug and public booking URL
   // Fetch organization slug
