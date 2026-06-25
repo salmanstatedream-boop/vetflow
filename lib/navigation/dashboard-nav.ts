@@ -23,7 +23,7 @@ import {
   Share2,
 } from 'lucide-react';
 import type { UserSessionDetails } from '@/lib/services/auth';
-import { canAccessRoute } from '@/lib/auth/capabilities';
+import { canAccessRoute, hasCapability, type Capability } from '@/lib/auth/capabilities';
 import { canAccessRouteByFeature, type Feature } from '@/lib/auth/features';
 
 export type DashboardNavItem = {
@@ -31,6 +31,7 @@ export type DashboardNavItem = {
   href: string;
   icon: LucideIcon;
   adminOnly?: boolean;
+  requiredCapability?: Capability;
 };
 
 export type DashboardNavGroup = {
@@ -66,8 +67,8 @@ export const DASHBOARD_NAV_GROUPS: DashboardNavGroup[] = [
     section: 'Operations',
     collapsible: true,
     items: [
-      { name: 'Inventory', href: '/dashboard/inventory', icon: Layers },
-      { name: 'Stock intake', href: '/dashboard/inventory?tab=intake', icon: Camera },
+      { name: 'Inventory', href: '/dashboard/inventory', icon: Layers, requiredCapability: 'manage_inventory' },
+      { name: 'Stock intake', href: '/dashboard/inventory?tab=intake', icon: Camera, requiredCapability: 'manage_inventory' },
     ],
   },
   {
@@ -149,14 +150,15 @@ export function filterNavGroups(
   role: UserSessionDetails['role'],
   features: Feature[]
 ): DashboardNavGroup[] {
-  const canSee = (href: string, adminOnly?: boolean) => {
-    if (adminOnly && role !== 'clinic_admin') return false;
-    return canAccessRoute(role, href) && canAccessRouteByFeature(features, href);
+  const canSee = (item: DashboardNavItem) => {
+    if (item.adminOnly && role !== 'clinic_admin') return false;
+    if (item.requiredCapability && !hasCapability(role, item.requiredCapability)) return false;
+    return canAccessRoute(role, item.href) && canAccessRouteByFeature(features, item.href);
   };
 
   return DASHBOARD_NAV_GROUPS.map((group) => ({
     ...group,
-    items: group.items.filter((item) => canSee(item.href, item.adminOnly)),
+    items: group.items.filter((item) => canSee(item)),
   })).filter((group) => group.items.length > 0);
 }
 
