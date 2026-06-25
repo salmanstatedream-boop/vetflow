@@ -155,6 +155,30 @@ export default function ClinicAdminDashboardClient({
         />
       </div>
 
+      <DashboardSectionCard
+        title="Quick Actions"
+        subtitle="Shortcuts to daily clinic workflows"
+        className="w-full"
+      >
+        <DashboardQabShell
+          layout="dashboard"
+          showHeading={false}
+          role={role}
+          capabilities={capabilities}
+          features={features}
+          featuresJson={featuresJson}
+          doctors={doctors}
+          activeBranchId={activeBranchId}
+          organizationId={organizationId}
+          clinicName={clinicName}
+          liveActiveConsults={liveActiveConsults}
+          liveCheckoutQueue={liveCheckoutQueue}
+          showConsultTimer={showConsultTimer}
+          branches={branches}
+          categories={categories}
+        />
+      </DashboardSectionCard>
+
       <div className={DASHBOARD_GRID}>
         <DashboardSectionCard
           title="Today's Schedule"
@@ -205,23 +229,6 @@ export default function ClinicAdminDashboardClient({
                 <span className="text-sm font-bold text-on-surface">{item.count}</span>
               </Link>
             ))}
-          </div>
-          <div className="mt-4 pt-4 border-t border-outline-variant/30">
-            <DashboardQabShell
-              role={role}
-              capabilities={capabilities}
-              features={features}
-              featuresJson={featuresJson}
-              doctors={doctors}
-              activeBranchId={activeBranchId}
-              organizationId={organizationId}
-              clinicName={clinicName}
-              liveActiveConsults={liveActiveConsults}
-              liveCheckoutQueue={liveCheckoutQueue}
-              showConsultTimer={showConsultTimer}
-              branches={branches}
-              categories={categories}
-            />
           </div>
         </DashboardSectionCard>
 

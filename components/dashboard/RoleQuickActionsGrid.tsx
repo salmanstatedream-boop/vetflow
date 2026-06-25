@@ -2,72 +2,81 @@
 
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import type { LucideIcon } from 'lucide-react';
-import { Loader2 } from 'lucide-react';
-import type { QabItem } from '@/components/dashboard/role-qab-config';
+import DashboardQuickActionTile from '@/components/dashboard/premium/DashboardQuickActionTile';
+import { groupQabItems, type QabItem } from '@/components/dashboard/role-qab-config';
+import { cn } from '@/lib/utils';
+
+export type QabLayout = 'compact' | 'dashboard';
 
 interface RoleQuickActionsGridProps {
   items: QabItem[];
   onAction: (item: QabItem) => void;
   pendingId?: string | null;
+  layout?: QabLayout;
+  showHeading?: boolean;
 }
+
+const GRID_CLASS: Record<QabLayout, string> = {
+  dashboard: 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5',
+  compact: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5',
+};
 
 export default function RoleQuickActionsGrid({
   items,
   onAction,
   pendingId = null,
+  layout = 'compact',
+  showHeading = true,
 }: RoleQuickActionsGridProps) {
   if (items.length === 0) return null;
 
+  if (layout === 'dashboard') {
+    const groups = groupQabItems(items);
+    return (
+      <div className="space-y-5">
+        {groups.map((section) => (
+          <div key={section.group}>
+            <p className="sidebar-section-label mb-2">{section.label}</p>
+            <div className={GRID_CLASS.dashboard}>
+              {section.items.map((item) => (
+                <DashboardQuickActionTile
+                  key={item.id}
+                  label={item.label}
+                  description={item.description}
+                  icon={item.icon}
+                  group={item.group}
+                  onClick={() => onAction(item)}
+                  loading={pendingId === item.id}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-3">
-      <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider">
-        Quick Actions
-      </h3>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+      {showHeading && (
+        <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider">
+          Quick Actions
+        </h3>
+      )}
+      <div className={cn(GRID_CLASS.compact)}>
         {items.map((item) => (
-          <QabCard
+          <DashboardQuickActionTile
             key={item.id}
-            item={item}
+            label={item.label}
+            description={item.description}
+            icon={item.icon}
+            group={item.group}
             onClick={() => onAction(item)}
             loading={pendingId === item.id}
           />
         ))}
       </div>
     </div>
-  );
-}
-
-function QabCard({
-  item,
-  onClick,
-  loading,
-}: {
-  item: QabItem;
-  onClick: () => void;
-  loading?: boolean;
-}) {
-  const Icon = item.icon as LucideIcon;
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={loading}
-      className="group relative text-left p-4 rounded-2xl border border-primary/20 bg-primary-container/40 hover:bg-primary-container/60 hover:border-primary/30 transition-all shadow-sm disabled:opacity-70"
-    >
-      {loading && (
-        <span className="absolute inset-0 flex items-center justify-center rounded-2xl bg-surface/60 backdrop-blur-[1px]">
-          <Loader2 className="w-5 h-5 text-primary animate-spin" />
-        </span>
-      )}
-      <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center mb-3 group-hover:bg-primary/25 transition-colors">
-        <Icon className="w-4.5 h-4.5 text-primary" />
-      </div>
-      <span className="text-xs font-bold text-on-surface block leading-tight">{item.label}</span>
-      <span className="text-[10px] text-on-surface-variant/70 block mt-0.5 line-clamp-2">
-        {item.description}
-      </span>
-    </button>
   );
 }
 

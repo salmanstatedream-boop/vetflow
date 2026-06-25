@@ -30,6 +30,29 @@ export const KPI_ACCENTS = {
 
 export const DASHBOARD_GRID = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-4 md:gap-5';
 
+export const QAB_GROUP_ACCENTS = {
+  clinical: {
+    chip: 'bg-violet-500/15 text-violet-400',
+    hover: 'hover:border-violet-500/30',
+  },
+  operations: {
+    chip: 'bg-cyan-500/15 text-cyan-400',
+    hover: 'hover:border-cyan-500/30',
+  },
+  financial: {
+    chip: 'bg-emerald-500/15 text-emerald-400',
+    hover: 'hover:border-emerald-500/30',
+  },
+  insights: {
+    chip: 'bg-amber-500/15 text-amber-400',
+    hover: 'hover:border-amber-500/30',
+  },
+  organization: {
+    chip: 'bg-slate-500/15 text-slate-300',
+    hover: 'hover:border-slate-400/30',
+  },
+} as const;
+
 export const CHART_TOOLTIP_STYLE = {
   backgroundColor: 'rgba(21, 18, 27, 0.95)',
   borderColor: 'rgba(255,255,255,0.08)',

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback, useTransition } from 'react';
-import RoleQuickActionsGrid from '@/components/dashboard/RoleQuickActionsGrid';
+import RoleQuickActionsGrid, { type QabLayout } from '@/components/dashboard/RoleQuickActionsGrid';
 import DashboardWorkflowLauncher from '@/components/dashboard/DashboardWorkflowLauncher';
 import {
   getQabsForRole,
@@ -37,6 +37,8 @@ interface DashboardQabShellProps {
   showConsultTimer?: boolean;
   branches: { id: string; name: string }[];
   categories: { id: string; name: string }[];
+  layout?: QabLayout;
+  showHeading?: boolean;
 }
 
 export default function DashboardQabShell({
@@ -53,6 +55,8 @@ export default function DashboardQabShell({
   showConsultTimer = false,
   branches,
   categories,
+  layout = 'compact',
+  showHeading = true,
 }: DashboardQabShellProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -94,7 +98,13 @@ export default function DashboardQabShell({
 
   return (
     <>
-      <RoleQuickActionsGrid items={qabItems} onAction={handleAction} pendingId={pendingQabId} />
+      <RoleQuickActionsGrid
+        layout={layout}
+        showHeading={showHeading}
+        items={qabItems}
+        onAction={handleAction}
+        pendingId={pendingQabId}
+      />
       <DashboardWorkflowLauncher
         activeModal={activeModal}
         onClose={closeModal}
