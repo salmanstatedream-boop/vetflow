@@ -1,33 +1,57 @@
 'use client';
 
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
-import type { DashboardNotification } from '@/lib/dashboard/notifications';
+import {
+  filterDismissedNotifications,
+  notificationBadgeCount,
+  type DashboardNotification,
+} from '@/lib/dashboard/notifications';
 
 type DashboardShellContextValue = {
   notifications: DashboardNotification[];
   setNotifications: (items: DashboardNotification[]) => void;
   notificationCount: number;
-  setNotificationCount: (count: number) => void;
+  clearNotifications: () => void;
 };
 
 const DashboardShellContext = createContext<DashboardShellContextValue | null>(null);
 
 export function DashboardShellProvider({ children }: { children: ReactNode }) {
-  const [notifications, setNotificationsState] = useState<DashboardNotification[]>([]);
-  const [notificationCount, setNotificationCount] = useState(0);
+  const [allNotifications, setAllNotifications] = useState<DashboardNotification[]>([]);
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => new Set());
 
   const setNotifications = useCallback((items: DashboardNotification[]) => {
-    setNotificationsState(items);
+    setAllNotifications(items);
   }, []);
+
+  const clearNotifications = useCallback(() => {
+    setDismissedIds((prev) => {
+      const next = new Set(prev);
+      for (const item of allNotifications) {
+        next.add(item.id);
+      }
+      return next;
+    });
+  }, [allNotifications]);
+
+  const notifications = useMemo(
+    () => filterDismissedNotifications(allNotifications, dismissedIds),
+    [allNotifications, dismissedIds]
+  );
+
+  const notificationCount = useMemo(
+    () => notificationBadgeCount(notifications),
+    [notifications]
+  );
 
   const value = useMemo(
     () => ({
       notifications,
       setNotifications,
       notificationCount,
-      setNotificationCount,
+      clearNotifications,
     }),
-    [notifications, setNotifications, notificationCount]
+    [notifications, setNotifications, notificationCount, clearNotifications]
   );
 
   return (

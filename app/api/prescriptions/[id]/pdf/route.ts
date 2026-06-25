@@ -92,6 +92,7 @@ export async function GET(
         brandName: branding.brandName,
         accentColor: branding.accentColor,
         footerText: branding.footerText,
+        logoUrl: branding.logoUrl,
       }) as any
     );
 

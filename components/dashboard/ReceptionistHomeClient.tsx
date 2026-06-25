@@ -2,20 +2,12 @@
 
 import AppLink from '@/components/layout/AppLink';
 import { useMemo, useState } from 'react';
-import QuickWalkInModal from '@/components/reception/QuickWalkInModal';
 import {
-  Calendar,
-  Search,
-  Layers,
-  ArrowRight,
   AlertTriangle,
   Heart,
   Phone,
-  UserPlus,
   Printer,
   FileText,
-  ShoppingBag,
-  Banknote,
 } from 'lucide-react';
 import { useVisibilityPolling } from '@/lib/hooks/useVisibilityPolling';
 import DateRangeQuickFilter from '@/components/dashboard/DateRangeQuickFilter';
@@ -67,27 +59,15 @@ export interface ReceptionistHomeClientProps {
   doctors: { id: string; firstName: string; lastName: string }[];
 }
 
-const WORKFLOW_STEPS = [
-  { step: 1, label: 'Find patient', href: '/dashboard/customers?focus=phone' },
-  { step: 2, label: 'Book / Check-in', href: '/dashboard/appointments?new=1' },
-  { step: 3, label: 'Doctor visit', href: '/dashboard/walk-ins' },
-  { step: 4, label: 'Checkout & print', href: '/dashboard/walk-ins' },
-  { step: 5, label: 'Retail sale', href: '/dashboard/sales/new' },
-];
-
 export default function ReceptionistHomeClient({
   upcomingAppointments,
   waitingVisits,
   consultingVisits = [],
   checkoutVisits,
   visitRecords,
-  activeBranchId,
-  branches,
-  doctors,
 }: ReceptionistHomeClientProps) {
   useVisibilityPolling(15000, true);
 
-  const [walkInOpen, setWalkInOpen] = useState(false);
   const [recordSearch, setRecordSearch] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -110,7 +90,67 @@ export default function ReceptionistHomeClient({
 
   return (
     <div className="space-y-6">
-      <DateRangeQuickFilter showWeek={false} />
+      <div className="grid md:grid-cols-3 gap-4">
+        <QueuePanel
+          title="Upcoming appointments"
+          empty="No appointments scheduled for today."
+          href="/dashboard/appointments"
+          isEmpty={upcomingAppointments.length === 0}
+        >
+          {upcomingAppointments.map((a) => (
+            <AppLink
+              key={a.id}
+              href="/dashboard/appointments"
+              className="block px-4 py-3 hover:bg-surface-container/30 border-b border-outline-variant/20 last:border-0"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-on-surface">{a.petName}</span>
+                {a.isEmergency && (
+                  <span className="text-[9px] font-bold text-destructive flex items-center gap-0.5">
+                    <AlertTriangle className="w-2.5 h-2.5" />
+                    EMERGENCY
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] text-on-surface-variant block">
+                {a.customerName} · <Phone className="w-2.5 h-2.5 inline" /> {a.customerPhone}
+              </span>
+              <span className="text-[10px] text-primary font-semibold">{a.preferredTime}</span>
+            </AppLink>
+          ))}
+        </QueuePanel>
+
+        <QueuePanel title="Waiting walk-ins" empty="No patients waiting." href="/dashboard/walk-ins" isEmpty={waitingVisits.length === 0}>
+          {waitingVisits.map((v) => (
+            <AppLink
+              key={v.id}
+              href="/dashboard/walk-ins"
+              className="block px-4 py-3 hover:bg-surface-container/30 border-b border-outline-variant/20 last:border-0"
+            >
+              <span className="text-xs font-bold text-on-surface flex items-center gap-1">
+                <Heart className="w-3 h-3 text-primary" />
+                {v.petName}
+              </span>
+              <span className="text-[10px] text-on-surface-variant block">{v.customerName}</span>
+              <span className="text-[10px] text-on-surface-variant/70 line-clamp-1">{v.reason}</span>
+            </AppLink>
+          ))}
+        </QueuePanel>
+
+        <QueuePanel title="Ready for checkout" empty="No patients awaiting billing." href="/dashboard/walk-ins" isEmpty={checkoutVisits.length === 0}>
+          {checkoutVisits.map((v) => (
+            <AppLink
+              key={v.id}
+              href={`/dashboard/invoices/create/${v.id}`}
+              className="block px-4 py-3 hover:bg-surface-container/30 border-b border-outline-variant/20 last:border-0"
+            >
+              <span className="text-xs font-bold text-on-surface">{v.petName}</span>
+              <span className="text-[10px] text-on-surface-variant block">{v.customerName}</span>
+              <span className="text-[10px] text-emerald-500 font-bold">Open checkout hub →</span>
+            </AppLink>
+          ))}
+        </QueuePanel>
+      </div>
 
       {consultingVisits.length > 0 && (
         <div className="glass-panel rounded-2xl border border-blue-500/30 p-4 space-y-2">
@@ -144,7 +184,8 @@ export default function ReceptionistHomeClient({
       )}
 
       <div className="glass-panel rounded-2xl p-5 border border-outline-variant/40">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+        <DateRangeQuickFilter showWeek={false} />
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 mt-4">
           <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider">
             Sales & visit records
           </h3>
@@ -259,108 +300,6 @@ export default function ReceptionistHomeClient({
           </div>
         )}
       </div>
-
-      <div className="glass-panel rounded-2xl p-5 border border-outline-variant/40">
-        <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider mb-3">
-          Daily workflow
-        </h3>
-        <div className="flex flex-wrap gap-2">
-          {WORKFLOW_STEPS.map((s, i) => (
-            <AppLink
-              key={s.step}
-              href={s.href}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-container/50 border border-outline-variant/50 text-xs font-semibold text-on-surface hover:border-primary/40 hover:bg-primary/5 transition-colors"
-            >
-              <span className="w-5 h-5 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center">
-                {s.step}
-              </span>
-              {s.label}
-              {i < WORKFLOW_STEPS.length - 1 && (
-                <ArrowRight className="w-3 h-3 text-on-surface-variant/40 hidden sm:block" />
-              )}
-            </AppLink>
-          ))}
-        </div>
-      </div>
-
-      <div className="grid md:grid-cols-3 gap-4">
-        <QueuePanel
-          title="Upcoming appointments"
-          empty="No appointments scheduled for today."
-          href="/dashboard/appointments"
-          isEmpty={upcomingAppointments.length === 0}
-        >
-          {upcomingAppointments.map((a) => (
-            <AppLink
-              key={a.id}
-              href="/dashboard/appointments"
-              className="block px-4 py-3 hover:bg-surface-container/30 border-b border-outline-variant/20 last:border-0"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-on-surface">{a.petName}</span>
-                {a.isEmergency && (
-                  <span className="text-[9px] font-bold text-destructive flex items-center gap-0.5">
-                    <AlertTriangle className="w-2.5 h-2.5" />
-                    EMERGENCY
-                  </span>
-                )}
-              </div>
-              <span className="text-[10px] text-on-surface-variant block">
-                {a.customerName} · <Phone className="w-2.5 h-2.5 inline" /> {a.customerPhone}
-              </span>
-              <span className="text-[10px] text-primary font-semibold">{a.preferredTime}</span>
-            </AppLink>
-          ))}
-        </QueuePanel>
-
-        <QueuePanel title="Waiting walk-ins" empty="No patients waiting." href="/dashboard/walk-ins" isEmpty={waitingVisits.length === 0}>
-          {waitingVisits.map((v) => (
-            <AppLink
-              key={v.id}
-              href="/dashboard/walk-ins"
-              className="block px-4 py-3 hover:bg-surface-container/30 border-b border-outline-variant/20 last:border-0"
-            >
-              <span className="text-xs font-bold text-on-surface flex items-center gap-1">
-                <Heart className="w-3 h-3 text-primary" />
-                {v.petName}
-              </span>
-              <span className="text-[10px] text-on-surface-variant block">{v.customerName}</span>
-              <span className="text-[10px] text-on-surface-variant/70 line-clamp-1">{v.reason}</span>
-            </AppLink>
-          ))}
-        </QueuePanel>
-
-        <QueuePanel title="Ready for checkout" empty="No patients awaiting billing." href="/dashboard/walk-ins" isEmpty={checkoutVisits.length === 0}>
-          {checkoutVisits.map((v) => (
-            <AppLink
-              key={v.id}
-              href={`/dashboard/invoices/create/${v.id}`}
-              className="block px-4 py-3 hover:bg-surface-container/30 border-b border-outline-variant/20 last:border-0"
-            >
-              <span className="text-xs font-bold text-on-surface">{v.petName}</span>
-              <span className="text-[10px] text-on-surface-variant block">{v.customerName}</span>
-              <span className="text-[10px] text-emerald-500 font-bold">Open checkout hub →</span>
-            </AppLink>
-          ))}
-        </QueuePanel>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        <QuickChip href="/dashboard/sales/new" icon={ShoppingBag} label="Retail sale" />
-        <QuickChip onClick={() => setWalkInOpen(true)} icon={UserPlus} label="Quick walk-in" primary />
-        <QuickChip href="/dashboard/customers?focus=phone" icon={Search} label="Search by phone" />
-        <QuickChip href="/dashboard/inventory?tab=intake" icon={Layers} label="Stock invoice intake" />
-        <QuickChip href="/dashboard/invoices?status=unpaid" icon={Banknote} label="Unpaid invoices" />
-        <QuickChip href="/dashboard/appointments?new=1" icon={Calendar} label="New appointment" />
-      </div>
-
-      <QuickWalkInModal
-        isOpen={walkInOpen}
-        onClose={() => setWalkInOpen(false)}
-        activeBranchId={activeBranchId}
-        branches={branches}
-        doctors={doctors}
-      />
     </div>
   );
 }
@@ -392,41 +331,5 @@ function QueuePanel({
         <p className="px-4 py-6 text-[10px] text-on-surface-variant/60 text-center italic">{empty}</p>
       )}
     </div>
-  );
-}
-
-function QuickChip({
-  href,
-  onClick,
-  icon: Icon,
-  label,
-  primary,
-}: {
-  href?: string;
-  onClick?: () => void;
-  icon: typeof Search;
-  label: string;
-  primary?: boolean;
-}) {
-  const className = `inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors ${
-    primary
-      ? 'bg-primary/15 border-primary/30 text-primary hover:bg-primary/25'
-      : 'border-outline-variant/50 text-on-surface hover:bg-surface-container-high'
-  }`;
-
-  if (onClick) {
-    return (
-      <button type="button" onClick={onClick} className={className}>
-        <Icon className="w-3.5 h-3.5 text-primary" />
-        {label}
-      </button>
-    );
-  }
-
-  return (
-    <AppLink href={href!} className={className}>
-      <Icon className="w-3.5 h-3.5 text-primary" />
-      {label}
-    </AppLink>
   );
 }

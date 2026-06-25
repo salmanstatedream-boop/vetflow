@@ -101,6 +101,9 @@ export async function createProductAction(payload: unknown) {
 
     const supabase = await createClient();
     const productType = normalizeProductTypeSlug(parsed.type);
+    const trackExpiry = productType !== 'service' && parsed.trackExpiry;
+    const expiryDate =
+      trackExpiry && parsed.expiryDate?.trim() ? parsed.expiryDate.trim().slice(0, 10) : null;
 
     const { data: product, error } = await supabase
       .from('products')
@@ -117,6 +120,8 @@ export async function createProductAction(payload: unknown) {
         selling_price: parsed.sellingPrice,
         stock_quantity: productType === 'service' ? 9999 : parsed.stockQuantity,
         reorder_level: parsed.reorderLevel,
+        track_expiry: trackExpiry,
+        expiry_date: expiryDate,
         is_active: true,
         created_by: ctx.userId,
       })
@@ -531,6 +536,9 @@ export async function updateProductAction(payload: unknown) {
     }
 
     const productType = normalizeProductTypeSlug(parsed.type);
+    const trackExpiry = productType !== 'service' && parsed.trackExpiry;
+    const expiryDate =
+      trackExpiry && parsed.expiryDate?.trim() ? parsed.expiryDate.trim().slice(0, 10) : null;
 
     const { data: product, error } = await admin
       .from('products')
@@ -545,6 +553,8 @@ export async function updateProductAction(payload: unknown) {
         purchase_price: parsed.purchasePrice,
         selling_price: parsed.sellingPrice,
         reorder_level: parsed.reorderLevel,
+        track_expiry: trackExpiry,
+        expiry_date: expiryDate,
       })
       .eq('id', parsed.productId)
       .select()

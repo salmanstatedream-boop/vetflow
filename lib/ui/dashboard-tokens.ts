@@ -34,7 +34,10 @@ export const DASHBOARD_GRID = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 g
 export const DASHBOARD_DENSITY = {
   pageGap: 'space-y-3 md:space-y-4',
   gridGap: 'gap-3 md:gap-3.5',
-  kpiMinH: 'min-h-[92px]',
+  kpiCompactH: 'h-[112px]',
+  kpiDefaultH: 'h-[128px]',
+  kpiFooterH: 'h-6',
+  kpiSparklineW: 'w-16',
   sectionPad: 'p-3.5 md:p-4',
   listMaxH: 'max-h-[200px]',
   chartH: 'h-[148px]',

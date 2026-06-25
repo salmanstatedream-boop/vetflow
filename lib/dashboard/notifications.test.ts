@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   checkoutNotifications,
+  filterDismissedNotifications,
   notificationBadgeCount,
   sortDashboardNotifications,
   type DashboardNotification,
@@ -56,5 +57,14 @@ describe('checkoutNotifications', () => {
     const all = [item('checkout', '1'), item('low_stock', '2')];
     expect(checkoutNotifications(all)).toHaveLength(1);
     expect(checkoutNotifications(all)[0]?.kind).toBe('checkout');
+  });
+});
+
+describe('filterDismissedNotifications', () => {
+  it('removes dismissed ids', () => {
+    const all = [item('checkout', 'a'), item('low_stock', 'b')];
+    const filtered = filterDismissedNotifications(all, new Set(['a']));
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0]?.id).toBe('b');
   });
 });

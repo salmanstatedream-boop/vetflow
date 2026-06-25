@@ -859,7 +859,7 @@ export default async function DashboardOverview({
         />
       )}
 
-      {showSecondary && (
+      {showSecondary && role !== 'receptionist' && (
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {canShowWidget(role, 'totalCustomers') && (
             <SecondaryStat icon={Users} label="Total Customers" value={totalCustomers} />

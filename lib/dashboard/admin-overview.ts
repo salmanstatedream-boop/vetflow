@@ -117,6 +117,7 @@ export async function loadAdminOverviewBundle(params: {
   })();
 
   const vaccWindowEnd = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
+  const expiryWindowEnd = new Date(Date.now() + 60 * 86400000).toISOString().slice(0, 10);
 
   const [
     settingsRes,
@@ -164,7 +165,7 @@ export async function loadAdminOverviewBundle(params: {
     supabase.from('visits').select(`id, reason, status, checked_in_at, pets:patients(name, species), customers(first_name, last_name), visit_assignments(user_profiles(first_name, last_name))`).eq('branch_id', branchId).in('status', ['waiting', 'consulting', 'ready_for_checkout']).order('checked_in_at'),
     supabase.from('visits').select('reason').eq('branch_id', branchId).gte('checked_in_at', `${days7[0]}T00:00:00Z`).limit(200),
     supabase.from('patients').select('species').eq('organization_id', organizationId),
-    supabase.from('inventory_batches').select('id, expiry_date, quantity, products(name, branch_id)').gte('expiry_date', today).lte('expiry_date', new Date(Date.now() + 60 * 86400000).toISOString().slice(0, 10)).order('expiry_date').limit(8),
+    supabase.from('products').select('id, name, expiry_date, stock_quantity').eq('branch_id', branchId).eq('track_expiry', true).not('expiry_date', 'is', null).gte('expiry_date', today).lte('expiry_date', expiryWindowEnd).is('deleted_at', null).order('expiry_date').limit(8),
     supabase.from('appointments').select('id, patient_name, customer_name, preferred_date, reason').eq('branch_id', branchId).not('follow_up_of_visit_id', 'is', null).lte('preferred_date', today).in('status', ['requested', 'confirmed', 'rescheduled']).limit(8),
     supabase.from('appointments').select('id', { count: 'exact', head: true }).eq('branch_id', branchId).not('follow_up_of_visit_id', 'is', null).lte('preferred_date', today).in('status', ['requested', 'confirmed', 'rescheduled']),
     supabase.from('appointments').select('id', { count: 'exact', head: true }).eq('branch_id', branchId).eq('visit_purpose', 'vaccination').eq('preferred_date', today),
@@ -409,20 +410,12 @@ export async function loadAdminOverviewBundle(params: {
         reorderLevel: p.reorder_level,
       };
     }),
-    expiringSoon: (expiringRes.data || [])
-      .filter((b) => {
-        const prod = normalizeOneToOne(b.products as { branch_id: string } | null);
-        return prod?.branch_id === branchId;
-      })
-      .map((b) => {
-        const prod = normalizeOneToOne(b.products as { name: string } | null);
-        return {
-          id: b.id,
-          productName: prod?.name || 'Product',
-          expiryDate: b.expiry_date as string,
-          quantity: b.quantity as number,
-        };
-      }),
+    expiringSoon: (expiringRes.data || []).map((p) => ({
+      id: p.id as string,
+      productName: p.name as string,
+      expiryDate: p.expiry_date as string,
+      quantity: (p.stock_quantity as number) ?? 0,
+    })),
     followUpsDue: (followUpsRes.data || []).map((a) => ({
       id: a.id,
       petName: a.patient_name as string,

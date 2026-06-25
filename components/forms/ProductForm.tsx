@@ -58,12 +58,15 @@ export default function ProductForm({
       reorderLevel: 5,
       purchasePrice: 0,
       sellingPrice: 0,
+      trackExpiry: false,
+      expiryDate: '',
     },
   });
 
   const typeWatch = watch('type');
   const branchIdWatch = watch('branchId');
   const categoryNameWatch = watch('categoryName');
+  const trackExpiryWatch = watch('trackExpiry');
   const purchasePriceWatch = watch('purchasePrice');
   const sellingPriceManuallySet = useRef(false);
 
@@ -266,6 +269,42 @@ export default function ProductForm({
               onCreateOption={handleCreateCategory}
               placeholder="Select or create category…"
             />
+
+            {typeWatch !== 'service' && (
+              <div className="space-y-3 p-3 rounded-xl border border-outline-variant/40 bg-surface-container/20">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(trackExpiryWatch)}
+                    onChange={(e) => {
+                      setValue('trackExpiry', e.target.checked, { shouldValidate: true });
+                      if (!e.target.checked) {
+                        setValue('expiryDate', '', { shouldValidate: true });
+                      }
+                    }}
+                    className="rounded border-outline-variant/60"
+                  />
+                  <span className="text-xs font-semibold text-on-surface">
+                    This product has an expiry date
+                  </span>
+                </label>
+                {trackExpiryWatch && (
+                  <div>
+                    <label className="block text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                      Expiry date
+                    </label>
+                    <input
+                      type="date"
+                      {...register('expiryDate')}
+                      className="w-full px-3 py-2 bg-surface-container/30 border border-outline-variant focus:border-primary rounded-xl outline-none text-xs text-on-surface"
+                    />
+                    {errors.expiryDate && (
+                      <span className="text-[10px] text-destructive mt-1 block">{errors.expiryDate.message}</span>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {typeWatch !== 'service' && (
               <div>

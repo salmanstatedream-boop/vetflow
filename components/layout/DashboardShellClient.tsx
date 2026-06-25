@@ -211,7 +211,7 @@ export default function DashboardShellClient({
   );
 
   return (
-    <DashboardShellProvider>
+    <DashboardShellProvider key={activeBranchId}>
       <DashboardNotificationsSync />
     <div className="min-h-screen bg-surface flex flex-col dashboard-shell">
       {session.isImpersonating && session.organizationName && (
@@ -367,7 +367,7 @@ export default function DashboardShellClient({
 function ConnectedDashboardTopBar(
   props: Omit<
     React.ComponentProps<typeof DashboardTopBar>,
-    'notificationCount' | 'notifications'
+    'notificationCount' | 'notifications' | 'onClearNotifications'
   >
 ) {
   const shell = useDashboardShell();
@@ -376,6 +376,7 @@ function ConnectedDashboardTopBar(
       {...props}
       notificationCount={shell?.notificationCount ?? 0}
       notifications={shell?.notifications ?? []}
+      onClearNotifications={shell?.clearNotifications}
     />
   );
 }

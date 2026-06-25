@@ -18,20 +18,35 @@ const stockCountField = z
   .int()
   .nonnegative({ message: 'Must be zero or greater' });
 
-export const ProductSchema = z.object({
-  name: z.string().min(1, { message: 'Product name is required' }),
-  brand: z.string().optional().or(z.literal('')),
-  sku: z.string().optional().or(z.literal('')),
-  unit: z.string().min(1, { message: 'Unit is required' }),
-  type: z.string().min(1, { message: 'Product type is required' }).max(50),
-  purchasePrice: moneyField,
-  sellingPrice: moneyField,
-  stockQuantity: stockCountField,
-  reorderLevel: stockCountField,
-  categoryId: EntityIdSchema.nullable().optional(),
-  categoryName: z.string().max(100).optional().or(z.literal('')),
-  branchId: EntityIdSchema,
-});
+export const ProductSchema = z
+  .object({
+    name: z.string().min(1, { message: 'Product name is required' }),
+    brand: z.string().optional().or(z.literal('')),
+    sku: z.string().optional().or(z.literal('')),
+    unit: z.string().min(1, { message: 'Unit is required' }),
+    type: z.string().min(1, { message: 'Product type is required' }).max(50),
+    purchasePrice: moneyField,
+    sellingPrice: moneyField,
+    stockQuantity: stockCountField,
+    reorderLevel: stockCountField,
+    categoryId: EntityIdSchema.nullable().optional(),
+    categoryName: z.string().max(100).optional().or(z.literal('')),
+    branchId: EntityIdSchema,
+    trackExpiry: z.boolean(),
+    expiryDate: z.string().nullable().optional().or(z.literal('')),
+  })
+  .superRefine((data, ctx) => {
+    if (data.type !== 'service' && data.trackExpiry) {
+      const date = (data.expiryDate || '').trim();
+      if (!date) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Expiry date is required when tracking expiry',
+          path: ['expiryDate'],
+        });
+      }
+    }
+  });
 
 export const UpdateProductSchema = ProductSchema.extend({
   productId: EntityIdSchema,

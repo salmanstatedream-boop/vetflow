@@ -34,6 +34,7 @@ function kindIcon(kind: DashboardNotificationKind) {
 interface DashboardNotificationsPanelProps {
   open: boolean;
   onClose: () => void;
+  onClear?: () => void;
   notifications: DashboardNotification[];
   triggerRef: React.RefObject<HTMLButtonElement | null>;
 }
@@ -41,6 +42,7 @@ interface DashboardNotificationsPanelProps {
 export default function DashboardNotificationsPanel({
   open,
   onClose,
+  onClear,
   notifications,
   triggerRef,
 }: DashboardNotificationsPanelProps) {
@@ -89,18 +91,29 @@ export default function DashboardNotificationsPanel({
         maxHeight: pos.maxListHeight + 48,
       }}
     >
-      <div className="flex items-center justify-between px-4 py-3 border-b border-outline-variant/40 shrink-0">
+      <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-outline-variant/40 shrink-0">
         <span className="text-xs font-bold text-on-surface uppercase tracking-wider">
           Notifications
         </span>
-        <button
-          type="button"
-          onClick={onClose}
-          className="p-1 rounded-lg text-on-surface-variant hover:text-on-surface"
-          aria-label="Close notifications"
-        >
-          <X className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          {notifications.length > 0 && onClear && (
+            <button
+              type="button"
+              onClick={onClear}
+              className="px-2 py-1 rounded-lg text-[10px] font-semibold text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
+            >
+              Clear all
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1 rounded-lg text-on-surface-variant hover:text-on-surface"
+            aria-label="Close notifications"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       <div className="overflow-y-auto flex-1" style={{ maxHeight: pos.maxListHeight }}>

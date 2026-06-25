@@ -23,6 +23,8 @@ interface ProductRow {
   selling_price: number;
   stock_quantity: number;
   reorder_level: number;
+  track_expiry: boolean;
+  expiry_date: string | null;
   created_by: string | null;
   product_categories: { name: string } | null;
 }
@@ -414,6 +416,11 @@ export default function InventoryCatalogClient({
                             <span className="flex items-center gap-1 text-[9px] font-bold text-destructive bg-destructive/5 border border-destructive/20 px-2 py-0.5 rounded-lg w-max">
                               <ShieldAlert className="w-3 h-3" />
                               Low Stock (Limit {prod.reorder_level})
+                            </span>
+                          )}
+                          {prod.track_expiry && prod.expiry_date && (
+                            <span className="block text-[9px] font-semibold text-amber-400">
+                              Exp: {new Date(prod.expiry_date).toLocaleDateString()}
                             </span>
                           )}
                         </div>

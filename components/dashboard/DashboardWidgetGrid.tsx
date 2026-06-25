@@ -2,6 +2,7 @@ import Link from 'next/link';
 import KpiCard from '@/components/ui/premium/KpiCard';
 import type { LucideIcon } from 'lucide-react';
 import { ArrowRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export type DashboardKpi = {
   key: string;
@@ -29,7 +30,7 @@ export default function DashboardWidgetGrid({
         : 'grid-cols-2 lg:grid-cols-4';
 
   return (
-    <div className={`grid ${colClass} gap-4 md:gap-6`}>
+    <div className={`grid ${colClass} gap-4 md:gap-6 items-stretch`}>
       {kpis.map((kpi) => {
         const card = (
           <KpiCard
@@ -37,16 +38,20 @@ export default function DashboardWidgetGrid({
             value={kpi.value}
             icon={kpi.icon}
             trend={kpi.trend}
-            className={kpi.href ? 'hover:border-primary/30 transition-colors' : undefined}
+            className={cn('h-full', kpi.href && 'hover:border-primary/30 transition-colors')}
           />
         );
 
         if (!kpi.href) {
-          return <div key={kpi.key}>{card}</div>;
+          return (
+            <div key={kpi.key} className="h-full">
+              {card}
+            </div>
+          );
         }
 
         return (
-          <Link key={kpi.key} href={kpi.href} className="group relative block">
+          <Link key={kpi.key} href={kpi.href} className="group relative block h-full">
             {card}
             <ArrowRight className="absolute top-5 right-5 w-4 h-4 text-on-surface-variant/20 group-hover:text-primary transition-colors" />
           </Link>

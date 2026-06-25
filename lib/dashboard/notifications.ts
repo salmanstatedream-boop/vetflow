@@ -39,6 +39,14 @@ export function notificationBadgeCount(items: DashboardNotification[]): number {
   return items.length;
 }
 
+export function filterDismissedNotifications(
+  items: DashboardNotification[],
+  dismissedIds: ReadonlySet<string>
+): DashboardNotification[] {
+  if (dismissedIds.size === 0) return items;
+  return items.filter((item) => !dismissedIds.has(item.id));
+}
+
 export function checkoutNotifications(
   items: DashboardNotification[]
 ): DashboardNotification[] {

@@ -55,6 +55,8 @@ export default function CatalogItemQuickAddModal({
       reorderLevel: 5,
       purchasePrice: 0,
       sellingPrice: 0,
+      trackExpiry: false,
+      expiryDate: '',
     },
   });
 

@@ -80,6 +80,7 @@ interface DashboardTopBarProps {
   displayDate: string;
   notificationCount?: number;
   notifications?: DashboardNotification[];
+  onClearNotifications?: () => void;
   hasAvatar: boolean;
   avatarInitial: string;
   roleLabel: string;
@@ -97,6 +98,7 @@ export default function DashboardTopBar({
   displayDate,
   notificationCount = 0,
   notifications = [],
+  onClearNotifications,
   hasAvatar,
   avatarInitial,
   roleLabel,
@@ -157,6 +159,7 @@ export default function DashboardTopBar({
           <DashboardNotificationsPanel
             open={notificationsOpen}
             onClose={() => setNotificationsOpen(false)}
+            onClear={onClearNotifications}
             notifications={notifications}
             triggerRef={bellRef}
           />

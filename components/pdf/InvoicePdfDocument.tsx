@@ -1,4 +1,4 @@
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import { formatMoney } from '@/lib/utils/currency';
 
 const styles = StyleSheet.create({
@@ -22,11 +22,18 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   logoPlaceholder: {
-    width: 14,
-    height: 14,
+    width: 40,
+    height: 40,
     backgroundColor: '#0F172A',
-    marginRight: 6,
-    borderRadius: 3
+    marginRight: 8,
+    borderRadius: 4
+  },
+  logoImage: {
+    width: 40,
+    height: 40,
+    marginRight: 8,
+    borderRadius: 4,
+    objectFit: 'contain' as const,
   },
   logoText: { 
     fontSize: 16, 
@@ -193,6 +200,7 @@ interface InvoicePdfProps {
   brandName?: string;
   accentColor?: string;
   footerText?: string;
+  logoUrl?: string | null;
 }
 
 export default function InvoicePdfDocument({
@@ -216,6 +224,7 @@ export default function InvoicePdfDocument({
   brandName,
   accentColor = '#0F172A',
   footerText,
+  logoUrl,
 }: InvoicePdfProps) {
   const fmt = (amount: number) => formatMoney(amount, currency);
   return (
@@ -225,7 +234,11 @@ export default function InvoicePdfDocument({
         {/* HEADER */}
         <View style={styles.header}>
           <View style={styles.logoContainer}>
-            <View style={[styles.logoPlaceholder, { backgroundColor: accentColor }]} />
+            {logoUrl ? (
+              <Image src={logoUrl} style={styles.logoImage} />
+            ) : (
+              <View style={[styles.logoPlaceholder, { backgroundColor: accentColor }]} />
+            )}
             <Text style={[styles.logoText, { color: accentColor }]}>{brandName || clinicName}</Text>
           </View>
           <View style={styles.clinicDetails}>

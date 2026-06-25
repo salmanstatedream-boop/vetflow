@@ -89,7 +89,7 @@ export default function ClinicAdminDashboardClient({
   return (
     <div className={DASHBOARD_DENSITY.pageGap}>
       {/* Row A — KPIs */}
-      <div className={cn('grid grid-cols-2 md:grid-cols-3 xl:grid-cols-7', DASHBOARD_DENSITY.gridGap)}>
+      <div className={cn('grid grid-cols-2 md:grid-cols-3 xl:grid-cols-7 items-stretch', DASHBOARD_DENSITY.gridGap)}>
         <DashboardKpiStatCard
           density="compact"
           label="Today's Appointments"

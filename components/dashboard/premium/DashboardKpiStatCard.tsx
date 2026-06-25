@@ -39,17 +39,18 @@ export default function DashboardKpiStatCard({
   const compact = density === 'compact';
   const positive = deltaPercent != null && deltaPercent >= 0;
   const hasDelta = deltaPercent != null && Number.isFinite(deltaPercent);
+  const showSparkline = Boolean(sparkline && sparkline.length > 1);
 
   const content = (
     <div
       className={cn(
-        'dashboard-card flex flex-col gap-2',
-        compact ? cn('p-3', DASHBOARD_DENSITY.kpiMinH) : 'p-4 md:p-5 gap-3 min-h-[120px]',
+        'dashboard-card flex flex-col h-full',
+        compact ? cn('p-3 gap-2', DASHBOARD_DENSITY.kpiCompactH) : cn('p-4 md:p-5 gap-3', DASHBOARD_DENSITY.kpiDefaultH),
         href && 'hover:border-primary/30 cursor-pointer transition-colors',
         className
       )}
     >
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex items-start justify-between gap-2 shrink-0">
         <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant leading-tight">
           {label}
         </span>
@@ -65,44 +66,58 @@ export default function DashboardKpiStatCard({
       </div>
       <p
         className={cn(
-          'font-bold text-on-surface font-[family-name:var(--font-display)] tracking-tight',
+          'font-bold text-on-surface font-[family-name:var(--font-display)] tracking-tight shrink-0 truncate',
           compact ? 'text-xl' : 'text-2xl'
         )}
       >
         {value}
       </p>
-      <div className="flex items-end justify-between gap-2 mt-auto">
-        {hasDelta ? (
-          <div
-            className={cn(
-              'inline-flex items-center gap-0.5 text-[10px] font-bold',
-              positive ? 'text-emerald-400' : 'text-red-400'
-            )}
-          >
-            {positive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-            {positive ? '+' : ''}
-            {deltaPercent!.toFixed(0)}%
-            {deltaLabel && (
-              <span className="text-on-surface-variant font-medium ml-0.5 hidden sm:inline">{deltaLabel}</span>
-            )}
-          </div>
-        ) : (
-          <span className="text-[10px] text-on-surface-variant truncate">{deltaLabel || ''}</span>
+      <div
+        className={cn(
+          'flex items-end justify-between gap-2 mt-auto shrink-0',
+          DASHBOARD_DENSITY.kpiFooterH
         )}
-        {sparkline && sparkline.length > 1 && (
-          <DashboardSparkline
-            data={sparkline}
-            stroke={sparklineStroke}
-            className={compact ? 'h-6 w-16' : 'h-7 w-20'}
-          />
-        )}
+      >
+        <div className="min-w-0 flex-1">
+          {hasDelta ? (
+            <div
+              className={cn(
+                'inline-flex items-center gap-0.5 text-[10px] font-bold',
+                positive ? 'text-emerald-400' : 'text-red-400'
+              )}
+            >
+              {positive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+              {positive ? '+' : ''}
+              {deltaPercent!.toFixed(0)}%
+              {deltaLabel && (
+                <span className="text-on-surface-variant font-medium ml-0.5 hidden sm:inline">{deltaLabel}</span>
+              )}
+            </div>
+          ) : (
+            <span className="text-[10px] text-on-surface-variant truncate block">
+              {deltaLabel || '\u00a0'}
+            </span>
+          )}
+        </div>
+        <div className={cn('shrink-0', DASHBOARD_DENSITY.kpiSparklineW, DASHBOARD_DENSITY.kpiFooterH)}>
+          {showSparkline && (
+            <DashboardSparkline
+              data={sparkline!}
+              stroke={sparklineStroke}
+              className={cn('h-full w-full', compact ? 'max-h-6' : 'max-h-7')}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
 
   if (href) {
     return (
-      <Link href={href} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-2xl">
+      <Link
+        href={href}
+        className="block h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-2xl"
+      >
         {content}
       </Link>
     );

@@ -74,6 +74,7 @@ export async function GET(
         brandName: branding.brandName,
         accentColor: branding.accentColor,
         footerText: branding.footerText || undefined,
+        logoUrl: branding.logoUrl,
       }) as any
     );
 

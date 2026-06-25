@@ -69,6 +69,8 @@ export default async function InventoryPage({
       selling_price,
       stock_quantity,
       reorder_level,
+      track_expiry,
+      expiry_date,
       category_id,
       created_by,
       product_categories ( name )

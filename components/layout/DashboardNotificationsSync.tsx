@@ -9,18 +9,15 @@ const POLL_MS = 15_000;
 export default function DashboardNotificationsSync() {
   const shell = useDashboardShell();
   const setNotificationsRef = useRef(shell?.setNotifications);
-  const setNotificationCountRef = useRef(shell?.setNotificationCount);
 
   useEffect(() => {
     setNotificationsRef.current = shell?.setNotifications;
-    setNotificationCountRef.current = shell?.setNotificationCount;
-  }, [shell?.setNotifications, shell?.setNotificationCount]);
+  }, [shell?.setNotifications]);
 
   const sync = useCallback(async () => {
     const result = await getDashboardNotificationsAction();
     if (result.success) {
       setNotificationsRef.current?.(result.notifications);
-      setNotificationCountRef.current?.(result.count);
     }
   }, []);
 
