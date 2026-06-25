@@ -685,12 +685,9 @@ export default function ConsultationWorkspaceClient({
     }
   };
 
-  const handleVisitTypeChange = (type: 'standard' | 'lab' | 'surgery') => {
+  const handleVisitTypeChange = (type: 'standard' | 'surgery') => {
     setVisitType(type);
     setValue('visitType', type);
-    if (type === 'lab') {
-      focusDiagnosticsPanel();
-    }
     if (type === 'surgery') {
       const surgerySvc = catalogServices.find((s) => s.name.toLowerCase().includes('surgery'));
       if (surgerySvc && serviceFields.length > 0) {
@@ -1140,8 +1137,13 @@ export default function ConsultationWorkspaceClient({
           {/* VISIT TYPE SELECTOR */}
           <div className="glass-panel rounded-xl border border-outline-variant/40 p-4 shadow-premium">
             <span className="text-[10px] font-bold text-on-surface-variant uppercase block mb-2">Visit type</span>
+            {visitType === 'lab' && (
+              <p className="text-xs text-amber-400 mb-2">
+                Legacy lab-focused visit — select Standard or Surgery to update.
+              </p>
+            )}
             <div className="flex flex-wrap gap-2">
-              {(['standard', 'lab', 'surgery'] as const).map((t) => (
+              {(['standard', 'surgery'] as const).map((t) => (
                 <button
                   key={t}
                   type="button"
@@ -1152,7 +1154,7 @@ export default function ConsultationWorkspaceClient({
                       : 'bg-surface-container border border-outline-variant text-on-surface-variant'
                   }`}
                 >
-                  {t === 'lab' ? 'Lab-focused' : t}
+                  {t}
                 </button>
               ))}
             </div>

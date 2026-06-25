@@ -118,6 +118,7 @@ export const ROUTE_CAPABILITIES: Record<string, Capability | undefined> = {
   '/dashboard/social': 'manage_social',
   '/dashboard/benchmarking': 'view_reports',
   '/dashboard/reports/ai': 'view_reports',
+  '/dashboard/camera': 'view_camera_feed',
 };
 
 export function normalizeRouteHref(href: string): string {

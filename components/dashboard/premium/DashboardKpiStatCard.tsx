@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import type { LucideIcon } from 'lucide-react';
 import { TrendingDown, TrendingUp } from 'lucide-react';
 import { DASHBOARD_DENSITY } from '@/lib/ui/dashboard-tokens';
@@ -18,6 +19,7 @@ interface DashboardKpiStatCardProps {
   deltaLabel?: string;
   className?: string;
   density?: 'default' | 'compact';
+  href?: string;
 }
 
 export default function DashboardKpiStatCard({
@@ -32,16 +34,18 @@ export default function DashboardKpiStatCard({
   deltaLabel,
   className,
   density = 'default',
+  href,
 }: DashboardKpiStatCardProps) {
   const compact = density === 'compact';
   const positive = deltaPercent != null && deltaPercent >= 0;
   const hasDelta = deltaPercent != null && Number.isFinite(deltaPercent);
 
-  return (
+  const content = (
     <div
       className={cn(
         'dashboard-card flex flex-col gap-2',
         compact ? cn('p-3', DASHBOARD_DENSITY.kpiMinH) : 'p-4 md:p-5 gap-3 min-h-[120px]',
+        href && 'hover:border-primary/30 cursor-pointer transition-colors',
         className
       )}
     >
@@ -95,4 +99,14 @@ export default function DashboardKpiStatCard({
       </div>
     </div>
   );
+
+  if (href) {
+    return (
+      <Link href={href} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-2xl">
+        {content}
+      </Link>
+    );
+  }
+
+  return content;
 }

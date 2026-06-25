@@ -97,6 +97,7 @@ export const ROUTE_FEATURES: Record<string, Feature | undefined> = {
   '/dashboard/branches': 'multi_branch',
   '/dashboard/ai-assistant': 'ai_assistant',
   '/dashboard/social': 'social_automation',
+  '/dashboard/camera': 'camera_feed',
 };
 
 export function resolveFeatures(

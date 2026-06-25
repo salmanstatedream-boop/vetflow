@@ -101,6 +101,7 @@ export default function ClinicAdminDashboardClient({
           sparkline={sparklines.appointments}
           deltaPercent={kpiTrends.todayAppointments}
           deltaLabel="vs yesterday"
+          href="/dashboard/appointments"
         />
         <DashboardKpiStatCard
           density="compact"
@@ -113,6 +114,7 @@ export default function ClinicAdminDashboardClient({
           sparkline={sparklines.revenue}
           deltaPercent={kpiTrends.todayRevenue}
           deltaLabel="vs yesterday"
+          href="/dashboard/revenue"
         />
         <DashboardKpiStatCard
           density="compact"
@@ -121,6 +123,7 @@ export default function ClinicAdminDashboardClient({
           icon={Wallet}
           accentClass={KPI_ACCENTS.receivables.bg}
           iconTextClass={KPI_ACCENTS.receivables.text}
+          href="/dashboard/invoices?status=unpaid"
         />
         <DashboardKpiStatCard
           density="compact"
@@ -130,6 +133,7 @@ export default function ClinicAdminDashboardClient({
           accentClass={KPI_ACCENTS.inClinic.bg}
           iconTextClass={KPI_ACCENTS.inClinic.text}
           deltaLabel="Waiting + consulting"
+          href="/dashboard/walk-ins"
         />
         <DashboardKpiStatCard
           density="compact"
@@ -138,6 +142,7 @@ export default function ClinicAdminDashboardClient({
           icon={AlertTriangle}
           accentClass={KPI_ACCENTS.inventory.bg}
           iconTextClass={KPI_ACCENTS.inventory.text}
+          href="/dashboard/inventory?lowStock=1"
         />
         <DashboardKpiStatCard
           density="compact"
@@ -148,6 +153,7 @@ export default function ClinicAdminDashboardClient({
           iconTextClass={KPI_ACCENTS.clients.text}
           deltaPercent={kpiTrends.newClientsMtd}
           deltaLabel="vs last month"
+          href="/dashboard/customers"
         />
         <DashboardKpiStatCard
           density="compact"
@@ -158,6 +164,7 @@ export default function ClinicAdminDashboardClient({
           iconTextClass={KPI_ACCENTS.vaccinations.text}
           deltaPercent={kpiTrends.vaccinationsToday}
           deltaLabel="vs yesterday"
+          href="/dashboard/appointments"
         />
       </div>
 

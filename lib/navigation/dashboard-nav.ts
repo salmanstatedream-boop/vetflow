@@ -21,6 +21,7 @@ import {
   ShoppingBag,
   BarChart3,
   Share2,
+  Video,
 } from 'lucide-react';
 import type { UserSessionDetails } from '@/lib/services/auth';
 import { canAccessRoute, hasCapability, type Capability } from '@/lib/auth/capabilities';
@@ -32,6 +33,7 @@ export type DashboardNavItem = {
   icon: LucideIcon;
   adminOnly?: boolean;
   requiredCapability?: Capability;
+  optInFeature?: Feature;
 };
 
 export type DashboardNavGroup = {
@@ -53,6 +55,13 @@ export const DASHBOARD_NAV_GROUPS: DashboardNavGroup[] = [
       { name: 'Consultations', href: '/dashboard/doctors', icon: BriefcaseMedical },
       { name: 'Prescriptions', href: '/dashboard/prescriptions', icon: FileText },
       { name: 'Walk-ins', href: '/dashboard/walk-ins', icon: ClipboardList },
+      {
+        name: 'Cameras',
+        href: '/dashboard/camera',
+        icon: Video,
+        requiredCapability: 'view_camera_feed',
+        optInFeature: 'camera_feed',
+      },
     ],
   },
   {
@@ -138,6 +147,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/dashboard/settings': 'Settings',
   '/dashboard/upgrade': 'Upgrade',
   '/dashboard/benchmarking': 'Benchmarking',
+  '/dashboard/camera': 'Cameras',
 };
 
 export function resolvePageTitle(pathname: string): string {
@@ -148,11 +158,13 @@ export function resolvePageTitle(pathname: string): string {
 
 export function filterNavGroups(
   role: UserSessionDetails['role'],
-  features: Feature[]
+  features: Feature[],
+  featuresJson?: Record<string, unknown> | null
 ): DashboardNavGroup[] {
   const canSee = (item: DashboardNavItem) => {
     if (item.adminOnly && role !== 'clinic_admin') return false;
     if (item.requiredCapability && !hasCapability(role, item.requiredCapability)) return false;
+    if (item.optInFeature && featuresJson?.[item.optInFeature] !== true) return false;
     return canAccessRoute(role, item.href) && canAccessRouteByFeature(features, item.href);
   };
 

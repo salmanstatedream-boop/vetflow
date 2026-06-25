@@ -81,3 +81,86 @@ export async function createCameraDeviceAction(payload: unknown) {
     return { success: false, error: err instanceof Error ? err.message : 'Failed' };
   }
 }
+
+export async function deleteCameraDeviceAction(deviceId: string) {
+  try {
+    const ctx = await resolveServerAuthContext();
+    if (!ctx) throw new Error('Unauthorized');
+    assertOrganization(ctx);
+    assertCapability(ctx, 'manage_camera_devices');
+    await assertCameraFeedFeature(ctx.organizationId);
+    if (!ctx.activeBranchId) throw new Error('Select a branch');
+
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from('camera_devices')
+      .update({ is_active: false })
+      .eq('id', deviceId)
+      .eq('branch_id', ctx.activeBranchId)
+      .eq('organization_id', ctx.organizationId);
+
+    if (error) throw new Error(error.message);
+    return { success: true };
+  } catch (err: unknown) {
+    return { success: false, error: err instanceof Error ? err.message : 'Failed' };
+  }
+}
+
+export type CameraRecordingRow = {
+  id: string;
+  deviceName: string;
+  startedAt: string;
+  endedAt: string | null;
+  storagePath: string;
+};
+
+export async function listCameraRecordingsAction() {
+  try {
+    const ctx = await resolveServerAuthContext();
+    if (!ctx) throw new Error('Unauthorized');
+    assertOrganization(ctx);
+    assertCapability(ctx, 'view_camera_feed');
+    await assertCameraFeedFeature(ctx.organizationId);
+    if (!ctx.activeBranchId) throw new Error('Select a branch');
+
+    const supabase = await createClient();
+    const { data: devices, error: devicesError } = await supabase
+      .from('camera_devices')
+      .select('id, name')
+      .eq('branch_id', ctx.activeBranchId)
+      .eq('is_active', true);
+
+    if (devicesError) throw new Error(devicesError.message);
+    const deviceIds = (devices || []).map((d) => d.id);
+    if (deviceIds.length === 0) {
+      return { success: true, recordings: [] as CameraRecordingRow[] };
+    }
+
+    const deviceNameById = new Map((devices || []).map((d) => [d.id, d.name]));
+
+    const { data, error } = await supabase
+      .from('camera_recordings')
+      .select('id, device_id, started_at, ended_at, storage_path')
+      .in('device_id', deviceIds)
+      .order('started_at', { ascending: false })
+      .limit(50);
+
+    if (error) throw new Error(error.message);
+
+    const recordings: CameraRecordingRow[] = (data || []).map((row) => ({
+      id: row.id,
+      deviceName: deviceNameById.get(row.device_id) || 'Camera',
+      startedAt: row.started_at,
+      endedAt: row.ended_at,
+      storagePath: row.storage_path,
+    }));
+
+    return { success: true, recordings };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Failed',
+      recordings: [] as CameraRecordingRow[],
+    };
+  }
+}

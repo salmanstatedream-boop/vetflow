@@ -9,9 +9,7 @@ import {
   MOCK_RECENT_VISITS,
 } from '@/lib/demo/mock-data';
 import { getActiveBranchName } from '@/lib/dashboard/resolve-active-branch';
-import RoleDashboardHero, {
-  type QuickLink,
-} from '@/components/dashboard/RoleDashboardHero';
+import RoleDashboardHero from '@/components/dashboard/RoleDashboardHero';
 import DashboardWidgetGrid, {
   type DashboardKpi,
 } from '@/components/dashboard/DashboardWidgetGrid';
@@ -116,7 +114,7 @@ export default async function DashboardOverview({
           greeting={greeting}
           organizationName={session.organizationName}
           role={role}
-          quickLinks={[]}
+          variant={role === 'clinic_admin' ? 'compact' : 'default'}
         />
         <div className="bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm p-6 rounded-2xl">
           {ctx.isImpersonating ? (
@@ -740,7 +738,6 @@ export default async function DashboardOverview({
   const canLink = (href: string) =>
     canAccessRoute(role, href) && canAccessRouteByFeature(features, href);
 
-  const quickLinks = buildQuickLinks(role, readyForCheckout, canLink);
   const netRevenueMtdLabel =
     netRevenueMtd !== null ? formatMoney(netRevenueMtd, clinicCurrency) : null;
 
@@ -773,17 +770,17 @@ export default async function DashboardOverview({
 
   return (
     <div className="space-y-8">
-      {role !== 'clinic_admin' && (
-        <RoleDashboardHero
-          firstName={session.firstName || 'User'}
-          greeting={greeting}
-          organizationName={session.organizationName}
-          role={role}
-          quickLinks={staffGateLocked ? [] : quickLinks}
-        />
-      )}
+      <RoleDashboardHero
+        firstName={session.firstName || 'User'}
+        greeting={greeting}
+        organizationName={session.organizationName}
+        role={role}
+        variant={role === 'clinic_admin' ? 'compact' : 'default'}
+      />
 
-      {showAttendance && <AttendanceWidgetClient initial={myAttendance} />}
+      {showAttendance && role !== 'clinic_admin' && (
+        <AttendanceWidgetClient initial={myAttendance} />
+      )}
 
       <StaffDashboardGate locked={staffGateLocked}>
       {role === 'clinic_admin' && adminOverview ? (
@@ -827,7 +824,9 @@ export default async function DashboardOverview({
         />
       )}
 
-      {kpis.length > 0 && role !== 'receptionist' && <DashboardWidgetGrid kpis={kpis} />}
+      {kpis.length > 0 && role !== 'receptionist' && role !== 'doctor' && (
+        <DashboardWidgetGrid kpis={kpis} />
+      )}
 
       {role === 'clinic_admin' && (
         <div className="grid lg:grid-cols-2 gap-6">
@@ -1016,39 +1015,6 @@ export default async function DashboardOverview({
   );
 }
 
-function buildQuickLinks(
-  role: UserSessionDetails['role'],
-  readyForCheckout: number,
-  canLink: (href: string) => boolean
-): QuickLink[] {
-  let links: QuickLink[] = [];
-  if (role === 'doctor') {
-    links = [
-      { key: 'queue', href: '/dashboard/doctors', label: 'Consultations' },
-      { key: 'rx', href: '/dashboard/prescriptions', label: 'Prescriptions' },
-      { key: 'appt', href: '/dashboard/appointments', label: 'Appointments' },
-    ];
-  } else if (role === 'receptionist') {
-    links = [
-      { key: 'walkin', href: '/dashboard/walk-ins', label: 'Walk-ins queue' },
-      { key: 'appt', href: '/dashboard/appointments', label: 'Appointments' },
-      {
-        key: 'checkout',
-        href: '/dashboard/walk-ins',
-        label: `Checkout queue (${readyForCheckout})`,
-      },
-      { key: 'billing', href: '/dashboard/invoices', label: 'Billing' },
-    ];
-  } else {
-    links = [
-      { key: 'staff', href: '/dashboard/staff', label: 'Manage staff' },
-      { key: 'reports', href: '/dashboard/reports', label: 'Reports' },
-      { key: 'upgrade', href: '/dashboard/upgrade', label: 'Upgrade plan' },
-    ];
-  }
-  return links.filter((l) => canLink(l.href));
-}
-
 function buildKpis(
   role: UserSessionDetails['role'],
   data: {
@@ -1081,46 +1047,7 @@ function buildKpis(
   }
 
   if (role === 'doctor') {
-    if (canShowWidget(role, 'todayAppointments')) {
-      kpis.push({
-        key: 'appt',
-        label: "Today's Appointments",
-        value: data.todayAppointments,
-        icon: Calendar,
-        href: '/dashboard/appointments',
-      });
-    }
-    kpis.push({
-      key: 'queue',
-      label: 'My Queue',
-      value: data.myQueueCount,
-      icon: BriefcaseMedical,
-      href: '/dashboard/doctors',
-    });
-    kpis.push({
-      key: 'active',
-      label: 'Active Consultations',
-      value: data.activeConsultations,
-      icon: Stethoscope,
-      href: '/dashboard/doctors',
-    });
-    kpis.push({
-      key: 'emergency',
-      label: 'Emergencies',
-      value: data.emergencyCount,
-      icon: AlertTriangle,
-      href: '/dashboard/doctors',
-    });
-    if (canShowWidget(role, 'openPrescriptions')) {
-      kpis.push({
-        key: 'rx',
-        label: 'Prescriptions',
-        value: data.openPrescriptions,
-        icon: FileText,
-        href: '/dashboard/prescriptions',
-      });
-    }
-    return kpis.filter((k) => !k.href || canLink(k.href));
+    return [];
   }
 
   if (canShowWidget(role, 'todayAppointments')) {

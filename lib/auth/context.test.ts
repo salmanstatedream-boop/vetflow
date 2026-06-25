@@ -18,6 +18,7 @@ function mockCtx(role: NonNullable<UserSessionDetails['role']>): ServerAuthConte
     activeBranchId: null,
     capabilities: [],
     features: [],
+    featuresJson: null,
     subscriptionStatus: 'active',
     currency: 'USD',
     clinicLogoUrl: null,

@@ -37,7 +37,11 @@ export default function DashboardSidebarNav({
     return params;
   }, [urlSearchParams]);
 
-  const groups = filterNavGroups(session.role, session.features as Feature[]);
+  const groups = filterNavGroups(
+    session.role,
+    session.features as Feature[],
+    session.featuresJson
+  );
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(groups.filter((g) => g.collapsible).map((g) => [g.section, true]))
   );

@@ -12,6 +12,7 @@ import {
 } from '@/lib/auth/capabilities';
 import {
   ALL_FEATURES,
+  OPT_IN_FEATURES,
   resolveFeatures,
   type Feature,
 } from '@/lib/auth/features';
@@ -25,6 +26,7 @@ export interface ServerAuthContext extends UserSessionDetails {
   activeBranchId: string | null;
   capabilities: Capability[];
   features: Feature[];
+  featuresJson: Record<string, unknown> | null;
   subscriptionStatus: string | null;
   currency: string;
   clinicLogoUrl: string | null;
@@ -121,6 +123,7 @@ async function resolveImpersonatedClinicSession(
     activeBranchId,
     capabilities: getCapabilitiesForRole(role),
     features: [...ALL_FEATURES],
+    featuresJson: null,
     subscriptionStatus: 'active',
     currency: normalizeCurrencyCode(appSettings?.currency),
     clinicLogoUrl: (appSettings?.clinic_logo_url as string | null) ?? null,
@@ -130,7 +133,7 @@ async function resolveImpersonatedClinicSession(
 
 async function loadOrganizationSubscription(
   organizationId: string
-): Promise<{ features: Feature[]; status: string | null }> {
+): Promise<{ features: Feature[]; featuresJson: Record<string, unknown> | null; status: string | null }> {
   const supabase = await createClient();
   const { data } = await supabase
     .from('subscription_status')
@@ -138,10 +141,17 @@ async function loadOrganizationSubscription(
     .eq('organization_id', organizationId)
     .maybeSingle();
 
+  const featuresJson = (data?.features as Record<string, unknown> | null) ?? null;
+  const features = resolveFeatures(featuresJson);
+  for (const feature of OPT_IN_FEATURES) {
+    if (featuresJson?.[feature] === true && !features.includes(feature)) {
+      features.push(feature);
+    }
+  }
+
   return {
-    features: resolveFeatures(
-      (data?.features as Record<string, unknown> | null) ?? null
-    ),
+    features,
+    featuresJson,
     status: data?.status ?? null,
   };
 }
@@ -190,6 +200,7 @@ export async function resolveServerAuthContext(): Promise<ServerAuthContext | nu
     : resolveActiveBranchId(session, branchCookie);
 
   let features: Feature[] = [...ALL_FEATURES];
+  let featuresJson: Record<string, unknown> | null = null;
   let subscriptionStatus: string | null = null;
   let currency = 'USD';
   let clinicLogoUrl: string | null = null;
@@ -200,6 +211,7 @@ export async function resolveServerAuthContext(): Promise<ServerAuthContext | nu
       loadOrganizationAppSettings(session.organizationId),
     ]);
     features = sub.features;
+    featuresJson = sub.featuresJson;
     subscriptionStatus = sub.status;
     currency = appSettings.currency;
     clinicLogoUrl = appSettings.clinicLogoUrl;
@@ -211,6 +223,7 @@ export async function resolveServerAuthContext(): Promise<ServerAuthContext | nu
     activeBranchId,
     capabilities: getCapabilitiesForRole(session.role),
     features,
+    featuresJson,
     subscriptionStatus,
     currency,
     clinicLogoUrl,

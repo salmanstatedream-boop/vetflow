@@ -1,8 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { listCameraDevicesAction, createCameraDeviceAction } from '@/lib/services/camera-actions';
-import { Loader2, Plus, Video } from 'lucide-react';
+import {
+  listCameraDevicesAction,
+  createCameraDeviceAction,
+  deleteCameraDeviceAction,
+} from '@/lib/services/camera-actions';
+import { Loader2, Plus, Trash2, Video } from 'lucide-react';
 
 export default function CameraDevicesClient() {
   const [devices, setDevices] = useState<
@@ -13,6 +17,7 @@ export default function CameraDevicesClient() {
   const [snapshotUrl, setSnapshotUrl] = useState('');
   const [streamUrl, setStreamUrl] = useState('');
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
   const load = () => {
@@ -47,6 +52,20 @@ export default function CameraDevicesClient() {
     setSaving(false);
   };
 
+  const removeDevice = async (deviceId: string, deviceName: string) => {
+    if (!window.confirm(`Remove camera "${deviceName}"?`)) return;
+    setDeletingId(deviceId);
+    setMessage(null);
+    const res = await deleteCameraDeviceAction(deviceId);
+    if (res.success) {
+      load();
+      setMessage('Camera device removed.');
+    } else {
+      setMessage(res.error || 'Failed to remove device');
+    }
+    setDeletingId(null);
+  };
+
   if (loading) return <Loader2 className="w-5 h-5 animate-spin" />;
 
   return (
@@ -62,13 +81,36 @@ export default function CameraDevicesClient() {
       {devices.length > 0 && (
         <ul className="space-y-2 text-xs">
           {devices.map((d) => (
-            <li key={d.id} className="p-3 rounded-xl border border-outline-variant/40">
-              <span className="font-bold">{d.name}</span>
-              {d.snapshot_url && (
-                <span className="text-[10px] text-on-surface-variant block truncate">
-                  Snapshot: {d.snapshot_url}
-                </span>
-              )}
+            <li
+              key={d.id}
+              className="flex items-start justify-between gap-3 p-3 rounded-xl border border-outline-variant/40"
+            >
+              <div className="min-w-0">
+                <span className="font-bold">{d.name}</span>
+                {d.stream_url && (
+                  <span className="text-[10px] text-on-surface-variant block truncate">
+                    Stream: {d.stream_url}
+                  </span>
+                )}
+                {d.snapshot_url && (
+                  <span className="text-[10px] text-on-surface-variant block truncate">
+                    Snapshot: {d.snapshot_url}
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => removeDevice(d.id, d.name)}
+                disabled={deletingId === d.id}
+                className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold text-destructive border border-destructive/30 hover:bg-destructive/10 disabled:opacity-60"
+              >
+                {deletingId === d.id ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Trash2 className="w-3.5 h-3.5" />
+                )}
+                Remove
+              </button>
             </li>
           ))}
         </ul>
