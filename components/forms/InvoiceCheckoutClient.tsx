@@ -20,6 +20,8 @@ import {
   FileText,
   Mail,
   Phone,
+  Trash2,
+  Plus,
 } from 'lucide-react';
 
 interface BillingItem {
@@ -62,6 +64,24 @@ export default function InvoiceCheckoutClient({
     invoiceId: string;
     prescriptionId: string | null;
   } | null>(null);
+  const [lineItems, setLineItems] = useState<BillingItem[]>(() =>
+    items.map((item) => ({ ...item }))
+  );
+
+  const updateLine = (index: number, patch: Partial<BillingItem>) => {
+    setLineItems((prev) => prev.map((row, i) => (i === index ? { ...row, ...patch } : row)));
+  };
+
+  const removeLine = (index: number) => {
+    setLineItems((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== index)));
+  };
+
+  const addLine = () => {
+    setLineItems((prev) => [
+      ...prev,
+      { name: 'Additional item', quantity: 1, unitPrice: 0, type: 'service' },
+    ]);
+  };
 
   const {
     register,
@@ -90,7 +110,7 @@ export default function InvoiceCheckoutClient({
   let subtotal = 0;
   let taxAmountTotal = 0;
 
-  const invoiceItems = items.map((item) => {
+  const invoiceItems = lineItems.map((item) => {
     const itemSub = item.quantity * item.unitPrice;
     subtotal += itemSub;
 
@@ -127,7 +147,18 @@ export default function InvoiceCheckoutClient({
     setError(null);
     try {
       const formData = new FormData();
-      formData.set('payload', JSON.stringify(data));
+      formData.set(
+        'payload',
+        JSON.stringify({
+          ...data,
+          lineItems: lineItems.map((item) => ({
+            name: item.name,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            type: item.type || 'service',
+          })),
+        })
+      );
       if (paymentProof) {
         formData.set('proof', paymentProof);
       }
@@ -238,26 +269,74 @@ export default function InvoiceCheckoutClient({
             <thead>
               <tr className="bg-surface-container/10 border-b border-outline-variant/40 text-[9px] font-bold text-on-surface/80 uppercase tracking-wider">
                 <th className="px-6 py-3">Description</th>
-                <th className="px-6 py-3">Qty</th>
-                <th className="px-6 py-3">Unit price</th>
-                <th className="px-6 py-3 text-right">Total</th>
+                <th className="px-4 py-3 w-20">Qty</th>
+                <th className="px-4 py-3 w-28">Unit price</th>
+                <th className="px-4 py-3 text-right">Total</th>
+                <th className="px-4 py-3 w-10" />
               </tr>
             </thead>
             <tbody className="divide-y divide-border/20 text-xs">
               {invoiceItems.map((item, idx) => (
                 <tr key={idx} className="hover:bg-surface-container/10">
-                  <td className="px-6 py-4 font-bold text-on-surface">{item.name}</td>
-                  <td className="px-6 py-4 text-on-surface-variant/60">{item.quantity}</td>
-                  <td className="px-6 py-4 text-on-surface-variant/60">
-                    {formatCurrency(item.unitPrice)}
+                  <td className="px-6 py-3">
+                    <input
+                      type="text"
+                      value={lineItems[idx]?.name ?? item.name}
+                      onChange={(e) => updateLine(idx, { name: e.target.value })}
+                      className="w-full px-2 py-1.5 bg-surface-container border border-outline-variant rounded-lg text-xs font-semibold text-on-surface outline-none focus:border-primary"
+                    />
                   </td>
-                  <td className="px-6 py-4 text-right font-semibold text-on-surface">
+                  <td className="px-4 py-3">
+                    <input
+                      type="number"
+                      min={1}
+                      value={lineItems[idx]?.quantity ?? item.quantity}
+                      onChange={(e) =>
+                        updateLine(idx, { quantity: Math.max(1, Number(e.target.value) || 1) })
+                      }
+                      className="w-full px-2 py-1.5 bg-surface-container border border-outline-variant rounded-lg text-xs text-on-surface outline-none focus:border-primary"
+                    />
+                  </td>
+                  <td className="px-4 py-3">
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={lineItems[idx]?.unitPrice ?? item.unitPrice}
+                      onChange={(e) =>
+                        updateLine(idx, { unitPrice: Math.max(0, Number(e.target.value) || 0) })
+                      }
+                      className="w-full px-2 py-1.5 bg-surface-container border border-outline-variant rounded-lg text-xs text-on-surface outline-none focus:border-primary"
+                    />
+                  </td>
+                  <td className="px-4 py-3 text-right font-semibold text-on-surface tabular-nums">
                     {formatCurrency(item.total)}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      type="button"
+                      onClick={() => removeLine(idx)}
+                      disabled={lineItems.length <= 1}
+                      className="p-1.5 rounded-lg text-destructive hover:bg-destructive/10 disabled:opacity-30"
+                      aria-label="Remove line"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          <div className="px-6 py-3 border-t border-outline-variant/30">
+            <button
+              type="button"
+              onClick={addLine}
+              className="inline-flex items-center gap-1 text-[10px] font-bold text-primary hover:underline"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Add line item
+            </button>
+          </div>
         </div>
       </div>
 

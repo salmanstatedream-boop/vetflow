@@ -241,7 +241,27 @@ export async function loadAdminOverviewBundle(params: {
   const clinicianMap = new Map(clinicians.map((c) => [c.id, `Dr. ${c.firstName} ${c.lastName}`]));
   const schedule: AdminScheduleItem[] = [];
 
+  const checkedInApptIds = (todayApptsRes.data || [])
+    .filter((a) => a.status === 'checked_in')
+    .map((a) => a.id as string);
+  const visitByAppointmentId = new Map<string, string>();
+  if (checkedInApptIds.length > 0) {
+    const { data: apptVisits } = await supabase
+      .from('visits')
+      .select('id, appointment_id')
+      .eq('branch_id', branchId)
+      .in('appointment_id', checkedInApptIds);
+    for (const v of apptVisits || []) {
+      if (v.appointment_id) visitByAppointmentId.set(v.appointment_id as string, v.id as string);
+    }
+  }
+
   for (const a of todayApptsRes.data || []) {
+    const visitId = visitByAppointmentId.get(a.id as string);
+    const href =
+      a.status === 'checked_in' && visitId
+        ? `/dashboard/doctors/${visitId}`
+        : '/dashboard/appointments';
     schedule.push({
       id: a.id,
       type: 'appointment',
@@ -252,7 +272,7 @@ export async function loadAdminOverviewBundle(params: {
       reason: (a.reason as string) || 'Appointment',
       status: a.status as string,
       doctorName: a.doctor_id ? clinicianMap.get(a.doctor_id as string) : undefined,
-      href: '/dashboard/appointments',
+      href,
     });
   }
 

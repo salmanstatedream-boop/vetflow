@@ -1,4 +1,6 @@
-import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import PdfClinicHeader from '@/components/pdf/PdfClinicHeader';
+import { formatPrescriptionDosage } from '@/lib/prescriptions/format-dosage';
 
 const styles = StyleSheet.create({
   page: { 
@@ -7,43 +9,6 @@ const styles = StyleSheet.create({
     fontSize: 10, 
     color: '#2D3748',
     backgroundColor: '#FFFFFF' 
-  },
-  header: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    borderBottomWidth: 1, 
-    borderBottomColor: '#E2E8F0', 
-    paddingBottom: 20, 
-    marginBottom: 20 
-  },
-  logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
-  logoPlaceholder: {
-    width: 40,
-    height: 40,
-    backgroundColor: '#17403a',
-    marginRight: 8,
-    borderRadius: 4
-  },
-  logoImage: {
-    width: 40,
-    height: 40,
-    marginRight: 8,
-    borderRadius: 4,
-    objectFit: 'contain' as const,
-  },
-  logoText: { 
-    fontSize: 16, 
-    fontWeight: 'bold', 
-    color: '#17403a',
-    letterSpacing: -0.5
-  },
-  clinicDetails: { 
-    textAlign: 'right',
-    fontSize: 8,
-    color: '#718096' 
   },
   titleSection: {
     marginBottom: 20,
@@ -236,23 +201,15 @@ export default function PrescriptionPdfDocument({
     <Document>
       <Page size="A4" style={styles.page}>
         
-        {/* HEADER */}
-        <View style={styles.header}>
-          <View style={styles.logoContainer}>
-            {logoUrl ? (
-              <Image src={logoUrl} style={styles.logoImage} />
-            ) : (
-              <View style={[styles.logoPlaceholder, { backgroundColor: accentColor }]} />
-            )}
-            <Text style={[styles.logoText, { color: accentColor }]}>{brandName || clinicName} Rx</Text>
-          </View>
-          <View style={styles.clinicDetails}>
-            <Text style={{ fontWeight: 'bold', color: '#0F172A' }}>{clinicName}</Text>
-            <Text>{branchName}</Text>
-            <Text>{branchAddress}</Text>
-            <Text>Phone: {branchPhone}</Text>
-          </View>
-        </View>
+        <PdfClinicHeader
+          clinicName={clinicName}
+          branchName={branchName}
+          branchAddress={branchAddress}
+          branchPhone={branchPhone}
+          brandName={brandName}
+          accentColor={accentColor}
+          logoUrl={logoUrl}
+        />
 
         {/* TITLE */}
         <View style={styles.titleSection}>
@@ -295,12 +252,10 @@ export default function PrescriptionPdfDocument({
           ) : null}
         </View>
 
-        {/* RX HEADER */}
-        <Text style={styles.rxHeader}>List Prescribed Medicines</Text>
-
-        {/* PRESCRIBED MEDICINES TABLE */}
         {items.length > 0 ? (
-        <View style={styles.table}>
+          <>
+            <Text style={styles.rxHeader}>List Prescribed Medicines</Text>
+            <View style={styles.table}>
           {/* Header Row */}
           <View style={[styles.tableRow, { backgroundColor: '#F7FAFC' }]}>
             <Text style={[styles.tableColHeader, styles.colMedicine]}>Medicine / Dosage Details</Text>
@@ -321,18 +276,17 @@ export default function PrescriptionPdfDocument({
                   </Text>
                 )}
               </View>
-              <Text style={[styles.tableCol, styles.colDosage]}>{item.dosage}</Text>
+              <Text style={[styles.tableCol, styles.colDosage]}>
+                {formatPrescriptionDosage(item.dosage, item.medicine_name)}
+              </Text>
               <Text style={[styles.tableCol, styles.colFreq]}>{item.frequency}</Text>
               <Text style={[styles.tableCol, styles.colDur]}>{item.duration}</Text>
               <Text style={[styles.tableCol, styles.colQty]}>{item.quantity_requested}</Text>
             </View>
           ))}
         </View>
-        ) : (
-          <Text style={{ fontSize: 10, color: '#718096', marginBottom: 16 }}>
-            No prescribed medicines recorded.
-          </Text>
-        )}
+          </>
+        ) : null}
 
         {/* SIGNATURE BLOCK */}
         <View style={styles.signatureArea}>

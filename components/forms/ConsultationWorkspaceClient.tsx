@@ -17,8 +17,10 @@ import CreatableSelect from '@/components/ui/premium/CreatableSelect';
 import RequiredLabel from '@/components/ui/RequiredLabel';
 import type { ProductType } from '@/lib/inventory/product-types';
 import { SoapTabBar, SOAP_TAB_ORDER, getSoapTabTitle, type SoapFlowTab } from '@/components/consultation/SoapTabBar';
+import { combineDosageWithUnit } from '@/lib/prescriptions/format-dosage';
 import { validateSoapTab, validateAllSoapSteps, isPrescriptionLineComplete } from '@/lib/consultation/soap-validation';
 import { getFirstValidationIssue } from '@/lib/consultation/consultation-form-errors';
+import { useCurrency } from '@/lib/context/CurrencyContext';
 import {
   computeFollowUpPreviews,
   defaultConsecutiveStartDate,
@@ -158,6 +160,8 @@ export default function ConsultationWorkspaceClient({
   isFollowUpPatient = false,
 }: ConsultationWorkspaceClientProps) {
   const router = useRouter();
+  const { formatCurrency } = useCurrency();
+  const [dosageUnits, setDosageUnits] = useState<Record<number, string>>({});
   const followUpBaseDate = checkedInAt.slice(0, 10);
   const [localProducts, setLocalProducts] = useState(products);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
@@ -340,9 +344,9 @@ export default function ConsultationWorkspaceClient({
     () =>
       localProducts.map((p) => ({
         value: p.id,
-        label: `${p.name} (${p.type}) — $${p.sellingPrice}`,
+        label: `${p.name} (${p.type}) — ${formatCurrency(p.sellingPrice)}`,
       })),
-    [localProducts]
+    [localProducts, formatCurrency]
   );
 
   const soapContext = useMemo(
@@ -901,54 +905,54 @@ export default function ConsultationWorkspaceClient({
         
         {/* PATIENT PROFILE BRIEF */}
         <div className="glass-panel rounded-xl border border-outline-variant/40 p-3.5 shadow-premium shrink-0">
-          <div className="flex items-center justify-between border-b border-outline-variant/35 pb-4 mb-4">
-            <div>
-              <span className="text-[9px] font-black text-primary uppercase tracking-wider block">Patient Brief</span>
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-base font-black text-on-surface">{pet.name}</h3>
-                <Link
-                  href={`/dashboard/doctors/patients/${patientId}`}
-                  className="text-[10px] font-semibold text-primary hover:underline shrink-0"
-                >
-                  Full patient history
-                </Link>
+          <div className="flex items-start justify-between gap-3 border-b border-outline-variant/35 pb-3 mb-3">
+            <div className="min-w-0">
+              <span className="text-[10px] font-semibold text-primary uppercase tracking-wider block">Patient Brief</span>
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                <h3 className="text-sm font-bold text-on-surface">{pet.name}</h3>
+                <span className="bg-primary/5 text-primary text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize">
+                  {pet.species}
+                </span>
               </div>
             </div>
-            <span className="bg-primary/5 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full capitalize">
-              {pet.species}
-            </span>
+            <Link
+              href={`/dashboard/doctors/patients/${patientId}`}
+              className="text-[10px] font-semibold text-primary hover:underline shrink-0"
+            >
+              Full patient history
+            </Link>
           </div>
 
-          <div className="space-y-3.5 text-xs">
-            <div className="flex items-center justify-between text-on-surface-variant/70">
+          <div className="space-y-2.5 text-xs">
+            <div className="flex items-center justify-between gap-2">
               <span className="font-semibold text-on-surface">Breed</span>
-              <span>{pet.breed || 'Unknown'}</span>
+              <span className="text-on-surface-variant">{pet.breed || 'Unknown'}</span>
             </div>
-            <div className="flex items-center justify-between text-on-surface-variant/70">
+            <div className="flex items-center justify-between gap-2">
               <span className="font-semibold text-on-surface">Gender</span>
-              <span>{pet.gender}</span>
+              <span className="text-on-surface-variant">{pet.gender}</span>
             </div>
             {pet.weightKg != null && (
-              <div className="flex items-center justify-between text-on-surface-variant/70">
+              <div className="flex items-center justify-between gap-2">
                 <span className="font-semibold text-on-surface flex items-center gap-1">
                   <Weight className="w-3.5 h-3.5 text-primary/70" />
                   Weight
                 </span>
-                <span>{pet.weightKg} kg</span>
+                <span className="text-on-surface-variant">{pet.weightKg} kg</span>
               </div>
             )}
             {pet.bodyConditionScore != null && (
-              <div className="flex items-center justify-between text-on-surface-variant/70">
+              <div className="flex items-center justify-between gap-2">
                 <span className="font-semibold text-on-surface">Body condition</span>
-                <span>{pet.bodyConditionScore} / 9</span>
+                <span className="text-on-surface-variant">{pet.bodyConditionScore} / 9</span>
               </div>
             )}
-            <div className="flex items-center justify-between text-on-surface-variant/70">
+            <div className="flex items-center justify-between gap-2">
               <span className="font-semibold text-on-surface flex items-center gap-1">
                 <User className="w-3.5 h-3.5 text-primary/70" />
                 Owner
               </span>
-              <span>{customer.firstName} {customer.lastName}</span>
+              <span className="text-on-surface-variant">{customer.firstName} {customer.lastName}</span>
             </div>
           </div>
 
@@ -1256,28 +1260,28 @@ export default function ConsultationWorkspaceClient({
               />
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 p-4 rounded-xl bg-surface-container/20 border border-outline-variant/30">
-              <p className="col-span-full text-[10px] font-bold text-primary uppercase tracking-wider">
+              <p className="col-span-full text-[10px] font-semibold text-primary uppercase tracking-wider">
                 Vitals <span className="text-on-surface-variant/50 font-normal normal-case">(at least one required if no exam notes)</span>
               </p>
               <div>
-                <label className="block text-[9px] font-semibold text-on-surface-variant uppercase mb-1">Temp (°C)</label>
-                <input type="number" step="0.1" data-soap-tab="O" data-soap-field="temperatureC" {...register('temperatureC', { valueAsNumber: true })} className="w-full px-2 py-2 bg-surface border border-outline-variant rounded-lg text-sm" />
+                <label className="block text-[10px] font-semibold text-on-surface-variant uppercase mb-1">Temp (°C)</label>
+                <input type="number" step="0.1" data-soap-tab="O" data-soap-field="temperatureC" {...register('temperatureC', { valueAsNumber: true })} className="w-full h-9 px-2 py-1.5 bg-surface border border-outline-variant rounded-lg text-xs text-on-surface" />
               </div>
               <div>
-                <label className="block text-[9px] font-semibold text-on-surface-variant uppercase mb-1">Heart rate</label>
-                <input type="number" data-soap-tab="O" data-soap-field="heartRateBpm" {...register('heartRateBpm', { valueAsNumber: true })} className="w-full px-2 py-2 bg-surface border border-outline-variant rounded-lg text-sm" />
+                <label className="block text-[10px] font-semibold text-on-surface-variant uppercase mb-1">Heart rate</label>
+                <input type="number" data-soap-tab="O" data-soap-field="heartRateBpm" {...register('heartRateBpm', { valueAsNumber: true })} className="w-full h-9 px-2 py-1.5 bg-surface border border-outline-variant rounded-lg text-xs text-on-surface" />
               </div>
               <div>
-                <label className="block text-[9px] font-semibold text-on-surface-variant uppercase mb-1">Resp. rate</label>
-                <input type="number" data-soap-tab="O" data-soap-field="respiratoryRate" {...register('respiratoryRate', { valueAsNumber: true })} className="w-full px-2 py-2 bg-surface border border-outline-variant rounded-lg text-sm" />
+                <label className="block text-[10px] font-semibold text-on-surface-variant uppercase mb-1">Resp. rate</label>
+                <input type="number" data-soap-tab="O" data-soap-field="respiratoryRate" {...register('respiratoryRate', { valueAsNumber: true })} className="w-full h-9 px-2 py-1.5 bg-surface border border-outline-variant rounded-lg text-xs text-on-surface" />
               </div>
               <div>
-                <label className="block text-[9px] font-semibold text-on-surface-variant uppercase mb-1">Weight (kg)</label>
-                <input type="number" step="0.1" data-soap-tab="O" data-soap-field="weightKg" {...register('weightKg', { valueAsNumber: true })} className="w-full px-2 py-2 bg-surface border border-outline-variant rounded-lg text-sm" />
+                <label className="block text-[10px] font-semibold text-on-surface-variant uppercase mb-1">Weight (kg)</label>
+                <input type="number" step="0.1" data-soap-tab="O" data-soap-field="weightKg" {...register('weightKg', { valueAsNumber: true })} className="w-full h-9 px-2 py-1.5 bg-surface border border-outline-variant rounded-lg text-xs text-on-surface" />
               </div>
               <div>
-                <label className="block text-[9px] font-semibold text-on-surface-variant uppercase mb-1">Body condition (1–9)</label>
-                <input type="number" min={1} max={9} step={1} data-soap-tab="O" data-soap-field="bodyConditionScore" {...register('bodyConditionScore', { valueAsNumber: true })} className="w-full px-2 py-2 bg-surface border border-outline-variant rounded-lg text-sm" />
+                <label className="block text-[10px] font-semibold text-on-surface-variant uppercase mb-1">Body condition (1–9)</label>
+                <input type="number" min={1} max={9} step={1} data-soap-tab="O" data-soap-field="bodyConditionScore" {...register('bodyConditionScore', { valueAsNumber: true })} className="w-full h-9 px-2 py-1.5 bg-surface border border-outline-variant rounded-lg text-xs text-on-surface" />
               </div>
             </div>
           </div>
@@ -1534,7 +1538,7 @@ export default function ConsultationWorkspaceClient({
                           { value: '', label: '— Select service —' },
                           ...catalogServices.map((s) => ({
                             value: s.id,
-                            label: `${s.name} ($${s.price})`,
+                            label: `${s.name} (${formatCurrency(s.price)})`,
                           })),
                         ]}
                         placeholder="Select service…"
@@ -1709,18 +1713,45 @@ export default function ConsultationWorkspaceClient({
                         />
                       </div>
                       <div>
-                        <label className="block text-[9px] font-bold text-on-surface-variant/40 uppercase mb-1">
+                        <label className="block text-[10px] font-semibold text-on-surface-variant uppercase mb-1">
                           <RequiredLabel>Dosage</RequiredLabel>
                         </label>
-                        <input
-                          type="text"
-                          data-soap-tab="Rx"
-                          data-soap-field="prescription-dosage"
-                          {...register(`prescriptionItems.${idx}.dosage`)}
-                          placeholder="e.g. 5ml"
-                          className="w-full px-2.5 py-1.5 glass-panel border border-outline-variant rounded-lg text-[10px] text-on-surface outline-none"
-                          required
-                        />
+                        <div className="flex gap-1">
+                          <input
+                            type="text"
+                            data-soap-tab="Rx"
+                            data-soap-field="prescription-dosage"
+                            {...register(`prescriptionItems.${idx}.dosage`)}
+                            onBlur={(e) => {
+                              const unit = dosageUnits[idx] || 'ml';
+                              const combined = combineDosageWithUnit(e.target.value, unit);
+                              if (combined !== e.target.value) {
+                                setValue(`prescriptionItems.${idx}.dosage`, combined, { shouldValidate: true });
+                              }
+                            }}
+                            placeholder="e.g. 5"
+                            className="flex-1 min-w-0 px-2.5 py-1.5 glass-panel border border-outline-variant rounded-lg text-xs text-on-surface outline-none"
+                            required
+                          />
+                          <select
+                            value={dosageUnits[idx] || 'ml'}
+                            onChange={(e) => {
+                              const unit = e.target.value;
+                              setDosageUnits((prev) => ({ ...prev, [idx]: unit }));
+                              const current = watch(`prescriptionItems.${idx}.dosage`) || '';
+                              const combined = combineDosageWithUnit(current, unit);
+                              if (combined !== current) {
+                                setValue(`prescriptionItems.${idx}.dosage`, combined, { shouldValidate: true });
+                              }
+                            }}
+                            className="w-16 px-1 py-1.5 glass-panel border border-outline-variant rounded-lg text-[10px] text-on-surface outline-none"
+                          >
+                            <option value="ml">ml</option>
+                            <option value="tablet">tab</option>
+                            <option value="capsule">cap</option>
+                            <option value="drops">drops</option>
+                          </select>
+                        </div>
                       </div>
                       <div>
                         <label className="block text-[9px] font-bold text-on-surface-variant/40 uppercase mb-1">

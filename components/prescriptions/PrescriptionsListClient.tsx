@@ -29,23 +29,22 @@ function canEditCare(role: string | null): boolean {
   return role === 'doctor' || role === 'receptionist' || role === 'clinic_admin';
 }
 
-type PrescriptionStatusFilter = 'finalized' | 'all' | 'draft' | 'no_prescription';
+type PrescriptionStatusFilter = 'all' | 'prescribed' | 'non_prescribed';
 
 function matchesPrescriptionFilter(
   rx: PrescriptionListRow,
   filter: PrescriptionStatusFilter
 ): boolean {
   if (filter === 'all') return true;
-  if (filter === 'no_prescription') return rx.noPrescriptionMarked;
-  if (filter === 'draft') return !rx.noPrescriptionMarked && !rx.isFinalized;
-  return rx.isFinalized && !rx.noPrescriptionMarked;
+  if (filter === 'non_prescribed') return rx.noPrescriptionMarked;
+  return !rx.noPrescriptionMarked;
 }
 
 export default function PrescriptionsListClient({
   prescriptions,
   userRole,
 }: PrescriptionsListClientProps) {
-  const [statusFilter, setStatusFilter] = useState<PrescriptionStatusFilter>('finalized');
+  const [statusFilter, setStatusFilter] = useState<PrescriptionStatusFilter>('all');
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [activePetId, setActivePetId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -86,10 +85,10 @@ export default function PrescriptionsListClient({
   const filterCounts = useMemo(
     () => ({
       all: prescriptions.length,
-      finalized: prescriptions.filter((rx) => matchesPrescriptionFilter(rx, 'finalized')).length,
-      draft: prescriptions.filter((rx) => matchesPrescriptionFilter(rx, 'draft')).length,
-      no_prescription: prescriptions.filter((rx) => matchesPrescriptionFilter(rx, 'no_prescription'))
-        .length,
+      prescribed: prescriptions.filter((rx) => matchesPrescriptionFilter(rx, 'prescribed')).length,
+      non_prescribed: prescriptions.filter((rx) =>
+        matchesPrescriptionFilter(rx, 'non_prescribed')
+      ).length,
     }),
     [prescriptions]
   );
@@ -116,10 +115,9 @@ export default function PrescriptionsListClient({
       <div className="flex flex-wrap gap-2 px-5 pt-4 pb-2 border-b border-outline-variant/20">
         {(
           [
-            { key: 'finalized' as const, label: 'Finalized' },
             { key: 'all' as const, label: 'All' },
-            { key: 'draft' as const, label: 'Draft' },
-            { key: 'no_prescription' as const, label: 'No prescription' },
+            { key: 'prescribed' as const, label: 'Prescribed' },
+            { key: 'non_prescribed' as const, label: 'Non-prescribed' },
           ] as const
         ).map(({ key, label }) => (
           <button
@@ -179,16 +177,10 @@ export default function PrescriptionsListClient({
                 className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                   rx.noPrescriptionMarked
                     ? 'bg-surface-container text-on-surface-variant border border-outline-variant/40'
-                    : rx.isFinalized
-                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                      : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                    : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                 }`}
               >
-                {rx.noPrescriptionMarked
-                  ? 'No prescription'
-                  : rx.isFinalized
-                    ? 'Finalized'
-                    : 'Draft'}
+                {rx.noPrescriptionMarked ? 'Non-prescribed' : 'Prescribed'}
               </span>
               {rx.petId && (
                 <button

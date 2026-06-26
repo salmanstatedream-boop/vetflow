@@ -81,12 +81,23 @@ export async function createInvoiceFromVisitAction(payload: unknown, proofFile?:
       quantity_requested: number;
     }>) || [];
 
-    const billingItems = await compileVisitBillingItems(adminClient, {
+    const compiledItems = await compileVisitBillingItems(adminClient, {
       organizationId: ctx.organizationId,
       branchId: visit.branch_id,
       visitId: visit.id,
       prescriptionItems: presItems,
     });
+
+    const billingItems =
+      parsed.lineItems && parsed.lineItems.length > 0
+        ? parsed.lineItems.map((item) => ({
+            name: item.name,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            type: item.type ?? 'service',
+            productId: null as string | null,
+          }))
+        : compiledItems;
 
     // 4. Retrieve Organization Tax settings
     const { data: taxSetting } = await adminClient

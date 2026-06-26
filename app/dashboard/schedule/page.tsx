@@ -78,6 +78,22 @@ export default async function SchedulePage({
 
   const { data: appointmentsRaw } = await appointmentsQuery;
 
+  const checkedInIds = (appointmentsRaw || [])
+    .filter((a) => a.status === 'checked_in')
+    .map((a) => a.id);
+
+  const visitByAppointmentId = new Map<string, string>();
+  if (checkedInIds.length > 0) {
+    const { data: linkedVisits } = await supabase
+      .from('visits')
+      .select('id, appointment_id')
+      .eq('branch_id', activeBranchId)
+      .in('appointment_id', checkedInIds);
+    for (const v of linkedVisits || []) {
+      if (v.appointment_id) visitByAppointmentId.set(v.appointment_id as string, v.id as string);
+    }
+  }
+
   const doctors = clinicians.map((d) => ({
     id: d.id,
     firstName: d.firstName,
@@ -95,6 +111,7 @@ export default async function SchedulePage({
     durationMinutes: (a.duration_minutes as number) ?? 30,
     doctorId: a.doctor_id as string | null,
     isEmergency: a.is_emergency ?? false,
+    visitId: visitByAppointmentId.get(a.id as string) ?? null,
   }));
 
   return (

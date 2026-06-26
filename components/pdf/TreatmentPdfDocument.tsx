@@ -1,4 +1,6 @@
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import PdfClinicHeader from '@/components/pdf/PdfClinicHeader';
+import { formatPrescriptionDosage } from '@/lib/prescriptions/format-dosage';
 
 const styles = StyleSheet.create({
   page: {
@@ -9,15 +11,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-    paddingBottom: 16,
-    marginBottom: 20,
+    marginBottom: 8,
   },
-  title: { fontSize: 18, fontWeight: 'bold', color: '#17403a' },
-  clinicDetails: { textAlign: 'right', fontSize: 8, color: '#718096' },
+  docTitle: { fontSize: 18, fontWeight: 'bold', color: '#17403a', marginBottom: 16 },
   section: { marginBottom: 14 },
   sectionTitle: {
     fontSize: 9,
@@ -77,6 +73,8 @@ export interface TreatmentPdfProps {
   weightKg?: number | null;
   footerText?: string;
   accentColor?: string;
+  logoUrl?: string | null;
+  brandName?: string;
   prescriptionItems?: Array<{
     medicine_name: string;
     dosage: string;
@@ -99,14 +97,17 @@ export default function TreatmentPdfDocument(props: TreatmentPdfProps) {
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
-          <Text style={styles.title}>Treatment Summary</Text>
-          <View style={styles.clinicDetails}>
-            <Text>{props.clinicName}</Text>
-            <Text>{props.branchName}</Text>
-            <Text>{props.branchAddress}</Text>
-            <Text>{props.branchPhone}</Text>
-          </View>
+          <PdfClinicHeader
+            clinicName={props.clinicName}
+            branchName={props.branchName}
+            branchAddress={props.branchAddress}
+            branchPhone={props.branchPhone}
+            brandName={props.brandName}
+            accentColor={props.accentColor}
+            logoUrl={props.logoUrl}
+          />
         </View>
+        <Text style={styles.docTitle}>Treatment Summary</Text>
 
         <View style={styles.metaRow}>
           <View style={styles.metaBlock}>
@@ -201,7 +202,7 @@ export default function TreatmentPdfDocument(props: TreatmentPdfProps) {
             <Text style={styles.sectionTitle}>Prescribed Medicines</Text>
             {props.prescriptionItems!.map((item, idx) => (
               <Text key={idx} style={styles.body}>
-                • {item.medicine_name} — {item.dosage}, {item.frequency}, {item.duration}
+                • {item.medicine_name} — {formatPrescriptionDosage(item.dosage, item.medicine_name)}, {item.frequency}, {item.duration}
                 {item.quantity_requested ? ` (Qty: ${item.quantity_requested})` : ''}
               </Text>
             ))}

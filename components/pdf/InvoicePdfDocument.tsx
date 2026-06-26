@@ -1,5 +1,6 @@
-import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import { formatMoney } from '@/lib/utils/currency';
+import PdfClinicHeader from '@/components/pdf/PdfClinicHeader';
 
 const styles = StyleSheet.create({
   page: { 
@@ -8,43 +9,6 @@ const styles = StyleSheet.create({
     fontSize: 10, 
     color: '#2D3748',
     backgroundColor: '#FFFFFF' 
-  },
-  header: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    borderBottomWidth: 1, 
-    borderBottomColor: '#E2E8F0', 
-    paddingBottom: 20, 
-    marginBottom: 20 
-  },
-  logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
-  logoPlaceholder: {
-    width: 40,
-    height: 40,
-    backgroundColor: '#0F172A',
-    marginRight: 8,
-    borderRadius: 4
-  },
-  logoImage: {
-    width: 40,
-    height: 40,
-    marginRight: 8,
-    borderRadius: 4,
-    objectFit: 'contain' as const,
-  },
-  logoText: { 
-    fontSize: 16, 
-    fontWeight: 'bold', 
-    color: '#0F172A',
-    letterSpacing: -0.5
-  },
-  clinicDetails: { 
-    textAlign: 'right',
-    fontSize: 8,
-    color: '#718096' 
   },
   titleSection: {
     marginBottom: 25
@@ -231,23 +195,15 @@ export default function InvoicePdfDocument({
     <Document>
       <Page size="A4" style={styles.page}>
         
-        {/* HEADER */}
-        <View style={styles.header}>
-          <View style={styles.logoContainer}>
-            {logoUrl ? (
-              <Image src={logoUrl} style={styles.logoImage} />
-            ) : (
-              <View style={[styles.logoPlaceholder, { backgroundColor: accentColor }]} />
-            )}
-            <Text style={[styles.logoText, { color: accentColor }]}>{brandName || clinicName}</Text>
-          </View>
-          <View style={styles.clinicDetails}>
-            <Text style={{ fontWeight: 'bold', color: '#0F172A' }}>{clinicName}</Text>
-            <Text>{branchName}</Text>
-            <Text>{branchAddress}</Text>
-            <Text>Phone: {branchPhone}</Text>
-          </View>
-        </View>
+        <PdfClinicHeader
+          clinicName={clinicName}
+          branchName={branchName}
+          branchAddress={branchAddress}
+          branchPhone={branchPhone}
+          brandName={brandName}
+          accentColor={accentColor}
+          logoUrl={logoUrl}
+        />
 
         {/* TITLE */}
         <View style={styles.titleSection}>

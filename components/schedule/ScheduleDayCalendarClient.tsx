@@ -54,6 +54,7 @@ export interface ScheduleAppointment {
   durationMinutes: number;
   doctorId: string | null;
   isEmergency: boolean;
+  visitId?: string | null;
 }
 
 interface ScheduleDayCalendarClientProps {
@@ -72,6 +73,13 @@ const STATUS_COLORS: Record<string, string> = {
   checked_in: 'bg-emerald-500/20 border-emerald-500/40 text-emerald-200',
   rescheduled: 'bg-violet-500/20 border-violet-500/40 text-violet-200',
 };
+
+function appointmentHref(appt: ScheduleAppointment): string {
+  if (appt.status === 'checked_in' && appt.visitId) {
+    return `/dashboard/doctors/${appt.visitId}`;
+  }
+  return '/dashboard/appointments';
+}
 
 function minutesToLabel(minutes: number): string {
   const h = Math.floor(minutes / 60);
@@ -438,7 +446,7 @@ export default function ScheduleDayCalendarClient({
                     return (
                       <Link
                         key={appt.id}
-                        href="/dashboard/appointments"
+                        href={appointmentHref(appt)}
                         className={cn(
                           'absolute z-[2] rounded-lg border px-1.5 py-1 overflow-hidden text-left shadow-sm',
                           color

@@ -234,6 +234,8 @@ export default function ConsultationLabsDocsPanel({
   const [labNotes, setLabNotes] = useState('');
   const [orderingLab, setOrderingLab] = useState(false);
   const [savingLabId, setSavingLabId] = useState<string | null>(null);
+  const [uploadingLabDocId, setUploadingLabDocId] = useState<string | null>(null);
+  const labFileRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const fileRef = useRef<HTMLInputElement>(null);
   const [docCategory, setDocCategory] = useState<string>('lab_result');
@@ -300,6 +302,35 @@ export default function ConsultationLabsDocsPanel({
       else setError(res.error || 'Failed to save result.');
     } finally {
       setSavingLabId(null);
+    }
+  };
+
+  const uploadLabDocument = async (order: LabOrder, file: File) => {
+    setUploadingLabDocId(order.id);
+    setError(null);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('visitId', visitId);
+      fd.append('patientId', patientId);
+      fd.append('category', 'lab_result');
+      fd.append('description', `${order.testName} result`);
+      const res = await uploadVisitDocumentAction(fd);
+      if (!res.success || !res.document) {
+        setError(res.error || 'Upload failed.');
+        return;
+      }
+      const resultText = getResultDraft(order);
+      const updateRes = await updateLabOrderResultAction({
+        labOrderId: order.id,
+        status: resultText.trim() ? 'completed' : 'in_progress',
+        resultText,
+        resultDocumentId: res.document.id,
+      });
+      if (updateRes.success) router.refresh();
+      else setError(updateRes.error || 'Failed to link document to lab test.');
+    } finally {
+      setUploadingLabDocId(null);
     }
   };
 
@@ -378,8 +409,8 @@ export default function ConsultationLabsDocsPanel({
   const isSidebar = variant === 'sidebar';
 
   const fieldClass =
-    'w-full px-2.5 py-2 bg-surface-container/40 border border-outline-variant/60 rounded-lg text-[11px] text-on-surface outline-none focus:border-primary/50';
-  const labelClass = 'block text-[9px] font-bold text-on-surface-variant/70 uppercase tracking-wide mb-1';
+    'w-full h-9 px-2.5 py-1.5 bg-surface-container/40 border border-outline-variant/60 rounded-lg text-xs text-on-surface outline-none focus:border-primary/50';
+  const labelClass = 'block text-[10px] font-semibold text-on-surface-variant uppercase tracking-wide mb-1';
 
   if (isSidebar) {
     return (
@@ -456,10 +487,10 @@ export default function ConsultationLabsDocsPanel({
                   key={o.id}
                   className="p-2.5 bg-surface-container/25 border border-outline-variant/35 rounded-lg space-y-2"
                 >
-                  <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <p className="text-[11px] font-bold text-on-surface truncate">{o.testName}</p>
-                      <p className="text-[9px] text-on-surface-variant/60 capitalize">
+                      <p className="text-xs font-semibold text-on-surface truncate">{o.testName}</p>
+                      <p className="text-[10px] text-on-surface-variant capitalize">
                         {o.status.replace('_', ' ')}
                       </p>
                     </div>
@@ -467,7 +498,7 @@ export default function ConsultationLabsDocsPanel({
                       value={o.status}
                       disabled={savingLabId === o.id}
                       onChange={(e) => changeLabStatus(o, e.target.value)}
-                      className="max-w-[7rem] px-1.5 py-1 bg-surface border border-outline-variant/60 rounded-md text-[9px] font-bold text-on-surface outline-none capitalize disabled:opacity-60 shrink-0"
+                      className="max-w-[7rem] h-8 px-1.5 bg-surface border border-outline-variant/60 rounded-md text-[10px] font-semibold text-on-surface outline-none capitalize disabled:opacity-60 shrink-0"
                     >
                       <option value="ordered">Demanded</option>
                       <option value="in_progress">Uploaded</option>
@@ -485,6 +516,42 @@ export default function ConsultationLabsDocsPanel({
                     className={fieldClass}
                   />
                   <div className="flex items-center gap-1.5 flex-wrap">
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png,.webp,.heic,.txt"
+                      className="hidden"
+                      ref={(el) => {
+                        labFileRefs.current[o.id] = el;
+                      }}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) void uploadLabDocument(o, file);
+                        e.target.value = '';
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => labFileRefs.current[o.id]?.click()}
+                      disabled={uploadingLabDocId === o.id}
+                      className="text-[10px] font-semibold text-primary border border-primary/25 px-2.5 py-1 rounded-md inline-flex items-center gap-1 disabled:opacity-60"
+                    >
+                      {uploadingLabDocId === o.id ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <FileUp className="w-3 h-3" />
+                      )}
+                      Upload result
+                    </button>
+                    {o.resultDocumentId && (
+                      <a
+                        href={`/api/documents/${o.resultDocumentId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[10px] font-semibold text-on-surface-variant hover:text-primary"
+                      >
+                        View file
+                      </a>
+                    )}
                     <button
                       type="button"
                       onClick={() => saveLabResult(o)}

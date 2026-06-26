@@ -94,6 +94,7 @@ export const ROUTE_FEATURES: Record<string, Feature | undefined> = {
   '/dashboard/sales': 'sales',
   '/dashboard/sales/new': 'sales',
   '/dashboard/reports': 'reports',
+  '/dashboard/reports/ai': 'reports',
   '/dashboard/branches': 'multi_branch',
   '/dashboard/ai-assistant': 'ai_assistant',
   '/dashboard/social': 'social_automation',

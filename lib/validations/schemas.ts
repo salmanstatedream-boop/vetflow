@@ -198,6 +198,13 @@ export const SubscriptionSchema = z.object({
 });
 
 // --- BILLING / CHECKOUT ---
+export const CheckoutLineItemSchema = z.object({
+  name: z.string().min(1),
+  quantity: z.number().int().positive(),
+  unitPrice: z.number().nonnegative(),
+  type: z.enum(['service', 'product', 'medicine']),
+});
+
 export const CheckoutSchema = z
   .object({
     visitId: EntityIdSchema,
@@ -208,6 +215,7 @@ export const CheckoutSchema = z
     paymentReference: z.string().optional().or(z.literal('')),
     notes: z.string().optional().or(z.literal('')),
     sendEmailReceipt: z.boolean().optional(),
+    lineItems: z.array(CheckoutLineItemSchema).min(1).optional(),
   })
   .superRefine((data, ctx) => {
     if (data.paymentStatus === 'partial' && (data.amountPaid == null || data.amountPaid <= 0)) {

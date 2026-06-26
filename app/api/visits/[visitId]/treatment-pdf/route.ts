@@ -106,6 +106,8 @@ export async function GET(
         branchPhone: branding.phone || branch?.phone || '',
         footerText: branding.footerText,
         accentColor: branding.accentColor,
+        brandName: branding.brandName,
+        logoUrl: branding.logoUrl,
         doctorName: formatAttendingDoctor(doctorProfile),
         customerName: customer
           ? `${customer.first_name} ${customer.last_name}`.trim()

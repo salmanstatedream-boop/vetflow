@@ -300,9 +300,9 @@ export default function StaffScheduleClient({
         </div>
       )}
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid lg:grid-cols-2 gap-6 items-start">
         <div>
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between min-h-[2.5rem] mb-3">
             <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider">
               Today roster · {new Date(`${attendanceDate}T12:00:00`).toLocaleDateString()}
             </h3>
@@ -366,21 +366,26 @@ export default function StaffScheduleClient({
         </div>
 
         <div>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+          <div className="min-h-[2.5rem] mb-3 flex items-center">
             <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider">
               Attendance history · last 30 days
             </h3>
-            <Select
-              value={historyStaffFilter}
-              onChange={setHistoryStaffFilter}
-              options={[
-                { value: 'all', label: 'All staff' },
-                ...staff.map((s) => ({ value: s.id, label: s.name })),
-              ]}
-              className="min-w-[160px]"
-            />
           </div>
           <GlassPanel className="p-0 overflow-hidden max-h-[360px] overflow-y-auto">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3 border-b border-outline-variant/30 bg-surface-container/20">
+              <span className="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wide">
+                Filter by staff
+              </span>
+              <Select
+                value={historyStaffFilter}
+                onChange={setHistoryStaffFilter}
+                options={[
+                  { value: 'all', label: 'All staff' },
+                  ...staff.map((s) => ({ value: s.id, label: s.name })),
+                ]}
+                className="min-w-[160px]"
+              />
+            </div>
             {filteredHistory.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
@@ -417,8 +422,8 @@ export default function StaffScheduleClient({
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        <GlassPanel className="p-5 lg:col-span-2 space-y-5">
+      <div className="grid lg:grid-cols-2 gap-6 items-start">
+        <GlassPanel className="p-5 space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5">
               <CalendarDays className="w-4 h-4 text-primary" />
@@ -553,7 +558,7 @@ export default function StaffScheduleClient({
           </div>
         </GlassPanel>
 
-        <GlassPanel className="p-5 lg:col-span-1">
+        <GlassPanel className="p-5">
           <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider mb-4 flex items-center gap-1.5">
             <CalendarPlus className="w-4 h-4 text-primary" />
             One-off shift override
@@ -615,12 +620,11 @@ export default function StaffScheduleClient({
         </GlassPanel>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        <div>
-          <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider mb-3">
-            Upcoming shifts
-          </h3>
-          <GlassPanel className="p-0 overflow-hidden">
+      <div>
+        <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider mb-3">
+          Upcoming shifts
+        </h3>
+        <GlassPanel className="p-0 overflow-hidden">
             {shifts.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
@@ -664,7 +668,6 @@ export default function StaffScheduleClient({
               <p className="text-xs text-on-surface-variant text-center py-10">No upcoming shifts scheduled.</p>
             )}
           </GlassPanel>
-        </div>
       </div>
     </div>
   );

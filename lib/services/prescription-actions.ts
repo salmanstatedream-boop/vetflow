@@ -75,7 +75,7 @@ export async function listBranchPrescriptionsAction(branchId: string) {
       const noPrescriptionMarked = isNoPrescriptionMarked(rx.notes as string | null, names.length);
       let medicineSummary: string | null = null;
       if (noPrescriptionMarked) {
-        medicineSummary = 'No prescription marked';
+        medicineSummary = null;
       } else if (names.length > 0) {
         const preview = names.slice(0, 2).join(', ');
         medicineSummary =

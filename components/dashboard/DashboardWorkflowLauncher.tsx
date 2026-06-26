@@ -18,7 +18,7 @@ import {
   getLowStockForBranchAction,
   getInventoryForecastAction,
 } from '@/lib/services/dashboard-qab-actions';
-import { generateAiAnalyticsReportAction } from '@/lib/services/ai-analytics-actions';
+import AiAnalyticsClient from '@/components/dashboard/AiAnalyticsClient';
 import { listCameraDevicesAction } from '@/lib/services/camera-actions';
 import { confirmAppointmentAction } from '@/lib/services/appointment-actions';
 import type { ForecastItem } from '@/lib/inventory/forecast';
@@ -529,52 +529,9 @@ function LiveCameraModal({ open, onClose }: { open: boolean; onClose: () => void
 }
 
 function AiAnalyticsSlideOver({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { formatCurrency } = useCurrency();
-  const [loading, setLoading] = useState(false);
-  const [narrative, setNarrative] = useState('');
-  const [metrics, setMetrics] = useState<Record<string, number> | null>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    setLoading(true);
-    generateAiAnalyticsReportAction().then((res) => {
-      if (res.success) {
-        setNarrative(res.narrative || '');
-        setMetrics(res.metrics || null);
-      }
-      setLoading(false);
-    });
-  }, [open]);
-
   return (
     <SlideOverPanel open={open} onClose={onClose} title="AI Analytic Reports" description="Business insights & recommendations">
-      {loading ? (
-        <Loader2 className="w-6 h-6 animate-spin mx-auto" />
-      ) : (
-        <div className="space-y-4">
-          {metrics && (
-            <div className="grid grid-cols-2 gap-2">
-              <MetricCard label="Revenue (MTD)" value={formatCurrency(metrics.paidTotal ?? 0, { decimals: 0 })} />
-              <MetricCard label="Unpaid" value={formatCurrency(metrics.unpaidTotal ?? 0, { decimals: 0 })} />
-              <MetricCard label="Visits (MTD)" value={String(metrics.visitCount)} />
-              <MetricCard label="Low stock" value={String(metrics.lowStockCount)} />
-            </div>
-          )}
-          <div className="prose prose-sm text-xs text-on-surface-variant whitespace-pre-wrap">{narrative}</div>
-          <Link href="/dashboard/reports" onClick={onClose} className="text-xs text-primary font-bold hover:underline">
-            View detailed charts →
-          </Link>
-        </div>
-      )}
+      {open ? <AiAnalyticsClient showChartsLink onChartsLinkClick={onClose} /> : null}
     </SlideOverPanel>
-  );
-}
-
-function MetricCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="p-3 rounded-xl bg-surface-container/40 border border-outline-variant/30">
-      <span className="text-[9px] font-bold uppercase text-on-surface-variant">{label}</span>
-      <p className="text-lg font-bold text-on-surface">{value}</p>
-    </div>
   );
 }
