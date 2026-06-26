@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { PatientMedicalProfileData, PatientVisitRow } from '@/lib/types/patient-medical';
@@ -12,6 +12,9 @@ import {
 import { uploadVisitDocumentAction, deleteDocumentAction } from '@/lib/services/document-actions';
 import MedicalRecordActivityPanel from '@/components/dashboard/MedicalRecordActivityPanel';
 import PatientHealthGraph from '@/components/pets/PatientHealthGraph';
+import VaccinationChartTab from '@/components/pets/medical-file/VaccinationChartTab';
+import DewormingChartTab from '@/components/pets/medical-file/DewormingChartTab';
+import GroomingChartTab from '@/components/pets/medical-file/GroomingChartTab';
 import Button from '@/components/ui/premium/Button';
 import Select from '@/components/ui/premium/Select';
 import Textarea from '@/components/ui/premium/Textarea';
@@ -39,7 +42,16 @@ import {
   User,
 } from 'lucide-react';
 
-type TabKey = 'history' | 'health' | 'labs' | 'billing' | 'care' | 'recommendations';
+type TabKey =
+  | 'history'
+  | 'health'
+  | 'vaccination'
+  | 'deworming'
+  | 'grooming'
+  | 'labs'
+  | 'billing'
+  | 'care'
+  | 'recommendations';
 
 interface PetMedicalProfileClientProps {
   profile: PatientMedicalProfileData;
@@ -54,6 +66,9 @@ interface PetMedicalProfileClientProps {
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'history', label: 'Medical History' },
   { key: 'health', label: 'Health timeline' },
+  { key: 'vaccination', label: 'Vaccination Chart' },
+  { key: 'deworming', label: 'Deworming Chart' },
+  { key: 'grooming', label: 'Grooming Chart' },
   { key: 'labs', label: 'Lab Reports' },
   { key: 'billing', label: 'Billing' },
   { key: 'care', label: 'Special Care & Allergies' },
@@ -152,6 +167,18 @@ export default function PetMedicalProfileClient({
   const refresh = () => onRefresh?.();
 
   const allLabOrders = profile.visits.flatMap((v) => v.labOrders);
+  const vaccinationRows = useMemo(
+    () => profile.workflowRecords.filter((r) => r.workflowType === 'vaccination'),
+    [profile.workflowRecords]
+  );
+  const dewormingRows = useMemo(
+    () => profile.workflowRecords.filter((r) => r.workflowType === 'deworming'),
+    [profile.workflowRecords]
+  );
+  const groomingRows = useMemo(
+    () => profile.workflowRecords.filter((r) => r.workflowType === 'grooming'),
+    [profile.workflowRecords]
+  );
   const recommendations = profile.visits
     .filter((v) => v.notes?.follow_up_recommendation)
     .map((v) => ({
@@ -465,6 +492,12 @@ export default function PetMedicalProfileClient({
           <PatientHealthGraph profile={profile} />
         </div>
       )}
+
+      {activeTab === 'vaccination' && <VaccinationChartTab rows={vaccinationRows} />}
+
+      {activeTab === 'deworming' && <DewormingChartTab rows={dewormingRows} />}
+
+      {activeTab === 'grooming' && <GroomingChartTab rows={groomingRows} />}
 
       {activeTab === 'history' && (
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">

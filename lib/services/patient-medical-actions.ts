@@ -23,6 +23,9 @@ import type {
   PrescriptionItemRow,
   VisitPrescriptionRow,
 } from '@/lib/types/patient-medical';
+import { parseWorkflowPayload } from '@/lib/consultations/workflow-validation';
+import { workflowPayloadToChartRow } from '@/lib/consultations/workflow-chart';
+import type { WorkflowChartRow } from '@/lib/consultations/workflow-types';
 import type { MedicalActivityRow } from '@/components/dashboard/MedicalRecordActivityPanel';
 import {
   buildMedicalActivityDetail,
@@ -284,7 +287,7 @@ export async function getPatientMedicalProfileAction(petId: string) {
     const { data: visitRows } = await supabase
       .from('visits')
       .select(`
-        id, reason, status, checked_in_at, completed_at, doctor_id, is_emergency,
+        id, reason, status, checked_in_at, completed_at, doctor_id, is_emergency, visit_purpose, workflow_payload,
         visit_assignments ( doctor_id, user_profiles ( first_name, last_name ) ),
         clinical_notes (
           id, visit_type, chief_complaint, history, examination_findings, diagnosis,
@@ -408,6 +411,7 @@ export async function getPatientMedicalProfileAction(petId: string) {
         status: v.status,
         checked_in_at: v.checked_in_at,
         completed_at: v.completed_at,
+        visit_purpose: (v.visit_purpose as string) ?? null,
         is_emergency: v.is_emergency ?? false,
         doctorName: resolveAttendingDoctor(v),
         notes: mapClinicalNote(rawNotes),
@@ -417,6 +421,27 @@ export async function getPatientMedicalProfileAction(petId: string) {
         services: visitServices,
       };
     });
+
+    const invoiceByVisit = new Map<string, number>();
+    for (const inv of invoices ?? []) {
+      if (inv.visit_id) invoiceByVisit.set(inv.visit_id, Number(inv.total));
+    }
+
+    const workflowRecords: WorkflowChartRow[] = [];
+    for (const v of visitRows ?? []) {
+      if (!v.workflow_payload) continue;
+      const payload = parseWorkflowPayload(v.workflow_payload);
+      if (!payload) continue;
+      workflowRecords.push(
+        workflowPayloadToChartRow(
+          v.id,
+          v.checked_in_at as string | null,
+          v.completed_at as string | null,
+          payload,
+          invoiceByVisit.get(v.id)
+        )
+      );
+    }
 
     const customer = pet.customers as {
       id: string;
@@ -479,6 +504,7 @@ export async function getPatientMedicalProfileAction(petId: string) {
           visit_id: inv.visit_id,
         })
       ),
+      workflowRecords,
       activities,
       allDocuments: (allDocs ?? []) as PatientDocumentRow[],
     };

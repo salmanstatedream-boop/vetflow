@@ -7,6 +7,9 @@ import { STOCK_PRODUCT_TYPES } from '@/lib/inventory/product-types';
 import PageHeader from '@/components/ui/premium/PageHeader';
 import Link from 'next/link';
 import { ArrowLeft, Stethoscope } from 'lucide-react';
+import type { VisitPurpose } from '@/lib/appointments/visit-purpose';
+import type { WorkflowConsultDraft } from '@/lib/consultations/workflow-types';
+import type { CompleteConsultationInput } from '@/lib/validations/schemas';
 
 export const metadata = {
   title: 'Consultation Room',
@@ -44,6 +47,8 @@ export default async function ConsultationRoomPage({
       consult_pause_reason,
       consult_pause_accumulated_sec,
       consult_draft,
+      visit_purpose,
+      workflow_payload,
       pet_id:patient_id,
       is_emergency,
       triage_notes,
@@ -221,12 +226,56 @@ export default async function ConsultationRoomPage({
   if (visit.appointment_id) {
     const { data: linkedAppt } = await supabase
       .from('appointments')
-      .select('follow_up_of_visit_id')
+      .select('follow_up_of_visit_id, visit_purpose')
       .eq('id', visit.appointment_id as string)
       .maybeSingle();
     if (linkedAppt?.follow_up_of_visit_id) {
       isFollowUpPatient = true;
     }
+    if (linkedAppt?.visit_purpose && !visit.visit_purpose) {
+      visit.visit_purpose = linkedAppt.visit_purpose;
+    }
+  }
+
+  let visitPurpose = (visit.visit_purpose as VisitPurpose) || 'other';
+  if (visit.appointment_id && visitPurpose === 'other') {
+    const { data: apptPurpose } = await supabase
+      .from('appointments')
+      .select('visit_purpose')
+      .eq('id', visit.appointment_id as string)
+      .maybeSingle();
+    if (apptPurpose?.visit_purpose) {
+      visitPurpose = apptPurpose.visit_purpose as VisitPurpose;
+    }
+  }
+
+  const { data: members } = await supabase
+    .from('organization_members')
+    .select('user_id')
+    .eq('organization_id', session.organizationId)
+    .eq('is_active', true);
+
+  const userIds = (members ?? []).map((m) => m.user_id);
+  const { data: profiles } = userIds.length
+    ? await supabase
+        .from('user_profiles')
+        .select('id, first_name, last_name')
+        .in('id', userIds)
+    : { data: [] };
+
+  const staffMembers =
+    profiles?.map((profile) => ({
+      id: profile.id,
+      name: `${profile.first_name} ${profile.last_name}`.trim() || 'Staff',
+    })) ?? [];
+
+  const rawDraft = visit.consult_draft as Record<string, unknown> | null;
+  let soapInitialDraft: CompleteConsultationInput | null = null;
+  let workflowInitialDraft: WorkflowConsultDraft | null = null;
+  if (rawDraft?.kind === 'workflow') {
+    workflowInitialDraft = rawDraft as unknown as WorkflowConsultDraft;
+  } else if (rawDraft) {
+    soapInitialDraft = rawDraft as CompleteConsultationInput;
   }
 
   const checkedInAt =
@@ -290,7 +339,10 @@ export default async function ConsultationRoomPage({
         consultPausedAt={visit.consult_paused_at as string | null}
         consultPauseReason={visit.consult_pause_reason as string | null}
         consultPauseAccumulatedSec={(visit.consult_pause_accumulated_sec as number) ?? 0}
-        initialDraft={(visit.consult_draft as import('@/lib/validations/schemas').CompleteConsultationInput | null) ?? null}
+        initialDraft={soapInitialDraft}
+        workflowInitialDraft={workflowInitialDraft}
+        visitPurpose={visitPurpose}
+        staffMembers={staffMembers}
         activeBranchId={visit.branch_id as string}
         categories={categories}
         checkedInAt={checkedInAt}

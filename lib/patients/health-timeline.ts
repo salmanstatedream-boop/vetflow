@@ -4,6 +4,7 @@ export type HealthEventType =
   | 'visit'
   | 'vaccination'
   | 'deworming'
+  | 'grooming'
   | 'surgery'
   | 'treatment';
 
@@ -62,6 +63,20 @@ function classifyVisitEvents(visit: PatientVisitRow): HealthEventMarker[] {
 
   const markers: HealthEventMarker[] = [];
   const note = visit.notes;
+
+  if (visit.visit_purpose === 'vaccination') {
+    markers.push({ date, type: 'vaccination', label: 'Vaccination', visitId: visit.id });
+    return markers;
+  }
+  if (visit.visit_purpose === 'deworming') {
+    markers.push({ date, type: 'deworming', label: 'Deworming', visitId: visit.id });
+    return markers;
+  }
+  if (visit.visit_purpose === 'grooming') {
+    markers.push({ date, type: 'grooming', label: 'Grooming', visitId: visit.id });
+    return markers;
+  }
+
   const textBlob = [
     visit.reason,
     note?.treatment_plan,
@@ -238,6 +253,7 @@ export const HEALTH_EVENT_COLORS: Record<HealthEventType, string> = {
   visit: '#74f5ff',
   vaccination: '#22c55e',
   deworming: '#a78bfa',
+  grooming: '#c084fc',
   surgery: '#f97316',
   treatment: '#3b82f6',
 };
@@ -246,6 +262,7 @@ export const HEALTH_EVENT_LABELS: Record<HealthEventType, string> = {
   visit: 'Visit',
   vaccination: 'Vaccination',
   deworming: 'Deworming',
+  grooming: 'Grooming',
   surgery: 'Surgery',
   treatment: 'Treatment',
 };

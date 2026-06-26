@@ -648,6 +648,7 @@ export async function checkInAppointmentAction(appointmentId: string, doctorId: 
         customer_id: customerId,
         appointment_id: appt.id,
         reason: appt.reason,
+        visit_purpose: (appt.visit_purpose as string) || 'other',
         status: 'waiting',
         is_emergency: appt.is_emergency ?? false,
         triage_notes: appt.intake_notes || null,

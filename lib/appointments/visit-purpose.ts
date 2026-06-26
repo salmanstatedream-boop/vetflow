@@ -6,9 +6,19 @@ export const VISIT_PURPOSE_VALUES = [
   'sick_visit',
   'surgery',
   'grooming',
+  'deworming',
   'follow_up',
   'other',
 ] as const;
+
+export const WORKFLOW_VISIT_PURPOSES = ['grooming', 'vaccination', 'deworming'] as const;
+export type WorkflowVisitPurpose = (typeof WORKFLOW_VISIT_PURPOSES)[number];
+
+export function isWorkflowVisitPurpose(
+  purpose: string | null | undefined
+): purpose is WorkflowVisitPurpose {
+  return WORKFLOW_VISIT_PURPOSES.includes(purpose as WorkflowVisitPurpose);
+}
 
 export type VisitPurpose = (typeof VISIT_PURPOSE_VALUES)[number];
 
@@ -20,6 +30,7 @@ export const VISIT_PURPOSE_LABELS: Record<VisitPurpose, string> = {
   sick_visit: 'Sick visit',
   surgery: 'Surgery',
   grooming: 'Grooming',
+  deworming: 'Deworming',
   follow_up: 'Follow-up',
   other: 'Other',
 };

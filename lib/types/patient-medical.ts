@@ -1,5 +1,7 @@
 import type { MedicalActivityRow } from '@/components/dashboard/MedicalRecordActivityPanel';
 
+import type { WorkflowChartRow } from '@/lib/consultations/workflow-types';
+
 export type PatientDocumentRow = {
   id: string;
   file_name: string;
@@ -67,6 +69,7 @@ export type PatientVisitRow = {
   status: string;
   checked_in_at: string | null;
   completed_at: string | null;
+  visit_purpose: string | null;
   is_emergency: boolean;
   doctorName: string | null;
   notes: ClinicalNoteRow | null;
@@ -100,6 +103,7 @@ export type PatientMedicalProfileData = {
   owner: PatientOwnerRow | null;
   visits: PatientVisitRow[];
   invoices: InvoiceRow[];
+  workflowRecords: WorkflowChartRow[];
   activities: MedicalActivityRow[];
   allDocuments: PatientDocumentRow[];
 };

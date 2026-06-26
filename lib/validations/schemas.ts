@@ -122,6 +122,8 @@ export const DocumentCategorySchema = z.enum([
   'prescription',
   'discharge',
   'vaccine',
+  'grooming_before',
+  'grooming_after',
   'consent',
   'referral',
   'other',

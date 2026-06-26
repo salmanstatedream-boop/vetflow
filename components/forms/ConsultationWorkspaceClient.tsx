@@ -28,6 +28,12 @@ import {
   type FollowUpMode,
 } from '@/lib/consultation/follow-up-schedule';
 import { useSoapFieldNavigation } from '@/lib/hooks/useSoapFieldNavigation';
+import type { VisitPurpose } from '@/lib/appointments/visit-purpose';
+import { isWorkflowVisitPurpose, visitPurposeLabel } from '@/lib/appointments/visit-purpose';
+import type { WorkflowConsultDraft } from '@/lib/consultations/workflow-types';
+import { getWorkflowConfig } from '@/lib/consultations/workflow-config';
+import AppointmentWorkflowRenderer from '@/components/consultations/workflows/AppointmentWorkflowRenderer';
+import type { StaffMember } from '@/components/consultations/workflows/GroomingWorkflow';
 import {
   Heart, 
   User, 
@@ -128,6 +134,9 @@ interface ConsultationWorkspaceClientProps {
   consultPauseReason?: string | null;
   consultPauseAccumulatedSec?: number;
   initialDraft?: Partial<CompleteConsultationInput> | null;
+  workflowInitialDraft?: WorkflowConsultDraft | null;
+  visitPurpose?: VisitPurpose;
+  staffMembers?: StaffMember[];
   activeBranchId: string;
   categories?: { id: string; name: string }[];
   checkedInAt: string;
@@ -154,6 +163,9 @@ export default function ConsultationWorkspaceClient({
   consultPauseReason: initialPauseReason = null,
   consultPauseAccumulatedSec = 0,
   initialDraft = null,
+  workflowInitialDraft = null,
+  visitPurpose = 'other',
+  staffMembers = [],
   activeBranchId,
   categories = [],
   checkedInAt,
@@ -161,6 +173,8 @@ export default function ConsultationWorkspaceClient({
 }: ConsultationWorkspaceClientProps) {
   const router = useRouter();
   const { formatCurrency } = useCurrency();
+  const isWorkflowVisit = isWorkflowVisitPurpose(visitPurpose);
+  const workflowConfig = isWorkflowVisit ? getWorkflowConfig(visitPurpose) : null;
   const [dosageUnits, setDosageUnits] = useState<Record<number, string>>({});
   const followUpBaseDate = checkedInAt.slice(0, 10);
   const [localProducts, setLocalProducts] = useState(products);
@@ -898,6 +912,19 @@ export default function ConsultationWorkspaceClient({
         </div>
       )}
 
+      {isWorkflowVisit && workflowConfig ? (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span
+            className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border ${workflowConfig.badgeClass}`}
+          >
+            {workflowConfig.label} workflow
+          </span>
+          <span className="text-[10px] text-on-surface-variant">
+            {visitPurposeLabel(visitPurpose)} · {visitReason}
+          </span>
+        </div>
+      ) : null}
+
     <div className="grid md:grid-cols-12 gap-4 lg:gap-5 items-start">
       
       {/* LEFT: patient brief + diagnostics */}
@@ -1110,7 +1137,19 @@ export default function ConsultationWorkspaceClient({
 
       </div>
 
-      {/* RIGHT: SOAP → Rx WORKSPACE */}
+      {/* RIGHT: workflow or SOAP workspace */}
+      {isWorkflowVisit ? (
+        <div className="md:col-span-8 flex flex-col space-y-4 relative">
+          <AppointmentWorkflowRenderer
+            visitId={visitId}
+            patientId={patientId}
+            workflowType={visitPurpose}
+            initialDraft={workflowInitialDraft}
+            staffMembers={staffMembers}
+            catalogServices={catalogServices}
+          />
+        </div>
+      ) : (
       <form
         ref={soapWorkspaceRef}
         onSubmit={onFormSubmit}
@@ -1862,6 +1901,7 @@ export default function ConsultationWorkspaceClient({
           </div>
 
         </form>
+      )}
 
       <CatalogItemQuickAddModal
         open={quickAddOpen}
