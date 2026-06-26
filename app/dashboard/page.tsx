@@ -821,7 +821,7 @@ export default async function DashboardOverview({
     role === 'clinic_admin';
 
   const staffGateLocked =
-    role !== 'clinic_admin' && role !== 'doctor' && showAttendance && !myAttendance.checkedIn;
+    role !== 'clinic_admin' && showAttendance && !myAttendance.checkedIn;
 
   const dashboardBody = (
     <>
