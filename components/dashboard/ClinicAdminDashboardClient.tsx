@@ -51,10 +51,12 @@ interface ClinicAdminDashboardClientProps extends AdminOverviewBundle {
 
 export default function ClinicAdminDashboardClient({
   currency,
+  today,
   kpis,
   kpiTrends,
   sparklines,
   todaySchedule,
+  assignedConsultations,
   actionCenter,
   revenueTrend7d,
   utilization,
@@ -85,9 +87,44 @@ export default function ClinicAdminDashboardClient({
   useVisibilityPolling(30_000);
 
   const scheduleItems = todaySchedule.slice(0, 8);
+  const scheduleTitle = `Schedule · ${new Date(`${today}T12:00:00`).toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  })}`;
 
   return (
     <div className={DASHBOARD_DENSITY.pageGap}>
+      {assignedConsultations.length > 0 && (
+        <div className="glass-panel rounded-2xl border border-blue-500/30 p-4 space-y-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <h3 className="text-xs font-bold text-blue-400 uppercase tracking-wider">
+              Assigned consultations in clinic
+            </h3>
+            <Link
+              href="/dashboard/doctors"
+              className="text-[10px] font-bold text-blue-400 hover:text-blue-300"
+            >
+              View full queue →
+            </Link>
+          </div>
+          {assignedConsultations.map((v) => (
+            <Link
+              key={v.id}
+              href={v.href}
+              className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs py-1 hover:bg-blue-500/5 rounded-lg px-1 -mx-1 transition-colors"
+            >
+              <span className="font-bold text-on-surface">
+                {v.petName} — {v.customerName}
+              </span>
+              <span className="text-[10px] text-on-surface-variant">
+                {v.doctorName} · {v.status.replace(/_/g, ' ')}
+              </span>
+            </Link>
+          ))}
+        </div>
+      )}
+
       {/* Row A — KPIs */}
       <div className={cn('grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-7 items-stretch', DASHBOARD_DENSITY.gridGap)}>
         <DashboardKpiStatCard
@@ -172,8 +209,8 @@ export default function ClinicAdminDashboardClient({
       <div className={DASHBOARD_GRID}>
         <DashboardSectionCard
           density="compact"
-          title="Today's Schedule"
-          subtitle="Appointments and walk-ins for today"
+          title={scheduleTitle}
+          subtitle="Appointments and walk-ins for the selected day"
           className="xl:col-span-6"
           footer={
             <div className="flex items-center justify-between gap-2">

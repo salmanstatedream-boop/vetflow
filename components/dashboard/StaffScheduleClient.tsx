@@ -48,6 +48,15 @@ export type AttendanceRow = {
   checkOutAt: string | null;
 };
 
+export type AttendanceHistoryRow = {
+  userId: string;
+  staffName: string;
+  workDate: string;
+  status: string | null;
+  checkInAt: string | null;
+  checkOutAt: string | null;
+};
+
 export type DayTemplate = {
   weekday: number;
   startTime: string;
@@ -112,6 +121,7 @@ export default function StaffScheduleClient({
   branches,
   shifts,
   attendance,
+  attendanceHistory,
   attendanceDate,
   initialTemplate,
   templateUserId,
@@ -121,6 +131,7 @@ export default function StaffScheduleClient({
   branches: BranchOption[];
   shifts: ShiftRow[];
   attendance: AttendanceRow[];
+  attendanceHistory: AttendanceHistoryRow[];
   attendanceDate: string;
   initialTemplate?: DayTemplate[];
   templateUserId?: string;
@@ -142,6 +153,7 @@ export default function StaffScheduleClient({
   const [bulkUserIds, setBulkUserIds] = useState<string[]>([]);
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [historyStaffFilter, setHistoryStaffFilter] = useState('all');
 
   const {
     register,
@@ -155,6 +167,11 @@ export default function StaffScheduleClient({
   });
 
   const present = attendance.filter((a) => a.rosterStatus === 'present' || a.rosterStatus === 'late').length;
+
+  const filteredHistory = useMemo(() => {
+    if (historyStaffFilter === 'all') return attendanceHistory;
+    return attendanceHistory.filter((row) => row.userId === historyStaffFilter);
+  }, [attendanceHistory, historyStaffFilter]);
 
   const toggleBulkUser = (id: string) => {
     setBulkUserIds((prev) =>
@@ -282,6 +299,123 @@ export default function StaffScheduleClient({
           {error || success}
         </div>
       )}
+
+      <div className="grid lg:grid-cols-2 gap-6">
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider">
+              Today roster · {new Date(`${attendanceDate}T12:00:00`).toLocaleDateString()}
+            </h3>
+            <span className="text-[10px] text-on-surface-variant">
+              {present}/{attendance.length} on site
+            </span>
+          </div>
+          <GlassPanel className="p-0 overflow-hidden">
+            {attendance.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className={tableHeadClass}>
+                      <th className="px-5 py-3">Staff</th>
+                      <th className="px-5 py-3">Check in</th>
+                      <th className="px-5 py-3">Check out</th>
+                      <th className="px-5 py-3">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {attendance.map((a) => {
+                      const Icon = rosterIcon[a.rosterStatus];
+                      const styleKey =
+                        a.rosterStatus === 'late'
+                          ? 'late'
+                          : a.rosterStatus === 'absent'
+                            ? 'absent'
+                            : a.rosterStatus === 'present'
+                              ? 'present'
+                              : a.rosterStatus;
+                      return (
+                        <tr key={a.userId} className={tableRowClass}>
+                          <td className="px-5 py-3">
+                            <span className="font-semibold text-on-surface block">{a.staffName}</span>
+                            <span className="text-[10px] text-on-surface-variant capitalize">
+                              {a.role.replace('_', ' ')}
+                            </span>
+                          </td>
+                          <td className="px-5 py-3 text-on-surface-variant">{fmtTime(a.checkInAt)}</td>
+                          <td className="px-5 py-3 text-on-surface-variant">{fmtTime(a.checkOutAt)}</td>
+                          <td className="px-5 py-3">
+                            <span
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                STATUS_STYLES[styleKey] || STATUS_STYLES.not_scheduled
+                              }`}
+                            >
+                              <Icon className="w-3 h-3" />
+                              {ROSTER_LABELS[a.rosterStatus]}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-xs text-on-surface-variant text-center py-10">No staff to show.</p>
+            )}
+          </GlassPanel>
+        </div>
+
+        <div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+            <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider">
+              Attendance history · last 30 days
+            </h3>
+            <Select
+              value={historyStaffFilter}
+              onChange={setHistoryStaffFilter}
+              options={[
+                { value: 'all', label: 'All staff' },
+                ...staff.map((s) => ({ value: s.id, label: s.name })),
+              ]}
+              className="min-w-[160px]"
+            />
+          </div>
+          <GlassPanel className="p-0 overflow-hidden max-h-[360px] overflow-y-auto">
+            {filteredHistory.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead className="sticky top-0 bg-surface-container-high z-10">
+                    <tr className={tableHeadClass}>
+                      <th className="px-5 py-3">Date</th>
+                      <th className="px-5 py-3">Staff</th>
+                      <th className="px-5 py-3">Check in</th>
+                      <th className="px-5 py-3">Check out</th>
+                      <th className="px-5 py-3">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredHistory.map((row) => (
+                      <tr key={`${row.userId}-${row.workDate}`} className={tableRowClass}>
+                        <td className="px-5 py-3 text-on-surface-variant whitespace-nowrap">
+                          {new Date(`${row.workDate}T12:00:00`).toLocaleDateString()}
+                        </td>
+                        <td className="px-5 py-3 font-semibold text-on-surface">{row.staffName}</td>
+                        <td className="px-5 py-3 text-on-surface-variant">{fmtTime(row.checkInAt)}</td>
+                        <td className="px-5 py-3 text-on-surface-variant">{fmtTime(row.checkOutAt)}</td>
+                        <td className="px-5 py-3 capitalize text-on-surface-variant">
+                          {row.status?.replace('_', ' ') || '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-xs text-on-surface-variant text-center py-10">No attendance records yet.</p>
+            )}
+          </GlassPanel>
+        </div>
+      </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
         <GlassPanel className="p-5 lg:col-span-2 space-y-5">
@@ -528,68 +662,6 @@ export default function StaffScheduleClient({
               </div>
             ) : (
               <p className="text-xs text-on-surface-variant text-center py-10">No upcoming shifts scheduled.</p>
-            )}
-          </GlassPanel>
-        </div>
-
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider">
-              Today roster · {new Date(attendanceDate).toLocaleDateString()}
-            </h3>
-            <span className="text-[10px] text-on-surface-variant">
-              {present}/{attendance.length} on site
-            </span>
-          </div>
-          <GlassPanel className="p-0 overflow-hidden">
-            {attendance.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
-                  <thead>
-                    <tr className={tableHeadClass}>
-                      <th className="px-5 py-3">Staff</th>
-                      <th className="px-5 py-3">Check in</th>
-                      <th className="px-5 py-3">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {attendance.map((a) => {
-                      const Icon = rosterIcon[a.rosterStatus];
-                      const styleKey =
-                        a.rosterStatus === 'late'
-                          ? 'late'
-                          : a.rosterStatus === 'absent'
-                            ? 'absent'
-                            : a.rosterStatus === 'present'
-                              ? 'present'
-                              : a.rosterStatus;
-                      return (
-                        <tr key={a.userId} className={tableRowClass}>
-                          <td className="px-5 py-3">
-                            <span className="font-semibold text-on-surface block">{a.staffName}</span>
-                            <span className="text-[10px] text-on-surface-variant capitalize">
-                              {a.role.replace('_', ' ')}
-                            </span>
-                          </td>
-                          <td className="px-5 py-3 text-on-surface-variant">{fmtTime(a.checkInAt)}</td>
-                          <td className="px-5 py-3">
-                            <span
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                STATUS_STYLES[styleKey] || STATUS_STYLES.not_scheduled
-                              }`}
-                            >
-                              <Icon className="w-3 h-3" />
-                              {ROSTER_LABELS[a.rosterStatus]}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className="text-xs text-on-surface-variant text-center py-10">No staff to show.</p>
             )}
           </GlassPanel>
         </div>

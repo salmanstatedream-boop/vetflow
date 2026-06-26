@@ -16,6 +16,7 @@ import { CurrencyProvider } from '@/lib/context/CurrencyContext';
 import { DashboardShellProvider, useDashboardShell } from '@/lib/context/DashboardShellContext';
 import DashboardNotificationsSync from '@/components/layout/DashboardNotificationsSync';
 import DashboardCheckoutAlertBar from '@/components/layout/DashboardCheckoutAlertBar';
+import DashboardAssignedConsultAlertBar from '@/components/layout/DashboardAssignedConsultAlertBar';
 import DashboardBranchSearchCluster from '@/components/layout/DashboardBranchSearchCluster';
 import DashboardAiAssistantWidget from '@/components/layout/DashboardAiAssistantWidget';
 import DeviceTimezoneSync from '@/components/layout/DeviceTimezoneSync';
@@ -343,6 +344,7 @@ export default function DashboardShellClient({
               themeToggle={<ThemeToggle />}
             />
             <DashboardCheckoutAlertBar />
+            <DashboardAssignedConsultAlertBar />
           </div>
 
           <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-[1600px] w-full mx-auto relative">

@@ -139,22 +139,14 @@ async function doctorHasRxAccess(
 export async function assertDoctorPatientAccess(
   petId: string,
   ctx: ServerAuthContext,
-  visitRows: Array<{
+  _visitRows: Array<{
     doctor_id?: string | null;
     visit_assignments?: VisitAssignmentEmbed | VisitAssignmentEmbed[] | null;
   }>
 ): Promise<boolean> {
   if (ctx.role === 'clinic_admin') return true;
-  if (ctx.role !== 'doctor') return false;
-
-  const doctorAssignedViaVisits = visitRows.some((v) => {
-    const assignment = normalizeOneToOne(v.visit_assignments);
-    return assignment?.doctor_id === ctx.userId || v.doctor_id === ctx.userId;
-  });
-
-  if (doctorAssignedViaVisits) return true;
-  const supabase = await createClient();
-  return doctorHasRxAccess(supabase, petId, ctx);
+  if (ctx.role === 'doctor') return true;
+  return false;
 }
 
 async function canEditVisitClinicalNote(

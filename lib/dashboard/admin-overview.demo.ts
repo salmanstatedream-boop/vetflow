@@ -65,6 +65,7 @@ export function getDemoAdminOverviewData(currency = 'USD'): AdminOverviewData {
         href: '/dashboard/appointments',
       },
     ],
+    assignedConsultations: [],
     actionCenter: [
       { id: 'a1', label: 'Unpaid invoices', count: 7, href: '/dashboard/invoices', variant: 'warning' },
       { id: 'a2', label: 'Low stock items', count: 6, href: '/dashboard/inventory', variant: 'danger' },

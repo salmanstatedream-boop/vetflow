@@ -2,7 +2,9 @@ export type DashboardNotificationKind =
   | 'checkout'
   | 'unpaid_invoice'
   | 'low_stock'
-  | 'emergency_queue';
+  | 'emergency_queue'
+  | 'assigned_to_me'
+  | 'assigned_in_clinic';
 
 export type DashboardNotification = {
   id: string;
@@ -16,6 +18,8 @@ export type DashboardNotification = {
 
 const KIND_PRIORITY: Record<DashboardNotificationKind, number> = {
   emergency_queue: 0,
+  assigned_to_me: 0,
+  assigned_in_clinic: 1,
   checkout: 1,
   unpaid_invoice: 2,
   low_stock: 3,
@@ -51,4 +55,10 @@ export function checkoutNotifications(
   items: DashboardNotification[]
 ): DashboardNotification[] {
   return items.filter((n) => n.kind === 'checkout');
+}
+
+export function assignedToMeNotifications(
+  items: DashboardNotification[]
+): DashboardNotification[] {
+  return items.filter((n) => n.kind === 'assigned_to_me');
 }

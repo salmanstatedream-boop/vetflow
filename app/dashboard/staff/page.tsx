@@ -13,7 +13,8 @@ import StaffScheduleClient, {
   type DayTemplate,
 } from '@/components/dashboard/StaffScheduleClient';
 import { syncDailyAttendanceAction } from '@/lib/services/attendance-actions';
-import { getDeviceTodayYmd } from '@/lib/utils/device-timezone.server';
+import { getDeviceTodayYmd, getDeviceTimezoneFromCookies } from '@/lib/utils/device-timezone.server';
+import { addDaysToYmd, getWeekdayFromYmdInTimezone } from '@/lib/utils/timezones';
 import StaffTabsClient from '@/components/dashboard/StaffTabsClient';
 import PageHeader from '@/components/ui/premium/PageHeader';
 import { Users } from 'lucide-react';
@@ -117,7 +118,9 @@ export default async function StaffPage() {
 
   const branchNameById = new Map((branches || []).map((b) => [b.id, b.name]));
   const todayIso = await getDeviceTodayYmd();
-  const todayWeekday = new Date().getDay();
+  const deviceTimezone = await getDeviceTimezoneFromCookies();
+  const todayWeekday = getWeekdayFromYmdInTimezone(todayIso, deviceTimezone);
+  const historyStart = addDaysToYmd(todayIso, -29);
 
   const { data: shiftsData } = await supabase
     .from('shifts')
@@ -160,6 +163,15 @@ export default async function StaffPage() {
     .select('user_id, status, check_in_at, check_out_at')
     .eq('organization_id', orgId)
     .eq('work_date', todayIso);
+
+  const { data: attendanceHistoryData } = await adminClient
+    .from('attendance_records')
+    .select('user_id, work_date, status, check_in_at, check_out_at')
+    .eq('organization_id', orgId)
+    .gte('work_date', historyStart)
+    .lte('work_date', todayIso)
+    .order('work_date', { ascending: false })
+    .order('check_in_at', { ascending: false });
 
   type AttendanceRecord = {
     user_id: string;
@@ -240,6 +252,24 @@ export default async function StaffPage() {
       };
     });
 
+  type AttendanceHistoryRow = {
+    userId: string;
+    staffName: string;
+    workDate: string;
+    status: string | null;
+    checkInAt: string | null;
+    checkOutAt: string | null;
+  };
+
+  const attendanceHistory: AttendanceHistoryRow[] = (attendanceHistoryData || []).map((row) => ({
+    userId: row.user_id,
+    staffName: nameByUserId.get(row.user_id) || 'Unknown',
+    workDate: row.work_date,
+    status: row.status,
+    checkInAt: row.check_in_at,
+    checkOutAt: row.check_out_at,
+  }));
+
   const staffOptions = staffList
     .filter((s) => s.role !== 'clinic_admin' && s.isActive)
     .map((s) => ({ id: s.id, name: `${s.firstName} ${s.lastName}`.trim() }));
@@ -274,6 +304,7 @@ export default async function StaffPage() {
             branches={branches || []}
             shifts={shiftRows}
             attendance={attendanceRows}
+            attendanceHistory={attendanceHistory}
             attendanceDate={todayIso}
             initialTemplate={initialTemplate}
             templateUserId={firstStaffId}

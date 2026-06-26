@@ -66,6 +66,17 @@ export function getTodayYmdInTimezone(timeZone: string): string {
   return toLocalDateKey(new Date().toISOString(), timeZone);
 }
 
+/** Weekday 0=Sun … 6=Sat for a calendar date in an IANA timezone. */
+export function getWeekdayFromYmdInTimezone(ymd: string, timeZone: string): number {
+  let ms = new Date(`${ymd}T12:00:00Z`).getTime();
+  if (toLocalDateKey(new Date(ms).toISOString(), timeZone) !== ymd) {
+    ms += 24 * 60 * 60 * 1000;
+  }
+  const day = new Intl.DateTimeFormat('en-US', { timeZone, weekday: 'short' }).format(ms);
+  const map: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  return map[day] ?? 0;
+}
+
 /** Add calendar days to a YYYY-MM-DD string (timezone-neutral calendar math). */
 export function addDaysToYmd(ymd: string, days: number): string {
   const [y, m, d] = ymd.split('-').map(Number);

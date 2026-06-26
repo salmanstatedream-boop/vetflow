@@ -1662,7 +1662,7 @@ export default function ConsultationWorkspaceClient({
                 {fields.map((field, idx) => (
                   <div 
                     key={field.id} 
-                    className="p-4 bg-surface-container/20 border border-outline-variant/40 rounded-xl grid grid-cols-12 gap-3 items-end relative"
+                    className="p-4 bg-surface-container/20 border border-outline-variant/40 rounded-xl grid grid-cols-12 gap-3 items-start relative"
                   >
                     {/* Catalog linker selection */}
                     <div className="col-span-12 sm:col-span-4 space-y-1">
@@ -1693,7 +1693,7 @@ export default function ConsultationWorkspaceClient({
                       </button>
                     </div>
 
-                    <div className="col-span-12 sm:col-span-8 grid grid-cols-4 gap-2">
+                    <div className="col-span-12 sm:col-span-8 grid grid-cols-4 gap-2 items-end">
                       <div className="col-span-2">
                         <label className="block text-[9px] font-bold text-on-surface-variant/40 uppercase mb-1">
                           <RequiredLabel>Medicine Name</RequiredLabel>

@@ -48,6 +48,15 @@ export type AdminExpiringRow = {
 
 export type ChartPoint = { name: string; value: number };
 
+export type AdminAssignedConsultation = {
+  id: string;
+  petName: string;
+  customerName: string;
+  doctorName: string;
+  status: string;
+  href: string;
+};
+
 export type AdminOverviewData = {
   currency: string;
   today: string;
@@ -66,6 +75,7 @@ export type AdminOverviewData = {
     revenue: number[];
   };
   todaySchedule: AdminScheduleItem[];
+  assignedConsultations: AdminAssignedConsultation[];
   actionCenter: AdminActionItem[];
   revenueTrend7d: ChartPoint[];
   utilization: { booked: number; total: number };

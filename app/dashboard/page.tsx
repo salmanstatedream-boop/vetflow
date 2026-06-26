@@ -784,6 +784,7 @@ export default async function DashboardOverview({
         organizationId: session.organizationId,
         branchId: activeBranchId,
         today: filterDate,
+        deviceTimezone,
       });
     }
   }

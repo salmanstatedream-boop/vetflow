@@ -12,6 +12,7 @@ import type { LiveConsultRow } from '@/components/dashboard/LiveOperationsPanel'
 import type { MedicalActivityRow } from '@/components/dashboard/MedicalRecordActivityPanel';
 import type { StaffAttendanceOverviewRow } from '@/components/dashboard/StaffAttendanceOverviewPanel';
 import { countLowStockProducts, fetchLowStockProductList } from '@/lib/inventory/low-stock';
+import { toLocalDateKey } from '@/lib/utils/timezones';
 import { getDemoAdminOverviewData } from './admin-overview.demo';
 import type {
   AdminOverviewBundle,
@@ -92,6 +93,7 @@ export async function loadAdminOverviewBundle(params: {
   organizationId: string;
   branchId: string;
   today: string;
+  deviceTimezone: string;
 }): Promise<AdminOverviewBundle> {
   if (isDemoMode()) {
     const demo = getDemoAdminOverviewData();
@@ -106,7 +108,7 @@ export async function loadAdminOverviewBundle(params: {
   }
 
   const supabase = await createClient();
-  const { organizationId, branchId, today } = params;
+  const { organizationId, branchId, today, deviceTimezone } = params;
   const monthStart = `${today.slice(0, 7)}-01`;
   const days7 = last7Days(today);
   const yesterday = days7[days7.length - 2]!;
@@ -214,7 +216,12 @@ export async function loadAdminOverviewBundle(params: {
   const lowStockTotal = lowStockCount;
   const followUpsTotal = followUpsCountRes.count || 0;
   const vaccinationsToday = vaccTodayRes.count || 0;
-  const checkoutCount = (todayVisitsRes.data || []).filter((v) => v.status === 'ready_for_checkout').length;
+  const checkoutCount = (todayVisitsRes.data || []).filter(
+    (v) =>
+      v.status === 'ready_for_checkout' &&
+      v.checked_in_at &&
+      toLocalDateKey(v.checked_in_at as string, deviceTimezone) === today
+  ).length;
 
   const apptByDay = new Map<string, number>();
   for (const d of days7) apptByDay.set(d, 0);
@@ -250,6 +257,12 @@ export async function loadAdminOverviewBundle(params: {
   }
 
   for (const v of todayVisitsRes.data || []) {
+    if (
+      !v.checked_in_at ||
+      toLocalDateKey(v.checked_in_at as string, deviceTimezone) !== today
+    ) {
+      continue;
+    }
     const pet = normalizeOneToOne(v.pets as { name: string; species: string } | null);
     const cust = normalizeOneToOne(v.customers as { first_name: string; last_name: string } | null);
     const assignment = normalizeOneToOne(v.visit_assignments as { user_profiles: { first_name: string; last_name: string } } | null);
@@ -269,6 +282,28 @@ export async function loadAdminOverviewBundle(params: {
   }
 
   schedule.sort((a, b) => a.time.localeCompare(b.time));
+
+  const assignedConsultations = (liveActiveRes.data || [])
+    .map((v) => {
+      const assignment = normalizeOneToOne(
+        v.visit_assignments as {
+          user_profiles: { first_name: string; last_name: string } | null;
+        } | null
+      );
+      const doc = normalizeOneToOne(assignment?.user_profiles ?? null);
+      if (!doc) return null;
+      const pet = normalizeOneToOne(v.pets as { name: string; species: string } | null);
+      const cust = normalizeOneToOne(v.customers as { first_name: string; last_name: string } | null);
+      return {
+        id: v.id as string,
+        petName: pet?.name || 'Unknown',
+        customerName: cust ? `${cust.first_name} ${cust.last_name}` : 'Unknown',
+        doctorName: `Dr. ${doc.first_name} ${doc.last_name}`,
+        status: v.status as string,
+        href: `/dashboard/doctors/${v.id}`,
+      };
+    })
+    .filter((row): row is NonNullable<typeof row> => row !== null);
 
   const reasonCounts = new Map<string, number>();
   for (const v of visitsReasonsRes.data || []) {
@@ -390,6 +425,7 @@ export async function loadAdminOverviewBundle(params: {
       revenue: days7.map((d) => revByDay.get(d) || 0),
     },
     todaySchedule: schedule.slice(0, 12),
+    assignedConsultations,
     actionCenter: [
       { id: 'unpaid', label: 'Unpaid invoices', count: unpaidCount, href: '/dashboard/invoices', variant: 'warning' as const },
       { id: 'stock', label: 'Low stock items', count: lowStockTotal, href: '/dashboard/inventory', variant: 'danger' as const },

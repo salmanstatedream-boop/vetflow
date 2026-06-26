@@ -116,6 +116,22 @@ export default function InvoicesListClient({
     dateFrom.length > 0 ||
     dateTo.length > 0;
 
+  const filteredTotal = useMemo(
+    () => filtered.reduce((sum, inv) => sum + inv.total, 0),
+    [filtered]
+  );
+
+  const totalLabel = useMemo(() => {
+    const parts: string[] = [];
+    if (saleTypeFilter !== 'all') parts.push(saleTypeFilter);
+    if (statusFilter !== 'all') {
+      parts.push(statusFilter === 'partially_paid' ? 'partial' : statusFilter);
+    }
+    if (paymentFilter !== 'all') parts.push(PAYMENT_METHOD_LABELS[paymentFilter]);
+    if (hasActiveFilters && parts.length === 0) parts.push('filtered');
+    return parts.length > 0 ? parts.join(' · ') : 'all invoices';
+  }, [saleTypeFilter, statusFilter, paymentFilter, hasActiveFilters]);
+
   const clearFilters = () => {
     setSaleTypeFilter('all');
     setStatusFilter('all');
@@ -175,6 +191,8 @@ export default function InvoicesListClient({
         </div>
       )}
 
+      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+        <div className="flex-1 min-w-0 space-y-4">
       <div className="flex flex-wrap gap-2 items-center">
         {(['all', 'clinical', 'retail'] as const).map((s) => (
           <button
@@ -260,6 +278,21 @@ export default function InvoicesListClient({
             Clear filters
           </button>
         )}
+      </div>
+        </div>
+
+        <div className="glass-panel rounded-2xl border border-outline-variant/40 p-4 shrink-0 min-w-[200px] lg:min-w-[220px]">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant block">
+            {hasActiveFilters ? 'Filtered total' : 'Total amount'}
+          </span>
+          <p className="text-2xl font-bold text-on-surface font-[family-name:var(--font-display)] tabular-nums mt-1">
+            {formatCurrency(filteredTotal)}
+          </p>
+          <p className="text-[10px] text-on-surface-variant mt-1">
+            {filtered.length} invoice{filtered.length === 1 ? '' : 's'}
+            {totalLabel !== 'all invoices' && ` · ${totalLabel}`}
+          </p>
+        </div>
       </div>
 
       <div className="glass-panel rounded-2xl border border-outline-variant/40 overflow-hidden shadow-premium">

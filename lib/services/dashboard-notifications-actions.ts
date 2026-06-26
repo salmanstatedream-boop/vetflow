@@ -136,6 +136,83 @@ export async function getDashboardNotificationsAction(): Promise<{
       }
     }
 
+    if (role === 'doctor' || role === 'clinic_admin') {
+      const { data: myAssigned } = await supabase
+        .from('visits')
+        .select(
+          'id, reason, status, checked_in_at, pets:patients(name), customers(first_name, last_name), visit_assignments!inner(doctor_id)'
+        )
+        .eq('branch_id', branchId)
+        .in('status', ['waiting', 'consulting'])
+        .eq('visit_assignments.doctor_id', ctx.userId)
+        .order('checked_in_at', { ascending: true })
+        .limit(5);
+
+      for (const v of myAssigned || []) {
+        const pet = normalizeOneToOne(
+          v.pets as { name: string } | { name: string }[] | null
+        );
+        const cust = normalizeOneToOne(
+          v.customers as { first_name: string; last_name: string } | null
+        );
+        const petName = pet?.name || 'Patient';
+        const customerName = cust
+          ? `${cust.first_name} ${cust.last_name}`.trim()
+          : 'Owner';
+        notifications.push({
+          id: `assigned-me-${v.id}`,
+          kind: 'assigned_to_me',
+          title: `${petName} assigned to you`,
+          body: `${customerName} — ${v.reason || 'Consultation'} (${(v.status as string).replace(/_/g, ' ')})`,
+          href: `/dashboard/doctors/${v.id}`,
+          priority: 0,
+          createdAt: (v.checked_in_at as string | null) ?? null,
+        });
+      }
+    }
+
+    if (role === 'clinic_admin') {
+      const { data: clinicAssigned } = await supabase
+        .from('visits')
+        .select(
+          `id, reason, status, checked_in_at, pets:patients(name), customers(first_name, last_name),
+          visit_assignments!inner(doctor_id, user_profiles(first_name, last_name))`
+        )
+        .eq('branch_id', branchId)
+        .in('status', ['waiting', 'consulting'])
+        .order('checked_in_at', { ascending: true })
+        .limit(5);
+
+      for (const v of clinicAssigned || []) {
+        const pet = normalizeOneToOne(
+          v.pets as { name: string } | { name: string }[] | null
+        );
+        const cust = normalizeOneToOne(
+          v.customers as { first_name: string; last_name: string } | null
+        );
+        const assignment = normalizeOneToOne(
+          v.visit_assignments as {
+            user_profiles: { first_name: string; last_name: string } | null;
+          } | null
+        );
+        const doc = normalizeOneToOne(assignment?.user_profiles ?? null);
+        const petName = pet?.name || 'Patient';
+        const customerName = cust
+          ? `${cust.first_name} ${cust.last_name}`.trim()
+          : 'Owner';
+        const doctorName = doc ? `Dr. ${doc.first_name} ${doc.last_name}` : 'Doctor';
+        notifications.push({
+          id: `assigned-clinic-${v.id}`,
+          kind: 'assigned_in_clinic',
+          title: `${petName} — ${doctorName}`,
+          body: `${customerName} · ${v.reason || 'Consultation'}`,
+          href: `/dashboard/doctors/${v.id}`,
+          priority: 1,
+          createdAt: (v.checked_in_at as string | null) ?? null,
+        });
+      }
+    }
+
     if (hasCapability(role, 'manage_walk_ins')) {
       const { data: emergencies } = await supabase
         .from('visits')
