@@ -13,20 +13,24 @@ export default function StaffTabsClient({
   const [tab, setTab] = useState<'team' | 'schedule'>('team');
 
   const tabClass = (active: boolean) =>
-    `inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+    `inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
       active
-        ? 'bg-primary/15 text-primary border border-primary/30'
-        : 'text-on-surface-variant hover:bg-surface-container border border-transparent'
+        ? 'bg-primary/15 text-primary shadow-sm'
+        : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50'
     }`;
 
   return (
     <div className="space-y-6">
-      <div className="flex gap-2">
-        <button className={tabClass(tab === 'team')} onClick={() => setTab('team')}>
+      <div className="dashboard-card p-1 inline-flex gap-1">
+        <button type="button" className={tabClass(tab === 'team')} onClick={() => setTab('team')}>
           <Users className="w-4 h-4" />
           Team
         </button>
-        <button className={tabClass(tab === 'schedule')} onClick={() => setTab('schedule')}>
+        <button
+          type="button"
+          className={tabClass(tab === 'schedule')}
+          onClick={() => setTab('schedule')}
+        >
           <CalendarClock className="w-4 h-4" />
           Schedule & attendance
         </button>

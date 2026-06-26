@@ -10,19 +10,18 @@ import {
   bulkAssignScheduleTemplateAction,
   generateShiftsFromTemplatesAction,
 } from '@/lib/services/attendance-actions';
-import GlassPanel from '@/components/ui/premium/GlassPanel';
 import Select from '@/components/ui/premium/Select';
+import DashboardSectionCard from '@/components/dashboard/premium/DashboardSectionCard';
+import AttendanceStatusBadge from '@/components/dashboard/AttendanceStatusBadge';
 import { tableHeadClass, tableRowClass } from '@/lib/ui/dashboard-classes';
 import {
   CalendarPlus,
   Loader2,
   Trash2,
-  Clock,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
   Users,
   CalendarDays,
+  Clock,
+  CalendarClock,
 } from 'lucide-react';
 
 type StaffOption = { id: string; name: string };
@@ -83,24 +82,8 @@ const WEEKDAYS: { weekday: number; label: string }[] = [
   { weekday: 0, label: 'Sun' },
 ];
 
-const STATUS_STYLES: Record<string, string> = {
-  present: 'bg-emerald-500/10 text-emerald-600',
-  late: 'bg-amber-500/10 text-amber-600',
-  absent: 'bg-destructive/10 text-destructive',
-  off: 'bg-surface-container text-on-surface-variant',
-  not_scheduled: 'bg-surface-container/60 text-on-surface-variant/70',
-  pending: 'bg-primary/5 text-primary',
-  on_leave: 'bg-surface-container text-on-surface-variant',
-};
-
-const ROSTER_LABELS: Record<AttendanceRow['rosterStatus'], string> = {
-  present: 'Present',
-  late: 'Late',
-  absent: 'Absent',
-  off: 'Off day',
-  not_scheduled: 'Not scheduled',
-  pending: 'Scheduled',
-};
+const TH = 'px-4 py-3';
+const TD = 'px-4 py-3';
 
 function defaultWeek(): DayTemplate[] {
   return WEEKDAYS.map(({ weekday }) => ({
@@ -114,6 +97,23 @@ function defaultWeek(): DayTemplate[] {
 function fmtTime(iso: string | null): string {
   if (!iso) return '—';
   return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
+      {children}
+    </h2>
+  );
+}
+
+function EmptyTableState({ message }: { message: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-12 text-center min-h-[200px]">
+      <Clock className="w-10 h-10 text-on-surface-variant/30 mb-3" />
+      <p className="text-xs text-on-surface-variant">{message}</p>
+    </div>
+  );
 }
 
 export default function StaffScheduleClient({
@@ -166,7 +166,11 @@ export default function StaffScheduleClient({
     defaultValues: { startTime: '09:00', endTime: '17:00', userId: '', branchId: '' },
   });
 
-  const present = attendance.filter((a) => a.rosterStatus === 'present' || a.rosterStatus === 'late').length;
+  const present = attendance.filter(
+    (a) => a.rosterStatus === 'present' || a.rosterStatus === 'late'
+  ).length;
+
+  const rosterDateLabel = new Date(`${attendanceDate}T12:00:00`).toLocaleDateString();
 
   const filteredHistory = useMemo(() => {
     if (historyStaffFilter === 'all') return attendanceHistory;
@@ -273,21 +277,8 @@ export default function StaffScheduleClient({
     });
   };
 
-  const rosterIcon = useMemo(
-    () =>
-      ({
-        present: CheckCircle,
-        late: AlertCircle,
-        absent: XCircle,
-        off: XCircle,
-        not_scheduled: Clock,
-        pending: Clock,
-      }) as Record<AttendanceRow['rosterStatus'], typeof CheckCircle>,
-    []
-  );
-
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {(error || success) && (
         <div
           className={`text-xs p-3 rounded-xl border ${
@@ -300,82 +291,62 @@ export default function StaffScheduleClient({
         </div>
       )}
 
-      <div className="grid lg:grid-cols-2 gap-6 items-start">
-        <div>
-          <div className="flex items-center justify-between min-h-[2.5rem] mb-3">
-            <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider">
-              Today roster · {new Date(`${attendanceDate}T12:00:00`).toLocaleDateString()}
-            </h3>
-            <span className="text-[10px] text-on-surface-variant">
-              {present}/{attendance.length} on site
-            </span>
-          </div>
-          <GlassPanel className="p-0 overflow-hidden">
-            {attendance.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
-                  <thead>
-                    <tr className={tableHeadClass}>
-                      <th className="px-5 py-3">Staff</th>
-                      <th className="px-5 py-3">Check in</th>
-                      <th className="px-5 py-3">Check out</th>
-                      <th className="px-5 py-3">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {attendance.map((a) => {
-                      const Icon = rosterIcon[a.rosterStatus];
-                      const styleKey =
-                        a.rosterStatus === 'late'
-                          ? 'late'
-                          : a.rosterStatus === 'absent'
-                            ? 'absent'
-                            : a.rosterStatus === 'present'
-                              ? 'present'
-                              : a.rosterStatus;
-                      return (
+      {/* Zone 1 — Attendance */}
+      <section className="space-y-4">
+        <SectionLabel>Attendance</SectionLabel>
+        <div className="grid lg:grid-cols-2 gap-5 items-stretch">
+          <DashboardSectionCard
+            className="h-full overflow-hidden"
+            title="Today roster"
+            subtitle={rosterDateLabel}
+            action={
+              <span className="text-[10px] font-semibold text-on-surface-variant whitespace-nowrap">
+                {present}/{attendance.length} on site
+              </span>
+            }
+          >
+            <div className="min-h-[280px] flex flex-col -mx-5 md:-mx-6 -mb-5 md:-mb-6">
+              {attendance.length > 0 ? (
+                <div className="overflow-x-auto flex-1">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className={tableHeadClass}>
+                        <th className={TH}>Staff</th>
+                        <th className={TH}>Check in</th>
+                        <th className={TH}>Check out</th>
+                        <th className={TH}>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {attendance.map((a) => (
                         <tr key={a.userId} className={tableRowClass}>
-                          <td className="px-5 py-3">
+                          <td className={TD}>
                             <span className="font-semibold text-on-surface block">{a.staffName}</span>
                             <span className="text-[10px] text-on-surface-variant capitalize">
                               {a.role.replace('_', ' ')}
                             </span>
                           </td>
-                          <td className="px-5 py-3 text-on-surface-variant">{fmtTime(a.checkInAt)}</td>
-                          <td className="px-5 py-3 text-on-surface-variant">{fmtTime(a.checkOutAt)}</td>
-                          <td className="px-5 py-3">
-                            <span
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                STATUS_STYLES[styleKey] || STATUS_STYLES.not_scheduled
-                              }`}
-                            >
-                              <Icon className="w-3 h-3" />
-                              {ROSTER_LABELS[a.rosterStatus]}
-                            </span>
+                          <td className={`${TD} text-on-surface-variant`}>{fmtTime(a.checkInAt)}</td>
+                          <td className={`${TD} text-on-surface-variant`}>{fmtTime(a.checkOutAt)}</td>
+                          <td className={TD}>
+                            <AttendanceStatusBadge status={a.rosterStatus} />
                           </td>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className="text-xs text-on-surface-variant text-center py-10">No staff to show.</p>
-            )}
-          </GlassPanel>
-        </div>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <EmptyTableState message="No staff to show." />
+              )}
+            </div>
+          </DashboardSectionCard>
 
-        <div>
-          <div className="min-h-[2.5rem] mb-3 flex items-center">
-            <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider">
-              Attendance history · last 30 days
-            </h3>
-          </div>
-          <GlassPanel className="p-0 overflow-hidden max-h-[360px] overflow-y-auto">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3 border-b border-outline-variant/30 bg-surface-container/20">
-              <span className="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wide">
-                Filter by staff
-              </span>
+          <DashboardSectionCard
+            className="h-full overflow-hidden"
+            title="Attendance history"
+            subtitle="Last 30 days"
+            action={
               <Select
                 value={historyStaffFilter}
                 onChange={setHistoryStaffFilter}
@@ -383,64 +354,71 @@ export default function StaffScheduleClient({
                   { value: 'all', label: 'All staff' },
                   ...staff.map((s) => ({ value: s.id, label: s.name })),
                 ]}
-                className="min-w-[160px]"
+                className="min-w-[140px]"
               />
-            </div>
-            {filteredHistory.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
-                  <thead className="sticky top-0 bg-surface-container-high z-10">
-                    <tr className={tableHeadClass}>
-                      <th className="px-5 py-3">Date</th>
-                      <th className="px-5 py-3">Staff</th>
-                      <th className="px-5 py-3">Check in</th>
-                      <th className="px-5 py-3">Check out</th>
-                      <th className="px-5 py-3">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredHistory.map((row) => (
-                      <tr key={`${row.userId}-${row.workDate}`} className={tableRowClass}>
-                        <td className="px-5 py-3 text-on-surface-variant whitespace-nowrap">
-                          {new Date(`${row.workDate}T12:00:00`).toLocaleDateString()}
-                        </td>
-                        <td className="px-5 py-3 font-semibold text-on-surface">{row.staffName}</td>
-                        <td className="px-5 py-3 text-on-surface-variant">{fmtTime(row.checkInAt)}</td>
-                        <td className="px-5 py-3 text-on-surface-variant">{fmtTime(row.checkOutAt)}</td>
-                        <td className="px-5 py-3 capitalize text-on-surface-variant">
-                          {row.status?.replace('_', ' ') || '—'}
-                        </td>
+            }
+          >
+            <div className="min-h-[280px] flex flex-col -mx-5 md:-mx-6 -mb-5 md:-mb-6">
+              {filteredHistory.length > 0 ? (
+                <div className="overflow-x-auto overflow-y-auto flex-1 max-h-[360px]">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead className="sticky top-0 z-10">
+                      <tr className={tableHeadClass}>
+                        <th className={TH}>Date</th>
+                        <th className={TH}>Staff</th>
+                        <th className={TH}>Check in</th>
+                        <th className={TH}>Check out</th>
+                        <th className={TH}>Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className="text-xs text-on-surface-variant text-center py-10">No attendance records yet.</p>
-            )}
-          </GlassPanel>
+                    </thead>
+                    <tbody>
+                      {filteredHistory.map((row) => (
+                        <tr key={`${row.userId}-${row.workDate}`} className={tableRowClass}>
+                          <td className={`${TD} text-on-surface-variant whitespace-nowrap`}>
+                            {new Date(`${row.workDate}T12:00:00`).toLocaleDateString()}
+                          </td>
+                          <td className={`${TD} font-semibold text-on-surface`}>{row.staffName}</td>
+                          <td className={`${TD} text-on-surface-variant`}>{fmtTime(row.checkInAt)}</td>
+                          <td className={`${TD} text-on-surface-variant`}>{fmtTime(row.checkOutAt)}</td>
+                          <td className={TD}>
+                            <AttendanceStatusBadge status={row.status} />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <EmptyTableState message="No attendance records yet." />
+              )}
+            </div>
+          </DashboardSectionCard>
         </div>
-      </div>
+      </section>
 
-      <div className="grid lg:grid-cols-2 gap-6 items-start">
-        <GlassPanel className="p-5 space-y-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5">
-              <CalendarDays className="w-4 h-4 text-primary" />
-              Weekly schedule template
-            </h3>
+      {/* Zone 2 — Weekly template (full width) */}
+      <section className="space-y-4">
+        <SectionLabel>Schedule templates</SectionLabel>
+        <DashboardSectionCard
+          title="Weekly schedule template"
+          subtitle="Set default hours per weekday, then generate shifts"
+          action={
             <button
               type="button"
               onClick={onGenerateShifts}
               disabled={generating}
-              className="text-[10px] font-bold text-primary border border-primary/20 px-3 py-1.5 rounded-lg disabled:opacity-60"
+              className="text-[10px] font-bold text-primary border border-primary/20 px-3 py-1.5 rounded-lg disabled:opacity-60 whitespace-nowrap"
             >
-              {generating ? <Loader2 className="w-3 h-3 animate-spin inline" /> : 'Generate 2 weeks of shifts'}
+              {generating ? (
+                <Loader2 className="w-3 h-3 animate-spin inline" />
+              ) : (
+                'Generate 2 weeks of shifts'
+              )}
             </button>
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-3 text-xs">
-            <div>
+          }
+        >
+          <div className="space-y-5 text-xs">
+            <div className="grid sm:grid-cols-2 gap-3">
               <Select
                 label="Staff member"
                 value={selectedStaffId}
@@ -449,8 +427,6 @@ export default function StaffScheduleClient({
                 onAddNew={() => router.push('/dashboard/staff')}
                 addNewLabel="Add staff member"
               />
-            </div>
-            <div>
               <Select
                 label="Branch"
                 value={selectedBranchId}
@@ -460,111 +436,115 @@ export default function StaffScheduleClient({
                 addNewLabel="Add branch"
               />
             </div>
-          </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs min-w-[520px]">
-              <thead>
-                <tr className={tableHeadClass}>
-                  <th className="px-3 py-2">Day</th>
-                  <th className="px-3 py-2">Start</th>
-                  <th className="px-3 py-2">End</th>
-                  <th className="px-3 py-2 text-center">Off</th>
-                </tr>
-              </thead>
-              <tbody>
-                {WEEKDAYS.map(({ weekday, label }) => {
-                  const day = weekDays.find((d) => d.weekday === weekday)!;
-                  return (
-                    <tr key={weekday} className={tableRowClass}>
-                      <td className="px-3 py-2 font-semibold text-on-surface">{label}</td>
-                      <td className="px-3 py-2">
-                        <input
-                          type="time"
-                          disabled={day.isOffDay}
-                          value={day.startTime}
-                          onChange={(e) => updateDay(weekday, { startTime: e.target.value })}
-                          className="px-2 py-1 bg-surface-container/30 border border-outline-variant rounded-lg text-xs disabled:opacity-40"
-                        />
-                      </td>
-                      <td className="px-3 py-2">
-                        <input
-                          type="time"
-                          disabled={day.isOffDay}
-                          value={day.endTime}
-                          onChange={(e) => updateDay(weekday, { endTime: e.target.value })}
-                          className="px-2 py-1 bg-surface-container/30 border border-outline-variant rounded-lg text-xs disabled:opacity-40"
-                        />
-                      </td>
-                      <td className="px-3 py-2 text-center">
-                        <input
-                          type="checkbox"
-                          checked={day.isOffDay}
-                          onChange={(e) => updateDay(weekday, { isOffDay: e.target.checked })}
-                          className="rounded border-outline-variant"
-                        />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={onSaveTemplate}
-              disabled={savingTemplate}
-              className="bg-primary hover:opacity-90 text-white px-4 py-2 rounded-xl text-xs font-semibold disabled:opacity-70"
-            >
-              {savingTemplate ? 'Saving…' : 'Save weekly template'}
-            </button>
-          </div>
-
-          <div className="pt-4 border-t border-outline-variant/30 space-y-3">
-            <h4 className="text-[10px] font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5 text-primary" />
-              Bulk apply to selected staff
-            </h4>
-            <div className="flex flex-wrap gap-2">
-              {staff.map((s) => (
-                <label
-                  key={s.id}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold border cursor-pointer ${
-                    bulkUserIds.includes(s.id)
-                      ? 'bg-primary/10 border-primary/30 text-primary'
-                      : 'border-outline-variant text-on-surface-variant'
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    className="sr-only"
-                    checked={bulkUserIds.includes(s.id)}
-                    onChange={() => toggleBulkUser(s.id)}
-                  />
-                  {s.name}
-                </label>
-              ))}
+            <div className="overflow-x-auto rounded-xl border border-outline-variant/30">
+              <table className="w-full text-left border-collapse text-xs min-w-[480px]">
+                <thead>
+                  <tr className={tableHeadClass}>
+                    <th className={TH}>Day</th>
+                    <th className={TH}>Start</th>
+                    <th className={TH}>End</th>
+                    <th className={`${TH} text-center`}>Off</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {WEEKDAYS.map(({ weekday, label }) => {
+                    const day = weekDays.find((d) => d.weekday === weekday)!;
+                    return (
+                      <tr key={weekday} className={tableRowClass}>
+                        <td className={`${TD} font-semibold text-on-surface`}>{label}</td>
+                        <td className={TD}>
+                          <input
+                            type="time"
+                            disabled={day.isOffDay}
+                            value={day.startTime}
+                            onChange={(e) => updateDay(weekday, { startTime: e.target.value })}
+                            className="px-2 py-1.5 bg-surface-container/30 border border-outline-variant rounded-lg text-xs disabled:opacity-40 w-full max-w-[120px]"
+                          />
+                        </td>
+                        <td className={TD}>
+                          <input
+                            type="time"
+                            disabled={day.isOffDay}
+                            value={day.endTime}
+                            onChange={(e) => updateDay(weekday, { endTime: e.target.value })}
+                            className="px-2 py-1.5 bg-surface-container/30 border border-outline-variant rounded-lg text-xs disabled:opacity-40 w-full max-w-[120px]"
+                          />
+                        </td>
+                        <td className={`${TD} text-center`}>
+                          <input
+                            type="checkbox"
+                            checked={day.isOffDay}
+                            onChange={(e) => updateDay(weekday, { isOffDay: e.target.checked })}
+                            className="rounded border-outline-variant"
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-            <button
-              type="button"
-              onClick={onBulkAssign}
-              disabled={savingTemplate || bulkUserIds.length === 0}
-              className="border border-primary/30 text-primary px-4 py-2 rounded-xl text-xs font-semibold disabled:opacity-50"
-            >
-              Apply to selected ({bulkUserIds.length})
-            </button>
-          </div>
-        </GlassPanel>
 
-        <GlassPanel className="p-5">
-          <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider mb-4 flex items-center gap-1.5">
-            <CalendarPlus className="w-4 h-4 text-primary" />
-            One-off shift override
-          </h3>
-          <form onSubmit={onAssign} className="space-y-3 text-xs">
-            <div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={onSaveTemplate}
+                disabled={savingTemplate}
+                className="bg-primary hover:opacity-90 text-white px-4 py-2 rounded-xl text-xs font-semibold disabled:opacity-70"
+              >
+                {savingTemplate ? 'Saving…' : 'Save weekly template'}
+              </button>
+            </div>
+
+            <div className="pt-4 border-t border-outline-variant/30 space-y-3">
+              <h4 className="text-[10px] font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-primary" />
+                Bulk apply to selected staff
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {staff.map((s) => (
+                  <label
+                    key={s.id}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold border cursor-pointer ${
+                      bulkUserIds.includes(s.id)
+                        ? 'bg-primary/10 border-primary/30 text-primary'
+                        : 'border-outline-variant text-on-surface-variant'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      className="sr-only"
+                      checked={bulkUserIds.includes(s.id)}
+                      onChange={() => toggleBulkUser(s.id)}
+                    />
+                    {s.name}
+                  </label>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={onBulkAssign}
+                disabled={savingTemplate || bulkUserIds.length === 0}
+                className="border border-primary/30 text-primary px-4 py-2 rounded-xl text-xs font-semibold disabled:opacity-50"
+              >
+                Apply to selected ({bulkUserIds.length})
+              </button>
+            </div>
+          </div>
+        </DashboardSectionCard>
+      </section>
+
+      {/* Zone 3 — Shift management */}
+      <section className="space-y-4">
+        <SectionLabel>Shift management</SectionLabel>
+        <div className="grid lg:grid-cols-2 gap-5 items-stretch">
+          <DashboardSectionCard
+            className="h-full flex flex-col"
+            title="One-off shift override"
+            subtitle="Assign a single shift outside the weekly template"
+          >
+            <form onSubmit={onAssign} className="flex flex-col flex-1 space-y-3 text-xs">
               <Select
                 label="Staff member"
                 value={watch('userId') || ''}
@@ -577,10 +557,8 @@ export default function StaffScheduleClient({
                 addNewLabel="Add staff member"
               />
               {errors.userId && (
-                <span className="text-[10px] text-destructive mt-1 block">{errors.userId.message}</span>
+                <span className="text-[10px] text-destructive -mt-2 block">{errors.userId.message}</span>
               )}
-            </div>
-            <div>
               <Select
                 label="Branch"
                 value={watch('branchId') || ''}
@@ -592,83 +570,112 @@ export default function StaffScheduleClient({
                 onAddNew={() => router.push('/dashboard/branches')}
                 addNewLabel="Add branch"
               />
-            </div>
-            <div>
-              <label className="block text-[10px] font-semibold text-on-surface/80 uppercase tracking-wider mb-1.5">
-                Date
-              </label>
-              <input
-                type="date"
-                {...register('shiftDate', { required: 'Pick a date' })}
-                className="w-full px-3 py-2 bg-surface-container/30 border border-outline-variant focus:border-primary rounded-xl text-xs text-on-surface outline-none"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <input type="time" {...register('startTime', { required: true })} className="w-full px-3 py-2 bg-surface-container/30 border border-outline-variant rounded-xl text-xs" />
-              <input type="time" {...register('endTime', { required: true })} className="w-full px-3 py-2 bg-surface-container/30 border border-outline-variant rounded-xl text-xs" />
-            </div>
-            <input {...register('notes')} placeholder="Notes (optional)" className="w-full px-3 py-2 bg-surface-container/30 border border-outline-variant rounded-xl text-xs" />
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-primary hover:opacity-90 text-white py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-70"
-            >
-              {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CalendarPlus className="w-3.5 h-3.5" />}
-              Assign shift
-            </button>
-          </form>
-        </GlassPanel>
-      </div>
-
-      <div>
-        <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider mb-3">
-          Upcoming shifts
-        </h3>
-        <GlassPanel className="p-0 overflow-hidden">
-            {shifts.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
-                  <thead>
-                    <tr className={tableHeadClass}>
-                      <th className="px-5 py-3">Staff</th>
-                      <th className="px-5 py-3">Date</th>
-                      <th className="px-5 py-3">Time</th>
-                      <th className="px-5 py-3 text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {shifts.map((s) => (
-                      <tr key={s.id} className={tableRowClass}>
-                        <td className="px-5 py-3 font-semibold text-on-surface">{s.staffName}</td>
-                        <td className="px-5 py-3 text-on-surface-variant">
-                          {new Date(s.shiftDate).toLocaleDateString()}
-                        </td>
-                        <td className="px-5 py-3 text-on-surface-variant">
-                          {s.startTime.slice(0, 5)}–{s.endTime.slice(0, 5)}
-                        </td>
-                        <td className="px-5 py-3 text-right">
-                          <button
-                            disabled={isPending}
-                            onClick={() => onDelete(s.id)}
-                            className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border border-destructive/30 text-destructive disabled:opacity-60"
-                          >
-                            {deletingId === s.id ? (
-                              <Loader2 className="w-3 h-3 animate-spin" />
-                            ) : (
-                              <Trash2 className="w-3 h-3" />
-                            )}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div>
+                <label className="block text-[10px] font-semibold text-on-surface/80 uppercase tracking-wider mb-1.5">
+                  Date
+                </label>
+                <input
+                  type="date"
+                  {...register('shiftDate', { required: 'Pick a date' })}
+                  className="w-full px-3 py-2 bg-surface-container/30 border border-outline-variant focus:border-primary rounded-xl text-xs text-on-surface outline-none"
+                />
               </div>
-            ) : (
-              <p className="text-xs text-on-surface-variant text-center py-10">No upcoming shifts scheduled.</p>
-            )}
-          </GlassPanel>
-      </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-semibold text-on-surface/80 uppercase tracking-wider mb-1.5">
+                    Start
+                  </label>
+                  <input
+                    type="time"
+                    {...register('startTime', { required: true })}
+                    className="w-full px-3 py-2 bg-surface-container/30 border border-outline-variant rounded-xl text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-semibold text-on-surface/80 uppercase tracking-wider mb-1.5">
+                    End
+                  </label>
+                  <input
+                    type="time"
+                    {...register('endTime', { required: true })}
+                    className="w-full px-3 py-2 bg-surface-container/30 border border-outline-variant rounded-xl text-xs"
+                  />
+                </div>
+              </div>
+              <input
+                {...register('notes')}
+                placeholder="Notes (optional)"
+                className="w-full px-3 py-2 bg-surface-container/30 border border-outline-variant rounded-xl text-xs"
+              />
+              <div className="flex-1 min-h-[1rem]" />
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-primary hover:opacity-90 text-white py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-70 mt-auto"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <CalendarPlus className="w-3.5 h-3.5" />
+                )}
+                Assign shift
+              </button>
+            </form>
+          </DashboardSectionCard>
+
+          <DashboardSectionCard
+            className="h-full overflow-hidden flex flex-col"
+            title="Upcoming shifts"
+            subtitle={`${shifts.length} scheduled`}
+          >
+            <div className="min-h-[280px] flex flex-col flex-1 -mx-5 md:-mx-6 -mb-5 md:-mb-6">
+              {shifts.length > 0 ? (
+                <div className="overflow-x-auto flex-1">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className={tableHeadClass}>
+                        <th className={TH}>Staff</th>
+                        <th className={TH}>Date</th>
+                        <th className={TH}>Time</th>
+                        <th className={`${TH} text-right`}>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {shifts.map((s) => (
+                        <tr key={s.id} className={tableRowClass}>
+                          <td className={`${TD} font-semibold text-on-surface`}>{s.staffName}</td>
+                          <td className={`${TD} text-on-surface-variant`}>
+                            {new Date(s.shiftDate).toLocaleDateString()}
+                          </td>
+                          <td className={`${TD} text-on-surface-variant`}>
+                            {s.startTime.slice(0, 5)}–{s.endTime.slice(0, 5)}
+                          </td>
+                          <td className={`${TD} text-right`}>
+                            <button
+                              type="button"
+                              disabled={isPending}
+                              onClick={() => onDelete(s.id)}
+                              className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border border-destructive/30 text-destructive disabled:opacity-60"
+                            >
+                              {deletingId === s.id ? (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                              ) : (
+                                <Trash2 className="w-3 h-3" />
+                              )}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <EmptyTableState message="No upcoming shifts scheduled." />
+              )}
+            </div>
+          </DashboardSectionCard>
+        </div>
+      </section>
     </div>
   );
 }
