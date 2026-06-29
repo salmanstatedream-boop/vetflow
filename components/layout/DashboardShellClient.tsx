@@ -21,7 +21,7 @@ import DashboardBranchSearchCluster from '@/components/layout/DashboardBranchSea
 import DashboardAiAssistantWidget from '@/components/layout/DashboardAiAssistantWidget';
 import DeviceTimezoneSync from '@/components/layout/DeviceTimezoneSync';
 import { resolveClinicLogoSrc } from '@/lib/branding/clinic-logo';
-import { Stethoscope, Search, Menu, X } from 'lucide-react';
+import { Stethoscope, Search, Menu, X, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 function UserAvatar({
@@ -64,16 +64,22 @@ function formatRoleLabel(role: string | null | undefined): string {
   }
 }
 
+const SIDEBAR_COLLAPSED_KEY = 'vetflow_sidebar_collapsed';
+const SIDEBAR_WIDTH_EXPANDED = '17rem';
+const SIDEBAR_WIDTH_COLLAPSED = '4rem';
+
 function SidebarBrand({
   organizationName,
   clinicLogoUrl,
+  collapsed = false,
 }: {
   organizationName?: string | null;
   clinicLogoUrl?: string | null;
+  collapsed?: boolean;
 }) {
   const logoSrc = resolveClinicLogoSrc(clinicLogoUrl);
   return (
-    <div className="h-16 flex items-center px-5 gap-2.5 border-b border-outline-variant/50 shrink-0">
+    <div className={`h-16 flex items-center border-b border-outline-variant/50 shrink-0 ${collapsed ? 'justify-center px-2' : 'px-5 gap-2.5'}`}>
       {logoSrc ? (
         <img
           src={logoSrc}
@@ -85,14 +91,16 @@ function SidebarBrand({
           <Stethoscope className="w-4 h-4 text-primary" />
         </div>
       )}
-      <div className="min-w-0">
-        <span className="font-bold text-sm text-on-surface block font-[family-name:var(--font-display)] truncate">
-          VetFlow
-        </span>
-        <span className="text-[9px] text-on-surface-variant uppercase tracking-wider block truncate">
-          {organizationName || 'AI Clinic OS'}
-        </span>
-      </div>
+      {!collapsed && (
+        <div className="min-w-0">
+          <span className="font-bold text-sm text-on-surface block font-[family-name:var(--font-display)] truncate">
+            VetFlow
+          </span>
+          <span className="text-[9px] text-on-surface-variant uppercase tracking-wider block truncate">
+            {organizationName || 'AI Clinic OS'}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -120,13 +128,45 @@ export default function DashboardShellClient({
   >([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [headerScrolled, setHeaderScrolled] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const mainScrollRef = React.useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const onScroll = () => setHeaderScrolled(window.scrollY > 4);
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    try {
+      const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+      if (stored === 'true') setSidebarCollapsed(true);
+    } catch {
+      /* ignore */
+    }
   }, []);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      '--dashboard-sidebar-width',
+      sidebarCollapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED
+    );
+  }, [sidebarCollapsed]);
+
+  const toggleSidebarCollapsed = () => {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    const el = mainScrollRef.current;
+    if (!el) return;
+    const onScroll = () => setHeaderScrolled(el.scrollTop > 4);
+    onScroll();
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, [pathname]);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -210,7 +250,7 @@ export default function DashboardShellClient({
     <DashboardShellProvider key={activeBranchId}>
       <DeviceTimezoneSync />
       <DashboardNotificationsSync />
-    <div className="min-h-screen bg-surface flex flex-col dashboard-shell">
+    <div className="h-screen overflow-hidden bg-surface flex flex-col dashboard-shell">
       {session.isImpersonating && session.organizationName && (
         <ImpersonationBanner organizationName={session.organizationName} />
       )}
@@ -269,22 +309,58 @@ export default function DashboardShellClient({
         </div>
       )}
 
-      <div className="flex flex-1 relative">
-        <aside className="hidden lg:flex w-[17rem] bg-surface-container/80 border-r border-outline-variant/50 flex-col sticky top-0 h-screen z-20 backdrop-blur-xl">
-          <SidebarBrand organizationName={session.organizationName} clinicLogoUrl={session.clinicLogoUrl} />
-          <nav className="flex-1 py-4 px-3 overflow-y-auto" aria-label="Main navigation">
-            <DashboardSidebarNav session={session} pathname={pathname} navLinkClass={navLinkClass} />
+      <div className="flex flex-1 min-h-0 overflow-hidden relative">
+        <aside
+          className={cn(
+            'hidden lg:flex bg-surface-container/80 border-r border-outline-variant/50 flex-col z-20 backdrop-blur-xl shrink-0 transition-[width] duration-200 h-full',
+            sidebarCollapsed ? 'w-16' : 'w-[17rem]'
+          )}
+        >
+          <div className="relative">
+            <SidebarBrand
+              organizationName={session.organizationName}
+              clinicLogoUrl={session.clinicLogoUrl}
+              collapsed={sidebarCollapsed}
+            />
+            <button
+              type="button"
+              onClick={toggleSidebarCollapsed}
+              className="absolute right-2 top-5 p-1 rounded-lg text-on-surface-variant hover:bg-surface-container-high hidden lg:flex"
+              aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              {sidebarCollapsed ? (
+                <PanelLeftOpen className="w-4 h-4" />
+              ) : (
+                <PanelLeftClose className="w-4 h-4" />
+              )}
+            </button>
+          </div>
+          <nav className="flex-1 py-4 px-3 overflow-y-auto overscroll-contain" aria-label="Main navigation">
+            <DashboardSidebarNav
+              session={session}
+              pathname={pathname}
+              navLinkClass={navLinkClass}
+              collapsed={sidebarCollapsed}
+            />
           </nav>
-          <div className="p-4 border-t border-outline-variant/50">
-            <div className="flex items-center justify-between gap-2">
-              <DashboardNavLink href="/dashboard/profile" className="flex items-center gap-3 min-w-0 hover:opacity-90 transition-opacity">
+          <div className="p-4 border-t border-outline-variant/50 shrink-0">
+            <div className={`flex items-center gap-2 ${sidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
+              <DashboardNavLink
+                href="/dashboard/profile"
+                className={`flex items-center gap-3 min-w-0 hover:opacity-90 transition-opacity ${sidebarCollapsed ? 'justify-center' : ''}`}
+                title={sidebarCollapsed ? displayName : undefined}
+              >
                 <UserAvatar hasAvatar={session.hasAvatar} initial={avatarInitial} />
-                <div className="min-w-0">
-                  <span className="text-[11px] font-bold text-on-surface block truncate">{displayName}</span>
-                  <span className="text-[9px] text-on-surface-variant block">{formatRoleLabel(session.role)}</span>
-                </div>
+                {!sidebarCollapsed && (
+                  <div className="min-w-0">
+                    <span className="text-[11px] font-bold text-on-surface block truncate">{displayName}</span>
+                    <span className="text-[9px] text-on-surface-variant block">{formatRoleLabel(session.role)}</span>
+                  </div>
+                )}
               </DashboardNavLink>
-              <LogoutButton className="text-on-surface-variant hover:text-destructive p-1.5 rounded-lg hover:bg-surface-container-high transition-colors" />
+              {!sidebarCollapsed && (
+                <LogoutButton className="text-on-surface-variant hover:text-destructive p-1.5 rounded-lg hover:bg-surface-container-high transition-colors" />
+              )}
             </div>
           </div>
         </aside>
@@ -323,7 +399,7 @@ export default function DashboardShellClient({
           </div>
         )}
 
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
           <div
             className={cn(
               'sticky top-0 z-30 bg-surface/75 backdrop-blur-xl border-b border-outline-variant/40',
@@ -347,7 +423,10 @@ export default function DashboardShellClient({
             <DashboardAssignedConsultAlertBar />
           </div>
 
-          <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-[1600px] w-full mx-auto relative">
+          <main
+            ref={mainScrollRef}
+            className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 md:p-6 lg:p-8 max-w-[1600px] w-full mx-auto relative"
+          >
             <CurrencyProvider currency={session.currency}>
               <DashboardPageTransition>{children}</DashboardPageTransition>
             </CurrencyProvider>

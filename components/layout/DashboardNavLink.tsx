@@ -1,11 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import type { ComponentProps } from 'react';
 import { cn } from '@/lib/utils';
 import { useGlobalLoadingOptional } from '@/components/layout/NavigationLoadingProvider';
-import { normalizeRoutePath, routePathsMatch } from '@/lib/utils/route-path';
+import { hrefsMatchCurrent, normalizeRoutePath, routePathsMatch } from '@/lib/utils/route-path';
 
 type DashboardNavLinkProps = ComponentProps<typeof Link>;
 
@@ -20,6 +20,7 @@ function resolveHref(href: DashboardNavLinkProps['href']): string {
 
 export default function DashboardNavLink({ href, onClick, className, ...props }: DashboardNavLinkProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const nav = useGlobalLoadingOptional();
   const target = resolveHref(href);
   const targetPath = normalizeRoutePath(target.split('?')[0] ?? target);
@@ -37,7 +38,11 @@ export default function DashboardNavLink({ href, onClick, className, ...props }:
           e.preventDefault();
           return;
         }
-        if (target && !target.startsWith('http') && routePathsMatch(target, pathname)) {
+        if (
+          target &&
+          !target.startsWith('http') &&
+          hrefsMatchCurrent(target, pathname, searchParams)
+        ) {
           e.preventDefault();
           return;
         }

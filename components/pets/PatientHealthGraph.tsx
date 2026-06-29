@@ -32,7 +32,7 @@ function formatDateLabel(iso: string): string {
   return new Date(iso.slice(0, 10)).toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
-    year: '2-digit',
+    year: 'numeric',
   });
 }
 
@@ -43,13 +43,25 @@ function buildTimeSeries(
     'weightKg' | 'bodyConditionScore' | 'temperatureC' | 'heartRateBpm' | 'respiratoryRate'
   >
 ) {
-  return points
+  const sorted = [...points].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
+  const seen = new Set<string>();
+  return sorted
     .filter((p) => p[field] != null)
-    .map((p) => ({
-      date: p.date.slice(0, 10),
-      label: formatDateLabel(p.date),
-      value: p[field] as number,
-    }));
+    .map((p, index) => {
+      const dateKey = p.date.slice(0, 10);
+      const label = seen.has(dateKey)
+        ? `${formatDateLabel(p.date)} ${new Date(p.date).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`
+        : formatDateLabel(p.date);
+      seen.add(dateKey);
+      return {
+        id: p.visitId || `${dateKey}-${index}`,
+        date: dateKey,
+        label,
+        value: p[field] as number,
+      };
+    });
 }
 
 export default function PatientHealthGraph({ profile }: PatientHealthGraphProps) {

@@ -205,6 +205,7 @@ export const CheckoutLineItemSchema = z.object({
   quantity: z.number().int().positive(),
   unitPrice: z.number().nonnegative(),
   type: z.enum(['service', 'product', 'medicine']),
+  productId: z.string().uuid().nullable().optional(),
 });
 
 export const CheckoutSchema = z

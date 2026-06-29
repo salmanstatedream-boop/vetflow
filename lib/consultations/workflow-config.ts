@@ -29,18 +29,10 @@ export const GROOMING_PROCESS_STEPS: { key: string; label: string }[] = [
 ];
 
 export const VACCINATION_PROCESS_STEPS: { key: string; label: string }[] = [
-  { key: 'prepare', label: 'Prepare' },
-  { key: 'verify_patient', label: 'Verify patient' },
-  { key: 'verify_vaccine', label: 'Verify vaccine' },
-  { key: 'check_expiry', label: 'Check expiry date' },
-  { key: 'check_vial', label: 'Check vial condition' },
-  { key: 'shake', label: 'Shake if needed' },
-  { key: 'prepare_dose', label: 'Prepare dose' },
-  { key: 'select_site', label: 'Select injection site' },
+  { key: 'verify', label: 'Verify patient & vaccine' },
   { key: 'administer', label: 'Administer vaccine' },
-  { key: 'record', label: 'Record vaccine details' },
   { key: 'observe', label: 'Observe 15–20 min' },
-  { key: 'post_care', label: 'Post-vaccine care' },
+  { key: 'record', label: 'Record vaccine details' },
 ];
 
 export const DEWORMING_PROCESS_STEPS: { key: string; label: string }[] = [
@@ -86,16 +78,8 @@ export const vaccinationWorkflowConfig: WorkflowConfig = {
   label: 'Vaccination',
   badgeClass: 'bg-green-500/15 text-green-300 border-green-500/30',
   steps: [
-    { id: 'arrival', label: 'Arrival / Check-in' },
-    { id: 'screening', label: 'Pre-vaccine Screening' },
-    { id: 'exam', label: 'Veterinary Exam' },
-    { id: 'plan', label: 'Vaccine Plan' },
-    { id: 'process', label: 'Vaccination Process' },
-    { id: 'documentation', label: 'Documentation & Records' },
-    { id: 'communication', label: 'Owner Communication' },
-    { id: 'checkout', label: 'Checkout & Billing' },
-    { id: 'followUp', label: 'Follow-up & Aftercare' },
-    { id: 'report', label: 'Vaccination Report' },
+    { id: 'clinical', label: 'Clinical', description: 'Screening, exam, vaccine plan & administration' },
+    { id: 'wrapup', label: 'Wrap-up', description: 'Documentation, owner comms & checkout' },
   ],
   processStepKeys: VACCINATION_PROCESS_STEPS,
 };

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,6 +9,8 @@ import { paymentMethodRequiresProof } from '@/lib/billing/payment-method';
 import PaymentProofUpload from '@/components/billing/PaymentProofUpload';
 import { useCurrency } from '@/lib/context/CurrencyContext';
 import { CheckoutSchema, type CheckoutInput } from '@/lib/validations/schemas';
+import { mapCatalogTypeToCheckoutLineType } from '@/lib/inventory/product-types';
+import CreatableSelect from '@/components/ui/premium/CreatableSelect';
 import {
   User,
   Heart,
@@ -29,13 +31,23 @@ interface BillingItem {
   quantity: number;
   unitPrice: number;
   type: string;
+  productId?: string | null;
 }
+
+export type CheckoutCatalogOption = {
+  id: string;
+  name: string;
+  type: string;
+  sellingPrice: number;
+  productId?: string | null;
+};
 
 interface InvoiceCheckoutClientProps {
   visitId: string;
   pet: { name: string; species: string; breed: string | null };
   customer: { firstName: string; lastName: string; phone: string; email?: string | null };
   items: BillingItem[];
+  catalogOptions?: CheckoutCatalogOption[];
   taxPercentage: number;
   taxName: string;
   appliesToProducts: boolean;
@@ -54,6 +66,7 @@ export default function InvoiceCheckoutClient({
   appliesToProducts,
   appliesToServices,
   prescriptionId,
+  catalogOptions = [],
 }: InvoiceCheckoutClientProps) {
   const router = useRouter();
   const { formatCurrency } = useCurrency();
@@ -65,8 +78,12 @@ export default function InvoiceCheckoutClient({
     prescriptionId: string | null;
   } | null>(null);
   const [lineItems, setLineItems] = useState<BillingItem[]>(() =>
-    items.map((item) => ({ ...item }))
+    items.map((item) => ({
+      ...item,
+      type: mapCatalogTypeToCheckoutLineType(item.type || 'service'),
+    }))
   );
+  const [catalogPickId, setCatalogPickId] = useState('');
 
   const updateLine = (index: number, patch: Partial<BillingItem>) => {
     setLineItems((prev) => prev.map((row, i) => (i === index ? { ...row, ...patch } : row)));
@@ -79,9 +96,31 @@ export default function InvoiceCheckoutClient({
   const addLine = () => {
     setLineItems((prev) => [
       ...prev,
-      { name: 'Additional item', quantity: 1, unitPrice: 0, type: 'service' },
+      { name: 'Additional item', quantity: 1, unitPrice: 0, type: 'service', productId: null },
     ]);
   };
+
+  const addFromCatalog = () => {
+    if (!catalogPickId) return;
+    const opt = catalogOptions.find((o) => o.id === catalogPickId);
+    if (!opt) return;
+    setLineItems((prev) => [
+      ...prev,
+      {
+        name: opt.name,
+        quantity: 1,
+        unitPrice: opt.sellingPrice,
+        type: mapCatalogTypeToCheckoutLineType(opt.type),
+        productId: opt.productId ?? null,
+      },
+    ]);
+    setCatalogPickId('');
+  };
+
+  const catalogSelectOptions = useMemo(
+    () => catalogOptions.map((o) => ({ value: o.id, label: `${o.name} — ${formatCurrency(o.sellingPrice)}` })),
+    [catalogOptions, formatCurrency]
+  );
 
   const {
     register,
@@ -155,7 +194,8 @@ export default function InvoiceCheckoutClient({
             name: item.name,
             quantity: item.quantity,
             unitPrice: item.unitPrice,
-            type: item.type || 'service',
+            type: mapCatalogTypeToCheckoutLineType(item.type || 'service'),
+            productId: item.productId ?? null,
           })),
         })
       );
@@ -168,7 +208,8 @@ export default function InvoiceCheckoutClient({
           invoiceId: res.invoiceId,
           prescriptionId: res.prescriptionId || prescriptionId || null,
         });
-        router.replace(`/dashboard/invoices/${res.invoiceId}`);
+        router.replace(`/dashboard/invoices/${res.invoiceId}?checkout=success`);
+        router.refresh();
       } else {
         setError(res.error || 'Failed to complete billing transaction.');
       }
@@ -327,14 +368,38 @@ export default function InvoiceCheckoutClient({
               ))}
             </tbody>
           </table>
-          <div className="px-6 py-3 border-t border-outline-variant/30">
+          <div className="px-6 py-3 border-t border-outline-variant/30 space-y-3">
+            {catalogOptions.length > 0 && (
+              <div className="flex flex-wrap items-end gap-2">
+                <div className="flex-1 min-w-[12rem]">
+                  <label className="block text-[9px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">
+                    Add from catalog
+                  </label>
+                  <CreatableSelect
+                    value={catalogPickId}
+                    onChange={setCatalogPickId}
+                    options={catalogSelectOptions}
+                    placeholder="Search products & services…"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={addFromCatalog}
+                  disabled={!catalogPickId}
+                  className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-primary/10 text-primary text-[10px] font-bold hover:bg-primary/20 disabled:opacity-40"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Add
+                </button>
+              </div>
+            )}
             <button
               type="button"
               onClick={addLine}
               className="inline-flex items-center gap-1 text-[10px] font-bold text-primary hover:underline"
             >
               <Plus className="w-3.5 h-3.5" />
-              Add line item
+              Add custom line item
             </button>
           </div>
         </div>

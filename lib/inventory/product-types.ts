@@ -33,9 +33,39 @@ export function normalizeProductTypeSlug(input: string): string {
   return slug || 'other';
 }
 
+export type CheckoutLineType = 'service' | 'product' | 'medicine';
+
+const DISPLAY_TYPE_ALIASES: Record<string, string> = {
+  service: 'Service',
+  medicine: 'Medicine',
+  food: 'Product',
+  treats: 'Product',
+  accessory: 'Product',
+  product: 'Product',
+  lab_test: 'Lab Test',
+  lab: 'Lab Test',
+  procedure: 'Procedure',
+  vaccine: 'Vaccine',
+  vaccination: 'Vaccine',
+  grooming: 'Grooming',
+  deworming: 'Medicine',
+};
+
+/** Map catalog DB type slug to checkout invoice line enum. */
+export function mapCatalogTypeToCheckoutLineType(slug: string): CheckoutLineType {
+  const normalized = normalizeProductTypeSlug(slug);
+  if (normalized === 'service') return 'service';
+  if (normalized === 'medicine' || normalized === 'deworming') return 'medicine';
+  return 'product';
+}
+
 export function formatProductTypeLabel(slug: string): string {
-  if (slug in TYPE_LABELS) {
-    return TYPE_LABELS[slug as ProductType];
+  const normalized = normalizeProductTypeSlug(slug);
+  if (DISPLAY_TYPE_ALIASES[normalized]) {
+    return DISPLAY_TYPE_ALIASES[normalized];
+  }
+  if (normalized in TYPE_LABELS) {
+    return TYPE_LABELS[normalized as ProductType];
   }
   return slug
     .split('_')

@@ -68,6 +68,21 @@ function mergeSections(
   return { ...base, ...partial } as WorkflowSectionsState;
 }
 
+function normalizeWorkflowStepId(
+  workflowType: WorkflowVisitPurpose,
+  stepId: string,
+  steps: { id: string }[]
+): string {
+  if (workflowType === 'vaccination') {
+    const clinical = ['arrival', 'screening', 'exam', 'plan', 'process', 'clinical'];
+    const wrapup = ['documentation', 'communication', 'checkout', 'followUp', 'report', 'wrapup'];
+    if (clinical.includes(stepId)) return 'clinical';
+    if (wrapup.includes(stepId)) return 'wrapup';
+  }
+  if (steps.some((s) => s.id === stepId)) return stepId;
+  return steps[0]?.id ?? stepId;
+}
+
 export default function AppointmentWorkflowRenderer({
   visitId,
   patientId,
@@ -78,8 +93,12 @@ export default function AppointmentWorkflowRenderer({
 }: AppointmentWorkflowRendererProps) {
   const router = useRouter();
   const config = getWorkflowConfig(workflowType);
-  const [currentStepId, setCurrentStepId] = useState(
-    initialDraft?.currentStepId ?? config.steps[0]?.id ?? 'arrival'
+  const [currentStepId, setCurrentStepId] = useState(() =>
+    normalizeWorkflowStepId(
+      workflowType,
+      initialDraft?.currentStepId ?? config.steps[0]?.id ?? 'arrival',
+      config.steps
+    )
   );
   const [sections, setSections] = useState<WorkflowSectionsState>(() =>
     mergeSections(workflowType, initialDraft?.payload as Partial<WorkflowSectionsState>)

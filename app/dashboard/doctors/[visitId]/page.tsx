@@ -6,7 +6,8 @@ import ConsultationWorkspaceClient from '@/components/forms/ConsultationWorkspac
 import { STOCK_PRODUCT_TYPES } from '@/lib/inventory/product-types';
 import PageHeader from '@/components/ui/premium/PageHeader';
 import Link from 'next/link';
-import { ArrowLeft, Stethoscope } from 'lucide-react';
+import PageBackNav from '@/components/layout/PageBackNav';
+import { Stethoscope } from 'lucide-react';
 import type { VisitPurpose } from '@/lib/appointments/visit-purpose';
 import type { WorkflowConsultDraft } from '@/lib/consultations/workflow-types';
 import type { CompleteConsultationInput } from '@/lib/validations/schemas';
@@ -290,13 +291,7 @@ export default async function ConsultationRoomPage({
     <div className="flex flex-col gap-4">
       
       <div className="shrink-0 space-y-3">
-      <Link
-        href="/dashboard/doctors"
-        className="inline-flex items-center gap-1.5 text-xs text-on-surface-variant/60 hover:text-primary font-semibold transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back to Consultations
-      </Link>
+      <PageBackNav items={[{ label: 'Consultations', href: '/dashboard/doctors' }]} />
 
       <PageHeader
         title="Active Consultation Room"

@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import PageBackNav from '@/components/layout/PageBackNav';
 import Link from 'next/link';
 import { resolveServerAuthContext } from '@/lib/auth/context';
 import { guardRoute } from '@/lib/auth/page-guards';
@@ -140,13 +141,7 @@ export default async function CustomerDetailPage({
   return (
     <div className="space-y-8">
       
-      <Link
-        href="/dashboard/customers"
-        className="inline-flex items-center gap-1.5 text-xs text-on-surface-variant/60 hover:text-primary font-semibold transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back to Directory
-      </Link>
+      <PageBackNav items={[{ label: 'Clients', href: '/dashboard/customers' }]} />
 
       <PageHeader
         title="Customer Profile"

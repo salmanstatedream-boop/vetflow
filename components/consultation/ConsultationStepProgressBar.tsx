@@ -10,7 +10,7 @@ export default function ConsultationStepProgressBar({ active }: ConsultationStep
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 md:left-64 z-[60] h-[3px] overflow-hidden bg-outline-variant/15 pointer-events-none"
+      className="fixed top-0 left-0 right-0 z-[60] h-[3px] overflow-hidden bg-outline-variant/15 pointer-events-none lg:left-[var(--dashboard-sidebar-width,17rem)]"
       role="progressbar"
       aria-label="Loading next section"
       aria-busy="true"

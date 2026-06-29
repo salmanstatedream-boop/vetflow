@@ -54,7 +54,7 @@ export default function DashboardKpiStatCard({
       )}
     >
       <div className="flex items-start justify-between gap-2 shrink-0">
-        <span className="text-[11px] font-bold uppercase tracking-wide text-on-surface-variant leading-snug line-clamp-2 min-h-[2rem]">
+        <span className="text-xs font-bold uppercase tracking-wide text-on-surface-variant leading-snug line-clamp-2 min-h-[2rem]">
           {label}
         </span>
         <div

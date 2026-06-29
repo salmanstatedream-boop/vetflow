@@ -1,6 +1,6 @@
 'use server';
 
-import { z } from 'zod';
+import { revalidatePath } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/server';
 import {
   assertBranchAccess,
@@ -21,6 +21,8 @@ import {
   compileThankYouTemplate,
 } from '@/lib/email';
 import { compileVisitBillingItems } from '@/lib/billing/compile-visit-billing';
+import { mapCatalogTypeToCheckoutLineType } from '@/lib/inventory/product-types';
+import { formatZodError } from '@/lib/utils/format-zod-error';
 import { formatMoney } from '@/lib/utils/currency';
 import { paymentMethodRequiresProof } from '@/lib/billing/payment-method';
 import { attachProofToPayment, uploadPaymentProofFile } from '@/lib/billing/payment-proof';
@@ -42,7 +44,15 @@ export async function createInvoiceFromVisitAction(payload: unknown, proofFile?:
     assertCapability(ctx, 'billing_checkout');
     assertFeature(ctx, 'sales');
 
-    const parsed = CheckoutSchema.parse(payload);
+    const raw = payload as { lineItems?: Array<{ type?: string; [key: string]: unknown }> };
+    if (raw.lineItems?.length) {
+      raw.lineItems = raw.lineItems.map((item) => ({
+        ...item,
+        type: mapCatalogTypeToCheckoutLineType(String(item.type || 'service')),
+      }));
+    }
+
+    const parsed = CheckoutSchema.parse(raw);
     if (
       (parsed.paymentStatus === 'paid' || parsed.paymentStatus === 'partial') &&
       paymentMethodRequiresProof(parsed.paymentMethod)
@@ -94,8 +104,8 @@ export async function createInvoiceFromVisitAction(payload: unknown, proofFile?:
             name: item.name,
             quantity: item.quantity,
             unitPrice: item.unitPrice,
-            type: item.type ?? 'service',
-            productId: null as string | null,
+            type: mapCatalogTypeToCheckoutLineType(item.type ?? 'service'),
+            productId: item.productId ?? null,
           }))
         : compiledItems;
 
@@ -354,14 +364,16 @@ export async function createInvoiceFromVisitAction(payload: unknown, proofFile?:
       });
     }
 
+    revalidatePath('/dashboard');
+
     return {
       success: true,
       invoiceId: invoice.id,
       prescriptionId: prescription?.id || null,
       clinicalNotesId: clinicalNote?.id || null,
     };
-  } catch (err: any) {
-    return { success: false, error: err.message || 'An unexpected error occurred during checkout.' };
+  } catch (err: unknown) {
+    return { success: false, error: formatZodError(err) };
   }
 }
 

@@ -108,7 +108,7 @@ export default async function SchedulePage({
     status: a.status,
     preferredDate: normalizeDateYmd(a.preferred_date as string),
     preferredTime: formatAppointmentTime(a.preferred_time as string),
-    durationMinutes: (a.duration_minutes as number) ?? 30,
+    durationMinutes: Math.max(15, (a.duration_minutes as number) || 30),
     doctorId: a.doctor_id as string | null,
     isEmergency: a.is_emergency ?? false,
     visitId: visitByAppointmentId.get(a.id as string) ?? null,

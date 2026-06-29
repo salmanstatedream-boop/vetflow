@@ -76,6 +76,7 @@ export default function NewAppointmentWizard({
   const [isLookingUp, setIsLookingUp] = useState(false);
 
   const [selectedPetId, setSelectedPetId] = useState<string | null>(initialPetId || null);
+  const [durationMinutes, setDurationMinutes] = useState(30);
   const [isNewPet, setIsNewPet] = useState(false);
   const [petName, setPetName] = useState('');
   const [petSpecies, setPetSpecies] = useState('Dog');
@@ -205,6 +206,7 @@ export default function NewAppointmentWizard({
           doctorId,
           preferredDate,
           preferredTime: normalizePreferredTimeForDb(preferredTime),
+          durationMinutes,
         });
         if (cancelled) return;
         if (res.success && !res.available && res.conflict) {
@@ -225,7 +227,7 @@ export default function NewAppointmentWizard({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [isOpen, activeBranchId, doctorId, preferredDate, preferredTime]);
+  }, [isOpen, activeBranchId, doctorId, preferredDate, preferredTime, durationMinutes]);
 
   const handlePhoneChange = (val: string) => {
     setPhone(val);
@@ -297,6 +299,7 @@ export default function NewAppointmentWizard({
         doctorId,
         preferredDate,
         preferredTime: normalizedTime,
+        durationMinutes,
       });
       if (slotRes.success && !slotRes.available) {
         const msg = slotRes.conflict
@@ -342,6 +345,7 @@ export default function NewAppointmentWizard({
         reason: reason.trim(),
         isEmergency,
         intakeNotes: intakeNotes.trim() || '',
+        durationMinutes,
       });
 
       if (res.success) {
@@ -637,6 +641,22 @@ export default function NewAppointmentWizard({
                     className="w-full px-3 py-2 bg-surface-container border border-outline-variant rounded-xl text-xs"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-on-surface-variant uppercase block mb-1">
+                  Duration
+                </label>
+                <select
+                  value={durationMinutes}
+                  onChange={(e) => setDurationMinutes(Number(e.target.value))}
+                  className="w-full px-3 py-2 bg-surface-container border border-outline-variant rounded-xl text-xs font-semibold"
+                >
+                  <option value={15}>15 minutes</option>
+                  <option value={30}>30 minutes</option>
+                  <option value={45}>45 minutes</option>
+                  <option value={60}>60 minutes</option>
+                </select>
               </div>
 
               <div>

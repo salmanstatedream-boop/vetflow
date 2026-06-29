@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { resolveServerAuthContext } from '@/lib/auth/context';
 import { canAccessRoute, canShowWidget, hasCapability, getCapabilitiesForRole } from '@/lib/auth/capabilities';
 import { canAccessRouteByFeature } from '@/lib/auth/features';

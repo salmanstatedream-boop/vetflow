@@ -1,15 +1,21 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { ArrowRight, Stethoscope } from 'lucide-react';
 import { assignedToMeNotifications } from '@/lib/dashboard/notifications';
 import { useDashboardShell } from '@/lib/context/DashboardShellContext';
 
 export default function DashboardAssignedConsultAlertBar() {
+  const pathname = usePathname();
   const shell = useDashboardShell();
   const assigned = assignedToMeNotifications(shell?.notifications ?? []);
 
   if (assigned.length === 0) return null;
+
+  const onConsultPage =
+    pathname.startsWith('/dashboard/doctors/') && pathname !== '/dashboard/doctors';
+  if (onConsultPage) return null;
 
   const first = assigned[0]!;
 

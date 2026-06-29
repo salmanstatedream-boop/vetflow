@@ -4,8 +4,9 @@ import { guardRoute } from '@/lib/auth/page-guards';
 import { createClient } from '@/lib/supabase/server';
 import InvoiceCheckoutClient from '@/components/forms/InvoiceCheckoutClient';
 import PageHeader from '@/components/ui/premium/PageHeader';
+import PageBackNav from '@/components/layout/PageBackNav';
 import Link from 'next/link';
-import { ArrowLeft, Receipt, Stethoscope, Clock, CheckCircle2 } from 'lucide-react';
+import { Receipt, Stethoscope, Clock, CheckCircle2 } from 'lucide-react';
 import { compileVisitBillingItems } from '@/lib/billing/compile-visit-billing';
 
 export const metadata = {
@@ -84,13 +85,7 @@ export default async function CreateInvoicePage({
     if (visit.status === 'consulting' || visit.status === 'waiting') {
       return (
         <div className="space-y-6">
-          <Link
-            href="/dashboard/walk-ins"
-            className="inline-flex items-center gap-1.5 text-xs text-on-surface-variant/60 hover:text-primary font-semibold transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Walk-in Queue
-          </Link>
+          <PageBackNav items={[{ label: 'Walk-in queue', href: '/dashboard/walk-ins' }]} />
           <div className="glass-panel rounded-2xl border border-blue-500/30 p-8 text-center space-y-4">
             <div className="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center mx-auto">
               <Stethoscope className="w-7 h-7 text-blue-400" />
@@ -137,7 +132,41 @@ export default async function CreateInvoicePage({
     prescriptionItems: presItems,
   });
 
-  const billingItems = billingItemsRaw.map(({ productId: _pid, ...rest }) => rest);
+  const billingItems = billingItemsRaw;
+
+  const [{ data: catalogProducts }, { data: catalogServices }] = await Promise.all([
+    supabase
+      .from('products')
+      .select('id, name, type, selling_price')
+      .eq('organization_id', session.organizationId!)
+      .eq('branch_id', visit.branch_id)
+      .eq('is_active', true)
+      .is('deleted_at', null)
+      .order('name'),
+    supabase
+      .from('services')
+      .select('id, name, price')
+      .eq('organization_id', session.organizationId!)
+      .eq('is_active', true)
+      .order('name'),
+  ]);
+
+  const catalogOptions = [
+    ...(catalogProducts || []).map((p) => ({
+      id: p.id,
+      name: p.name,
+      type: p.type as string,
+      sellingPrice: Number(p.selling_price),
+      productId: p.id,
+    })),
+    ...(catalogServices || []).map((s) => ({
+      id: `svc-${s.id}`,
+      name: s.name,
+      type: 'service',
+      sellingPrice: Number(s.price),
+      productId: null,
+    })),
+  ];
 
   const { data: taxSetting } = await supabase
     .from('tax_settings')
@@ -155,13 +184,7 @@ export default async function CreateInvoicePage({
 
   return (
     <div className="space-y-8">
-      <Link
-        href="/dashboard/walk-ins"
-        className="inline-flex items-center gap-1.5 text-xs text-on-surface-variant/60 hover:text-primary font-semibold transition-colors -mb-4"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back to Walk-in Queue
-      </Link>
+      <PageBackNav items={[{ label: 'Walk-in queue', href: '/dashboard/walk-ins' }]} />
 
       <div className="flex items-center gap-3 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
         <CheckCircle2 className="w-5 h-5 text-emerald-500" />
@@ -190,6 +213,7 @@ export default async function CreateInvoicePage({
           email: customerDetails?.email || '',
         }}
         items={billingItems}
+        catalogOptions={catalogOptions}
         taxPercentage={taxSetting?.is_enabled ? Number(taxSetting.tax_percentage) : 0}
         taxName={taxSetting?.tax_name || 'VAT'}
         appliesToProducts={taxSetting?.applies_to_products || false}

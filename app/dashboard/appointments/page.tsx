@@ -7,7 +7,6 @@ import { fetchAssignableClinicians } from '@/lib/clinical/assignable-clinicians'
 import AppointmentsPageHeader from '@/components/dashboard/AppointmentsPageHeader';
 import AppointmentsListClient from '@/components/dashboard/AppointmentsListClient';
 import { Suspense } from 'react';
-import DateRangeQuickFilter from '@/components/dashboard/DateRangeQuickFilter';
 
 export const metadata = {
   title: 'Appointments Scheduler',
@@ -128,10 +127,6 @@ export default async function AppointmentsPage() {
           activeBranchId={activeBranchId}
           userRole={session.role}
         />
-      </Suspense>
-
-      <Suspense fallback={null}>
-        <DateRangeQuickFilter showWeek={false} />
       </Suspense>
 
       {/* APPOINTMENTS LIST */}

@@ -85,6 +85,7 @@ export const DASHBOARD_NAV_GROUPS: DashboardNavGroup[] = [
     collapsible: true,
     items: [
       { name: 'Invoices', href: '/dashboard/invoices', icon: Receipt },
+      { name: 'Retail Sale', href: '/dashboard/sales/new', icon: ShoppingBag },
       { name: 'Revenue', href: '/dashboard/revenue', icon: DollarSign, adminOnly: true },
       { name: 'Reports', href: '/dashboard/reports', icon: TrendingUp },
     ],
@@ -106,7 +107,6 @@ export const DASHBOARD_NAV_GROUPS: DashboardNavGroup[] = [
     section: 'Organization',
     collapsible: true,
     items: [
-      { name: 'Retail Sale', href: '/dashboard/sales/new', icon: ShoppingBag },
       { name: 'Sales', href: '/dashboard/sales', icon: BarChart3, adminOnly: true },
       { name: 'Social', href: '/dashboard/social', icon: Share2 },
       { name: 'Branches', href: '/dashboard/branches', icon: MapPin },
@@ -172,6 +172,62 @@ export function filterNavGroups(
     ...group,
     items: group.items.filter((item) => canSee(item)),
   })).filter((group) => group.items.length > 0);
+}
+
+const ROLE_NAV_PRIORITIES: Partial<Record<NonNullable<UserSessionDetails['role']>, string[]>> = {
+  receptionist: [
+    '/dashboard',
+    '/dashboard/walk-ins',
+    '/dashboard/appointments',
+    '/dashboard/schedule',
+    '/dashboard/customers',
+    '/dashboard/pets',
+    '/dashboard/invoices',
+    '/dashboard/sales/new',
+    '/dashboard/inventory',
+    '/dashboard/inventory?tab=intake',
+    '/dashboard/ai-assistant',
+    '/dashboard/profile',
+  ],
+  doctor: [
+    '/dashboard',
+    '/dashboard/doctors',
+    '/dashboard/schedule',
+    '/dashboard/appointments',
+    '/dashboard/pets',
+    '/dashboard/prescriptions',
+    '/dashboard/ai-assistant',
+    '/dashboard/profile',
+  ],
+};
+
+function navPriorityIndex(href: string, priorities: string[]): number {
+  const idx = priorities.indexOf(href);
+  if (idx >= 0) return idx;
+  const base = href.split('?')[0]!;
+  const baseIdx = priorities.findIndex((p) => p.split('?')[0] === base);
+  return baseIdx >= 0 ? baseIdx : 1000;
+}
+
+/** Reorder nav groups and items for role-specific daily workflows. */
+export function reorderNavGroupsForRole(
+  groups: DashboardNavGroup[],
+  role: UserSessionDetails['role']
+): DashboardNavGroup[] {
+  const priorities = role ? ROLE_NAV_PRIORITIES[role] : undefined;
+  if (!priorities) return groups;
+
+  const withSortedItems = groups.map((group) => ({
+    ...group,
+    items: [...group.items].sort(
+      (a, b) => navPriorityIndex(a.href, priorities) - navPriorityIndex(b.href, priorities)
+    ),
+    minPriority: Math.min(...group.items.map((i) => navPriorityIndex(i.href, priorities))),
+  }));
+
+  return withSortedItems
+    .sort((a, b) => a.minPriority - b.minPriority)
+    .map(({ minPriority: _minPriority, ...group }) => group);
 }
 
 export type NavSearchParams = Record<string, string | string[] | undefined>;

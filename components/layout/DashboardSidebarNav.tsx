@@ -7,6 +7,7 @@ import DashboardNavLink from '@/components/layout/DashboardNavLink';
 import {
   filterNavGroups,
   isNavItemActive,
+  reorderNavGroupsForRole,
   SETTINGS_NAV_ITEM,
   type DashboardNavGroup,
 } from '@/lib/navigation/dashboard-nav';
@@ -20,6 +21,7 @@ interface DashboardSidebarNavProps {
   pathname: string;
   navLinkClass: (active: boolean) => string;
   onNavigate?: () => void;
+  collapsed?: boolean;
 }
 
 export default function DashboardSidebarNav({
@@ -27,6 +29,7 @@ export default function DashboardSidebarNav({
   pathname,
   navLinkClass,
   onNavigate,
+  collapsed = false,
 }: DashboardSidebarNavProps) {
   const urlSearchParams = useSearchParams();
   const searchParams = useMemo(() => {
@@ -37,10 +40,9 @@ export default function DashboardSidebarNav({
     return params;
   }, [urlSearchParams]);
 
-  const groups = filterNavGroups(
-    session.role,
-    session.features as Feature[],
-    session.featuresJson
+  const groups = reorderNavGroupsForRole(
+    filterNavGroups(session.role, session.features as Feature[], session.featuresJson),
+    session.role
   );
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(groups.filter((g) => g.collapsible).map((g) => [g.section, true]))
@@ -67,18 +69,20 @@ export default function DashboardSidebarNav({
           collapsible={group.collapsible}
           open={openSections[group.section] ?? true}
           onToggle={() => toggle(group.section)}
+          collapsed={collapsed}
         />
       ))}
       {settingsVisible && (
         <div className="pt-2 mt-2 border-t border-outline-variant/40">
           <DashboardNavLink
             href={SETTINGS_NAV_ITEM.href}
-            className={navLinkClass(isNavItemActive(pathname, SETTINGS_NAV_ITEM.href, searchParams))}
+            className={`${navLinkClass(isNavItemActive(pathname, SETTINGS_NAV_ITEM.href, searchParams))} ${collapsed ? 'justify-center px-2' : ''}`}
             onClick={onNavigate}
+            title={collapsed ? SETTINGS_NAV_ITEM.name : undefined}
             aria-current={isNavItemActive(pathname, SETTINGS_NAV_ITEM.href, searchParams) ? 'page' : undefined}
           >
-            <SETTINGS_NAV_ITEM.icon className="w-4 h-4" />
-            {SETTINGS_NAV_ITEM.name}
+            <SETTINGS_NAV_ITEM.icon className="w-4 h-4 shrink-0" />
+            {!collapsed && SETTINGS_NAV_ITEM.name}
           </DashboardNavLink>
         </div>
       )}
@@ -95,6 +99,7 @@ function NavGroupBlock({
   collapsible,
   open,
   onToggle,
+  collapsed = false,
 }: {
   group: DashboardNavGroup;
   pathname: string;
@@ -104,6 +109,7 @@ function NavGroupBlock({
   collapsible?: boolean;
   open: boolean;
   onToggle: () => void;
+  collapsed?: boolean;
 }) {
   if (group.section === 'Overview' && group.items.length === 1) {
     const item = group.items[0]!;
@@ -111,30 +117,33 @@ function NavGroupBlock({
     return (
       <DashboardNavLink
         href={item.href}
-        className={navLinkClass(active)}
+        className={`${navLinkClass(active)} ${collapsed ? 'justify-center px-2' : ''}`}
         onClick={onNavigate}
+        title={collapsed ? item.name : undefined}
         aria-current={active ? 'page' : undefined}
       >
-        <item.icon className="w-4 h-4" />
-        {item.name}
+        <item.icon className="w-4 h-4 shrink-0" />
+        {!collapsed && item.name}
       </DashboardNavLink>
     );
   }
 
   return (
     <div className="mb-2">
-      <button
-        type="button"
-        onClick={collapsible ? onToggle : undefined}
-        className={`sidebar-section-label w-full flex items-center justify-between ${collapsible ? 'cursor-pointer hover:text-on-surface' : 'cursor-default'}`}
-        aria-expanded={collapsible ? open : undefined}
-      >
-        {group.section}
-        {collapsible && (
-          <ChevronDown className={`w-3 h-3 transition-transform ${open ? '' : '-rotate-90'}`} />
-        )}
-      </button>
-      {(!collapsible || open) && (
+      {!collapsed && (
+        <button
+          type="button"
+          onClick={collapsible ? onToggle : undefined}
+          className={`sidebar-section-label w-full flex items-center justify-between ${collapsible ? 'cursor-pointer hover:text-on-surface' : 'cursor-default'}`}
+          aria-expanded={collapsible ? open : undefined}
+        >
+          {group.section}
+          {collapsible && (
+            <ChevronDown className={`w-3 h-3 transition-transform ${open ? '' : '-rotate-90'}`} />
+          )}
+        </button>
+      )}
+      {(!collapsible || open || collapsed) && (
         <div className="space-y-0.5">
           {group.items.map((item) => {
             const active = isNavItemActive(pathname, item.href, searchParams);
@@ -142,12 +151,13 @@ function NavGroupBlock({
               <DashboardNavLink
                 key={item.href}
                 href={item.href}
-                className={navLinkClass(active)}
+                className={`${navLinkClass(active)} ${collapsed ? 'justify-center px-2' : ''}`}
                 onClick={onNavigate}
+                title={collapsed ? item.name : undefined}
                 aria-current={active ? 'page' : undefined}
               >
-                <item.icon className="w-4 h-4" />
-                {item.name}
+                <item.icon className="w-4 h-4 shrink-0" />
+                {!collapsed && item.name}
               </DashboardNavLink>
             );
           })}

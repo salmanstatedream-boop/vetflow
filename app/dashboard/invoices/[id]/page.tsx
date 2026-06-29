@@ -5,18 +5,9 @@ import { createClient } from '@/lib/supabase/server';
 import { formatMoney } from '@/lib/utils/currency';
 import PageHeader from '@/components/ui/premium/PageHeader';
 import InvoicePaymentActions from '@/components/dashboard/InvoicePaymentActions';
+import PageBackNav from '@/components/layout/PageBackNav';
 import Link from 'next/link';
-import { 
-  ArrowLeft, 
-  Receipt, 
-  Printer, 
-  FileCheck2, 
-  User, 
-  Heart, 
-  Calendar,
-  FileSpreadsheet,
-  CheckCircle2
-} from 'lucide-react';
+import { Receipt, User, Heart, Calendar, FileSpreadsheet, CheckCircle2, Printer, FileCheck2 } from 'lucide-react';
 
 export const metadata = {
   title: 'Invoice Details',
@@ -87,13 +78,7 @@ export default async function InvoiceDetailPage({
   return (
     <div className="space-y-8">
       
-      <Link
-        href="/dashboard/invoices"
-        className="inline-flex items-center gap-1.5 text-xs text-on-surface-variant/60 hover:text-primary font-semibold transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back to Invoices
-      </Link>
+      <PageBackNav items={[{ label: 'Invoices', href: '/dashboard/invoices' }]} />
 
       <PageHeader
         title={`Invoice Receipt: ${invoice.invoice_number}`}

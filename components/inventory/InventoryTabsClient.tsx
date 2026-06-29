@@ -14,7 +14,7 @@ export default function InventoryTabsClient({ initialTab }: InventoryTabsClientP
   return (
     <div className="flex gap-2">
       <Link
-        href={pathname}
+        href="/dashboard/inventory"
         className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-colors ${
           initialTab === 'catalog'
             ? 'bg-primary text-white'

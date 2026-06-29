@@ -2,6 +2,7 @@
 
 import { useRef, useState, useMemo } from 'react';
 import Link from 'next/link';
+import PageBackNav from '@/components/layout/PageBackNav';
 import Image from 'next/image';
 import type { PatientMedicalProfileData, PatientVisitRow } from '@/lib/types/patient-medical';
 import {
@@ -35,8 +36,10 @@ import {
   Pencil,
   Phone,
   Pill,
+  Printer,
   Receipt,
   Stethoscope,
+  Heart,
   Trash2,
   Upload,
   User,
@@ -310,13 +313,26 @@ export default function PetMedicalProfileClient({
 
   return (
     <div className="space-y-8">
-      {variant === 'page' && profile.owner && (
-        <Link
-          href={`/dashboard/customers/${profile.owner.id}`}
-          className="inline-flex items-center gap-1.5 text-xs text-on-surface-variant hover:text-primary font-semibold"
-        >
-          Back to owner profile
-        </Link>
+      {variant === 'page' && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <PageBackNav
+            items={[
+              { label: 'All pets', href: '/dashboard/pets', icon: Heart },
+              ...(profile.owner
+                ? [{ label: 'Owner profile', href: `/dashboard/customers/${profile.owner.id}` }]
+                : []),
+            ]}
+          />
+          <a
+            href={`/api/pets/${profile.petId}/medical-file`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border border-primary/30 text-primary hover:bg-primary/10"
+          >
+            <Printer className="w-4 h-4" />
+            Print / Export PDF
+          </a>
+        </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">

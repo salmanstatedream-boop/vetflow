@@ -448,9 +448,10 @@ export default function ScheduleDayCalendarClient({
                         key={appt.id}
                         href={appointmentHref(appt)}
                         className={cn(
-                          'absolute z-[2] rounded-lg border px-1.5 py-1 overflow-hidden text-left shadow-sm',
+                          'absolute z-[2] rounded-lg border px-1.5 py-1 overflow-hidden text-left shadow-sm pointer-events-auto',
                           color
                         )}
+                        title={`${appt.durationMinutes} min`}
                         style={{
                           top,
                           height,
@@ -459,7 +460,7 @@ export default function ScheduleDayCalendarClient({
                         }}
                       >
                         <p className="text-[10px] font-bold truncate">
-                          {formatAppointmentTime(appt.preferredTime)} · {appt.patientName}
+                          {formatAppointmentTime(appt.preferredTime)} · {appt.durationMinutes}m · {appt.patientName}
                         </p>
                         <p className="text-[9px] opacity-80 truncate">{appt.reason}</p>
                         {columnCount > 1 && (

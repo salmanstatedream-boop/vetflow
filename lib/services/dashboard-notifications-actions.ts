@@ -143,7 +143,7 @@ export async function getDashboardNotificationsAction(): Promise<{
           'id, reason, status, checked_in_at, pets:patients(name), customers(first_name, last_name), visit_assignments!inner(doctor_id)'
         )
         .eq('branch_id', branchId)
-        .in('status', ['waiting', 'consulting'])
+        .eq('status', 'waiting')
         .eq('visit_assignments.doctor_id', ctx.userId)
         .order('checked_in_at', { ascending: true })
         .limit(5);

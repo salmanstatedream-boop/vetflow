@@ -913,15 +913,62 @@ export default function ConsultationWorkspaceClient({
       )}
 
       {isWorkflowVisit && workflowConfig ? (
-        <div className="flex items-center gap-2 flex-wrap">
-          <span
-            className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border ${workflowConfig.badgeClass}`}
-          >
-            {workflowConfig.label} workflow
-          </span>
-          <span className="text-[10px] text-on-surface-variant">
-            {visitPurposeLabel(visitPurpose)} · {visitReason}
-          </span>
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span
+              className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border ${workflowConfig.badgeClass}`}
+            >
+              {workflowConfig.label} workflow
+            </span>
+            <span className="text-[10px] text-on-surface-variant">
+              {visitPurposeLabel(visitPurpose)} · {visitReason}
+            </span>
+          </div>
+          {!consultPausedAt ? (
+            <button
+              type="button"
+              onClick={() => setShowPauseModal(true)}
+              disabled={pauseLoading || isSubmitting}
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold border border-violet-500/30 text-violet-300 hover:bg-violet-500/10 disabled:opacity-60"
+            >
+              <Pause className="w-3 h-3" />
+              Pause
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleResumeConsult}
+              disabled={pauseLoading || isSubmitting}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border border-emerald-500/40 text-emerald-400 bg-surface/95 hover:bg-emerald-500/10 disabled:opacity-60"
+            >
+              {pauseLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+              Resume
+            </button>
+          )}
+        </div>
+      ) : !isWorkflowVisit ? (
+        <div className="flex justify-end">
+          {!consultPausedAt ? (
+            <button
+              type="button"
+              onClick={() => setShowPauseModal(true)}
+              disabled={pauseLoading || isSubmitting}
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold border border-violet-500/30 text-violet-300 hover:bg-violet-500/10 disabled:opacity-60"
+            >
+              <Pause className="w-3 h-3" />
+              Pause
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleResumeConsult}
+              disabled={pauseLoading || isSubmitting}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border border-emerald-500/40 text-emerald-400 bg-surface/95 hover:bg-emerald-500/10 disabled:opacity-60"
+            >
+              {pauseLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+              Resume
+            </button>
+          )}
         </div>
       ) : null}
 
@@ -1156,18 +1203,6 @@ export default function ConsultationWorkspaceClient({
         onKeyDown={handleFormKeyDown}
         className="md:col-span-8 flex flex-col space-y-4 relative"
       >
-          {consultPausedAt && (
-            <button
-              type="button"
-              onClick={handleResumeConsult}
-              disabled={pauseLoading || isSubmitting}
-              className="absolute top-0 right-0 z-20 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border border-emerald-500/40 text-emerald-400 bg-surface/95 backdrop-blur-sm hover:bg-emerald-500/10 disabled:opacity-60 shadow-sm"
-            >
-              {pauseLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
-              Resume
-            </button>
-          )}
-          
           {error && (
             <div className="p-4 bg-destructive/5 border border-destructive/20 text-destructive text-xs rounded-xl">
               {error}
@@ -1212,17 +1247,6 @@ export default function ConsultationWorkspaceClient({
               maxUnlockedIndex={maxUnlockedIndex}
               draftSaved={draftSaved}
             />
-            {!consultPausedAt ? (
-              <button
-                type="button"
-                onClick={() => setShowPauseModal(true)}
-                disabled={pauseLoading || isSubmitting}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold border border-violet-500/30 text-violet-300 hover:bg-violet-500/10 disabled:opacity-60"
-              >
-                <Pause className="w-3 h-3" />
-                Pause
-              </button>
-            ) : null}
           </div>
 
           {tabError && (

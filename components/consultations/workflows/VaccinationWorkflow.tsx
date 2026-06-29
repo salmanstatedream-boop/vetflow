@@ -42,6 +42,11 @@ function newVaccine(): VaccineRecord {
   };
 }
 
+const VACCINATION_COMPOUND_STEPS: Record<string, string[]> = {
+  clinical: ['arrival', 'screening', 'exam', 'plan', 'process'],
+  wrapup: ['documentation', 'communication', 'checkout', 'followUp', 'report'],
+};
+
 export default function VaccinationWorkflow({
   stepId,
   sections,
@@ -54,6 +59,25 @@ export default function VaccinationWorkflow({
     key: K,
     value: VaccinationWorkflowSections[K]
   ) => onChange({ ...sections, [key]: value });
+
+  const compound = VACCINATION_COMPOUND_STEPS[stepId];
+  if (compound) {
+    return (
+      <div className="space-y-4">
+        {compound.map((innerId) => (
+          <VaccinationWorkflow
+            key={innerId}
+            stepId={innerId}
+            sections={sections}
+            onChange={onChange}
+            staffMembers={staffMembers}
+            visitId={visitId}
+            patientId={patientId}
+          />
+        ))}
+      </div>
+    );
+  }
 
   if (stepId === 'arrival') {
     const s = sections.arrival;

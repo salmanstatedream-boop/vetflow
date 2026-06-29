@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { mapCatalogTypeToCheckoutLineType } from '@/lib/inventory/product-types';
 
 export type BillingLineItem = {
   productId: string | null;
@@ -88,7 +89,7 @@ export async function compileVisitBillingItems(
           name: prod.name,
           quantity: item.quantity_requested,
           unitPrice: Number(prod.selling_price),
-          type: prod.type,
+          type: mapCatalogTypeToCheckoutLineType(prod.type),
         });
       }
     } else {

@@ -329,10 +329,14 @@ export default function InventoryCatalogClient({
                         )}
                       </td>
                       <td className="px-6 py-4">
-                        <span className="font-semibold text-on-surface capitalize">service</span>
-                        <span className="inline-flex ml-1.5 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-violet-500/10 text-violet-400 border border-violet-500/20">
-                          Org service
+                        <span className="font-semibold text-on-surface">
+                          {formatProductTypeLabel('service')}
                         </span>
+                        {svc.description && (
+                          <span className="text-[10px] text-on-surface-variant/50 block line-clamp-1">
+                            {svc.description} · Managed in Settings
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 font-medium text-on-surface-variant/80">
                         {formatCurrency(Number(svc.price))}
@@ -379,15 +383,10 @@ export default function InventoryCatalogClient({
                         {prod.brand && `Brand: ${prod.brand}`} {prod.sku && `• SKU: ${prod.sku}`}
                       </span>
                     </td>
-                    <td className="px-6 py-4 capitalize text-on-surface-variant/70">
+                    <td className="px-6 py-4">
                       <span className="font-semibold text-on-surface">
                         {formatProductTypeLabel(prod.type)}
                       </span>
-                      {prod.type === 'service' && (
-                        <span className="inline-flex ml-1.5 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-primary/10 text-primary border border-primary/20">
-                          Catalog
-                        </span>
-                      )}
                       {prod.product_categories && (
                         <span className="text-on-surface-variant/60 block text-[10px]">
                           Category: {prod.product_categories.name}
