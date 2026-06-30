@@ -401,6 +401,13 @@ export async function completeConsultationAction(payload: unknown) {
       respiratory_rate: numOrNull(parsed.respiratoryRate),
       weight_kg: numOrNull(parsed.weightKg),
       body_condition_score: numOrNull(parsed.bodyConditionScore),
+      dehydration_percent: numOrNull(parsed.dehydrationPercent),
+      sign_vomiting: parsed.signVomiting ?? false,
+      sign_anorexia: parsed.signAnorexia ?? false,
+      sign_diarrhoea: parsed.signDiarrhoea ?? false,
+      sign_constipation: parsed.signConstipation ?? false,
+      sign_vaccination: parsed.signVaccination ?? false,
+      sign_deworming: parsed.signDeworming ?? false,
     };
 
     const { data: existingNotes } = await supabase

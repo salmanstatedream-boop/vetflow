@@ -22,6 +22,12 @@ interface DashboardSidebarNavProps {
   navLinkClass: (active: boolean) => string;
   onNavigate?: () => void;
   collapsed?: boolean;
+  navLocked?: boolean;
+}
+
+function isNavAllowedWhenLocked(href: string): boolean {
+  const base = href.split('?')[0];
+  return base === '/dashboard';
 }
 
 export default function DashboardSidebarNav({
@@ -30,6 +36,7 @@ export default function DashboardSidebarNav({
   navLinkClass,
   onNavigate,
   collapsed = false,
+  navLocked = false,
 }: DashboardSidebarNavProps) {
   const urlSearchParams = useSearchParams();
   const searchParams = useMemo(() => {
@@ -70,12 +77,14 @@ export default function DashboardSidebarNav({
           open={openSections[group.section] ?? true}
           onToggle={() => toggle(group.section)}
           collapsed={collapsed}
+          navLocked={navLocked}
         />
       ))}
       {settingsVisible && (
         <div className="pt-2 mt-2 border-t border-outline-variant/40">
           <DashboardNavLink
             href={SETTINGS_NAV_ITEM.href}
+            disabled={navLocked}
             className={`${navLinkClass(isNavItemActive(pathname, SETTINGS_NAV_ITEM.href, searchParams))} ${collapsed ? 'justify-center px-2' : ''}`}
             onClick={onNavigate}
             title={collapsed ? SETTINGS_NAV_ITEM.name : undefined}
@@ -100,6 +109,7 @@ function NavGroupBlock({
   open,
   onToggle,
   collapsed = false,
+  navLocked = false,
 }: {
   group: DashboardNavGroup;
   pathname: string;
@@ -110,6 +120,7 @@ function NavGroupBlock({
   open: boolean;
   onToggle: () => void;
   collapsed?: boolean;
+  navLocked?: boolean;
 }) {
   if (group.section === 'Overview' && group.items.length === 1) {
     const item = group.items[0]!;
@@ -117,6 +128,7 @@ function NavGroupBlock({
     return (
       <DashboardNavLink
         href={item.href}
+        disabled={navLocked && !isNavAllowedWhenLocked(item.href)}
         className={`${navLinkClass(active)} ${collapsed ? 'justify-center px-2' : ''}`}
         onClick={onNavigate}
         title={collapsed ? item.name : undefined}
@@ -151,6 +163,7 @@ function NavGroupBlock({
               <DashboardNavLink
                 key={item.href}
                 href={item.href}
+                disabled={navLocked && !isNavAllowedWhenLocked(item.href)}
                 className={`${navLinkClass(active)} ${collapsed ? 'justify-center px-2' : ''}`}
                 onClick={onNavigate}
                 title={collapsed ? item.name : undefined}

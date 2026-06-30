@@ -337,6 +337,13 @@ export const CompleteConsultationSchema = z
     respiratoryRate: z.number().int().nonnegative().optional().or(z.nan()),
     weightKg: z.number().nonnegative().optional().or(z.nan()),
     bodyConditionScore: z.number().int().min(1).max(9).optional().or(z.nan()),
+    dehydrationPercent: z.number().min(0).max(100).optional().or(z.nan()),
+    signVomiting: z.boolean().optional(),
+    signAnorexia: z.boolean().optional(),
+    signDiarrhoea: z.boolean().optional(),
+    signConstipation: z.boolean().optional(),
+    signVaccination: z.boolean().optional(),
+    signDeworming: z.boolean().optional(),
     prescriptionItems: z.array(PrescriptionItemSchema),
     serviceItems: z.array(VisitServiceItemSchema),
   })
@@ -486,6 +493,13 @@ export const UpdateClinicalNoteSchema = z.object({
   respiratoryRate: z.number().int().nonnegative().optional().or(z.nan()),
   weightKg: z.number().nonnegative().optional().or(z.nan()),
   bodyConditionScore: z.number().int().min(1).max(9).optional().or(z.nan()),
+  dehydrationPercent: z.number().min(0).max(100).optional().or(z.nan()),
+  signVomiting: z.boolean().optional(),
+  signAnorexia: z.boolean().optional(),
+  signDiarrhoea: z.boolean().optional(),
+  signConstipation: z.boolean().optional(),
+  signVaccination: z.boolean().optional(),
+  signDeworming: z.boolean().optional(),
 });
 
 export const UpdatePatientCareNotesSchema = z.object({

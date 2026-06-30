@@ -20,8 +20,13 @@ import DashboardAssignedConsultAlertBar from '@/components/layout/DashboardAssig
 import DashboardBranchSearchCluster from '@/components/layout/DashboardBranchSearchCluster';
 import DashboardAiAssistantWidget from '@/components/layout/DashboardAiAssistantWidget';
 import DeviceTimezoneSync from '@/components/layout/DeviceTimezoneSync';
+import StaffAttendanceGate from '@/components/layout/StaffAttendanceGate';
+import { AttendanceProvider, useAttendance } from '@/lib/context/AttendanceContext';
+import type { MyAttendance } from '@/components/dashboard/AttendanceWidgetClient';
+import { hasCapability } from '@/lib/auth/capabilities';
+import { EMPTY_ATTENDANCE } from '@/lib/dashboard/load-my-attendance';
 import { resolveClinicLogoSrc } from '@/lib/branding/clinic-logo';
-import { Stethoscope, Search, Menu, X, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Stethoscope, Search, Menu, X, PanelLeftClose } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 function UserAvatar({
@@ -72,25 +77,49 @@ function SidebarBrand({
   organizationName,
   clinicLogoUrl,
   collapsed = false,
+  interactive = false,
+  onLogoClick,
 }: {
   organizationName?: string | null;
   clinicLogoUrl?: string | null;
   collapsed?: boolean;
+  interactive?: boolean;
+  onLogoClick?: () => void;
 }) {
   const logoSrc = resolveClinicLogoSrc(clinicLogoUrl);
+  const logoMark = logoSrc ? (
+    <img
+      src={logoSrc}
+      alt=""
+      className="w-9 h-9 rounded-xl object-contain bg-white/10 border border-outline-variant/30"
+    />
+  ) : (
+    <div className="w-9 h-9 bg-gradient-to-br from-violet-500/30 to-purple-800/40 flex items-center justify-center rounded-xl border border-violet-500/20 neon-accent-line">
+      <Stethoscope className="w-4 h-4 text-primary" />
+    </div>
+  );
+
+  const rowClass = `h-16 flex items-center border-b border-outline-variant/50 shrink-0 ${collapsed ? 'justify-center px-2' : 'px-5 gap-2.5'}`;
+
+  if (interactive && onLogoClick) {
+    return (
+      <div className={rowClass}>
+        <button
+          type="button"
+          onClick={onLogoClick}
+          className="rounded-xl p-1 cursor-pointer hover:bg-surface-container-high focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 transition-colors"
+          aria-label="Expand sidebar"
+          title="Expand sidebar"
+        >
+          {logoMark}
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className={`h-16 flex items-center border-b border-outline-variant/50 shrink-0 ${collapsed ? 'justify-center px-2' : 'px-5 gap-2.5'}`}>
-      {logoSrc ? (
-        <img
-          src={logoSrc}
-          alt=""
-          className="w-9 h-9 rounded-xl object-contain bg-white/10 border border-outline-variant/30"
-        />
-      ) : (
-        <div className="w-9 h-9 bg-gradient-to-br from-violet-500/30 to-purple-800/40 flex items-center justify-center rounded-xl border border-violet-500/20 neon-accent-line">
-          <Stethoscope className="w-4 h-4 text-primary" />
-        </div>
-      )}
+    <div className={rowClass}>
+      {logoMark}
       {!collapsed && (
         <div className="min-w-0">
           <span className="font-bold text-sm text-on-surface block font-[family-name:var(--font-display)] truncate">
@@ -108,12 +137,14 @@ function SidebarBrand({
 interface DashboardShellClientProps {
   session: ServerAuthContext;
   activeBranchId?: string;
+  initialAttendance?: MyAttendance;
   children: React.ReactNode;
 }
 
 export default function DashboardShellClient({
   session,
   activeBranchId,
+  initialAttendance = EMPTY_ATTENDANCE,
   children,
 }: DashboardShellClientProps) {
   const pathname = usePathname();
@@ -246,10 +277,104 @@ export default function DashboardShellClient({
     />
   );
 
+  const showAttendance =
+    session.role !== 'clinic_admin' && hasCapability(session.role, 'mark_attendance');
+  const staffRequiresAttendanceGate =
+    showAttendance && (session.role === 'receptionist' || session.role === 'doctor');
+
+  const topBarCompact = pathname !== '/dashboard';
+
   return (
     <DashboardShellProvider key={activeBranchId}>
       <DeviceTimezoneSync />
       <DashboardNotificationsSync />
+      <AttendanceProvider initial={initialAttendance}>
+        <DashboardShellBody
+          session={session}
+          activeBranchId={activeBranchId}
+          staffRequiresAttendanceGate={staffRequiresAttendanceGate}
+          topBarCompact={topBarCompact}
+          pathname={pathname}
+          sidebarCollapsed={sidebarCollapsed}
+          toggleSidebarCollapsed={toggleSidebarCollapsed}
+          navLinkClass={navLinkClass}
+          displayName={displayName}
+          avatarInitial={avatarInitial}
+          headerScrolled={headerScrolled}
+          mainScrollRef={mainScrollRef}
+          mobileMenuButton={mobileMenuButton}
+          branchSearchCluster={branchSearchCluster}
+          isMobileMenuOpen={isMobileMenuOpen}
+          setIsMobileMenuOpen={setIsMobileMenuOpen}
+          isSearchOpen={isSearchOpen}
+          setIsSearchOpen={setIsSearchOpen}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          searchResults={searchResults}
+          searchLoading={searchLoading}
+        >
+          {children}
+        </DashboardShellBody>
+      </AttendanceProvider>
+    </DashboardShellProvider>
+  );
+}
+
+type DashboardShellBodyProps = {
+  session: ServerAuthContext;
+  activeBranchId?: string;
+  staffRequiresAttendanceGate: boolean;
+  topBarCompact: boolean;
+  pathname: string;
+  sidebarCollapsed: boolean;
+  toggleSidebarCollapsed: () => void;
+  navLinkClass: (active: boolean) => string;
+  displayName: string;
+  avatarInitial: string;
+  headerScrolled: boolean;
+  mainScrollRef: React.RefObject<HTMLElement | null>;
+  mobileMenuButton: React.ReactNode;
+  branchSearchCluster: React.ReactNode;
+  isMobileMenuOpen: boolean;
+  setIsMobileMenuOpen: (open: boolean) => void;
+  isSearchOpen: boolean;
+  setIsSearchOpen: (open: boolean) => void;
+  searchQuery: string;
+  setSearchQuery: (q: string) => void;
+  searchResults: Awaited<ReturnType<typeof globalClinicSearchAction>>['results'];
+  searchLoading: boolean;
+  children: React.ReactNode;
+};
+
+function DashboardShellBody({
+  session,
+  staffRequiresAttendanceGate,
+  topBarCompact,
+  pathname,
+  sidebarCollapsed,
+  toggleSidebarCollapsed,
+  navLinkClass,
+  displayName,
+  avatarInitial,
+  headerScrolled,
+  mainScrollRef,
+  mobileMenuButton,
+  branchSearchCluster,
+  isMobileMenuOpen,
+  setIsMobileMenuOpen,
+  isSearchOpen,
+  setIsSearchOpen,
+  searchQuery,
+  setSearchQuery,
+  searchResults,
+  searchLoading,
+  children,
+}: DashboardShellBodyProps) {
+  const attendance = useAttendance();
+  const attendanceGateLocked =
+    staffRequiresAttendanceGate && !(attendance?.checkedIn ?? false);
+
+  return (
     <div className="h-screen overflow-hidden bg-surface flex flex-col dashboard-shell">
       {session.isImpersonating && session.organizationName && (
         <ImpersonationBanner organizationName={session.organizationName} />
@@ -321,19 +446,19 @@ export default function DashboardShellClient({
               organizationName={session.organizationName}
               clinicLogoUrl={session.clinicLogoUrl}
               collapsed={sidebarCollapsed}
+              interactive={sidebarCollapsed}
+              onLogoClick={sidebarCollapsed ? toggleSidebarCollapsed : undefined}
             />
-            <button
-              type="button"
-              onClick={toggleSidebarCollapsed}
-              className="absolute right-2 top-5 p-1 rounded-lg text-on-surface-variant hover:bg-surface-container-high hidden lg:flex"
-              aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            >
-              {sidebarCollapsed ? (
-                <PanelLeftOpen className="w-4 h-4" />
-              ) : (
+            {!sidebarCollapsed && (
+              <button
+                type="button"
+                onClick={toggleSidebarCollapsed}
+                className="absolute right-2 top-5 p-1 rounded-lg text-on-surface-variant hover:bg-surface-container-high hidden lg:flex"
+                aria-label="Collapse sidebar"
+              >
                 <PanelLeftClose className="w-4 h-4" />
-              )}
-            </button>
+              </button>
+            )}
           </div>
           <nav className="flex-1 py-4 px-3 overflow-y-auto overscroll-contain" aria-label="Main navigation">
             <DashboardSidebarNav
@@ -341,6 +466,7 @@ export default function DashboardShellClient({
               pathname={pathname}
               navLinkClass={navLinkClass}
               collapsed={sidebarCollapsed}
+              navLocked={attendanceGateLocked}
             />
           </nav>
           <div className="p-4 border-t border-outline-variant/50 shrink-0">
@@ -381,6 +507,7 @@ export default function DashboardShellClient({
                   pathname={pathname}
                   navLinkClass={navLinkClass}
                   onNavigate={() => setIsMobileMenuOpen(false)}
+                  navLocked={attendanceGateLocked}
                 />
               </nav>
               <div className="p-4 border-t border-outline-variant">
@@ -414,7 +541,7 @@ export default function DashboardShellClient({
               hasAvatar={session.hasAvatar}
               avatarInitial={avatarInitial}
               roleLabel={formatRoleLabel(session.role)}
-              compact={pathname === '/dashboard'}
+              compact={topBarCompact}
               mobileMenuButton={mobileMenuButton}
               branchSearchCluster={branchSearchCluster}
               themeToggle={<ThemeToggle />}
@@ -428,7 +555,9 @@ export default function DashboardShellClient({
             className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 md:p-6 lg:p-8 max-w-[1600px] w-full mx-auto relative"
           >
             <CurrencyProvider currency={session.currency}>
-              <DashboardPageTransition>{children}</DashboardPageTransition>
+              <StaffAttendanceGate locked={attendanceGateLocked}>
+                <DashboardPageTransition>{children}</DashboardPageTransition>
+              </StaffAttendanceGate>
             </CurrencyProvider>
           </main>
 
@@ -436,7 +565,6 @@ export default function DashboardShellClient({
         </div>
       </div>
     </div>
-    </DashboardShellProvider>
   );
 }
 

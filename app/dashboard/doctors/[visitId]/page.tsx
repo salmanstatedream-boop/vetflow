@@ -11,6 +11,9 @@ import { Stethoscope } from 'lucide-react';
 import type { VisitPurpose } from '@/lib/appointments/visit-purpose';
 import type { WorkflowConsultDraft } from '@/lib/consultations/workflow-types';
 import type { CompleteConsultationInput } from '@/lib/validations/schemas';
+import { workflowPayloadToChartRow } from '@/lib/consultations/workflow-chart';
+import { parseWorkflowPayload } from '@/lib/consultations/workflow-validation';
+import { deriveObjectiveSignDefaults } from '@/lib/patients/objective-sign-defaults';
 
 export const metadata = {
   title: 'Consultation Room',
@@ -270,6 +273,28 @@ export default async function ConsultationRoomPage({
       name: `${profile.first_name} ${profile.last_name}`.trim() || 'Staff',
     })) ?? [];
 
+  const { data: workflowVisits } = await supabase
+    .from('visits')
+    .select('id, checked_in_at, completed_at, workflow_payload')
+    .eq('patient_id', visit.pet_id)
+    .not('workflow_payload', 'is', null)
+    .in('status', ['ready_for_checkout', 'completed']);
+
+  const workflowRecords = (workflowVisits ?? []).flatMap((v) => {
+    const payload = parseWorkflowPayload(v.workflow_payload);
+    if (!payload) return [];
+    return [
+      workflowPayloadToChartRow(
+        v.id,
+        v.checked_in_at as string | null,
+        v.completed_at as string | null,
+        payload,
+        undefined
+      ),
+    ];
+  });
+  const objectiveSignDefaults = deriveObjectiveSignDefaults(workflowRecords);
+
   const rawDraft = visit.consult_draft as Record<string, unknown> | null;
   let soapInitialDraft: CompleteConsultationInput | null = null;
   let workflowInitialDraft: WorkflowConsultDraft | null = null;
@@ -290,8 +315,8 @@ export default async function ConsultationRoomPage({
   return (
     <div className="flex flex-col gap-4">
       
-      <div className="shrink-0 space-y-3">
-      <PageBackNav items={[{ label: 'Consultations', href: '/dashboard/doctors' }]} />
+      <div className="shrink-0 space-y-4">
+      <PageBackNav items={[{ label: 'Back to consultations', href: '/dashboard/doctors' }]} />
 
       <PageHeader
         title="Active Consultation Room"
@@ -342,6 +367,7 @@ export default async function ConsultationRoomPage({
         categories={categories}
         checkedInAt={checkedInAt}
         isFollowUpPatient={isFollowUpPatient}
+        objectiveSignDefaults={objectiveSignDefaults}
       />
 
     </div>

@@ -28,6 +28,13 @@ export type ClinicalNoteRow = {
   respiratory_rate: number | null;
   weight_kg: number | null;
   body_condition_score: number | null;
+  dehydration_percent: number | null;
+  sign_vomiting: boolean | null;
+  sign_anorexia: boolean | null;
+  sign_diarrhoea: boolean | null;
+  sign_constipation: boolean | null;
+  sign_vaccination: boolean | null;
+  sign_deworming: boolean | null;
 };
 
 export type PrescriptionItemRow = {

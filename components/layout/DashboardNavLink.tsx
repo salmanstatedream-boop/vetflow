@@ -7,7 +7,9 @@ import { cn } from '@/lib/utils';
 import { useGlobalLoadingOptional } from '@/components/layout/NavigationLoadingProvider';
 import { hrefsMatchCurrent, normalizeRoutePath, routePathsMatch } from '@/lib/utils/route-path';
 
-type DashboardNavLinkProps = ComponentProps<typeof Link>;
+type DashboardNavLinkProps = ComponentProps<typeof Link> & {
+  disabled?: boolean;
+};
 
 function resolveHref(href: DashboardNavLinkProps['href']): string {
   if (typeof href === 'string') return href;
@@ -18,7 +20,7 @@ function resolveHref(href: DashboardNavLinkProps['href']): string {
   return `${path}${query}`;
 }
 
-export default function DashboardNavLink({ href, onClick, className, ...props }: DashboardNavLinkProps) {
+export default function DashboardNavLink({ href, onClick, className, disabled, ...props }: DashboardNavLinkProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const nav = useGlobalLoadingOptional();
@@ -34,6 +36,10 @@ export default function DashboardNavLink({ href, onClick, className, ...props }:
     <Link
       href={href}
       onClick={(e) => {
+        if (disabled) {
+          e.preventDefault();
+          return;
+        }
         if (nav?.isNavigating) {
           e.preventDefault();
           return;
@@ -51,7 +57,8 @@ export default function DashboardNavLink({ href, onClick, className, ...props }:
         }
         onClick?.(e);
       }}
-      className={cn(className, isPending && 'opacity-80 animate-pulse')}
+      className={cn(className, isPending && 'opacity-80 animate-pulse', disabled && 'opacity-40 pointer-events-none cursor-not-allowed')}
+      aria-disabled={disabled || undefined}
       aria-busy={isPending || undefined}
       {...props}
     />

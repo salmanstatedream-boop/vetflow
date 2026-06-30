@@ -141,6 +141,10 @@ interface ConsultationWorkspaceClientProps {
   categories?: { id: string; name: string }[];
   checkedInAt: string;
   isFollowUpPatient?: boolean;
+  objectiveSignDefaults?: {
+    signVaccination: boolean;
+    signDeworming: boolean;
+  };
 }
 
 export default function ConsultationWorkspaceClient({
@@ -170,6 +174,7 @@ export default function ConsultationWorkspaceClient({
   categories = [],
   checkedInAt,
   isFollowUpPatient = false,
+  objectiveSignDefaults,
 }: ConsultationWorkspaceClientProps) {
   const router = useRouter();
   const { formatCurrency } = useCurrency();
@@ -265,6 +270,15 @@ export default function ConsultationWorkspaceClient({
       weightKg: initialDraft?.weightKg ?? pet.weightKg ?? undefined,
       bodyConditionScore:
         initialDraft?.bodyConditionScore ?? pet.bodyConditionScore ?? undefined,
+      dehydrationPercent: initialDraft?.dehydrationPercent ?? undefined,
+      signVomiting: initialDraft?.signVomiting ?? false,
+      signAnorexia: initialDraft?.signAnorexia ?? false,
+      signDiarrhoea: initialDraft?.signDiarrhoea ?? false,
+      signConstipation: initialDraft?.signConstipation ?? false,
+      signVaccination:
+        initialDraft?.signVaccination ?? objectiveSignDefaults?.signVaccination ?? false,
+      signDeworming:
+        initialDraft?.signDeworming ?? objectiveSignDefaults?.signDeworming ?? false,
       prescriptionItems: initialDraft?.prescriptionItems ?? [],
       serviceItems: initialDraft?.serviceItems?.length
         ? initialDraft.serviceItems
@@ -317,7 +331,16 @@ export default function ConsultationWorkspaceClient({
 
   const soapCompleted: Partial<Record<SoapFlowTab, boolean>> = {
     S: Boolean(chiefComplaintWatch?.trim()),
-    O: Boolean(examinationWatch?.trim()) || Boolean(watch('temperatureC')),
+    O:
+      Boolean(examinationWatch?.trim()) ||
+      Boolean(watch('temperatureC')) ||
+      Boolean(watch('dehydrationPercent')) ||
+      Boolean(watch('signVomiting')) ||
+      Boolean(watch('signAnorexia')) ||
+      Boolean(watch('signDiarrhoea')) ||
+      Boolean(watch('signConstipation')) ||
+      Boolean(watch('signVaccination')) ||
+      Boolean(watch('signDeworming')),
     A: Boolean(diagnosisWatch?.trim()),
     P: Boolean(treatmentPlanWatch?.trim()) || serviceFields.length > 0,
     Rx:
@@ -1322,7 +1345,7 @@ export default function ConsultationWorkspaceClient({
                 className="w-full px-3 py-2.5 bg-surface-container/20 border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary rounded-xl text-sm text-on-surface outline-none"
               />
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 p-4 rounded-xl bg-surface-container/20 border border-outline-variant/30">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 rounded-xl bg-surface-container/20 border border-outline-variant/30">
               <p className="col-span-full text-[10px] font-semibold text-primary uppercase tracking-wider">
                 Vitals <span className="text-on-surface-variant/50 font-normal normal-case">(at least one required if no exam notes)</span>
               </p>
@@ -1345,6 +1368,36 @@ export default function ConsultationWorkspaceClient({
               <div>
                 <label className="block text-[10px] font-semibold text-on-surface-variant uppercase mb-1">Body condition (1–9)</label>
                 <input type="number" min={1} max={9} step={1} data-soap-tab="O" data-soap-field="bodyConditionScore" {...register('bodyConditionScore', { valueAsNumber: true })} className="w-full h-9 px-2 py-1.5 bg-surface border border-outline-variant rounded-lg text-xs text-on-surface" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-semibold text-on-surface-variant uppercase mb-1">Dehydration %</label>
+                <input type="number" min={0} max={100} step={1} data-soap-tab="O" data-soap-field="dehydrationPercent" {...register('dehydrationPercent', { valueAsNumber: true })} className="w-full h-9 px-2 py-1.5 bg-surface border border-outline-variant rounded-lg text-xs text-on-surface" />
+              </div>
+            </div>
+            <div className="p-4 rounded-xl bg-surface-container/20 border border-outline-variant/30 space-y-3">
+              <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">Clinical signs</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {(
+                  [
+                    ['signVomiting', 'Vomiting'],
+                    ['signAnorexia', 'Anorexia'],
+                    ['signDiarrhoea', 'Diarrhoea'],
+                    ['signConstipation', 'Constipation'],
+                    ['signVaccination', 'Vaccination'],
+                    ['signDeworming', 'Deworming'],
+                  ] as const
+                ).map(([field, label]) => (
+                  <label key={field} className="flex items-center gap-2 text-xs text-on-surface cursor-pointer">
+                    <input
+                      type="checkbox"
+                      data-soap-tab="O"
+                      data-soap-field={field}
+                      {...register(field)}
+                      className="rounded border-outline-variant text-primary focus:ring-primary/40"
+                    />
+                    {label}
+                  </label>
+                ))}
               </div>
             </div>
           </div>

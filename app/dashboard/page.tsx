@@ -69,7 +69,6 @@ import { UPCOMING_APPOINTMENT_STATUSES } from '@/lib/appointments/status';
 import { formatMoney } from '@/lib/utils/currency';
 import DashboardQabShell from '@/components/dashboard/DashboardQabShell';
 import StaffDashboardGateClient from '@/components/dashboard/StaffDashboardGateClient';
-import { AttendanceProvider } from '@/lib/context/AttendanceContext';
 import StaffAttendanceOverviewPanel, {
   type StaffAttendanceOverviewRow,
 } from '@/components/dashboard/StaffAttendanceOverviewPanel';
@@ -1069,12 +1068,12 @@ export default async function DashboardOverview({
       />
 
       {showAttendance && role !== 'clinic_admin' ? (
-        <AttendanceProvider initial={myAttendance}>
+        <>
           <AttendanceWidgetClient initial={myAttendance} />
           <StaffDashboardGateClient initialLocked={staffGateLocked}>
             {dashboardBody}
           </StaffDashboardGateClient>
-        </AttendanceProvider>
+        </>
       ) : (
         dashboardBody
       )}

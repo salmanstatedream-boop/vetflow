@@ -3,7 +3,6 @@ import { resolveServerAuthContext } from '@/lib/auth/context';
 import { guardRoute } from '@/lib/auth/page-guards';
 import { getPatientMedicalProfileAction } from '@/lib/services/patient-medical-actions';
 import PetMedicalProfileClient from '@/components/pets/PetMedicalProfileClient';
-import PageBackNav from '@/components/layout/PageBackNav';
 import PageHeader from '@/components/ui/premium/PageHeader';
 import { Heart } from 'lucide-react';
 
@@ -40,7 +39,6 @@ export default async function PetDetailPage({
 
   return (
     <div className="space-y-8">
-      <PageBackNav items={[{ label: 'All pets', href: '/dashboard/pets' }]} />
       <PageHeader
         title={`Medical File: ${result.data.petName}`}
         description="Clinical charting history and diagnostics for this patient."

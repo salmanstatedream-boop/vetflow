@@ -20,7 +20,7 @@ export default function PageBackNav({ items, className = '' }: PageBackNavProps)
 
   return (
     <nav
-      className={`flex flex-wrap items-center gap-x-4 gap-y-2 -mb-2 ${className}`}
+      className={`flex flex-wrap items-center gap-x-4 gap-y-2 mb-3 ${className}`}
       aria-label="Back navigation"
     >
       {items.map((item) => {

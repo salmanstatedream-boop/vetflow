@@ -120,6 +120,13 @@ function mapClinicalNote(raw: Record<string, unknown> | null): ClinicalNoteRow |
     respiratory_rate: (raw.respiratory_rate as number) ?? null,
     weight_kg: (raw.weight_kg as number) ?? null,
     body_condition_score: (raw.body_condition_score as number) ?? null,
+    dehydration_percent: (raw.dehydration_percent as number) ?? null,
+    sign_vomiting: (raw.sign_vomiting as boolean) ?? null,
+    sign_anorexia: (raw.sign_anorexia as boolean) ?? null,
+    sign_diarrhoea: (raw.sign_diarrhoea as boolean) ?? null,
+    sign_constipation: (raw.sign_constipation as boolean) ?? null,
+    sign_vaccination: (raw.sign_vaccination as boolean) ?? null,
+    sign_deworming: (raw.sign_deworming as boolean) ?? null,
   };
 }
 
@@ -572,6 +579,14 @@ export async function updateClinicalNoteAction(payload: unknown) {
       heart_rate_bpm: numOrNull(parsed.heartRateBpm),
       respiratory_rate: numOrNull(parsed.respiratoryRate),
       weight_kg: numOrNull(parsed.weightKg),
+      body_condition_score: numOrNull(parsed.bodyConditionScore),
+      dehydration_percent: numOrNull(parsed.dehydrationPercent),
+      sign_vomiting: parsed.signVomiting ?? false,
+      sign_anorexia: parsed.signAnorexia ?? false,
+      sign_diarrhoea: parsed.signDiarrhoea ?? false,
+      sign_constipation: parsed.signConstipation ?? false,
+      sign_vaccination: parsed.signVaccination ?? false,
+      sign_deworming: parsed.signDeworming ?? false,
     };
 
     const { data: existingNotes } = await supabase
