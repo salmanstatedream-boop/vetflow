@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Bell, Stethoscope } from 'lucide-react';
 import { resolvePageTitle } from '@/lib/navigation/dashboard-nav';
 import { resolveClinicLogoSrc } from '@/lib/branding/clinic-logo';
@@ -110,23 +110,32 @@ export default function DashboardTopBar({
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const bellRef = useRef<HTMLButtonElement>(null);
 
-  const showTitleBlock = !(compact && pathname === '/dashboard');
+  useEffect(() => {
+    if (compact) setNotificationsOpen(false);
+  }, [compact]);
 
   return (
-    <div className="bg-transparent px-4 md:px-6 py-3 md:py-4">
-      {showTitleBlock && (
-        <div className="min-w-0 mb-3">
-          <h1 className="text-lg md:text-xl font-bold text-on-surface font-[family-name:var(--font-display)]">
-            {pageTitle}
-          </h1>
-          {!compact && (
-            <p className="text-xs text-on-surface-variant mt-0.5 truncate">
-              Welcome back, {firstName}! Here&apos;s what&apos;s happening at{' '}
-              {organizationName || 'your clinic'}.
-            </p>
-          )}
-        </div>
+    <div
+      className={cn(
+        'bg-transparent px-4 md:px-6 transition-[padding] duration-200',
+        compact ? 'py-2' : 'py-3 md:py-4'
       )}
+    >
+      <div
+        className={cn(
+          'min-w-0 overflow-hidden transition-all duration-200',
+          compact ? 'max-h-0 opacity-0 mb-0' : 'max-h-24 opacity-100 mb-3'
+        )}
+        aria-hidden={compact}
+      >
+        <h1 className="text-lg md:text-xl font-bold text-on-surface font-[family-name:var(--font-display)]">
+          {pageTitle}
+        </h1>
+        <p className="text-xs text-on-surface-variant mt-0.5 truncate">
+          Welcome back, {firstName}! Here&apos;s what&apos;s happening at{' '}
+          {organizationName || 'your clinic'}.
+        </p>
+      </div>
 
       <div className="flex flex-wrap items-center gap-2 md:gap-3">
         {mobileMenuButton}
@@ -137,31 +146,37 @@ export default function DashboardTopBar({
         )}
 
         <div className="flex flex-wrap items-center gap-2 md:gap-3 ml-auto">
-          <ClinicBrandCluster clinicLogoUrl={clinicLogoUrl} organizationName={organizationName} />
+          {!compact && (
+            <ClinicBrandCluster clinicLogoUrl={clinicLogoUrl} organizationName={organizationName} />
+          )}
 
-          <button
-            ref={bellRef}
-            type="button"
-            onClick={() => setNotificationsOpen((o) => !o)}
-            className="relative p-2 rounded-xl border border-outline-variant/50 bg-surface-container/40 text-on-surface-variant hover:text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-            aria-label={`Notifications${notificationCount > 0 ? `, ${notificationCount} items` : ''}`}
-            aria-expanded={notificationsOpen}
-          >
-            <Bell className="w-4 h-4" />
-            {notificationCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-primary text-[9px] font-bold text-on-primary flex items-center justify-center neon-accent-line">
-                {notificationCount > 9 ? '9+' : notificationCount}
-              </span>
-            )}
-          </button>
+          {!compact && (
+            <>
+              <button
+                ref={bellRef}
+                type="button"
+                onClick={() => setNotificationsOpen((o) => !o)}
+                className="relative p-2 rounded-xl border border-outline-variant/50 bg-surface-container/40 text-on-surface-variant hover:text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                aria-label={`Notifications${notificationCount > 0 ? `, ${notificationCount} items` : ''}`}
+                aria-expanded={notificationsOpen}
+              >
+                <Bell className="w-4 h-4" />
+                {notificationCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-primary text-[9px] font-bold text-on-primary flex items-center justify-center neon-accent-line">
+                    {notificationCount > 9 ? '9+' : notificationCount}
+                  </span>
+                )}
+              </button>
 
-          <DashboardNotificationsPanel
-            open={notificationsOpen}
-            onClose={() => setNotificationsOpen(false)}
-            onClear={onClearNotifications}
-            notifications={notifications}
-            triggerRef={bellRef}
-          />
+              <DashboardNotificationsPanel
+                open={notificationsOpen}
+                onClose={() => setNotificationsOpen(false)}
+                onClear={onClearNotifications}
+                notifications={notifications}
+                triggerRef={bellRef}
+              />
+            </>
+          )}
 
           <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl border border-outline-variant/40 bg-surface-container/30 text-xs text-on-surface-variant">
             <DeviceLocalDate />

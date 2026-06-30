@@ -70,6 +70,7 @@ function formatRoleLabel(role: string | null | undefined): string {
 }
 
 const SIDEBAR_COLLAPSED_KEY = 'vetflow_sidebar_collapsed';
+const HEADER_SCROLL_COLLAPSE_PX = 20;
 const SIDEBAR_WIDTH_EXPANDED = '17rem';
 const SIDEBAR_WIDTH_COLLAPSED = '4rem';
 
@@ -193,7 +194,7 @@ export default function DashboardShellClient({
   useEffect(() => {
     const el = mainScrollRef.current;
     if (!el) return;
-    const onScroll = () => setHeaderScrolled(el.scrollTop > 4);
+    const onScroll = () => setHeaderScrolled(el.scrollTop > HEADER_SCROLL_COLLAPSE_PX);
     onScroll();
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => el.removeEventListener('scroll', onScroll);
@@ -282,7 +283,7 @@ export default function DashboardShellClient({
   const staffRequiresAttendanceGate =
     showAttendance && (session.role === 'receptionist' || session.role === 'doctor');
 
-  const topBarCompact = pathname !== '/dashboard';
+  const topBarMinimal = pathname !== '/dashboard' || headerScrolled;
 
   return (
     <DashboardShellProvider key={activeBranchId}>
@@ -293,7 +294,7 @@ export default function DashboardShellClient({
           session={session}
           activeBranchId={activeBranchId}
           staffRequiresAttendanceGate={staffRequiresAttendanceGate}
-          topBarCompact={topBarCompact}
+          topBarMinimal={topBarMinimal}
           pathname={pathname}
           sidebarCollapsed={sidebarCollapsed}
           toggleSidebarCollapsed={toggleSidebarCollapsed}
@@ -324,7 +325,7 @@ type DashboardShellBodyProps = {
   session: ServerAuthContext;
   activeBranchId?: string;
   staffRequiresAttendanceGate: boolean;
-  topBarCompact: boolean;
+  topBarMinimal: boolean;
   pathname: string;
   sidebarCollapsed: boolean;
   toggleSidebarCollapsed: () => void;
@@ -349,7 +350,7 @@ type DashboardShellBodyProps = {
 function DashboardShellBody({
   session,
   staffRequiresAttendanceGate,
-  topBarCompact,
+  topBarMinimal,
   pathname,
   sidebarCollapsed,
   toggleSidebarCollapsed,
@@ -541,7 +542,7 @@ function DashboardShellBody({
               hasAvatar={session.hasAvatar}
               avatarInitial={avatarInitial}
               roleLabel={formatRoleLabel(session.role)}
-              compact={topBarCompact}
+              compact={topBarMinimal}
               mobileMenuButton={mobileMenuButton}
               branchSearchCluster={branchSearchCluster}
               themeToggle={<ThemeToggle />}
