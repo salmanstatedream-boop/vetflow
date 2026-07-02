@@ -1,27 +1,26 @@
 import type { Metadata } from 'next';
-import CinematicHome from '@/components/landing/CinematicHome';
+import PhoenixHomePage from '@/components/home/PhoenixHomePage';
 
-const title = 'ClinixDev — The Cinematic Clinic Operating System';
+const title = 'Phoenix OS — Clinic Operating System';
 const description =
-  'ClinixDev is a secure, multi-tenant clinic platform. Launching first for veterinary clinics with appointments, consultations, prescriptions, labs, documents, inventory, and tax-aware branded invoicing — engineered to scale to dental, general, and specialty clinics.';
+  'Phoenix OS is a secure clinic operating system. Starting with veterinary clinics — appointments, consultations, prescriptions, inventory, invoices, and audit-ready workflows — built to scale across dental, general, and specialty care.';
 
 export const metadata: Metadata = {
   title,
   description,
   keywords: [
-    'clinic management software',
+    'clinic operating system',
     'veterinary clinic software',
-    'vet practice management',
-    'multi-tenant clinic platform',
-    'HIPAA-ready clinic software',
+    'clinic management platform',
+    'multi-tenant clinic OS',
     'clinic invoicing and inventory',
-    'ClinixDev',
+    'Phoenix OS',
   ],
   openGraph: {
     title,
     description,
     type: 'website',
-    siteName: 'ClinixDev',
+    siteName: 'Phoenix OS',
   },
   twitter: {
     card: 'summary_large_image',
@@ -32,5 +31,5 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
-  return <CinematicHome />;
+  return <PhoenixHomePage />;
 }

@@ -1,4 +1,8 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
 
 @theme {
   /* ClinicOS dark palette */
@@ -48,26 +52,39 @@
 
 :root {
   --landing-nav-height: calc(5rem + 0.75rem);
-  --background: 260 14% 8%;
-  --foreground: 280 20% 91%;
-  --card: 260 12% 12%;
-  --card-foreground: 280 20% 91%;
-  --popover: 260 12% 14%;
-  --popover-foreground: 280 20% 91%;
-  --primary: 263 100% 80%;
-  --primary-foreground: 263 100% 28%;
-  --secondary: 200 100% 77%;
-  --secondary-foreground: 200 100% 15%;
-  --muted: 260 10% 18%;
-  --muted-foreground: 280 15% 70%;
-  --accent: 33 100% 70%;
-  --accent-foreground: 260 14% 8%;
-  --destructive: 6 100% 84%;
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: 0 84% 20%;
-  --border: 260 8% 22%;
-  --input: 260 8% 22%;
-  --ring: 263 100% 80%;
-  --radius: 1rem;
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
 }
 
 html {
@@ -558,7 +575,6 @@ body {
   to { opacity: 1; }
 }
 
-
 /* ─── Landing page premium utilities ───────────────────────────────── */
 
 .perspective-frame {
@@ -783,3 +799,452 @@ html.screenshotting .sticky-showcase-container {
   height: auto !important;
 }
 
+/* ─── Phoenix OS marketing homepage ─── */
+.phx-page {
+  --phx-bg: #03040a;
+  --phx-bg-alt: #070a12;
+  --phx-panel: #0b1020;
+  --phx-border: rgba(255, 255, 255, 0.1);
+  --phx-text: #f8fafc;
+  --phx-muted: #94a3b8;
+  --phx-cyan: #22d3ee;
+  --phx-blue: #3b82f6;
+  --phx-violet: #8b5cf6;
+  --phx-purple: #a855f7;
+  --phx-nav-height: 4.5rem;
+  background-color: var(--phx-bg);
+  color: var(--phx-text);
+}
+
+.phx-section {
+  position: relative;
+  padding-block: clamp(3.5rem, 6vw, 5.5rem);
+}
+
+.phx-container {
+  width: min(1200px, calc(100% - 2rem));
+  margin-inline: auto;
+}
+
+/* Fades any full-bleed background layer toward the page background at the edges */
+.phx-fade-mask {
+  mask-image: radial-gradient(ellipse 90% 75% at 50% 45%, black 35%, transparent 82%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 75% at 50% 45%, black 35%, transparent 82%);
+}
+
+/* Hero background wash: fade hard toward the section edges so it reads as an accent */
+.phx-hero-mask {
+  mask-image: radial-gradient(ellipse 85% 70% at 60% 30%, black 25%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 85% 70% at 60% 30%, black 25%, transparent 75%);
+}
+
+/* CTA aurora rays: keep dark stripes even if the app theme flips to light */
+.phx-page .phx-cta-rays {
+  --stripe-color: #000;
+}
+
+/* Logo slider marquee (Vengeance component ships without its CSS).
+   Expects the logos array to be duplicated once for a seamless -50% loop. */
+.phx-page .logo-slider__track {
+  animation: phx-logo-slide calc(var(--speed, 60) * 1s) linear infinite;
+  will-change: transform;
+}
+
+.phx-page .logo-slider__container[data-direction='right'] .logo-slider__track {
+  animation-direction: reverse;
+}
+
+.phx-page .logo-slider__container[data-pause-on-hover='true']:hover .logo-slider__track {
+  animation-play-state: paused;
+}
+
+@keyframes phx-logo-slide {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.phx-page .logo-slider__blur {
+  background: linear-gradient(to left, #03040a 10%, transparent 100%);
+}
+
+.phx-page .logo-slider__blur > div {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phx-page .logo-slider__track {
+    animation: none;
+  }
+}
+
+@keyframes phx-scroll-cue {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translateY(6px);
+    opacity: 0.4;
+  }
+}
+
+.phx-scroll-cue-dot {
+  animation: phx-scroll-cue 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phx-scroll-cue-dot {
+    animation: none;
+  }
+}
+
+.phx-eyebrow {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--phx-cyan);
+}
+
+.phx-heading {
+  font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--phx-text);
+}
+
+.phx-subtext {
+  color: var(--phx-muted);
+  line-height: 1.7;
+}
+
+.phx-panel {
+  background: var(--phx-panel);
+  border: 1px solid var(--phx-border);
+  border-radius: 1rem;
+}
+
+.phx-gradient-text {
+  background: linear-gradient(135deg, var(--phx-cyan), var(--phx-blue), var(--phx-violet));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.phx-grid-bg {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+}
+
+.phx-glow {
+  box-shadow: 0 0 40px rgba(34, 211, 238, 0.12), 0 0 80px rgba(59, 130, 246, 0.08);
+}
+
+.phx-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.625rem;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: #03040a;
+  background: linear-gradient(135deg, var(--phx-cyan), var(--phx-blue));
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  cursor: pointer;
+}
+
+.phx-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 32px rgba(34, 211, 238, 0.25);
+}
+
+.phx-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.625rem;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--phx-text);
+  border: 1px solid var(--phx-border);
+  background: rgba(255, 255, 255, 0.03);
+  transition: border-color 0.2s ease, background 0.2s ease;
+  cursor: pointer;
+}
+
+.phx-btn-ghost:hover {
+  border-color: rgba(34, 211, 238, 0.35);
+  background: rgba(34, 211, 238, 0.06);
+}
+
+.phx-card {
+  background: var(--phx-panel);
+  border: 1px solid var(--phx-border);
+  border-radius: 1rem;
+  transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.phx-card:hover {
+  border-color: rgba(34, 211, 238, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+@keyframes phx-pulse-glow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+@keyframes phx-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.phx-animate-pulse-glow {
+  animation: phx-pulse-glow 2.5s ease-in-out infinite;
+}
+
+.phx-animate-float {
+  animation: phx-float 4s ease-in-out infinite;
+}
+
+@keyframes phx-orbit-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Vengeance UI utilities (homepage) */
+@keyframes border-beam {
+  100% { offset-distance: 100%; }
+}
+
+@property --glow-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes glow-angle-rotate {
+  to { --glow-angle: 1turn; }
+}
+
+.glow-conic {
+  border-image: conic-gradient(
+    from var(--glow-angle),
+    #22d3ee,
+    #3b82f6,
+    #8b5cf6,
+    #22d3ee
+  ) 1;
+  animation: glow-angle-rotate var(--glow-animation-duration, 4s) linear infinite;
+}
+
+.phx-page {
+  --stripe-color: #000;
+  --rainbow-blue: #22d3ee;
+  --rainbow-violet: #8b5cf6;
+}
+
+.phx-page .animate-aurora-bg {
+  animation: aurora-smooth-bg 60s linear infinite;
+}
+
+@keyframes aurora-smooth-bg {
+  from { background-position: 50% 50%, 50% 50%; }
+  to { background-position: 350% 50%, 350% 50%; }
+}
+
+.phx-page .spotlight-nav {
+  --spotlight-color: rgba(34, 211, 238, 0.12);
+  --ambience-color: rgba(34, 211, 238, 0.9);
+}
+
+.phx-page .spotlight-nav-bg {
+  background: rgba(11, 16, 32, 0.85);
+  backdrop-filter: blur(12px);
+}
+
+.phx-page .spotlight-nav-shadow {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+.phx-page .glass-border {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Phoenix footer — Vengeance footer lighting structure */
+.phx-page .phx-footer-lighting {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(920px, 100%);
+  height: 280px;
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+.phx-page #lightings {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.phx-page .lighting-section {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(34, 211, 238, 0.12);
+  border-radius: 50%;
+  transform: scaleX(1.75);
+  box-shadow:
+    0 0 48px rgba(34, 211, 238, 0.06),
+    inset 0 0 32px rgba(59, 130, 246, 0.05);
+}
+
+.phx-page #light-two {
+  inset: 7%;
+}
+
+.phx-page #light-three {
+  inset: 14%;
+  border-color: rgba(59, 130, 246, 0.14);
+}
+
+.phx-page #light-four {
+  inset: 21%;
+}
+
+.phx-page #light-five {
+  inset: 28%;
+  border-color: rgba(139, 92, 246, 0.18);
+  box-shadow:
+    0 0 64px rgba(139, 92, 246, 0.08),
+    inset 0 0 40px rgba(34, 211, 238, 0.06);
+}
+
+.phx-page .phx-footer-wordmark {
+  background: linear-gradient(180deg, rgba(34, 211, 238, 0.14) 0%, transparent 72%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.phx-orbit-spin {
+  animation: phx-orbit-spin 48s linear infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phx-animate-pulse-glow,
+  .phx-animate-float,
+  .phx-orbit-spin {
+    animation: none;
+  }
+
+  .phx-card:hover {
+    transform: none;
+  }
+
+  .phx-btn-primary:hover {
+    transform: none;
+  }
+}
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
