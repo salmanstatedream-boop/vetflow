@@ -85,7 +85,7 @@ export default function AnimatedWorkflow() {
               <div
                 key={step.id}
                 data-workflow-node
-                className="phx-card p-4 cursor-default transition-transform duration-300 hover:-translate-y-1"
+                className="phx-card p-4 cursor-default transition-all duration-300 hover:-translate-y-1.5 hover:border-[#22D3EE]/40 hover:shadow-[0_8px_32px_rgba(34,211,238,0.12)]"
               >
                 <div className="w-8 h-8 rounded-lg bg-[#22D3EE]/10 border border-[#22D3EE]/20 flex items-center justify-center text-xs font-mono text-[#22D3EE] mb-3">
                   {String(i + 1).padStart(2, '0')}
@@ -105,7 +105,10 @@ export default function AnimatedWorkflow() {
               <div
                 key={step.id}
                 data-workflow-node
-                className={cn('phx-card p-4 relative', i === 0 && 'border-[#22D3EE]/30')}
+                className={cn(
+                  'phx-card p-4 relative transition-all duration-300 hover:border-[#22D3EE]/40',
+                  i === 0 && 'border-[#22D3EE]/30',
+                )}
               >
                 <div className="absolute -left-[1.35rem] top-5 w-3 h-3 rounded-full bg-[#0B1020] border-2 border-[#22D3EE]" />
                 <div className="text-xs font-mono text-[#22D3EE] mb-1">

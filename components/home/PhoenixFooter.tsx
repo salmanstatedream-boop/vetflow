@@ -33,18 +33,17 @@ export default function PhoenixFooter() {
 
       <div className="flex flex-col lg:flex-row justify-between w-full pb-12 z-10 relative gap-10">
         <div className="flex flex-col max-w-xl">
-          <Link href="/" className="flex items-center gap-3 mb-6 cursor-pointer w-fit">
-            <PhoenixLogoMark size={32} />
-            <span className="font-semibold text-[#F8FAFC] text-lg">Phoenix OS</span>
+          <Link href="/" className="flex items-center gap-3 mb-3 cursor-pointer w-fit">
+            <PhoenixLogoMark size={34} />
+            <div className="leading-tight">
+              <span className="font-semibold text-[#F8FAFC] text-lg block">Phoenix OS</span>
+              <span className="text-[11px] font-mono uppercase tracking-[0.18em] text-[#22D3EE]/80">
+                Clinic Operating System
+              </span>
+            </div>
           </Link>
 
-          <h2 className="text-2xl md:text-4xl font-semibold leading-tight text-[#F8FAFC] mb-4">
-            Clinic operating system
-            <br />
-            for modern practices
-          </h2>
-
-          <p className="text-[#64748B] text-sm leading-relaxed max-w-md">
+          <p className="text-[#64748B] text-sm leading-relaxed max-w-md mt-3">
             Starting with veterinary clinics and scaling to dental, general, and specialty practices —
             one intelligent OS for queue, records, billing, and audit-ready workflows.
           </p>

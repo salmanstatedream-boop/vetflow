@@ -15,7 +15,8 @@ const ICONS = {
   specialty: Sparkles,
 } as const;
 
-const PHOENIX_GRADIENT = ['#22D3EE', '#3B82F6', '#8B5CF6', '#A855F7', '#22D3EE', '#3B82F6', '#8B5CF6', '#A855F7', '#22D3EE', '#3B82F6'];
+// Calm sheen: deep navy base with one soft cyan and one blue highlight sweeping around
+const PHOENIX_GRADIENT = ['#0B2535', '#123B52', '#22D3EE', '#123B52', '#0B2535', '#0E2A4A', '#3B82F6', '#0E2A4A', '#0B2535', '#0B2535'];
 
 export default function ClinicTypes() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -51,10 +52,10 @@ export default function ClinicTypes() {
                   borderRadius="1rem"
                   colorPreset="custom"
                   gradientColors={PHOENIX_GRADIENT}
-                  borderWidth="0.35em"
-                  blurAmount="0.45em"
-                  inset="-0.4em"
-                  animationDuration={6}
+                  borderWidth="0.25em"
+                  blurAmount="0.55em"
+                  inset="-0.3em"
+                  animationDuration={12}
                   paused={reducedMotion}
                   className="bg-[#0B1020]/80 border-0 min-h-[220px] !place-content-stretch !place-items-stretch"
                 >

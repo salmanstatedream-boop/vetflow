@@ -87,7 +87,13 @@ export default function AnimatedPhoenixGrid() {
 
     tl.add(
       nodes,
-      { scale: [0, 1], opacity: [0, 1], duration: 600, delay: stagger(100) },
+      {
+        scale: [0.4, 1],
+        opacity: [0, 1],
+        duration: 650,
+        delay: stagger(220),
+        ease: 'outBack(1.6)',
+      },
       '-=300',
     );
   }, [reducedMotion]);
@@ -332,8 +338,8 @@ export default function AnimatedPhoenixGrid() {
                     'relative w-11 h-11 rounded-xl flex items-center justify-center',
                     'bg-[#0B1020] border transition-all duration-300',
                     isActive
-                      ? 'border-opacity-80 shadow-lg scale-105'
-                      : 'border-white/10 hover:border-white/20',
+                      ? 'border-opacity-80 shadow-lg scale-110'
+                      : 'border-white/10 hover:border-white/25 hover:scale-105',
                   )}
                   style={{
                     borderColor: isActive ? node.color : undefined,

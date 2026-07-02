@@ -134,8 +134,9 @@ export default function ExpandableBentoGrid({ items }: BentoGridProps) {
                     <motion.div
                         layoutId={`card-${item.title}-${id}`}
                         key={item.id}
+                        data-bento-item
                         onClick={() => setActive(item)}
-                        className="p-4 flex flex-col md:flex-row justify-between items-center hover:bg-[#22D3EE]/5 rounded-xl cursor-pointer bg-[#0B1020]/60 border border-[#22D3EE]/15 transition-colors"
+                        className="p-4 flex flex-col md:flex-row justify-between items-center rounded-xl cursor-pointer bg-[#0B1020]/60 border border-[#22D3EE]/15 transition-all duration-300 hover:bg-[#22D3EE]/5 hover:border-[#22D3EE]/35 hover:-translate-y-1 hover:shadow-[0_8px_28px_rgba(34,211,238,0.1)]"
                     >
                         <div className="flex gap-3 flex-row items-center justify-center mx-auto ">
                             <motion.div layoutId={`image-${item.title}-${id}`}>

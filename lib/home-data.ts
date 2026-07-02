@@ -177,6 +177,12 @@ export const PRICING_TIERS = [
     name: 'Starter',
     description: 'For small clinics starting with core workflows.',
     highlights: ['Live queue', 'Consultations', 'Basic invoicing'],
+    details: [
+      'Up to 3 staff accounts',
+      'Walk-in and appointment queue',
+      'Patient records and visit history',
+      'Email support',
+    ],
   },
   {
     id: 'growth',
@@ -184,12 +190,25 @@ export const PRICING_TIERS = [
     description: 'For clinics managing teams, inventory, billing, and reports.',
     highlights: ['Inventory intelligence', 'Role dashboards', 'Audit logs'],
     featured: true,
+    details: [
+      'Unlimited staff with role permissions',
+      'Stock alerts linked to prescriptions',
+      'Branded invoices and documents',
+      'Revenue and activity reports',
+      'Priority support',
+    ],
   },
   {
     id: 'multi',
     name: 'Multi-Clinic',
     description: 'For operators running multiple clinic locations.',
     highlights: ['Multi-location', 'Central oversight', 'Scalable architecture'],
+    details: [
+      'Every Growth feature, every branch',
+      'Cross-branch reporting and oversight',
+      'Per-branch data separation',
+      'Dedicated onboarding',
+    ],
   },
 ] as const;
 
@@ -312,13 +331,59 @@ export const CTA_AVATARS = [
   { id: 'a5', name: 'Zara — Practice Manager', initials: 'ZA', color: '#0EA5E9' },
 ] as const;
 
+const svgPreview = (body: string) =>
+  'data:image/svg+xml,' +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="140"><rect width="240" height="140" rx="8" fill="#0B1020"/><rect x="0.5" y="0.5" width="239" height="139" rx="8" fill="none" stroke="#22D3EE" stroke-opacity="0.15"/>${body}</svg>`,
+  );
+
+/* Mini UI mockups matched to each security item. */
 export const SECURITY_PREVIEW_IMAGES = [
-  'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="240" height="140"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#22D3EE"/><stop offset="1" stop-color="#3B82F6"/></linearGradient></defs><rect width="240" height="140" fill="#0B1020"/><circle cx="120" cy="70" r="40" fill="url(#g)" opacity="0.5"/></svg>'),
-  'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="240" height="140"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#3B82F6"/><stop offset="1" stop-color="#8B5CF6"/></linearGradient></defs><rect width="240" height="140" fill="#0B1020"/><rect x="60" y="35" width="120" height="70" rx="12" fill="url(#g)" opacity="0.45"/></svg>'),
-  'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="240" height="140"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#8B5CF6"/><stop offset="1" stop-color="#A855F7"/></linearGradient></defs><rect width="240" height="140" fill="#0B1020"/><path d="M40 100 L120 30 L200 100 Z" fill="url(#g)" opacity="0.4"/></svg>'),
-  'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="240" height="140"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#22D3EE"/><stop offset="1" stop-color="#8B5CF6"/></linearGradient></defs><rect width="240" height="140" fill="#0B1020"/><rect x="30" y="30" width="80" height="80" rx="8" fill="url(#g)" opacity="0.35"/><rect x="130" y="30" width="80" height="80" rx="8" fill="url(#g)" opacity="0.25"/></svg>'),
-  'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="240" height="140"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#3B82F6"/><stop offset="1" stop-color="#22D3EE"/></linearGradient></defs><rect width="240" height="140" fill="#0B1020"/><text x="120" y="78" text-anchor="middle" fill="url(#g)" font-size="28" font-family="sans-serif">PDF</text></svg>'),
-  'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="240" height="140"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#A855F7"/><stop offset="1" stop-color="#22D3EE"/></linearGradient></defs><rect width="240" height="140" fill="#0B1020"/><line x1="40" y1="70" x2="200" y2="70" stroke="url(#g)" stroke-width="4"/><circle cx="80" cy="70" r="10" fill="#22D3EE"/><circle cx="160" cy="70" r="10" fill="#8B5CF6"/></svg>'),
+  // Role-based access: avatars + role chips
+  svgPreview(
+    '<circle cx="44" cy="42" r="14" fill="#22D3EE" opacity="0.85"/><text x="44" y="47" text-anchor="middle" fill="#03040A" font-size="11" font-weight="700" font-family="sans-serif">DR</text><rect x="66" y="34" width="64" height="8" rx="4" fill="#F8FAFC" opacity="0.8"/><rect x="66" y="47" width="40" height="6" rx="3" fill="#22D3EE" opacity="0.4"/>' +
+    '<circle cx="44" cy="80" r="14" fill="#3B82F6" opacity="0.85"/><text x="44" y="85" text-anchor="middle" fill="#03040A" font-size="11" font-weight="700" font-family="sans-serif">FD</text><rect x="66" y="72" width="76" height="8" rx="4" fill="#F8FAFC" opacity="0.8"/><rect x="66" y="85" width="52" height="6" rx="3" fill="#3B82F6" opacity="0.4"/>' +
+    '<circle cx="44" cy="118" r="14" fill="#8B5CF6" opacity="0.85"/><text x="44" y="123" text-anchor="middle" fill="#03040A" font-size="11" font-weight="700" font-family="sans-serif">AD</text><rect x="66" y="110" width="56" height="8" rx="4" fill="#F8FAFC" opacity="0.8"/><rect x="66" y="123" width="34" height="6" rx="3" fill="#8B5CF6" opacity="0.4"/>' +
+    '<rect x="160" y="32" width="58" height="18" rx="9" fill="#22D3EE" opacity="0.14"/><text x="189" y="44" text-anchor="middle" fill="#22D3EE" font-size="9" font-family="monospace">DOCTOR</text>' +
+    '<rect x="160" y="70" width="58" height="18" rx="9" fill="#3B82F6" opacity="0.14"/><text x="189" y="82" text-anchor="middle" fill="#3B82F6" font-size="9" font-family="monospace">DESK</text>' +
+    '<rect x="160" y="108" width="58" height="18" rx="9" fill="#8B5CF6" opacity="0.14"/><text x="189" y="120" text-anchor="middle" fill="#8B5CF6" font-size="9" font-family="monospace">ADMIN</text>',
+  ),
+  // Audit history: timestamped log rows
+  svgPreview(
+    '<rect x="20" y="18" width="90" height="8" rx="4" fill="#F8FAFC" opacity="0.7"/>' +
+    '<circle cx="30" cy="49" r="4" fill="#22D3EE"/><rect x="42" y="45" width="98" height="7" rx="3.5" fill="#94A3B8" opacity="0.55"/><rect x="168" y="45" width="48" height="7" rx="3.5" fill="#22D3EE" opacity="0.3"/>' +
+    '<circle cx="30" cy="74" r="4" fill="#3B82F6"/><rect x="42" y="70" width="118" height="7" rx="3.5" fill="#94A3B8" opacity="0.55"/><rect x="168" y="70" width="48" height="7" rx="3.5" fill="#3B82F6" opacity="0.3"/>' +
+    '<circle cx="30" cy="99" r="4" fill="#8B5CF6"/><rect x="42" y="95" width="84" height="7" rx="3.5" fill="#94A3B8" opacity="0.55"/><rect x="168" y="95" width="48" height="7" rx="3.5" fill="#8B5CF6" opacity="0.3"/>' +
+    '<circle cx="30" cy="124" r="4" fill="#22C55E"/><rect x="42" y="120" width="104" height="7" rx="3.5" fill="#94A3B8" opacity="0.55"/><rect x="168" y="120" width="48" height="7" rx="3.5" fill="#22C55E" opacity="0.3"/>',
+  ),
+  // Secure records: locked file card
+  svgPreview(
+    '<path d="M70 30 h56 l18 18 v58 a6 6 0 0 1 -6 6 h-68 a6 6 0 0 1 -6 -6 v-70 a6 6 0 0 1 6 -6 z" fill="#101A33" stroke="#3B82F6" stroke-opacity="0.5"/><path d="M126 30 v18 h18 z" fill="#3B82F6" opacity="0.4"/>' +
+    '<rect x="78" y="60" width="48" height="6" rx="3" fill="#94A3B8" opacity="0.55"/><rect x="78" y="72" width="60" height="6" rx="3" fill="#94A3B8" opacity="0.4"/><rect x="78" y="84" width="38" height="6" rx="3" fill="#94A3B8" opacity="0.3"/>' +
+    '<rect x="140" y="88" width="34" height="26" rx="6" fill="#22D3EE"/><rect x="148" y="76" width="18" height="18" rx="9" fill="none" stroke="#22D3EE" stroke-width="4"/><circle cx="157" cy="100" r="4" fill="#03040A"/>',
+  ),
+  // Multi-clinic separation: two tenant panels
+  svgPreview(
+    '<rect x="18" y="28" width="92" height="84" rx="8" fill="#101A33" stroke="#22D3EE" stroke-opacity="0.4"/><rect x="28" y="40" width="40" height="7" rx="3.5" fill="#22D3EE" opacity="0.7"/><rect x="28" y="56" width="66" height="6" rx="3" fill="#94A3B8" opacity="0.45"/><rect x="28" y="68" width="52" height="6" rx="3" fill="#94A3B8" opacity="0.35"/><rect x="28" y="88" width="30" height="12" rx="6" fill="#22D3EE" opacity="0.2"/>' +
+    '<rect x="130" y="28" width="92" height="84" rx="8" fill="#101A33" stroke="#8B5CF6" stroke-opacity="0.4"/><rect x="140" y="40" width="40" height="7" rx="3.5" fill="#8B5CF6" opacity="0.7"/><rect x="140" y="56" width="66" height="6" rx="3" fill="#94A3B8" opacity="0.45"/><rect x="140" y="68" width="52" height="6" rx="3" fill="#94A3B8" opacity="0.35"/><rect x="140" y="88" width="30" height="12" rx="6" fill="#8B5CF6" opacity="0.2"/>' +
+    '<line x1="120" y1="24" x2="120" y2="116" stroke="#F8FAFC" stroke-opacity="0.15" stroke-dasharray="4 4"/>',
+  ),
+  // Branded documents: invoice PDF mock
+  svgPreview(
+    '<rect x="62" y="16" width="116" height="108" rx="8" fill="#101A33" stroke="#22D3EE" stroke-opacity="0.35"/>' +
+    '<circle cx="80" cy="34" r="7" fill="#22D3EE"/><rect x="94" y="30" width="52" height="8" rx="4" fill="#F8FAFC" opacity="0.8"/>' +
+    '<rect x="76" y="52" width="88" height="6" rx="3" fill="#94A3B8" opacity="0.5"/><rect x="76" y="64" width="72" height="6" rx="3" fill="#94A3B8" opacity="0.4"/><rect x="76" y="76" width="80" height="6" rx="3" fill="#94A3B8" opacity="0.3"/>' +
+    '<line x1="76" y1="92" x2="164" y2="92" stroke="#22D3EE" stroke-opacity="0.3"/>' +
+    '<rect x="76" y="100" width="36" height="9" rx="4.5" fill="#94A3B8" opacity="0.5"/><rect x="126" y="98" width="38" height="14" rx="7" fill="#22D3EE" opacity="0.85"/><text x="145" y="108" text-anchor="middle" fill="#03040A" font-size="9" font-weight="700" font-family="sans-serif">PAID</text>',
+  ),
+  // Protected workflows: shielded flow steps
+  svgPreview(
+    '<rect x="20" y="56" width="48" height="28" rx="6" fill="#101A33" stroke="#22D3EE" stroke-opacity="0.5"/><rect x="28" y="66" width="32" height="7" rx="3.5" fill="#22D3EE" opacity="0.6"/>' +
+    '<line x1="68" y1="70" x2="96" y2="70" stroke="#3B82F6" stroke-opacity="0.5" stroke-dasharray="4 4"/>' +
+    '<path d="M120 44 l22 8 v18 c0 14 -10 22 -22 27 c-12 -5 -22 -13 -22 -27 v-18 z" fill="#3B82F6" opacity="0.25" stroke="#3B82F6" stroke-opacity="0.7"/><path d="M112 70 l6 7 l12 -13" fill="none" stroke="#22D3EE" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<line x1="144" y1="70" x2="172" y2="70" stroke="#3B82F6" stroke-opacity="0.5" stroke-dasharray="4 4"/>' +
+    '<rect x="172" y="56" width="48" height="28" rx="6" fill="#101A33" stroke="#8B5CF6" stroke-opacity="0.5"/><rect x="180" y="66" width="32" height="7" rx="3.5" fill="#8B5CF6" opacity="0.6"/>',
+  ),
 ] as const;
 
 export const PHOENIX_NODES = [

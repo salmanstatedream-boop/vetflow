@@ -9,7 +9,7 @@ export default function FeatureToolbox() {
   const sectionRef = useRef<HTMLElement>(null);
 
   useScrollReveal(sectionRef, {
-    selector: '[data-feature-fade]',
+    selector: '[data-feature-fade], [data-bento-item]',
     staggerMs: 80,
   });
 
@@ -42,7 +42,7 @@ export default function FeatureToolbox() {
           audit.
         </p>
 
-        <div data-feature-fade>
+        <div>
           <ExpandableBentoGrid items={bentoItems} />
         </div>
       </div>

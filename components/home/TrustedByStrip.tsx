@@ -15,7 +15,7 @@ export default function TrustedByStrip() {
     return (
       <div
         key={module.id}
-        className="flex items-center gap-2.5 px-2 text-[#94A3B8] hover:text-[#F8FAFC] transition-colors"
+        className="flex items-center gap-2.5 px-2 text-[#94A3B8] select-none cursor-default"
       >
         <span className="w-8 h-8 rounded-lg bg-[#22D3EE]/8 border border-[#22D3EE]/15 flex items-center justify-center shrink-0">
           <Icon size={16} className="text-[#22D3EE]" />
@@ -34,7 +34,7 @@ export default function TrustedByStrip() {
       </div>
       <div data-trusted-fade>
         {/* Logos duplicated once so the -50% marquee loop is seamless */}
-        <LogoSlider logos={[...marks, ...marks]} speed={36} pauseOnHover showBlur />
+        <LogoSlider logos={[...marks, ...marks]} speed={36} showBlur={false} />
       </div>
     </section>
   );
