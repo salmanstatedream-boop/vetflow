@@ -17,6 +17,9 @@ const ICONS = {
 
 const PHOENIX_GRADIENT = ['#0B2535', '#123B52', '#22D3EE', '#123B52', '#0B2535', '#0E2A4A', '#3B82F6', '#0E2A4A', '#0B2535', '#0B2535'];
 
+const CLINIC_CARD_HOVER =
+  'cursor-default transition-colors duration-200 hover:border-[#22D3EE]/35 hover:bg-[color-mix(in_srgb,var(--phx-panel)_88%,var(--phx-cyan))] hover:shadow-[0_8px_32px_rgba(34,211,238,0.1)]';
+
 export default function ClinicTypes() {
   const sectionRef = useRef<HTMLElement>(null);
 
@@ -40,7 +43,7 @@ export default function ClinicTypes() {
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-5 items-stretch">
+        <div className="grid sm:grid-cols-2 gap-5 items-stretch auto-rows-fr">
           {CLINIC_TYPES.map((clinic) => {
             const Icon = ICONS[clinic.id];
             const isAvailable = clinic.status === 'Available Now';
@@ -51,9 +54,10 @@ export default function ClinicTypes() {
               .join(' ');
 
             return (
-              <div key={clinic.id} data-clinic-card className={cn('h-full', !isAvailable && 'cursor-default')}>
+              <div key={clinic.id} data-clinic-card className="h-full min-h-[280px]">
                 <GlowBorderCard
                   width="100%"
+                  height="100%"
                   aspectRatio="auto"
                   borderRadius="1rem"
                   colorPreset="custom"
@@ -64,17 +68,19 @@ export default function ClinicTypes() {
                   animationDuration={12}
                   paused={reducedMotion || !isAvailable}
                   className={cn(
-                    'border-0 h-full min-h-[220px] !place-content-stretch !place-items-stretch transition-colors duration-200',
+                    'border-0 h-full min-h-[280px] !place-content-stretch !place-items-stretch',
+                    '[&>div:last-child]:items-stretch [&>div:last-child]:justify-start [&>div:last-child]:!p-0',
+                    CLINIC_CARD_HOVER,
                     isAvailable
-                      ? 'bg-[var(--phx-panel)]/90 ring-1 ring-[#22D3EE]/30'
-                      : 'phx-panel opacity-75',
+                      ? 'bg-[var(--phx-panel)]/90 ring-1 ring-[#22D3EE]/30 hover:ring-[#22D3EE]/45'
+                      : 'phx-panel opacity-80 hover:opacity-95',
                   )}
                 >
-                  <div className="p-6 w-full h-full flex flex-col text-left">
+                  <div className="p-6 w-full h-full min-h-[280px] flex flex-col text-left">
                     <div className="flex items-start justify-between gap-4 mb-4">
                       <div
                         className={cn(
-                          'w-11 h-11 rounded-xl flex items-center justify-center',
+                          'w-11 h-11 rounded-xl flex items-center justify-center shrink-0',
                           isAvailable
                             ? 'bg-[#22D3EE]/10 border border-[#22D3EE]/20'
                             : 'bg-white/5 border border-white/10',
@@ -87,7 +93,7 @@ export default function ClinicTypes() {
                       </div>
                       <span
                         className={cn(
-                          'text-[10px] font-mono uppercase tracking-wider px-2.5 py-1 rounded-full border',
+                          'text-[10px] font-mono uppercase tracking-wider px-2.5 py-1 rounded-full border shrink-0',
                           isAvailable
                             ? 'text-[#22D3EE] border-[#22D3EE]/30 bg-[#22D3EE]/10'
                             : 'text-[#64748B] border-white/15 bg-white/5',
@@ -98,21 +104,21 @@ export default function ClinicTypes() {
                     </div>
 
                     <h3 className="text-lg font-semibold text-[#F8FAFC] mb-2">{clinic.title}</h3>
-                    <p className="text-sm text-[#94A3B8] leading-relaxed mb-4 flex-1">
+                    <p className="text-sm text-[#94A3B8] leading-relaxed flex-1 min-h-[3.5rem]">
                       {clinic.description}
                     </p>
 
-                    <div className="mt-auto">
+                    <div className="mt-auto pt-4 min-h-[2.75rem] flex items-end w-full">
                       {isAvailable && clinic.details.length > 0 ? (
                         <MoriphingDisclosure
                           id={`clinic-${clinic.id}`}
                           title="View capabilities"
                           description={disclosureDescription}
-                          className="rounded-md border-[#22D3EE]/20 bg-[var(--phx-bg-alt)]/50 text-[#94A3B8] max-w-none cursor-pointer phx-focus-ring"
+                          className="w-full rounded-md border-[#22D3EE]/20 bg-[var(--phx-bg-alt)]/50 text-[#94A3B8] max-w-none cursor-pointer phx-focus-ring"
                           icon={<ArrowRight size={14} className="text-[#22D3EE]" />}
                         />
                       ) : (
-                        <span className="inline-flex text-[10px] font-mono uppercase tracking-wider text-[#64748B] px-2.5 py-1 rounded-full border border-white/10 bg-white/5">
+                        <span className="inline-flex items-center min-h-[2.75rem] text-[10px] font-mono uppercase tracking-wider text-[#64748B] px-2.5 py-1 rounded-full border border-white/10 bg-white/5">
                           Coming soon
                         </span>
                       )}
