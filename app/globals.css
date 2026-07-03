@@ -870,6 +870,15 @@ html.screenshotting .sticky-showcase-container {
   background: color-mix(in srgb, var(--phx-cyan) 6%, var(--phx-panel));
 }
 
+.phx-bento-thumb img {
+  filter: saturate(0.85) brightness(0.9);
+  transition: filter 0.2s ease;
+}
+
+[data-bento-item]:hover .phx-bento-thumb img {
+  filter: saturate(0.95) brightness(1);
+}
+
 .phx-focus-ring {
   outline: none;
 }

@@ -74,6 +74,7 @@ export type FeatureItem = {
   id: string;
   title: string;
   description: string;
+  image: string;
   icon: LucideIcon;
 };
 
@@ -83,6 +84,7 @@ export const FEATURES: FeatureItem[] = [
     title: 'Live Clinic Queue',
     description:
       'Stop juggling three notebooks at the front desk — see who is waiting, who is with the vet, and who is ready to leave in one glance.',
+    image: '/features/queue.webp',
     icon: Activity,
   },
   {
@@ -90,6 +92,7 @@ export const FEATURES: FeatureItem[] = [
     title: 'Smart Consultation Room',
     description:
       'Give vets a calm, focused screen for SOAP notes and treatment decisions without hunting through scattered files.',
+    image: '/features/consultation.svg',
     icon: Stethoscope,
   },
   {
@@ -97,6 +100,7 @@ export const FEATURES: FeatureItem[] = [
     title: 'Inventory Intelligence',
     description:
       'Know what is running low before a procedure starts — stock moves with prescriptions so counts stay honest.',
+    image: '/features/inventory.webp',
     icon: Package,
   },
   {
@@ -104,6 +108,7 @@ export const FEATURES: FeatureItem[] = [
     title: 'Billing & Invoices',
     description:
       'Turn a finished visit into a branded invoice in minutes, with taxes and line items already filled in.',
+    image: '/features/billing.webp',
     icon: Receipt,
   },
   {
@@ -111,6 +116,7 @@ export const FEATURES: FeatureItem[] = [
     title: 'Secure Documents',
     description:
       'Keep lab results, discharge sheets, and clinic paperwork in one protected place — searchable when you need them.',
+    image: '/features/documents.webp',
     icon: FileText,
   },
   {
@@ -118,6 +124,7 @@ export const FEATURES: FeatureItem[] = [
     title: 'Role-Based Dashboards',
     description:
       'Reception sees the queue, vets see cases, owners see revenue — each role gets exactly what they need.',
+    image: '/features/dashboards.webp',
     icon: LayoutDashboard,
   },
   {
@@ -125,13 +132,23 @@ export const FEATURES: FeatureItem[] = [
     title: 'Audit Logs',
     description:
       'Answer "who changed this?" in seconds — every sensitive action is logged with user, role, and timestamp.',
+    image: '/features/audit.webp',
     icon: ClipboardList,
+  },
+  {
+    id: 'appointments',
+    title: 'Appointments & Reminders',
+    description:
+      'Fill the schedule without double-booking — send reminders so fewer visits slip through the cracks.',
+    image: '/features/appointments.webp',
+    icon: CalendarCheck,
   },
   {
     id: 'multi-clinic',
     title: 'Multi-Clinic Foundation',
     description:
       'Open a second branch without starting from scratch — each location stays separate with shared oversight.',
+    image: '/features/multi-clinic.webp',
     icon: Building2,
   },
 ];

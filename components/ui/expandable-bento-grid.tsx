@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useId, useRef, useState } from 'react'
+import Image from 'next/image'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useOutsideClick } from '@/hooks/use-outside-click'
 import { cn } from '@/lib/utils'
@@ -13,9 +14,71 @@ export interface BentoGridProps {
         subtitle?: string
         description?: string
         content: React.ReactNode
+        image?: string
         icon?: React.ReactNode
         className?: string
     }[]
+}
+
+function BentoThumbnail({
+    image,
+    icon,
+    title,
+    className,
+}: {
+    image?: string
+    icon?: React.ReactNode
+    title: string
+    className?: string
+}) {
+    if (image) {
+        return (
+            <div
+                className={cn(
+                    'phx-bento-thumb relative h-14 w-14 rounded-lg overflow-hidden border border-[#22D3EE]/20 shrink-0',
+                    className,
+                )}
+            >
+                <Image src={image} alt="" fill className="object-cover" sizes="56px" />
+            </div>
+        )
+    }
+
+    return (
+        <div
+            className={cn(
+                'h-14 w-14 rounded-lg bg-[#22D3EE]/10 border border-[#22D3EE]/20 flex items-center justify-center text-[#22D3EE] p-1 shrink-0',
+                className,
+            )}
+        >
+            {icon ?? <span className="sr-only">{title}</span>}
+        </div>
+    )
+}
+
+function BentoHeroImage({
+    image,
+    icon,
+    title,
+}: {
+    image?: string
+    icon?: React.ReactNode
+    title: string
+}) {
+    if (image) {
+        return (
+            <div className="relative w-full h-40 md:h-52 lg:h-60 overflow-hidden">
+                <Image src={image} alt={title} fill className="object-cover" priority sizes="500px" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0B1020] via-[#0B1020]/20 to-transparent" />
+            </div>
+        )
+    }
+
+    return (
+        <div className="w-full h-40 md:h-52 lg:h-60 bg-[#22D3EE]/10 flex items-center justify-center">
+            {icon ? <div className="scale-[2] text-[#22D3EE]">{icon}</div> : null}
+        </div>
+    )
 }
 
 export default function ExpandableBentoGrid({ items }: BentoGridProps) {
@@ -75,13 +138,11 @@ export default function ExpandableBentoGrid({ items }: BentoGridProps) {
                             className="w-full max-w-[500px] h-full md:h-fit md:max-h-[90%] flex flex-col bg-[#0B1020] border border-[#22D3EE]/20 sm:rounded-3xl overflow-hidden"
                         >
                             <motion.div layoutId={`image-${active.title}-${id}`}>
-                                <div className="w-full h-40 md:h-50 lg:h-60 bg-[#22D3EE]/10 flex items-center justify-center perspective-distant transform-3d">
-                                    {active.icon ? (
-                                        <div className="scale-[2] text-[#22D3EE]">{active.icon}</div>
-                                    ) : (
-                                        <div className="w-full h-full bg-gray-200" />
-                                    )}
-                                </div>
+                                <BentoHeroImage
+                                    image={active.image}
+                                    icon={active.icon}
+                                    title={active.title}
+                                />
                             </motion.div>
 
                             <div >
@@ -131,22 +192,21 @@ export default function ExpandableBentoGrid({ items }: BentoGridProps) {
                 ) : null}
             </AnimatePresence>
             <ul className="max-w-5xl mx-auto w-full gap-2 lg:gap-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 items-stretch">
-                {items.map((item, index) => (
+                {items.map((item) => (
                     <motion.div
                         layoutId={`card-${item.title}-${id}`}
                         key={item.id}
                         data-bento-item
                         onClick={() => setActive(item)}
-                        className={cn(
-                            'p-4 h-full min-h-[5.5rem] flex flex-col rounded-xl cursor-pointer bg-[#0B1020]/60 border border-[#22D3EE]/15 transition-colors duration-200 hover:bg-[#22D3EE]/5 hover:border-[#22D3EE]/35 hover:shadow-[0_8px_28px_rgba(34,211,238,0.1)]',
-                            index === 6 && 'lg:col-start-2',
-                        )}
+                        className="p-4 h-full min-h-[5.5rem] flex flex-col rounded-xl cursor-pointer bg-[#0B1020]/60 border border-[#22D3EE]/15 transition-colors duration-200 hover:bg-[#22D3EE]/5 hover:border-[#22D3EE]/35 hover:shadow-[0_8px_28px_rgba(34,211,238,0.1)]"
                     >
                         <div className="flex gap-3 flex-row items-start w-full text-left">
                             <motion.div layoutId={`image-${item.title}-${id}`} className="shrink-0">
-                                <div className="h-14 w-14 rounded-lg bg-[#22D3EE]/10 border border-[#22D3EE]/20 flex items-center justify-center text-[#22D3EE] p-1">
-                                    {item.icon}
-                                </div>
+                                <BentoThumbnail
+                                    image={item.image}
+                                    icon={item.icon}
+                                    title={item.title}
+                                />
                             </motion.div>
                             <div className="min-w-0 flex-1">
                                 <motion.h3
