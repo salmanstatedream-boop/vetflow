@@ -7,7 +7,7 @@ function FooterLink({ href, children }: { href: string; children: ReactNode }) {
   return (
     <Link
       href={href}
-      className="text-sm text-[#94A3B8] hover:text-[#F8FAFC] tracking-wide transition-colors duration-200 block"
+      className="text-sm text-[#94A3B8] hover:text-[#F8FAFC] tracking-wide transition-colors duration-200 block phx-focus-ring rounded-sm"
     >
       {children}
     </Link>
@@ -33,7 +33,7 @@ export default function PhoenixFooter() {
 
       <div className="flex flex-col lg:flex-row justify-between w-full pb-12 z-10 relative gap-10">
         <div className="flex flex-col max-w-xl">
-          <Link href="/" className="flex items-center gap-3 mb-3 cursor-pointer w-fit">
+          <Link href="/" className="flex items-center gap-3 mb-3 cursor-pointer w-fit phx-focus-ring rounded-xl transition-colors duration-200">
             <PhoenixLogoMark size={34} />
             <div className="leading-tight">
               <span className="font-semibold text-[#F8FAFC] text-lg block">Phoenix OS</span>

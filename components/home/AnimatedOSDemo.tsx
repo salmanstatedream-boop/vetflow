@@ -57,11 +57,8 @@ export default function AnimatedOSDemo() {
   }, []);
 
   return (
-    <section ref={sectionRef} id="product" className="phx-section bg-[#070A12]">
-      <div
-        aria-hidden
-        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#22D3EE]/30 to-transparent"
-      />
+    <section ref={sectionRef} id="product" className="phx-section phx-section-alt">
+      <div aria-hidden className="phx-section-divider" />
       <div className="phx-container">
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
           <div>

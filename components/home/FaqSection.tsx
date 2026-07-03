@@ -14,7 +14,7 @@ export default function FaqSection() {
   useScrollReveal(sectionRef, { selector: '[data-faq-fade]', staggerMs: 90 });
 
   return (
-    <section ref={sectionRef} id="faq" className="phx-section">
+    <section ref={sectionRef} id="faq" className="phx-section phx-section-alt">
       <div className="phx-container">
         <p className="phx-eyebrow mb-4 text-center" data-faq-fade>
           08 / FAQ
@@ -47,7 +47,7 @@ export default function FaqSection() {
                   type="button"
                   onClick={() => setOpenIndex(isOpen ? null : index)}
                   aria-expanded={isOpen}
-                  className="w-full flex items-center justify-between gap-4 px-5 sm:px-6 py-5 text-left cursor-pointer group"
+                  className="w-full flex items-center justify-between gap-4 px-5 sm:px-6 py-5 text-left cursor-pointer group phx-focus-ring rounded-2xl transition-colors duration-200"
                 >
                   <span
                     className={cn(

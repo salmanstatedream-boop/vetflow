@@ -26,7 +26,7 @@ export default function FeatureToolbox() {
   });
 
   return (
-    <section ref={sectionRef} className="phx-section bg-[#070A12]">
+    <section ref={sectionRef} className="phx-section phx-section-alt">
       <div className="phx-container">
         <p className="phx-eyebrow mb-4" data-feature-fade>
           03 / TOOLBOX

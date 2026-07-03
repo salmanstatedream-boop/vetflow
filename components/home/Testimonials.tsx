@@ -12,16 +12,12 @@ const PALETTE = [
   ['#22D3EE', '#8B5CF6'],
 ] as const;
 
-/* Per-persona "work preview" artwork: appointments queue, prescription note,
-   revenue chart, team roles grid. */
 const WORK_PREVIEWS: Record<string, string> = {
-  // Front Desk Lead — appointment queue
   reception:
     '<rect x="36" y="36" width="150" height="10" rx="5" fill="#F8FAFC" opacity="0.85"/>' +
     '<rect x="36" y="64" width="328" height="42" rx="10" fill="#101A33" stroke="#22D3EE" stroke-opacity="0.4"/><rect x="50" y="76" width="52" height="18" rx="9" fill="#22D3EE" opacity="0.25"/><text x="76" y="89" text-anchor="middle" fill="#22D3EE" font-size="12" font-family="monospace">09:00</text><rect x="116" y="79" width="110" height="12" rx="6" fill="#F8FAFC" opacity="0.7"/><circle cx="344" cy="85" r="6" fill="#22C55E"/>' +
     '<rect x="36" y="116" width="328" height="42" rx="10" fill="#101A33" stroke="#3B82F6" stroke-opacity="0.35"/><rect x="50" y="128" width="52" height="18" rx="9" fill="#3B82F6" opacity="0.25"/><text x="76" y="141" text-anchor="middle" fill="#3B82F6" font-size="12" font-family="monospace">09:30</text><rect x="116" y="131" width="132" height="12" rx="6" fill="#F8FAFC" opacity="0.6"/><circle cx="344" cy="137" r="6" fill="#EAB308"/>' +
     '<rect x="36" y="168" width="328" height="42" rx="10" fill="#101A33" stroke="#8B5CF6" stroke-opacity="0.3"/><rect x="50" y="180" width="52" height="18" rx="9" fill="#8B5CF6" opacity="0.25"/><text x="76" y="193" text-anchor="middle" fill="#8B5CF6" font-size="12" font-family="monospace">10:00</text><rect x="116" y="183" width="92" height="12" rx="6" fill="#F8FAFC" opacity="0.5"/><circle cx="344" cy="189" r="6" fill="#64748B"/>',
-  // Lead Veterinarian — prescription / SOAP note
   vet:
     '<rect x="36" y="30" width="328" height="196" rx="12" fill="#101A33" stroke="#22D3EE" stroke-opacity="0.35"/>' +
     '<text x="56" y="70" fill="#22D3EE" font-size="34" font-weight="700" font-family="Georgia,serif">Rx</text>' +
@@ -31,14 +27,12 @@ const WORK_PREVIEWS: Record<string, string> = {
     '<circle cx="64" cy="144" r="4" fill="#3B82F6"/><rect x="78" y="138" width="150" height="10" rx="5" fill="#94A3B8" opacity="0.55"/><rect x="290" y="138" width="54" height="10" rx="5" fill="#3B82F6" opacity="0.3"/>' +
     '<circle cx="64" cy="172" r="4" fill="#8B5CF6"/><rect x="78" y="166" width="196" height="10" rx="5" fill="#94A3B8" opacity="0.5"/>' +
     '<path d="M250 205 q14 -14 28 0 q14 14 28 0" fill="none" stroke="#22D3EE" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>',
-  // Clinic Owner — revenue chart
   owner:
     '<rect x="36" y="36" width="120" height="10" rx="5" fill="#F8FAFC" opacity="0.85"/><rect x="36" y="54" width="70" height="8" rx="4" fill="#22C55E" opacity="0.6"/>' +
     '<line x1="44" y1="216" x2="364" y2="216" stroke="#94A3B8" stroke-opacity="0.3"/>' +
     '<rect x="60" y="168" width="34" height="48" rx="5" fill="#164E63"/><rect x="112" y="148" width="34" height="68" rx="5" fill="#155E75"/><rect x="164" y="156" width="34" height="60" rx="5" fill="#164E63"/><rect x="216" y="120" width="34" height="96" rx="5" fill="#0E7490"/><rect x="268" y="100" width="34" height="116" rx="5" fill="#0891B2"/><rect x="320" y="80" width="34" height="136" rx="5" fill="#22D3EE"/>' +
     '<path d="M77 160 L129 138 L181 146 L233 108 L285 88 L337 66" fill="none" stroke="#22C55E" stroke-width="3" stroke-linecap="round"/>' +
     '<circle cx="337" cy="66" r="6" fill="#22C55E"/><rect x="296" y="40" width="84" height="22" rx="11" fill="#22C55E" opacity="0.15"/><text x="338" y="55" text-anchor="middle" fill="#22C55E" font-size="12" font-weight="700" font-family="sans-serif">+32%</text>',
-  // Practice Manager — team roles grid
   manager:
     '<rect x="36" y="36" width="150" height="10" rx="5" fill="#F8FAFC" opacity="0.85"/>' +
     '<rect x="36" y="64" width="156" height="74" rx="10" fill="#101A33" stroke="#22D3EE" stroke-opacity="0.4"/><circle cx="62" cy="94" r="13" fill="#22D3EE" opacity="0.85"/><rect x="84" y="84" width="72" height="9" rx="4.5" fill="#F8FAFC" opacity="0.7"/><rect x="84" y="99" width="50" height="7" rx="3.5" fill="#22D3EE" opacity="0.4"/>' +
@@ -77,38 +71,55 @@ export default function Testimonials() {
   }));
 
   return (
-    <section ref={sectionRef} id="testimonials" className="phx-section bg-[#070A12]">
-      <div
-        aria-hidden
-        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#3B82F6]/30 to-transparent"
-      />
+    <section ref={sectionRef} id="testimonials" className="phx-section phx-section-alt">
+      <div aria-hidden className="phx-section-divider" />
       <div className="phx-container">
-        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-          <div>
-            <p className="phx-eyebrow mb-4" data-testimonial-fade>
-              06 / TEAMS
-            </p>
-            <h2
-              className="phx-heading text-3xl sm:text-4xl lg:text-5xl mb-4"
-              data-testimonial-fade
-            >
-              Every role, one workspace.
-            </h2>
-            <p className="phx-subtext text-lg max-w-xl" data-testimonial-fade>
-              Front desk, doctors, managers, and owners all work in the same operating system —
-              each with dashboards, permissions, and workflows shaped to their role.
-            </p>
-          </div>
+        <div className="text-center max-w-2xl mx-auto mb-10 lg:mb-12">
+          <p className="phx-eyebrow mb-4" data-testimonial-fade>
+            06 / TEAMS
+          </p>
+          <h2
+            className="phx-heading text-3xl sm:text-4xl lg:text-5xl mb-4"
+            data-testimonial-fade
+          >
+            Real teams. Calmer mornings.
+          </h2>
+          <p className="phx-subtext text-lg" data-testimonial-fade>
+            Early-access clinics share what changed when everyone finally worked from the same screen.
+          </p>
+        </div>
 
-          <div data-testimonial-fade className="max-w-md lg:max-w-xl mx-auto w-full">
-            <TestimonialsCard
-              items={items}
-              width={560}
-              autoPlay
-              autoPlayInterval={4200}
-              className="!p-0"
-            />
-          </div>
+        {/* Mobile: carousel */}
+        <div data-testimonial-fade className="lg:hidden max-w-md mx-auto w-full cursor-default">
+          <TestimonialsCard
+            items={items}
+            width={560}
+            autoPlay
+            autoPlayInterval={4200}
+            className="!p-0"
+          />
+        </div>
+
+        {/* Desktop: 2×2 grid */}
+        <div className="hidden lg:grid grid-cols-2 gap-5">
+          {TESTIMONIALS.map((testimonial, index) => (
+            <article
+              key={testimonial.id}
+              data-testimonial-fade
+              className="phx-card overflow-hidden cursor-default transition-colors duration-200 hover:border-[#22D3EE]/25"
+            >
+              <div
+                className="h-36 bg-cover bg-center border-b border-white/10"
+                style={{ backgroundImage: `url("${personaImage(testimonial.id, testimonial.title, index)}")` }}
+                role="img"
+                aria-label={testimonial.title}
+              />
+              <div className="p-5">
+                <p className="text-sm text-[#94A3B8] leading-relaxed mb-4">{testimonial.description}</p>
+                <p className="text-sm font-semibold text-[#F8FAFC]">{testimonial.title}</p>
+              </div>
+            </article>
+          ))}
         </div>
       </div>
     </section>

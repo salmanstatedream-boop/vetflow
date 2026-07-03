@@ -47,7 +47,7 @@ export default function ClinicTypes() {
               'extendedDescription' in clinic ? clinic.extendedDescription : undefined;
 
             return (
-              <div key={clinic.id} data-clinic-card>
+              <div key={clinic.id} data-clinic-card className={cn(!isAvailable && 'cursor-default')}>
                 <GlowBorderCard
                   width="100%"
                   aspectRatio="auto"

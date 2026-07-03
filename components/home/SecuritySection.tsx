@@ -14,11 +14,8 @@ export default function SecuritySection() {
   });
 
   return (
-    <section ref={sectionRef} id="security" className="phx-section bg-[#070A12]">
-      <div
-        aria-hidden
-        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#8B5CF6]/30 to-transparent"
-      />
+    <section ref={sectionRef} id="security" className="phx-section phx-section-alt">
+      <div aria-hidden className="phx-section-divider" />
       <div className="phx-container">
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-start">
           <div>
@@ -43,7 +40,7 @@ export default function SecuritySection() {
                     image={SECURITY_PREVIEW_IMAGES[index] ?? SECURITY_PREVIEW_IMAGES[0]}
                     description={`${item.label} — protected inside Phoenix OS`}
                     href="#security"
-                    className="phx-card p-4 min-h-[100px] flex flex-col items-center justify-center gap-3 cursor-pointer"
+                    className="phx-card p-4 min-h-[100px] flex flex-col items-center justify-center gap-3 cursor-pointer transition-colors duration-200 hover:border-[#8B5CF6]/30"
                   >
                     <div className="w-10 h-10 rounded-lg bg-[#8B5CF6]/10 border border-[#8B5CF6]/20 flex items-center justify-center">
                       <Icon size={18} className="text-[#8B5CF6]" />

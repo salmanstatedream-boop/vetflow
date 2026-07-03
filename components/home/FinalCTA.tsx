@@ -33,7 +33,7 @@ export default function FinalCTA() {
     >
       <div className="absolute inset-0 pointer-events-none phx-cta-rays" aria-hidden>
         <AnimatedRays
-          className="absolute inset-0 opacity-50"
+          className="absolute inset-0 opacity-40 sm:opacity-50"
           colors={['#22D3EE', '#8B5CF6', '#3B82F6']}
         />
       </div>
@@ -72,7 +72,7 @@ export default function FinalCTA() {
           <RadialGlowButton
             type="button"
             onClick={() => router.push('/request-access')}
-            className="text-base px-8 py-3"
+            className="text-base px-8 py-3 phx-focus-ring cursor-pointer transition-colors duration-200"
           >
             Request Access
           </RadialGlowButton>

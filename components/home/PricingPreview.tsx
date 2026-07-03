@@ -49,9 +49,8 @@ export default function PricingPreview() {
                 key={tier.id}
                 data-pricing-card
                 className={cn(
-                  'transition-all duration-300',
-                  isDimmed && 'opacity-60 scale-[0.99]',
-                  isHovered && '-translate-y-1.5',
+                  'transition-opacity duration-200',
+                  isDimmed && 'opacity-60',
                 )}
                 onMouseEnter={() => setHoveredId(tier.id)}
                 onMouseLeave={() => setHoveredId(null)}
@@ -74,7 +73,7 @@ export default function PricingPreview() {
                   animationDuration={isFeatured ? 10 : 14}
                   paused={reducedMotion || hoveredId !== null}
                   className={cn(
-                    'border-0 min-h-[340px] !place-content-stretch !place-items-stretch transition-colors duration-300',
+                    'border-0 min-h-[340px] !place-content-stretch !place-items-stretch transition-colors duration-200 cursor-default',
                     isHovered
                       ? 'bg-gradient-to-b from-[#0E2A4A]/95 to-[#0B1020]/95 ring-1 ring-[#22D3EE]/50 shadow-[0_16px_48px_rgba(34,211,238,0.16)]'
                       : 'bg-[#0B1020]/85',
@@ -135,7 +134,7 @@ export default function PricingPreview() {
                       type="button"
                       onClick={() => router.push('/request-access')}
                       className={cn(
-                        'w-full mt-auto transition-all duration-300',
+                        'w-full mt-auto transition-colors duration-200 phx-focus-ring cursor-pointer',
                         isFeatured || isHovered ? 'phx-btn-primary' : 'phx-btn-ghost',
                       )}
                     >

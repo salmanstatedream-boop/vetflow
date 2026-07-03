@@ -37,7 +37,8 @@ export default function AnimatedWorkflow() {
   }).join(' ')}`;
 
   return (
-    <section ref={sectionRef} id="workflows" className="phx-section overflow-hidden relative">
+    <section ref={sectionRef} id="workflows" className="phx-section phx-section-alt overflow-hidden relative">
+      <div aria-hidden className="phx-section-divider" />
       <LightLines
         className="absolute inset-0 pointer-events-none opacity-40 phx-fade-mask"
         showBackground={false}
@@ -85,7 +86,7 @@ export default function AnimatedWorkflow() {
               <div
                 key={step.id}
                 data-workflow-node
-                className="phx-card p-4 cursor-default transition-all duration-300 hover:-translate-y-1.5 hover:border-[#22D3EE]/40 hover:shadow-[0_8px_32px_rgba(34,211,238,0.12)]"
+                className="phx-card p-4 cursor-default transition-colors duration-200 hover:border-[#22D3EE]/40 hover:shadow-[0_8px_32px_rgba(34,211,238,0.12)]"
               >
                 <div className="w-8 h-8 rounded-lg bg-[#22D3EE]/10 border border-[#22D3EE]/20 flex items-center justify-center text-xs font-mono text-[#22D3EE] mb-3">
                   {String(i + 1).padStart(2, '0')}
@@ -106,7 +107,7 @@ export default function AnimatedWorkflow() {
                 key={step.id}
                 data-workflow-node
                 className={cn(
-                  'phx-card p-4 relative transition-all duration-300 hover:border-[#22D3EE]/40',
+                  'phx-card p-4 relative transition-colors duration-200 hover:border-[#22D3EE]/40',
                   i === 0 && 'border-[#22D3EE]/30',
                 )}
               >

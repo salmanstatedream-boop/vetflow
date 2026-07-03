@@ -8,6 +8,7 @@ import { LightLines } from '@/components/ui/light-lines';
 import MorphText from '@/components/ui/morph-text';
 import { CLINIC_TYPE_WORDS, HERO } from '@/lib/home-data';
 import { usePrefersReducedMotion } from '@/lib/hooks/usePrefersReducedMotion';
+import { cn } from '@/lib/utils';
 import AnimatedPhoenixGrid from './AnimatedPhoenixGrid';
 
 export default function PhoenixHero() {
@@ -42,7 +43,7 @@ export default function PhoenixHero() {
   return (
     <section
       ref={rootRef}
-      className="relative pt-[calc(var(--phx-nav-height)+2.5rem)] pb-14 lg:pb-20 overflow-hidden"
+      className="relative pt-[calc(var(--phx-nav-height)+4.5rem)] pb-14 lg:pb-20 overflow-hidden"
     >
       <LightLines
         className="absolute inset-0 pointer-events-none opacity-60 phx-hero-mask"
@@ -68,18 +69,24 @@ export default function PhoenixHero() {
             </p>
 
             <h1 className="phx-heading text-4xl sm:text-5xl lg:text-6xl xl:text-7xl mb-4">
-              {HERO.headline.map((line) => (
+              {HERO.headline.map((line, lineIndex) => (
                 <span key={line} className="block overflow-hidden">
-                  {line.split(' ').map((word, i) => (
-                    <span
-                      key={`${line}-${word}-${i}`}
-                      data-phx-word
-                      className="inline-block mr-[0.25em]"
-                      style={{ opacity: reducedMotion ? 1 : 0 }}
-                    >
-                      {word}
-                    </span>
-                  ))}
+                  {line.split(' ').map((word, i) => {
+                    const isAccentLine = lineIndex === 1;
+                    return (
+                      <span
+                        key={`${line}-${word}-${i}`}
+                        data-phx-word
+                        className={cn(
+                          'inline-block mr-[0.25em]',
+                          isAccentLine && 'phx-gradient-text',
+                        )}
+                        style={{ opacity: reducedMotion ? 1 : 0 }}
+                      >
+                        {word}
+                      </span>
+                    );
+                  })}
                 </span>
               ))}
             </h1>
@@ -122,7 +129,7 @@ export default function PhoenixHero() {
             >
               <InteractiveHoverButton
                 onClick={() => router.push('/request-access')}
-                className="border-[#22D3EE]/30 text-[#F8FAFC]"
+                className="border-[#22D3EE]/30 text-[#F8FAFC] phx-focus-ring transition-colors duration-200"
                 style={
                   {
                     '--background': '#0B1020',
@@ -135,7 +142,7 @@ export default function PhoenixHero() {
               </InteractiveHoverButton>
               <InteractiveHoverButton
                 onClick={() => router.push('/login')}
-                className="border-white/15 text-[#94A3B8] hover:text-[#F8FAFC]"
+                className="border-white/15 text-[#94A3B8] hover:text-[#F8FAFC] phx-focus-ring transition-colors duration-200"
                 style={
                   {
                     '--background': 'transparent',

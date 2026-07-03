@@ -821,6 +821,64 @@ html.screenshotting .sticky-showcase-container {
   padding-block: clamp(3.5rem, 6vw, 5.5rem);
 }
 
+.phx-section-alt {
+  background-color: var(--phx-bg-alt);
+}
+
+.phx-section-divider {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    color-mix(in srgb, var(--phx-cyan) 25%, transparent),
+    transparent
+  );
+  pointer-events: none;
+}
+
+.phx-metric-card {
+  background: var(--phx-panel);
+  border: 1px solid var(--phx-border);
+  border-radius: 1rem;
+  padding: 1.25rem 1rem;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.phx-metric-card:hover {
+  border-color: rgba(34, 211, 238, 0.2);
+  background: color-mix(in srgb, var(--phx-panel) 92%, var(--phx-cyan));
+}
+
+.phx-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.375rem 0.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--phx-border);
+  background: color-mix(in srgb, var(--phx-panel) 60%, transparent);
+  user-select: none;
+  cursor: default;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.phx-chip:hover {
+  border-color: rgba(34, 211, 238, 0.25);
+  background: color-mix(in srgb, var(--phx-cyan) 6%, var(--phx-panel));
+}
+
+.phx-focus-ring {
+  outline: none;
+}
+
+.phx-focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--phx-cyan) 40%, transparent);
+}
+
 .phx-container {
   width: min(1200px, calc(100% - 2rem));
   margin-inline: auto;
@@ -990,12 +1048,11 @@ html.screenshotting .sticky-showcase-container {
   background: var(--phx-panel);
   border: 1px solid var(--phx-border);
   border-radius: 1rem;
-  transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .phx-card:hover {
   border-color: rgba(34, 211, 238, 0.25);
-  transform: translateY(-2px);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
 }
 
