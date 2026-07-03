@@ -1025,6 +1025,16 @@ html.screenshotting .sticky-showcase-container {
   color: var(--phx-text);
 }
 
+.phx-hero-heading {
+  line-height: 1.15;
+}
+
+@media (min-width: 1280px) {
+  .phx-hero-heading {
+    line-height: 1.2;
+  }
+}
+
 .phx-subtext {
   color: var(--phx-muted);
   line-height: 1.7;
@@ -1249,8 +1259,18 @@ html.screenshotting .sticky-showcase-container {
 
 .phx-page .phx-header-wordmark {
   display: block;
-  transform: translateY(22%);
+  transform: translateY(18%);
   line-height: 0.85;
+  background: linear-gradient(
+    180deg,
+    rgba(34, 211, 238, 0.35) 0%,
+    rgba(139, 92, 246, 0.12) 55%,
+    transparent 85%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 40px rgba(34, 211, 238, 0.08);
 }
 
 .phx-orbit-spin {

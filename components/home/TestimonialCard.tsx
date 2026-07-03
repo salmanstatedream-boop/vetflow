@@ -47,7 +47,7 @@ export default function TestimonialCard({
   return (
     <article
       className={cn(
-        'phx-card relative overflow-hidden p-6 sm:p-7 min-h-[220px] flex flex-col cursor-default transition-colors duration-200 hover:border-[#22D3EE]/25',
+        'phx-card relative overflow-hidden p-6 sm:p-7 min-h-[220px] h-full flex flex-col cursor-default transition-colors duration-200 hover:border-[#22D3EE]/25',
         className,
       )}
     >
@@ -79,7 +79,7 @@ export default function TestimonialCard({
         aria-hidden
       />
 
-      <blockquote className="flex-1 text-base lg:text-[1.05rem] text-[#CBD5E1] leading-relaxed mb-6">
+      <blockquote className="flex-1 text-base lg:text-[1.05rem] text-[#CBD5E1] leading-[1.65] mb-6">
         {quote}
       </blockquote>
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { animate, stagger } from 'animejs';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
@@ -58,6 +59,21 @@ export default function PhoenixHero() {
 
       <div className="phx-container relative">
         <div className="max-w-6xl mx-auto text-center">
+          <div
+            className="relative mx-auto mb-6 w-[88px] h-[88px] sm:w-[112px] sm:h-[112px] lg:w-[128px] lg:h-[128px]"
+            data-phx-fade
+            style={{ opacity: reducedMotion ? 1 : 0 }}
+          >
+            <Image
+              src="/phoenix-logo.png"
+              alt="Phoenix OS"
+              fill
+              priority
+              className="object-contain"
+              sizes="(max-width: 640px) 88px, (max-width: 1024px) 112px, 128px"
+            />
+          </div>
+
           <p
             className="phx-eyebrow mb-6"
             data-phx-fade
@@ -66,9 +82,9 @@ export default function PhoenixHero() {
             {HERO.eyebrow}
           </p>
 
-          <h1 className="phx-heading text-4xl sm:text-5xl lg:text-6xl xl:text-[4.25rem] mb-4 max-w-4xl mx-auto">
+          <h1 className="phx-heading phx-hero-heading text-4xl sm:text-5xl lg:text-6xl xl:text-[4.25rem] mb-4 max-w-4xl mx-auto flex flex-col gap-y-1 sm:gap-y-2">
             {HERO.headline.map((line, lineIndex) => (
-              <span key={line} className="block overflow-hidden">
+              <span key={line} className="block overflow-visible">
                 {line.split(' ').map((word, i) => {
                   const isAccentLine = lineIndex === 1;
                   return (

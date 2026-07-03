@@ -99,14 +99,15 @@ export default function Testimonials() {
         </div>
 
         {/* Desktop: 2×2 grid */}
-        <div className="hidden lg:grid grid-cols-2 gap-5">
+        <div className="hidden lg:grid grid-cols-2 gap-5 items-stretch">
           {TESTIMONIALS.map((testimonial, index) => (
-            <div key={testimonial.id} data-testimonial-fade>
+            <div key={testimonial.id} data-testimonial-fade className="h-full">
               <TestimonialCard
                 id={testimonial.id}
                 title={testimonial.title}
                 description={testimonial.description}
                 index={index}
+                className="h-full"
               />
             </div>
           ))}

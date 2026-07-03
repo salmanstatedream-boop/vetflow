@@ -3,6 +3,7 @@
 import React, { useEffect, useId, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useOutsideClick } from '@/hooks/use-outside-click'
+import { cn } from '@/lib/utils'
 import { X } from 'lucide-react'
 
 export interface BentoGridProps {
@@ -129,31 +130,34 @@ export default function ExpandableBentoGrid({ items }: BentoGridProps) {
                     </div>
                 ) : null}
             </AnimatePresence>
-            <ul className="max-w-4xl mx-auto w-full gap-2 lg:gap-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3  items-start ">
-                {items.map((item) => (
+            <ul className="max-w-5xl mx-auto w-full gap-2 lg:gap-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 items-stretch">
+                {items.map((item, index) => (
                     <motion.div
                         layoutId={`card-${item.title}-${id}`}
                         key={item.id}
                         data-bento-item
                         onClick={() => setActive(item)}
-                        className="p-4 flex flex-col md:flex-row justify-between items-center rounded-xl cursor-pointer bg-[#0B1020]/60 border border-[#22D3EE]/15 transition-colors duration-200 hover:bg-[#22D3EE]/5 hover:border-[#22D3EE]/35 hover:shadow-[0_8px_28px_rgba(34,211,238,0.1)]"
+                        className={cn(
+                            'p-4 h-full min-h-[5.5rem] flex flex-col rounded-xl cursor-pointer bg-[#0B1020]/60 border border-[#22D3EE]/15 transition-colors duration-200 hover:bg-[#22D3EE]/5 hover:border-[#22D3EE]/35 hover:shadow-[0_8px_28px_rgba(34,211,238,0.1)]',
+                            index === 6 && 'lg:col-start-2',
+                        )}
                     >
-                        <div className="flex gap-3 flex-row items-center justify-center mx-auto ">
-                            <motion.div layoutId={`image-${item.title}-${id}`}>
+                        <div className="flex gap-3 flex-row items-start w-full text-left">
+                            <motion.div layoutId={`image-${item.title}-${id}`} className="shrink-0">
                                 <div className="h-14 w-14 rounded-lg bg-[#22D3EE]/10 border border-[#22D3EE]/20 flex items-center justify-center text-[#22D3EE] p-1">
                                     {item.icon}
                                 </div>
                             </motion.div>
-                            <div className="">
+                            <div className="min-w-0 flex-1">
                                 <motion.h3
                                     layoutId={`title-${item.title}-${id}`}
-                                    className="font-medium  text-neutral-800 dark:text-neutral-200  text-left"
+                                    className="font-medium text-neutral-800 dark:text-neutral-200 text-left"
                                 >
                                     {item.title}
                                 </motion.h3>
                                 <motion.p
                                     layoutId={`description-${item.title}-${id}`}
-                                    className="text-neutral-600 dark:text-neutral-400 text-left  text-xs md:text-[14px]"
+                                    className="text-neutral-600 dark:text-neutral-400 text-left text-xs md:text-[14px] line-clamp-2"
                                 >
                                     {item.subtitle}
                                 </motion.p>

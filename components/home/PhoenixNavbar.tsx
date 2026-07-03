@@ -55,7 +55,7 @@ export default function PhoenixNavbar() {
             className="relative z-10 flex-1 min-w-0 overflow-hidden h-full flex items-end phx-focus-ring rounded-sm"
             aria-label="Phoenix OS home"
           >
-            <span className="phx-footer-wordmark phx-header-wordmark text-[clamp(2.5rem,11vw,7rem)] font-bold leading-none tracking-tighter whitespace-nowrap pointer-events-none select-none">
+            <span className="phx-header-wordmark text-[clamp(2.75rem,12vw,7.5rem)] font-bold leading-none tracking-tighter whitespace-nowrap pointer-events-none select-none">
               Phoenix OS
             </span>
           </Link>

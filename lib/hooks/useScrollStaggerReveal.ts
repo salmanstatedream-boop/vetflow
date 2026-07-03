@@ -26,9 +26,9 @@ function getVisibleElements(root: HTMLElement, selector: string) {
 function getSectionProgress(section: HTMLElement) {
   const rect = section.getBoundingClientRect();
   const viewport = window.innerHeight;
-  const travelDistance = rect.height + viewport * 0.55;
-  const traveled = viewport * 0.88 - rect.top;
-  return clamp(traveled / travelDistance, 0, 1);
+  const startY = viewport * 0.88;
+  const endY = viewport * 0.35;
+  return clamp((startY - rect.top) / (startY - endY), 0, 1);
 }
 
 export function useScrollStaggerReveal(
@@ -119,7 +119,7 @@ export function useScrollStaggerReveal(
       items = getVisibleElements(root, selector);
       if (items.length === 0) return;
       const progress = getSectionProgress(root);
-      const nextCount = Math.round(progress * items.length);
+      const nextCount = Math.ceil(progress * items.length);
       applyCount(nextCount, true);
     };
 

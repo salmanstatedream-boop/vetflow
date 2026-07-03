@@ -99,12 +99,12 @@ export default function AnimatedWorkflow() {
             </defs>
           </svg>
 
-          <div className="grid grid-cols-7 gap-4">
+          <div className="grid grid-cols-7 gap-4 items-stretch">
             {WORKFLOW_STEPS.map((step, i) => (
               <div
                 key={step.id}
                 data-stagger-item
-                className={cn('phx-card p-4', WORKFLOW_CARD_HOVER)}
+                className={cn('phx-card p-4 h-full min-h-[7.5rem]', WORKFLOW_CARD_HOVER)}
               >
                 <div className="w-8 h-8 rounded-lg bg-[#22D3EE]/10 border border-[#22D3EE]/20 flex items-center justify-center text-xs font-mono text-[#22D3EE] mb-3">
                   {String(i + 1).padStart(2, '0')}
