@@ -34,7 +34,6 @@ export default function TrustedByStrip() {
           logos={[...marks, ...marks]}
           speed={36}
           showBlur={false}
-          pauseOnHover
           variant="chip"
         />
       </div>

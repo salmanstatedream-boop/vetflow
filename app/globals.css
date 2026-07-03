@@ -926,6 +926,36 @@ html.screenshotting .sticky-showcase-container {
   margin-inline: auto;
 }
 
+/* Workflow: stable 7-column track; scrolls horizontally on narrower desktops */
+.phx-workflow-scroll {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.phx-workflow-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.phx-workflow-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(9.5rem, 1fr));
+  gap: 0.875rem;
+  align-items: stretch;
+  min-width: 56rem;
+}
+
+@media (min-width: 1280px) {
+  .phx-workflow-scroll {
+    overflow-x: visible;
+  }
+
+  .phx-workflow-grid {
+    min-width: 0;
+    gap: 1rem;
+  }
+}
+
 /* Fades any full-bleed background layer toward the page background at the edges */
 .phx-fade-mask {
   mask-image: radial-gradient(ellipse 90% 75% at 50% 45%, black 35%, transparent 82%);

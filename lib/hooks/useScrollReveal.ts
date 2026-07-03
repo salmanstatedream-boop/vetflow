@@ -26,6 +26,13 @@ interface ScrollRevealOptions {
  *
  * Returns `true` when reduced motion is active (content stays static).
  */
+function getVisibleElements(root: HTMLElement, selector: string) {
+  return Array.from(root.querySelectorAll<HTMLElement>(selector)).filter((el) => {
+    const rect = el.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0;
+  });
+}
+
 export function useScrollReveal(
   ref: RefObject<HTMLElement | null>,
   {
@@ -44,7 +51,7 @@ export function useScrollReveal(
     const root = ref.current;
     if (!root) return;
 
-    const items = Array.from(root.querySelectorAll<HTMLElement>(selector));
+    const items = getVisibleElements(root, selector);
 
     const showStatic = () => {
       for (const el of items) {

@@ -4,7 +4,6 @@ import { animate, svg } from 'animejs';
 import { useRef } from 'react';
 import { WORKFLOW_STEPS } from '@/lib/home-data';
 import { useScrollReveal } from '@/lib/hooks/useScrollReveal';
-import { useScrollStaggerReveal } from '@/lib/hooks/useScrollStaggerReveal';
 import { cn } from '@/lib/utils';
 import { LightLines } from '@/components/ui/light-lines';
 
@@ -15,11 +14,6 @@ export default function AnimatedWorkflow() {
   const sectionRef = useRef<HTMLElement>(null);
   const pathRef = useRef<SVGPathElement>(null);
   const pathAnimatedRef = useRef(false);
-
-  useScrollReveal(sectionRef, {
-    selector: '[data-workflow-fade]',
-    staggerMs: 70,
-  });
 
   const drawPath = () => {
     const path = pathRef.current;
@@ -39,12 +33,12 @@ export default function AnimatedWorkflow() {
     });
   };
 
-  useScrollStaggerReveal(sectionRef, {
-    selector: '[data-stagger-item]',
-    staggerMs: 60,
-    onActiveCountChange: (count) => {
-      if (count > 0) drawPath();
-    },
+  useScrollReveal(sectionRef, {
+    selector: '[data-workflow-fade], [data-workflow-card]',
+    staggerMs: 55,
+    y: 16,
+    durationMs: 550,
+    onReveal: drawPath,
   });
 
   const pathD = `M 24 24 ${WORKFLOW_STEPS.map((_, i) => {
@@ -66,7 +60,7 @@ export default function AnimatedWorkflow() {
         lineColor="#3B82F6"
       />
       <div className="phx-container relative">
-        <div className="phx-section-header max-w-3xl">
+        <div className="phx-section-header max-w-3xl mb-8 lg:mb-10">
           <p className="phx-eyebrow" data-workflow-fade>
             02 / WORKFLOWS
           </p>
@@ -76,43 +70,51 @@ export default function AnimatedWorkflow() {
         </div>
 
         {/* Desktop horizontal workflow */}
-        <div className="hidden lg:block relative">
-          <svg
-            viewBox={`0 0 ${24 + (WORKFLOW_STEPS.length - 1) * 112} 48`}
-            className="w-full h-12 mb-8"
-            preserveAspectRatio="none"
-          >
-            <path
-              ref={pathRef}
-              d={pathD}
-              fill="none"
-              stroke="url(#workflow-grad)"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            <defs>
-              <linearGradient id="workflow-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#22D3EE" />
-                <stop offset="50%" stopColor="#3B82F6" />
-                <stop offset="100%" stopColor="#8B5CF6" />
-              </linearGradient>
-            </defs>
-          </svg>
+        <div className="hidden lg:block">
+          <div className="phx-workflow-scroll mb-5">
+            <svg
+              viewBox={`0 0 ${24 + (WORKFLOW_STEPS.length - 1) * 112} 48`}
+              className="w-full h-10 min-w-[56rem]"
+              preserveAspectRatio="none"
+              aria-hidden
+            >
+              <path
+                ref={pathRef}
+                d={pathD}
+                fill="none"
+                stroke="url(#workflow-grad)"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+              <defs>
+                <linearGradient id="workflow-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#22D3EE" />
+                  <stop offset="50%" stopColor="#3B82F6" />
+                  <stop offset="100%" stopColor="#8B5CF6" />
+                </linearGradient>
+              </defs>
+            </svg>
 
-          <div className="grid grid-cols-7 gap-4 items-stretch">
-            {WORKFLOW_STEPS.map((step, i) => (
-              <div
-                key={step.id}
-                data-stagger-item
-                className={cn('phx-card p-4 h-full min-h-[7.5rem]', WORKFLOW_CARD_HOVER)}
-              >
-                <div className="w-8 h-8 rounded-lg bg-[#22D3EE]/10 border border-[#22D3EE]/20 flex items-center justify-center text-xs font-mono text-[#22D3EE] mb-3">
-                  {String(i + 1).padStart(2, '0')}
+            <div className="phx-workflow-grid">
+              {WORKFLOW_STEPS.map((step, i) => (
+                <div
+                  key={step.id}
+                  data-workflow-card
+                  className={cn(
+                    'phx-card p-4 h-full min-h-[8.5rem] flex flex-col min-w-0',
+                    WORKFLOW_CARD_HOVER,
+                  )}
+                >
+                  <div className="w-8 h-8 rounded-lg bg-[#22D3EE]/10 border border-[#22D3EE]/20 flex items-center justify-center text-xs font-mono text-[#22D3EE] mb-3 shrink-0">
+                    {String(i + 1).padStart(2, '0')}
+                  </div>
+                  <h3 className="text-sm font-semibold text-[#F8FAFC] mb-1 leading-snug">
+                    {step.label}
+                  </h3>
+                  <p className="text-xs text-[#64748B] leading-relaxed mt-auto">{step.description}</p>
                 </div>
-                <h3 className="text-sm font-semibold text-[#F8FAFC] mb-1">{step.label}</h3>
-                <p className="text-xs text-[#64748B]">{step.description}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
@@ -123,9 +125,9 @@ export default function AnimatedWorkflow() {
             {WORKFLOW_STEPS.map((step, i) => (
               <div
                 key={step.id}
-                data-stagger-item
+                data-workflow-card
                 className={cn(
-                  'phx-card p-4 relative',
+                  'phx-card p-4 relative min-h-[5.5rem]',
                   WORKFLOW_CARD_HOVER,
                   i === 0 && 'border-[#22D3EE]/30',
                 )}
