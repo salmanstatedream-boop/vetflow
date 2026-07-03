@@ -62,15 +62,17 @@ export default function AnimatedOSDemo() {
       <div className="phx-container">
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
           <div>
-            <p className="phx-eyebrow mb-4" data-demo-fade>
-              01 / PRODUCT
-            </p>
-            <h2 className="phx-heading text-3xl sm:text-4xl lg:text-5xl mb-4" data-demo-fade>
-              {OS_DEMO.heading}
-            </h2>
-            <p className="phx-subtext text-lg mb-8" data-demo-fade>
-              {OS_DEMO.subheadline}
-            </p>
+            <div className="phx-section-header max-w-xl">
+              <p className="phx-eyebrow" data-demo-fade>
+                01 / PRODUCT
+              </p>
+              <h2 className="phx-heading text-3xl sm:text-4xl lg:text-5xl" data-demo-fade>
+                {OS_DEMO.heading}
+              </h2>
+              <p className="phx-subtext text-lg" data-demo-fade>
+                {OS_DEMO.subheadline}
+              </p>
+            </div>
             <ul className="space-y-3">
               {OS_DEMO.bullets.map((bullet) => (
                 <li
@@ -102,7 +104,7 @@ export default function AnimatedOSDemo() {
                     key={step.id}
                     data-demo-step
                     className={cn(
-                      'phx-panel p-3 sm:p-4 transition-colors',
+                      'phx-panel p-3 sm:p-4 transition-colors duration-200 hover:border-[#22D3EE]/25',
                       i === 0 ? 'border-[#22D3EE]/30' : '',
                     )}
                     style={{ opacity: reducedMotion ? (i === 0 ? 1 : 0.5) : 0.35 }}

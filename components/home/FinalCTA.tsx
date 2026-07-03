@@ -29,7 +29,8 @@ export default function FinalCTA() {
   return (
     <section
       ref={sectionRef}
-      className="relative overflow-hidden min-h-[60vh] flex items-center py-20 sm:py-24"
+      id="get-started"
+      className="phx-section relative overflow-hidden min-h-[60vh] flex items-center"
     >
       <div className="absolute inset-0 pointer-events-none phx-cta-rays" aria-hidden>
         <AnimatedRays

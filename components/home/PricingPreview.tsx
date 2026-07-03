@@ -23,20 +23,20 @@ export default function PricingPreview() {
   });
 
   return (
-    <section ref={sectionRef} id="pricing" className="phx-section">
+    <section ref={sectionRef} id="pricing" className="phx-section relative">
+      <div aria-hidden className="phx-section-divider" />
       <div className="phx-container">
-        <p className="phx-eyebrow mb-4 text-center" data-pricing-fade>
-          07 / PRICING
-        </p>
-        <h2
-          className="phx-heading text-3xl sm:text-4xl lg:text-5xl mb-4 text-center"
-          data-pricing-fade
-        >
-          Start simple. Scale when ready.
-        </h2>
-        <p className="phx-subtext text-lg text-center mb-10 max-w-xl mx-auto" data-pricing-fade>
-          Choose the plan that fits your clinic today. Upgrade when your team grows.
-        </p>
+        <div className="phx-section-header text-center max-w-xl mx-auto">
+          <p className="phx-eyebrow" data-pricing-fade>
+            07 / PRICING
+          </p>
+          <h2 className="phx-heading text-3xl sm:text-4xl lg:text-5xl" data-pricing-fade>
+            Start simple. Scale when ready.
+          </h2>
+          <p className="phx-subtext text-lg" data-pricing-fade>
+            Choose the plan that fits your clinic today. Upgrade when your team grows.
+          </p>
+        </div>
 
         <div className="grid md:grid-cols-3 gap-6 md:gap-4 max-w-5xl mx-auto items-start">
           {PRICING_TIERS.map((tier) => {
@@ -75,8 +75,10 @@ export default function PricingPreview() {
                   className={cn(
                     'border-0 min-h-[340px] !place-content-stretch !place-items-stretch transition-colors duration-200 cursor-default',
                     isHovered
-                      ? 'bg-gradient-to-b from-[#0E2A4A]/95 to-[#0B1020]/95 ring-1 ring-[#22D3EE]/50 shadow-[0_16px_48px_rgba(34,211,238,0.16)]'
-                      : 'bg-[#0B1020]/85',
+                      ? 'bg-gradient-to-b from-[#0E2A4A]/95 to-[var(--phx-panel)]/95 ring-1 ring-[#22D3EE]/50 shadow-[0_16px_48px_rgba(34,211,238,0.16)]'
+                      : isFeatured
+                        ? 'bg-[var(--phx-panel)]/85 ring-1 ring-[#22D3EE]/40'
+                        : 'bg-[var(--phx-panel)]/85',
                   )}
                 >
                   <div className="p-4 sm:p-5 flex flex-col h-full w-full text-left">

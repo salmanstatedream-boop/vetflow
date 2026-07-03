@@ -879,6 +879,48 @@ html.screenshotting .sticky-showcase-container {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--phx-cyan) 40%, transparent);
 }
 
+.phx-section-header {
+  margin-bottom: 2.5rem;
+}
+
+.phx-section-header .phx-eyebrow {
+  margin-bottom: 1rem;
+}
+
+.phx-section-header .phx-heading {
+  margin-bottom: 1rem;
+}
+
+.phx-stats-band {
+  position: relative;
+  background-color: #05070f;
+  border-block: 1px solid rgba(255, 255, 255, 0.05);
+  padding-block: 2.5rem;
+}
+
+@media (min-width: 640px) {
+  .phx-stats-band {
+    padding-block: 3rem;
+  }
+}
+
+.phx-marquee-fade {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 12%,
+    black 88%,
+    transparent
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 12%,
+    black 88%,
+    transparent
+  );
+}
+
 .phx-container {
   width: min(1200px, calc(100% - 2rem));
   margin-inline: auto;

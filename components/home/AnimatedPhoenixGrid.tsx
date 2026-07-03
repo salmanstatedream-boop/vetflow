@@ -321,7 +321,7 @@ export default function AnimatedPhoenixGrid() {
                   node.live
                     ? 'cursor-pointer'
                     : 'cursor-default opacity-60 hover:opacity-75',
-                  'transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#22D3EE]/50 rounded-xl',
+                  'transition-colors duration-200 phx-focus-ring rounded-xl',
                 )}
                 style={{
                   left: pct(node.x),
@@ -339,10 +339,10 @@ export default function AnimatedPhoenixGrid() {
                 <div
                   className={cn(
                     'relative w-11 h-11 rounded-xl flex items-center justify-center',
-                    'bg-[#0B1020] border transition-all duration-300',
+                    'bg-[#0B1020] border transition-colors duration-200',
                     isActive
-                      ? 'border-opacity-80 shadow-lg scale-110'
-                      : 'border-white/10 hover:border-white/25 hover:scale-105',
+                      ? 'border-opacity-80 shadow-lg'
+                      : 'border-white/10 hover:border-white/25',
                   )}
                   style={{
                     borderColor: isActive ? node.color : undefined,

@@ -29,7 +29,7 @@ export default function TrustedByStrip() {
           Built for every role in your practice
         </p>
       </div>
-      <div data-trusted-fade>
+      <div data-trusted-fade className="phx-marquee-fade">
         <LogoSlider logos={[...marks, ...marks]} speed={36} showBlur={false} />
       </div>
     </section>

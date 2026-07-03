@@ -27,19 +27,19 @@ export default function FeatureToolbox() {
 
   return (
     <section ref={sectionRef} className="phx-section phx-section-alt">
+      <div aria-hidden className="phx-section-divider" />
       <div className="phx-container">
-        <p className="phx-eyebrow mb-4" data-feature-fade>
-          03 / TOOLBOX
-        </p>
-        <h2
-          className="phx-heading text-3xl sm:text-4xl lg:text-5xl mb-4 max-w-3xl"
-          data-feature-fade
-        >
-          The complete clinic operating toolbox.
-        </h2>
-        <p className="phx-subtext text-lg mb-10 max-w-2xl" data-feature-fade>
-          Pick the module you need — each one stands alone and connects when it matters.
-        </p>
+        <div className="phx-section-header max-w-3xl">
+          <p className="phx-eyebrow" data-feature-fade>
+            03 / TOOLBOX
+          </p>
+          <h2 className="phx-heading text-3xl sm:text-4xl lg:text-5xl" data-feature-fade>
+            The complete clinic operating toolbox.
+          </h2>
+          <p className="phx-subtext text-lg max-w-2xl" data-feature-fade>
+            Pick the module you need — each one stands alone and connects when it matters.
+          </p>
+        </div>
 
         <div>
           <ExpandableBentoGrid items={bentoItems} />

@@ -29,15 +29,17 @@ export default function ClinicTypes() {
   return (
     <section ref={sectionRef} id="clinic-types" className="phx-section">
       <div className="phx-container">
-        <p className="phx-eyebrow mb-4" data-clinic-fade>
-          04 / CLINIC TYPES
-        </p>
-        <h2
-          className="phx-heading text-3xl sm:text-4xl lg:text-5xl mb-10 max-w-3xl"
-          data-clinic-fade
-        >
-          Built for vet clinics first. Ready for every clinic next.
-        </h2>
+        <div className="phx-section-header max-w-3xl">
+          <p className="phx-eyebrow" data-clinic-fade>
+            04 / CLINIC TYPES
+          </p>
+          <h2 className="phx-heading text-3xl sm:text-4xl lg:text-5xl" data-clinic-fade>
+            Built for vet clinics first. Ready for every clinic next.
+          </h2>
+          <p className="phx-subtext text-lg max-w-2xl" data-clinic-fade>
+            One live vertical today — with more clinic types on the Phoenix OS roadmap.
+          </p>
+        </div>
 
         <div className="grid sm:grid-cols-2 gap-5">
           {CLINIC_TYPES.map((clinic) => {
@@ -60,8 +62,10 @@ export default function ClinicTypes() {
                   animationDuration={12}
                   paused={reducedMotion || !isAvailable}
                   className={cn(
-                    'bg-[#0B1020]/80 border-0 min-h-[220px] !place-content-stretch !place-items-stretch',
-                    !isAvailable && 'opacity-75',
+                    'border-0 min-h-[220px] !place-content-stretch !place-items-stretch transition-colors duration-200',
+                    isAvailable
+                      ? 'bg-[var(--phx-panel)]/90 ring-1 ring-[#22D3EE]/30'
+                      : 'phx-panel opacity-75',
                   )}
                 >
                   <div className="p-6 w-full text-left">
@@ -106,7 +110,7 @@ export default function ClinicTypes() {
                         id={`clinic-${clinic.id}`}
                         title="View capabilities"
                         description={clinic.details.join(' · ')}
-                        className="rounded-md border-[#22D3EE]/20 bg-[#070A12]/50 text-[#94A3B8] max-w-none"
+                        className="rounded-md border-[#22D3EE]/20 bg-[var(--phx-bg-alt)]/50 text-[#94A3B8] max-w-none cursor-pointer phx-focus-ring"
                         icon={<ArrowRight size={14} className="text-[#22D3EE]" />}
                       />
                     ) : (

@@ -50,12 +50,14 @@ export default function AnimatedWorkflow() {
         lineColor="#3B82F6"
       />
       <div className="phx-container relative">
-        <p className="phx-eyebrow mb-4" data-workflow-fade>
-          02 / WORKFLOWS
-        </p>
-        <h2 className="phx-heading text-3xl sm:text-4xl lg:text-5xl mb-10" data-workflow-fade>
-          From front desk to final invoice.
-        </h2>
+        <div className="phx-section-header max-w-3xl">
+          <p className="phx-eyebrow" data-workflow-fade>
+            02 / WORKFLOWS
+          </p>
+          <h2 className="phx-heading text-3xl sm:text-4xl lg:text-5xl" data-workflow-fade>
+            From front desk to final invoice.
+          </h2>
+        </div>
 
         {/* Desktop horizontal workflow */}
         <div className="hidden lg:block relative">
@@ -107,7 +109,7 @@ export default function AnimatedWorkflow() {
                 key={step.id}
                 data-workflow-node
                 className={cn(
-                  'phx-card p-4 relative transition-colors duration-200 hover:border-[#22D3EE]/40',
+                  'phx-card p-4 relative cursor-default transition-colors duration-200 hover:border-[#22D3EE]/40 hover:shadow-[0_8px_32px_rgba(34,211,238,0.12)]',
                   i === 0 && 'border-[#22D3EE]/30',
                 )}
               >

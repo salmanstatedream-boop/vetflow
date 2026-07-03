@@ -15,16 +15,16 @@ export default function FaqSection() {
 
   return (
     <section ref={sectionRef} id="faq" className="phx-section phx-section-alt">
+      <div aria-hidden className="phx-section-divider" />
       <div className="phx-container">
-        <p className="phx-eyebrow mb-4 text-center" data-faq-fade>
-          08 / FAQ
-        </p>
-        <h2
-          className="phx-heading text-3xl sm:text-4xl lg:text-5xl mb-10 text-center"
-          data-faq-fade
-        >
-          Questions clinics ask us.
-        </h2>
+        <div className="phx-section-header text-center max-w-3xl mx-auto">
+          <p className="phx-eyebrow" data-faq-fade>
+            08 / FAQ
+          </p>
+          <h2 className="phx-heading text-3xl sm:text-4xl lg:text-5xl" data-faq-fade>
+            Questions clinics ask us.
+          </h2>
+        </div>
 
         <div className="max-w-3xl mx-auto flex flex-col gap-3">
           {FAQS.map((faq, index) => {
@@ -37,10 +37,10 @@ export default function FaqSection() {
                 layout
                 transition={{ type: 'spring', stiffness: 320, damping: 32 }}
                 className={cn(
-                  'rounded-2xl border overflow-hidden transition-colors duration-300',
+                  'rounded-2xl border overflow-hidden transition-colors duration-200',
                   isOpen
-                    ? 'bg-[#0B1020] border-[#22D3EE]/35 shadow-[0_8px_40px_rgba(34,211,238,0.08)]'
-                    : 'bg-[#0B1020]/60 border-white/10 hover:border-[#22D3EE]/25',
+                    ? 'phx-panel border-[#22D3EE]/35 shadow-[0_8px_40px_rgba(34,211,238,0.08)]'
+                    : 'phx-panel border-white/10 hover:border-[#22D3EE]/25',
                 )}
               >
                 <button

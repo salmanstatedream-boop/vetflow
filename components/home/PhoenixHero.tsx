@@ -164,7 +164,11 @@ export default function PhoenixHero() {
             </p>
           </div>
 
-          <div data-phx-fade style={{ opacity: reducedMotion ? 1 : 0 }}>
+          <div
+            data-phx-fade
+            style={{ opacity: reducedMotion ? 1 : 0 }}
+            className="rounded-2xl overflow-hidden border border-white/10 phx-panel"
+          >
             <AnimatedPhoenixGrid />
           </div>
         </div>

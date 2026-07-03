@@ -19,16 +19,18 @@ export default function SecuritySection() {
       <div className="phx-container">
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-start">
           <div>
-            <p className="phx-eyebrow mb-4" data-security-fade>
-              05 / SECURITY
-            </p>
-            <h2 className="phx-heading text-3xl sm:text-4xl lg:text-5xl mb-4" data-security-fade>
-              Secure by design.
-            </h2>
-            <p className="phx-subtext text-lg" data-security-fade>
-              Role-based access, encrypted records, per-clinic data separation, and a complete audit
-              trail — so your team can operate with confidence.
-            </p>
+            <div className="phx-section-header max-w-xl">
+              <p className="phx-eyebrow" data-security-fade>
+                05 / SECURITY
+              </p>
+              <h2 className="phx-heading text-3xl sm:text-4xl lg:text-5xl" data-security-fade>
+                Secure by design.
+              </h2>
+              <p className="phx-subtext text-lg" data-security-fade>
+                Role-based access, encrypted records, per-clinic data separation, and a complete audit
+                trail — so your team can operate with confidence.
+              </p>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -40,7 +42,7 @@ export default function SecuritySection() {
                     image={SECURITY_PREVIEW_IMAGES[index] ?? SECURITY_PREVIEW_IMAGES[0]}
                     description={`${item.label} — protected inside Phoenix OS`}
                     href="#security"
-                    className="phx-card p-4 min-h-[100px] flex flex-col items-center justify-center gap-3 cursor-pointer transition-colors duration-200 hover:border-[#8B5CF6]/30"
+                    className="phx-card p-4 min-h-[108px] flex flex-col items-center justify-center gap-3 cursor-pointer transition-colors duration-200 hover:border-[#8B5CF6]/30 phx-focus-ring rounded-2xl"
                   >
                     <div className="w-10 h-10 rounded-lg bg-[#8B5CF6]/10 border border-[#8B5CF6]/20 flex items-center justify-center">
                       <Icon size={18} className="text-[#8B5CF6]" />

@@ -35,4 +35,4 @@ Four `phx-metric-card` tiles with icons, not flat numbers.
 
 ## Testimonials
 
-Desktop: 2×2 grid. Mobile: carousel. Intro: emotional proof only, no feature recap.
+Quote-first cards with role badge; no wireframe crop. Desktop: 2×2 grid. Mobile: carousel. Intro: emotional proof only, no feature recap.

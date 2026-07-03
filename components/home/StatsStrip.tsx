@@ -24,8 +24,14 @@ export default function StatsStrip() {
   });
 
   return (
-    <section ref={sectionRef} className="relative border-y border-white/5 bg-[#05070f] py-10 sm:py-12">
+    <section ref={sectionRef} className="phx-stats-band">
       <div className="phx-container">
+        <p
+          className="text-center text-xs font-mono uppercase tracking-[0.2em] text-[#64748B] mb-6"
+          data-stat-fade
+        >
+          Built for modern vet practices
+        </p>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {STATS.map((stat) => {
             const Icon = STAT_ICONS[stat.id as keyof typeof STAT_ICONS] ?? Layers;
