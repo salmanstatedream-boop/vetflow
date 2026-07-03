@@ -15,7 +15,6 @@ const ICONS = {
   specialty: Sparkles,
 } as const;
 
-// Calm sheen: deep navy base with one soft cyan and one blue highlight sweeping around
 const PHOENIX_GRADIENT = ['#0B2535', '#123B52', '#22D3EE', '#123B52', '#0B2535', '#0E2A4A', '#3B82F6', '#0E2A4A', '#0B2535', '#0B2535'];
 
 export default function ClinicTypes() {
@@ -41,15 +40,18 @@ export default function ClinicTypes() {
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-5">
+        <div className="grid sm:grid-cols-2 gap-5 items-stretch">
           {CLINIC_TYPES.map((clinic) => {
             const Icon = ICONS[clinic.id];
             const isAvailable = clinic.status === 'Available Now';
             const extendedDescription =
               'extendedDescription' in clinic ? clinic.extendedDescription : undefined;
+            const disclosureDescription = [extendedDescription, clinic.details.join(' · ')]
+              .filter(Boolean)
+              .join(' ');
 
             return (
-              <div key={clinic.id} data-clinic-card className={cn(!isAvailable && 'cursor-default')}>
+              <div key={clinic.id} data-clinic-card className={cn('h-full', !isAvailable && 'cursor-default')}>
                 <GlowBorderCard
                   width="100%"
                   aspectRatio="auto"
@@ -62,13 +64,13 @@ export default function ClinicTypes() {
                   animationDuration={12}
                   paused={reducedMotion || !isAvailable}
                   className={cn(
-                    'border-0 min-h-[220px] !place-content-stretch !place-items-stretch transition-colors duration-200',
+                    'border-0 h-full min-h-[220px] !place-content-stretch !place-items-stretch transition-colors duration-200',
                     isAvailable
                       ? 'bg-[var(--phx-panel)]/90 ring-1 ring-[#22D3EE]/30'
                       : 'phx-panel opacity-75',
                   )}
                 >
-                  <div className="p-6 w-full text-left">
+                  <div className="p-6 w-full h-full flex flex-col text-left">
                     <div className="flex items-start justify-between gap-4 mb-4">
                       <div
                         className={cn(
@@ -96,28 +98,25 @@ export default function ClinicTypes() {
                     </div>
 
                     <h3 className="text-lg font-semibold text-[#F8FAFC] mb-2">{clinic.title}</h3>
-                    <p className="text-sm text-[#94A3B8] leading-relaxed mb-3">
+                    <p className="text-sm text-[#94A3B8] leading-relaxed mb-4 flex-1">
                       {clinic.description}
                     </p>
-                    {extendedDescription && (
-                      <p className="text-sm text-[#94A3B8]/90 leading-relaxed mb-4">
-                        {extendedDescription}
-                      </p>
-                    )}
 
-                    {isAvailable && clinic.details.length > 0 ? (
-                      <MoriphingDisclosure
-                        id={`clinic-${clinic.id}`}
-                        title="View capabilities"
-                        description={clinic.details.join(' · ')}
-                        className="rounded-md border-[#22D3EE]/20 bg-[var(--phx-bg-alt)]/50 text-[#94A3B8] max-w-none cursor-pointer phx-focus-ring"
-                        icon={<ArrowRight size={14} className="text-[#22D3EE]" />}
-                      />
-                    ) : (
-                      <span className="inline-flex text-[10px] font-mono uppercase tracking-wider text-[#64748B] px-2.5 py-1 rounded-full border border-white/10 bg-white/5">
-                        Coming soon
-                      </span>
-                    )}
+                    <div className="mt-auto">
+                      {isAvailable && clinic.details.length > 0 ? (
+                        <MoriphingDisclosure
+                          id={`clinic-${clinic.id}`}
+                          title="View capabilities"
+                          description={disclosureDescription}
+                          className="rounded-md border-[#22D3EE]/20 bg-[var(--phx-bg-alt)]/50 text-[#94A3B8] max-w-none cursor-pointer phx-focus-ring"
+                          icon={<ArrowRight size={14} className="text-[#22D3EE]" />}
+                        />
+                      ) : (
+                        <span className="inline-flex text-[10px] font-mono uppercase tracking-wider text-[#64748B] px-2.5 py-1 rounded-full border border-white/10 bg-white/5">
+                          Coming soon
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </GlowBorderCard>
               </div>

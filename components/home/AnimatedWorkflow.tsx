@@ -1,33 +1,49 @@
 'use client';
 
-import { animate, stagger, svg } from 'animejs';
+import { animate, svg } from 'animejs';
 import { useRef } from 'react';
 import { WORKFLOW_STEPS } from '@/lib/home-data';
 import { useScrollReveal } from '@/lib/hooks/useScrollReveal';
+import { useScrollStaggerReveal } from '@/lib/hooks/useScrollStaggerReveal';
 import { cn } from '@/lib/utils';
 import { LightLines } from '@/components/ui/light-lines';
+
+const WORKFLOW_CARD_HOVER =
+  'cursor-default transition-colors duration-200 hover:border-[#22D3EE]/45 hover:bg-[color-mix(in_srgb,var(--phx-panel)_88%,var(--phx-cyan))] hover:shadow-[0_8px_32px_rgba(34,211,238,0.12)]';
 
 export default function AnimatedWorkflow() {
   const sectionRef = useRef<HTMLElement>(null);
   const pathRef = useRef<SVGPathElement>(null);
+  const pathAnimatedRef = useRef(false);
 
   useScrollReveal(sectionRef, {
-    selector: '[data-workflow-fade], [data-workflow-node]',
+    selector: '[data-workflow-fade]',
     staggerMs: 70,
-    onReveal: () => {
-      const path = pathRef.current;
-      if (!path) return;
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        path.style.strokeDashoffset = '0';
-        return;
-      }
-      const drawable = svg.createDrawable(path);
-      animate(drawable, {
-        draw: ['0 0', '0 1'],
-        duration: 1800,
-        delay: 250,
-        ease: 'inOut(3)',
-      });
+  });
+
+  const drawPath = () => {
+    const path = pathRef.current;
+    if (!path || pathAnimatedRef.current) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      path.style.strokeDashoffset = '0';
+      pathAnimatedRef.current = true;
+      return;
+    }
+    pathAnimatedRef.current = true;
+    const drawable = svg.createDrawable(path);
+    animate(drawable, {
+      draw: ['0 0', '0 1'],
+      duration: 1800,
+      delay: 250,
+      ease: 'inOut(3)',
+    });
+  };
+
+  useScrollStaggerReveal(sectionRef, {
+    selector: '[data-stagger-item]',
+    staggerMs: 60,
+    onActiveCountChange: (count) => {
+      if (count > 0) drawPath();
     },
   });
 
@@ -87,8 +103,8 @@ export default function AnimatedWorkflow() {
             {WORKFLOW_STEPS.map((step, i) => (
               <div
                 key={step.id}
-                data-workflow-node
-                className="phx-card p-4 cursor-default transition-colors duration-200 hover:border-[#22D3EE]/40 hover:shadow-[0_8px_32px_rgba(34,211,238,0.12)]"
+                data-stagger-item
+                className={cn('phx-card p-4', WORKFLOW_CARD_HOVER)}
               >
                 <div className="w-8 h-8 rounded-lg bg-[#22D3EE]/10 border border-[#22D3EE]/20 flex items-center justify-center text-xs font-mono text-[#22D3EE] mb-3">
                   {String(i + 1).padStart(2, '0')}
@@ -107,9 +123,10 @@ export default function AnimatedWorkflow() {
             {WORKFLOW_STEPS.map((step, i) => (
               <div
                 key={step.id}
-                data-workflow-node
+                data-stagger-item
                 className={cn(
-                  'phx-card p-4 relative cursor-default transition-colors duration-200 hover:border-[#22D3EE]/40 hover:shadow-[0_8px_32px_rgba(34,211,238,0.12)]',
+                  'phx-card p-4 relative',
+                  WORKFLOW_CARD_HOVER,
                   i === 0 && 'border-[#22D3EE]/30',
                 )}
               >

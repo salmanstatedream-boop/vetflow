@@ -811,7 +811,7 @@ html.screenshotting .sticky-showcase-container {
   --phx-blue: #3b82f6;
   --phx-violet: #8b5cf6;
   --phx-purple: #a855f7;
-  --phx-nav-height: 4.5rem;
+  --phx-nav-height: 3.5rem;
   background-color: var(--phx-bg);
   color: var(--phx-text);
 }
@@ -956,6 +956,16 @@ html.screenshotting .sticky-showcase-container {
 
 .phx-page .logo-slider__container[data-pause-on-hover='true']:hover .logo-slider__track {
   animation-play-state: paused;
+}
+
+.phx-page .logo-slider__container[data-variant='chip'] .logo-slider__track {
+  align-items: center;
+}
+
+.phx-page .logo-slider__container[data-variant='chip'] .logo-slider__item {
+  width: auto;
+  height: auto;
+  aspect-ratio: auto;
 }
 
 @keyframes phx-logo-slide {
@@ -1235,6 +1245,12 @@ html.screenshotting .sticky-showcase-container {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+.phx-page .phx-header-wordmark {
+  display: block;
+  transform: translateY(22%);
+  line-height: 0.85;
 }
 
 .phx-orbit-spin {

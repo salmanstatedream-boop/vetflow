@@ -27,6 +27,8 @@ export interface LogoSliderProps {
     className?: string;
     /** Whether to pause animation on hover. Default: false */
     pauseOnHover?: boolean;
+    /** Item layout: fixed logo slots vs auto-width chips */
+    variant?: "logo" | "chip";
 }
 
 /**
@@ -46,7 +48,10 @@ export const LogoSlider = ({
     blurIntensity = 1,
     className,
     pauseOnHover = false,
+    variant = "logo",
 }: LogoSliderProps) => {
+    const isChip = variant === "chip";
+
     return (
         <div
             className={cn(
@@ -65,10 +70,12 @@ export const LogoSlider = ({
             <div
                 className={cn(
                     "logo-slider__container",
-                    "relative w-full min-h-[80px] grid"
+                    "relative w-full grid",
+                    isChip ? "min-h-[52px]" : "min-h-[80px]",
                 )}
                 data-direction={direction}
                 data-pause-on-hover={pauseOnHover}
+                data-variant={variant}
             >
                 {/* Progressive Blur Overlay - Left */}
                 {showBlur && (
@@ -97,14 +104,30 @@ export const LogoSlider = ({
                 )}
 
                 {/* Logo Track */}
-                <ul className="logo-slider__track flex items-center h-full w-fit m-0 p-0 list-none">
+                <ul
+                    className={cn(
+                        "logo-slider__track flex items-center h-full w-fit m-0 p-0 list-none",
+                        isChip && "gap-3 sm:gap-4",
+                    )}
+                >
                     {logos.map((logo, index) => (
                         <li
                             key={index}
-                            className="logo-slider__item h-4/5 w-[120px] sm:w-[140px] lg:w-[160px] aspect-video grid place-items-center shrink-0"
+                            className={cn(
+                                "logo-slider__item shrink-0",
+                                isChip
+                                    ? "w-auto h-auto"
+                                    : "h-4/5 w-[120px] sm:w-[140px] lg:w-[160px] aspect-video grid place-items-center",
+                            )}
                             style={{ "--item-index": index } as React.CSSProperties}
                         >
-                            <div className="w-full h-full flex items-center justify-center [&>svg]:h-[65%] [&>svg]:w-auto [&>svg]:fill-zinc-800 dark:[&>svg]:fill-zinc-200 [&>img]:h-[65%] [&>img]:w-auto [&>img]:object-contain [&>img]:grayscale [&>img]:brightness-50 dark:[&>img]:brightness-125">
+                            <div
+                                className={cn(
+                                    isChip
+                                        ? "flex items-center"
+                                        : "w-full h-full flex items-center justify-center [&>svg]:h-[65%] [&>svg]:w-auto [&>svg]:fill-zinc-800 dark:[&>svg]:fill-zinc-200 [&>img]:h-[65%] [&>img]:w-auto [&>img]:object-contain [&>img]:grayscale [&>img]:brightness-50 dark:[&>img]:brightness-125",
+                                )}
+                            >
                                 {logo}
                             </div>
                         </li>

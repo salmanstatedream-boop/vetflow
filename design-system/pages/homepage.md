@@ -9,6 +9,7 @@ Alternate transparent and `phx-section-alt` bands. Use `phx-section-divider` at 
 | Section | Background | Divider |
 |---------|------------|---------|
 | Hero | transparent | — |
+| Early Access | `#05070f` band | yes |
 | Stats | `#05070f` band | — |
 | OS Demo | alt | yes |
 | TrustedBy | transparent | — |
@@ -23,11 +24,11 @@ Alternate transparent and `phx-section-alt` bands. Use `phx-section-divider` at 
 
 ## Navbar
 
-Floating pill: `top-4 inset-x-4 lg:inset-x-8 max-w-5xl mx-auto rounded-2xl`. Glass backdrop when scrolled.
+Full-width header with footer-style `phx-header-wordmark` clipped at top. Menu button opens slide-over drawer (all breakpoints).
 
 ## Hero
 
-Second headline line accent: `phx-gradient-text` on "vet practices".
+Centered landscape text band; no orbit graphic. Second headline line accent: `phx-gradient-text` on "vet practices".
 
 ## Stats
 

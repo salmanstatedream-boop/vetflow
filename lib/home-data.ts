@@ -32,6 +32,15 @@ export const HERO = {
     'Vet clinics live today. Dental, general, and specialty care on the roadmap.',
 } as const;
 
+export const EARLY_ACCESS = {
+  eyebrow: 'EARLY ACCESS',
+  headline: 'Be among the first vet clinics on Phoenix OS.',
+  subtext:
+    'We are onboarding a limited group of veterinary practices. Request access to join the early cohort and shape the platform with us.',
+  cta: 'Request Early Access',
+  note: 'No credit card · Onboarding support included',
+} as const;
+
 export const OS_DEMO = {
   heading: 'Your whole team, one live workspace.',
   subheadline:
@@ -133,7 +142,7 @@ export const CLINIC_TYPES = [
     title: 'Vet Clinic',
     status: 'Available Now' as const,
     description:
-      'Phoenix OS is purpose-built for veterinary practices — from the first walk-in to the final discharge sheet. Manage pet owners and their animals, species and breed profiles, vaccination schedules, and full medical histories in one place.',
+      'Purpose-built for veterinary practices — live today with reception, clinical workflows, and billing in one workspace.',
     extendedDescription:
       'Vets get a dedicated SOAP workspace, lab order tracking, prescription-to-inventory sync, and branded PDF outputs. Every role — reception, doctor, practice manager, and owner — sees a dashboard tailored to their day.',
     details: [

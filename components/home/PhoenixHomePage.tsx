@@ -1,5 +1,6 @@
 import PhoenixNavbar from './PhoenixNavbar';
 import PhoenixHero from './PhoenixHero';
+import EarlyAccessSection from './EarlyAccessSection';
 import StatsStrip from './StatsStrip';
 import AnimatedOSDemo from './AnimatedOSDemo';
 import TrustedByStrip from './TrustedByStrip';
@@ -21,6 +22,7 @@ export default function PhoenixHomePage() {
         <PhoenixNavbar />
         <main>
           <PhoenixHero />
+          <EarlyAccessSection />
           <StatsStrip />
           <AnimatedOSDemo />
           <TrustedByStrip />

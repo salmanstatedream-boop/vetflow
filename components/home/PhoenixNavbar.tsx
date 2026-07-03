@@ -2,29 +2,37 @@
 
 import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { LineHoverLink } from '@/components/ui/line-hover-link';
-import { SpotlightNavbar } from '@/components/ui/spotlight-navbar';
 import { NAV_LINKS } from '@/lib/home-data';
 import { usePrefersReducedMotion } from '@/lib/hooks/usePrefersReducedMotion';
 import { cn } from '@/lib/utils';
-import PhoenixLogoMark from './PhoenixLogoMark';
 import { useLenis } from './SmoothScrollProvider';
 
-const SCROLL_OFFSET = -96;
+const SCROLL_OFFSET = -80;
 
 export default function PhoenixNavbar() {
-  const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const reducedMotion = usePrefersReducedMotion();
   const lenis = useLenis();
+  const menuId = useId();
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+    if (!open) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [open]);
 
   const scrollToSection = (href: string) => {
     const el = document.querySelector<HTMLElement>(href);
@@ -39,100 +47,120 @@ export default function PhoenixNavbar() {
   };
 
   return (
-    <header className="fixed inset-x-4 lg:inset-x-8 top-4 z-50 max-w-5xl mx-auto">
-      <div
-        className={cn(
-          'rounded-2xl border transition-all duration-200 overflow-hidden',
-          scrolled || open
-            ? 'bg-[#03040A]/85 backdrop-blur-xl border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)]'
-            : 'bg-[#03040A]/40 backdrop-blur-md border-white/5',
-        )}
-      >
-        <div className="flex h-[var(--phx-nav-height)] items-center justify-between gap-4 px-4 sm:px-5">
+    <>
+      <header className="fixed inset-x-0 top-0 z-50 h-[var(--phx-nav-height)] overflow-hidden border-b border-white/5 bg-[#03040A]/80 backdrop-blur-md">
+        <div className="relative h-full phx-container flex items-end justify-between pb-1">
           <Link
             href="/"
-            className="flex items-center gap-3 cursor-pointer group shrink-0 phx-focus-ring rounded-xl"
+            className="relative z-10 flex-1 min-w-0 overflow-hidden h-full flex items-end phx-focus-ring rounded-sm"
+            aria-label="Phoenix OS home"
           >
-            <PhoenixLogoMark />
-            <div className="leading-tight">
-              <div className="font-semibold text-[#F8FAFC] group-hover:text-[#22D3EE] transition-colors duration-200">
-                Phoenix OS
-              </div>
-              <div className="text-[11px] text-[#64748B] hidden sm:block">Clinic Operating System</div>
-            </div>
+            <span className="phx-footer-wordmark phx-header-wordmark text-[clamp(2.5rem,11vw,7rem)] font-bold leading-none tracking-tighter whitespace-nowrap pointer-events-none select-none">
+              Phoenix OS
+            </span>
           </Link>
-
-          <div className="hidden lg:flex flex-1 justify-center">
-            <SpotlightNavbar
-              className="!pt-0"
-              items={NAV_LINKS.map((link) => ({ label: link.label, href: link.href }))}
-              onItemClick={(item) => scrollToSection(item.href)}
-            />
-          </div>
-
-          <div className="hidden md:flex items-center gap-3 shrink-0">
-            <Link
-              href="/login"
-              className="phx-btn-ghost text-sm px-4 py-2 phx-focus-ring transition-colors duration-200"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/request-access"
-              className="phx-btn-primary text-sm px-4 py-2 phx-focus-ring transition-colors duration-200"
-            >
-              Request Access
-            </Link>
-          </div>
 
           <button
             type="button"
-            className="lg:hidden p-2 text-[#F8FAFC] cursor-pointer phx-focus-ring rounded-lg transition-colors duration-200 hover:text-[#22D3EE]"
-            onClick={() => setOpen((v) => !v)}
+            className={cn(
+              'relative z-20 shrink-0 flex items-center justify-center w-11 h-11 rounded-xl border border-white/10',
+              'bg-[var(--phx-panel)]/80 text-[#F8FAFC] cursor-pointer phx-focus-ring',
+              'transition-colors duration-200 hover:border-[#22D3EE]/30 hover:text-[#22D3EE]',
+            )}
+            onClick={() => setOpen((value) => !value)}
             aria-label={open ? 'Close menu' : 'Open menu'}
             aria-expanded={open}
+            aria-controls={menuId}
           >
-            {open ? <X size={22} /> : <Menu size={22} />}
+            {open ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
+      </header>
 
-        {open && (
-          <div className="lg:hidden border-t border-white/10">
-            <div className="px-4 sm:px-5 py-4 flex flex-col gap-3">
+      {open && (
+        <div className="fixed inset-0 z-[60]">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-pointer"
+            aria-label="Close menu"
+            onClick={() => setOpen(false)}
+          />
+
+          <aside
+            id={menuId}
+            className={cn(
+              'absolute inset-y-0 right-0 w-full max-w-sm',
+              'bg-[#03040A]/95 backdrop-blur-xl border-l border-white/10 shadow-[-8px_0_40px_rgba(0,0,0,0.45)]',
+              'flex flex-col',
+            )}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Site navigation"
+          >
+            <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
+              <div>
+                <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-[#64748B]">
+                  Navigation
+                </p>
+                <p className="text-sm font-semibold text-[#F8FAFC] mt-1">Phoenix OS</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-center w-10 h-10 rounded-lg border border-white/10 text-[#94A3B8] hover:text-[#F8FAFC] hover:border-[#22D3EE]/30 transition-colors duration-200 cursor-pointer phx-focus-ring"
+                aria-label="Close menu"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <nav className="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-1">
               {NAV_LINKS.map((link) => (
                 <LineHoverLink
                   key={link.href}
                   href={link.href}
                   variant="slide"
-                  className="text-sm text-[#94A3B8] hover:text-[#F8FAFC] py-2 phx-focus-ring rounded-md transition-colors duration-200"
-                  onClick={(e) => {
-                    e.preventDefault();
+                  className="text-base text-[#94A3B8] hover:text-[#F8FAFC] py-3 phx-focus-ring rounded-md transition-colors duration-200"
+                  onClick={(event) => {
+                    event.preventDefault();
                     scrollToSection(link.href);
                   }}
                 >
                   {link.label}
                 </LineHoverLink>
               ))}
-              <div className="flex flex-col gap-2 pt-2 border-t border-white/10">
-                <Link
-                  href="/login"
-                  className="phx-btn-ghost text-sm phx-focus-ring transition-colors duration-200"
-                  onClick={() => setOpen(false)}
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/request-access"
-                  className="phx-btn-primary text-sm phx-focus-ring transition-colors duration-200"
-                  onClick={() => setOpen(false)}
-                >
-                  Request Access
-                </Link>
-              </div>
+              <LineHoverLink
+                href="#early-access"
+                variant="slide"
+                className="text-base text-[#94A3B8] hover:text-[#F8FAFC] py-3 phx-focus-ring rounded-md transition-colors duration-200"
+                onClick={(event) => {
+                  event.preventDefault();
+                  scrollToSection('#early-access');
+                }}
+              >
+                Early Access
+              </LineHoverLink>
+            </nav>
+
+            <div className="px-6 py-6 border-t border-white/10 flex flex-col gap-3">
+              <Link
+                href="/login"
+                className="phx-btn-ghost text-sm w-full justify-center phx-focus-ring transition-colors duration-200"
+                onClick={() => setOpen(false)}
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/request-access"
+                className="phx-btn-primary text-sm w-full justify-center phx-focus-ring transition-colors duration-200"
+                onClick={() => setOpen(false)}
+              >
+                Request Access
+              </Link>
             </div>
-          </div>
-        )}
-      </div>
-    </header>
+          </aside>
+        </div>
+      )}
+    </>
   );
 }

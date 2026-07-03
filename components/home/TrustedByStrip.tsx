@@ -13,7 +13,7 @@ export default function TrustedByStrip() {
   const marks = TRUSTED_MODULES.map((module) => {
     const Icon = module.icon;
     return (
-      <div key={module.id} className="phx-chip mx-1 text-[#94A3B8]">
+      <div key={module.id} className="phx-chip text-[#94A3B8] cursor-default">
         <span className="w-8 h-8 rounded-lg bg-[#22D3EE]/8 border border-[#22D3EE]/15 flex items-center justify-center shrink-0">
           <Icon size={16} className="text-[#22D3EE]" />
         </span>
@@ -30,7 +30,13 @@ export default function TrustedByStrip() {
         </p>
       </div>
       <div data-trusted-fade className="phx-marquee-fade">
-        <LogoSlider logos={[...marks, ...marks]} speed={36} showBlur={false} />
+        <LogoSlider
+          logos={[...marks, ...marks]}
+          speed={36}
+          showBlur={false}
+          pauseOnHover
+          variant="chip"
+        />
       </div>
     </section>
   );
