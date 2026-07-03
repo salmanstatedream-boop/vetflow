@@ -4,14 +4,14 @@ import {
   Building2,
   CalendarCheck,
   ClipboardList,
+  Clock,
   FileText,
-  FlaskConical,
   LayoutDashboard,
   Package,
-  Pill,
   Receipt,
   Shield,
   Stethoscope,
+  TrendingUp,
   Users,
 } from 'lucide-react';
 
@@ -25,29 +25,29 @@ export const NAV_LINKS = [
 
 export const HERO = {
   eyebrow: 'PHOENIX OS',
-  headline: ['One operating system.', 'Every clinic workflow.'],
+  headline: ['One operating system.', 'Built for vet practices.'],
   subheadline:
-    'Phoenix OS connects appointments, walk-ins, consultations, inventory, invoices, documents, and audit-ready workflows inside one intelligent clinic workspace.',
+    'Run your entire veterinary clinic from one screen — less admin, calmer mornings, and a team that always knows what happens next.',
   microcopy:
-    'Starting with veterinary clinics. Built to scale across dental, general, and specialty care.',
+    'Vet clinics live today. Dental, general, and specialty care on the roadmap.',
 } as const;
 
 export const OS_DEMO = {
-  heading: 'The clinic OS that moves with your team.',
+  heading: 'Your whole team, one live workspace.',
   subheadline:
-    'Every front-desk action, doctor workflow, invoice, record, and inventory update stays connected in one real-time system.',
+    'When reception updates the queue, the vet sees it instantly. When treatment finishes, billing is already half done. No chasing, no duplicate entry.',
   bullets: [
-    'Real-time queue and consultation sync',
-    'Connected records, inventory, and billing',
-    'Audit-ready actions across every step',
+    'Everyone sees the same live patient status',
+    'Handoffs happen in seconds, not sticky notes',
+    'Owners get visibility without micromanaging',
   ],
   steps: [
-  { id: 'appointment', label: 'Appointment created', detail: 'Walk-in added to live queue' },
-  { id: 'record', label: 'Patient record opened', detail: 'History and vitals in one view' },
-  { id: 'consultation', label: 'Consultation started', detail: 'SOAP notes and diagnosis workspace' },
-  { id: 'prescription', label: 'Prescription added', detail: 'Treatment plan linked to inventory' },
-  { id: 'inventory', label: 'Inventory updated', detail: 'Stock movement recorded automatically' },
-  { id: 'invoice', label: 'Invoice generated', detail: 'Branded PDF ready for payment' },
+    { id: 'appointment', label: 'Created', detail: 'Added to live queue' },
+    { id: 'record', label: 'Opened', detail: 'History in one view' },
+    { id: 'consultation', label: 'Started', detail: 'Notes workspace ready' },
+    { id: 'prescription', label: 'Added', detail: 'Treatment linked' },
+    { id: 'inventory', label: 'Updated', detail: 'Stock recorded' },
+    { id: 'invoice', label: 'Generated', detail: 'PDF ready' },
   ],
 } as const;
 
@@ -73,56 +73,56 @@ export const FEATURES: FeatureItem[] = [
     id: 'queue',
     title: 'Live Clinic Queue',
     description:
-      'Track walk-ins, appointments, waiting patients, active consultations, and completed visits from one real-time view.',
+      'Stop juggling three notebooks at the front desk — see who is waiting, who is with the vet, and who is ready to leave in one glance.',
     icon: Activity,
   },
   {
     id: 'consultation',
     title: 'Smart Consultation Room',
     description:
-      'Give doctors a focused workspace for notes, diagnosis, treatment, prescriptions, labs, and patient history.',
+      'Give vets a calm, focused screen for SOAP notes and treatment decisions without hunting through scattered files.',
     icon: Stethoscope,
   },
   {
     id: 'inventory',
     title: 'Inventory Intelligence',
     description:
-      'Connect medicine, stock movement, low-stock alerts, usage, and invoices without manual confusion.',
+      'Know what is running low before a procedure starts — stock moves with prescriptions so counts stay honest.',
     icon: Package,
   },
   {
     id: 'billing',
     title: 'Billing & Invoices',
     description:
-      'Create clean invoices, service charges, taxes, branded PDFs, and payment-ready records.',
+      'Turn a finished visit into a branded invoice in minutes, with taxes and line items already filled in.',
     icon: Receipt,
   },
   {
     id: 'documents',
     title: 'Secure Documents',
     description:
-      'Store prescriptions, lab files, reports, clinic documents, and branded outputs securely.',
+      'Keep lab results, discharge sheets, and clinic paperwork in one protected place — searchable when you need them.',
     icon: FileText,
   },
   {
     id: 'dashboards',
     title: 'Role-Based Dashboards',
     description:
-      'Separate views for super admin, clinic admin, receptionist, doctor, and staff.',
+      'Reception sees the queue, vets see cases, owners see revenue — each role gets exactly what they need.',
     icon: LayoutDashboard,
   },
   {
     id: 'audit',
     title: 'Audit Logs',
     description:
-      'Track important system actions so clinic operations stay transparent and secure.',
+      'Answer "who changed this?" in seconds — every sensitive action is logged with user, role, and timestamp.',
     icon: ClipboardList,
   },
   {
     id: 'multi-clinic',
     title: 'Multi-Clinic Foundation',
     description:
-      'Built for one clinic today and many clinics tomorrow with scalable architecture.',
+      'Open a second branch without starting from scratch — each location stays separate with shared oversight.',
     icon: Building2,
   },
 ];
@@ -133,32 +133,40 @@ export const CLINIC_TYPES = [
     title: 'Vet Clinic',
     status: 'Available Now' as const,
     description:
-      'Built first for veterinary clinics with pet owners, pets, consultations, prescriptions, lab records, inventory, invoices, and audit-ready workflows.',
-    details: ['Pet records', 'Prescriptions', 'Lab files', 'Inventory sync'],
+      'Phoenix OS is purpose-built for veterinary practices — from the first walk-in to the final discharge sheet. Manage pet owners and their animals, species and breed profiles, vaccination schedules, and full medical histories in one place.',
+    extendedDescription:
+      'Vets get a dedicated SOAP workspace, lab order tracking, prescription-to-inventory sync, and branded PDF outputs. Every role — reception, doctor, practice manager, and owner — sees a dashboard tailored to their day.',
+    details: [
+      'Pet & owner profiles',
+      'SOAP & treatment plans',
+      'Vaccination reminders',
+      'Lab orders & results',
+      'Rx with stock deduction',
+      'Branded invoices & documents',
+      'Role-based dashboards',
+      'Full audit trail',
+    ],
   },
   {
     id: 'dental',
     title: 'Dental Clinic',
-    status: 'Roadmap' as const,
-    description:
-      'Designed for dental practices with patient records, appointment flows, treatment notes, billing, and secure documents.',
-    details: ['Treatment plans', 'Appointment flows', 'Secure billing'],
+    status: 'Under Development' as const,
+    description: 'Under development — launching on the Phoenix OS roadmap.',
+    details: [] as const,
   },
   {
     id: 'general',
     title: 'General Clinic',
-    status: 'Roadmap' as const,
-    description:
-      'A flexible clinic operating system for front desk intake, patient records, consultations, invoices, and secure documents.',
-    details: ['Flexible intake', 'Patient records', 'Consultation flows'],
+    status: 'Under Development' as const,
+    description: 'Under development — launching on the Phoenix OS roadmap.',
+    details: [] as const,
   },
   {
     id: 'specialty',
     title: 'Specialty Clinic',
-    status: 'Roadmap' as const,
-    description:
-      'Designed for specialty workflows with configurable processes, secure records, branded outputs, and audit logs.',
-    details: ['Configurable workflows', 'Branded outputs', 'Audit logs'],
+    status: 'Under Development' as const,
+    description: 'Under development — launching on the Phoenix OS roadmap.',
+    details: [] as const,
   },
 ] as const;
 
@@ -175,34 +183,34 @@ export const PRICING_TIERS = [
   {
     id: 'starter',
     name: 'Starter',
-    description: 'For small clinics starting with core workflows.',
-    highlights: ['Live queue', 'Consultations', 'Basic invoicing'],
+    description: 'For solo vets and small teams getting off paper and spreadsheets.',
+    highlights: ['Up to 3 staff', 'Core vet modules', 'Email support'],
     details: [
       'Up to 3 staff accounts',
-      'Walk-in and appointment queue',
       'Patient records and visit history',
+      'Branded invoice templates',
       'Email support',
     ],
   },
   {
     id: 'growth',
     name: 'Growth',
-    description: 'For clinics managing teams, inventory, billing, and reports.',
-    highlights: ['Inventory intelligence', 'Role dashboards', 'Audit logs'],
+    description: 'For growing practices with more staff, stock, and reporting needs.',
+    highlights: ['Unlimited staff', 'Priority support', 'Revenue reports'],
     featured: true,
     details: [
       'Unlimited staff with role permissions',
-      'Stock alerts linked to prescriptions',
-      'Branded invoices and documents',
+      'Stock alerts and usage tracking',
       'Revenue and activity reports',
+      'Branded documents',
       'Priority support',
     ],
   },
   {
     id: 'multi',
     name: 'Multi-Clinic',
-    description: 'For operators running multiple clinic locations.',
-    highlights: ['Multi-location', 'Central oversight', 'Scalable architecture'],
+    description: 'For operators running two or more clinic locations.',
+    highlights: ['Every branch covered', 'Central oversight', 'Dedicated onboarding'],
     details: [
       'Every Growth feature, every branch',
       'Cross-branch reporting and oversight',
@@ -246,26 +254,24 @@ export const FOOTER_COLUMNS = [
   },
 ] as const;
 
-export const CLINIC_TYPE_WORDS = ['Vet Clinic', 'Dental Clinic', 'General Clinic', 'Specialty Clinic'] as const;
+export const CLINIC_TYPE_WORDS = ['Vet Clinics', 'More clinic types soon'] as const;
 
 export const STATS = [
   { id: 'modules', value: 12, suffix: '+', label: 'Modules unified in one OS' },
-  { id: 'steps', value: 7, suffix: '', label: 'Workflow steps automated' },
+  { id: 'sync', value: 100, suffix: '%', label: 'Real-time sync across roles' },
   { id: 'audit', value: 100, suffix: '%', label: 'Actions audit-covered' },
-  { id: 'types', value: 4, suffix: '', label: 'Clinic types supported' },
+  { id: 'types', value: 1, suffix: '', label: 'Vet clinics live today' },
 ] as const;
 
 export const TRUSTED_MODULES: { id: string; label: string; icon: LucideIcon }[] = [
-  { id: 'appointments', label: 'Appointments', icon: CalendarCheck },
-  { id: 'consultations', label: 'Consultations', icon: Stethoscope },
-  { id: 'prescriptions', label: 'Prescriptions', icon: Pill },
-  { id: 'labs', label: 'Lab Orders', icon: FlaskConical },
-  { id: 'inventory', label: 'Inventory', icon: Package },
-  { id: 'invoicing', label: 'Invoicing', icon: Receipt },
-  { id: 'records', label: 'Records', icon: FileText },
-  { id: 'audit', label: 'Audit Logs', icon: ClipboardList },
-  { id: 'branches', label: 'Multi-Branch', icon: Building2 },
-  { id: 'reports', label: 'Reports', icon: Activity },
+  { id: 'desk', label: 'Front Desk', icon: CalendarCheck },
+  { id: 'vet', label: 'Veterinarian', icon: Stethoscope },
+  { id: 'manager', label: 'Practice Manager', icon: LayoutDashboard },
+  { id: 'owner', label: 'Clinic Owner', icon: Building2 },
+  { id: 'noshows', label: 'Fewer no-shows', icon: Clock },
+  { id: 'checkout', label: 'Faster checkout', icon: TrendingUp },
+  { id: 'visibility', label: 'Owner visibility', icon: Activity },
+  { id: 'onboarding', label: 'Quick onboarding', icon: Users },
 ];
 
 export const TESTIMONIALS = [
@@ -273,25 +279,25 @@ export const TESTIMONIALS = [
     id: 'reception',
     title: 'Front Desk Lead',
     description:
-      '"The live queue changed our mornings completely. Walk-ins, appointments, and doctor handoffs finally live in one screen instead of three notebooks."',
+      '"Our mornings used to be chaos. Now I know exactly who is waiting, who the vet is seeing, and who is ready to pay — without shouting down the hallway."',
   },
   {
     id: 'vet',
     title: 'Lead Veterinarian',
     description:
-      '"Consultation notes, prescriptions, and lab orders flow straight into the invoice. I finish records before the pet leaves the room."',
+      '"I used to stay late finishing paperwork. Now my notes are done before the pet leaves — I actually get home on time."',
   },
   {
     id: 'owner',
     title: 'Clinic Owner',
     description:
-      '"Inventory intelligence and audit logs gave me oversight I never had. I can see every branch, every action, every day."',
+      '"For the first time I can see what is happening across the practice without standing over everyone\'s shoulder. That peace of mind is worth everything."',
   },
   {
     id: 'manager',
     title: 'Practice Manager',
     description:
-      '"Onboarding the team took a single afternoon. Roles, permissions, and branded documents worked out of the box."',
+      '"We onboarded the whole team in one afternoon. Nobody needed a manual — they just logged in and started working."',
   },
 ] as const;
 
@@ -299,7 +305,7 @@ export const FAQS = [
   {
     question: 'How secure is our clinic and patient data?',
     answer:
-      'Phoenix OS is built on role-based access control, multi-tenant clinic separation, encrypted records, and complete audit logs. Every action in the system is traceable to a user, a role, and a timestamp.',
+      'Role-based access, encrypted records, multi-tenant separation, and a complete audit trail. Every sensitive action is traceable to a user, role, and timestamp.',
   },
   {
     question: 'Can we migrate from our existing system or paper records?',
@@ -314,12 +320,12 @@ export const FAQS = [
   {
     question: 'How does pricing work?',
     answer:
-      'Plans scale with your clinic: Starter covers core workflows for small teams, Growth adds inventory intelligence and role dashboards, and Multi-Clinic unlocks multi-location oversight. Every tier includes secure, audit-ready workflows.',
+      'Starter fits solo vets and small teams. Growth adds unlimited staff, reporting, and priority support. Multi-Clinic is for operators with two or more branches. Request access and we will recommend the right tier.',
   },
   {
     question: 'We are not a vet clinic — can we still use Phoenix OS?',
     answer:
-      'Veterinary clinics are fully supported today. Dental, general, and specialty clinic workflows are on the roadmap, built on the same operating core — request access and we will notify you when your clinic type goes live.',
+      'Veterinary clinics are fully supported today. Dental, general, and specialty clinic types are under development on the same operating core — request access and we will notify you when yours goes live.',
   },
 ] as const;
 
@@ -390,7 +396,8 @@ export const PHOENIX_NODES = [
   {
     id: 'vet',
     label: 'Vet Clinic',
-    detail: 'Pet records, prescriptions, and inventory in one flow.',
+    detail:
+      'Full vet practice OS — pet profiles, SOAP notes, lab orders, Rx-to-stock sync, branded documents, and role dashboards. Available now.',
     x: 290,
     y: 78,
     color: '#22D3EE',
@@ -400,7 +407,7 @@ export const PHOENIX_NODES = [
   {
     id: 'dental',
     label: 'Dental Clinic',
-    detail: 'Treatment notes, appointments, and secure billing.',
+    detail: 'Under development',
     x: 290,
     y: 322,
     color: '#3B82F6',
@@ -410,7 +417,7 @@ export const PHOENIX_NODES = [
   {
     id: 'general',
     label: 'General Clinic',
-    detail: 'Flexible intake, records, and consultation workflows.',
+    detail: 'Under development',
     x: 110,
     y: 322,
     color: '#8B5CF6',
@@ -420,7 +427,7 @@ export const PHOENIX_NODES = [
   {
     id: 'specialty',
     label: 'Specialty Clinic',
-    detail: 'Configurable processes with audit-ready records.',
+    detail: 'Under development',
     x: 110,
     y: 78,
     color: '#A855F7',

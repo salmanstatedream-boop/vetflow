@@ -43,6 +43,8 @@ export default function ClinicTypes() {
           {CLINIC_TYPES.map((clinic) => {
             const Icon = ICONS[clinic.id];
             const isAvailable = clinic.status === 'Available Now';
+            const extendedDescription =
+              'extendedDescription' in clinic ? clinic.extendedDescription : undefined;
 
             return (
               <div key={clinic.id} data-clinic-card>
@@ -56,20 +58,33 @@ export default function ClinicTypes() {
                   blurAmount="0.55em"
                   inset="-0.3em"
                   animationDuration={12}
-                  paused={reducedMotion}
-                  className="bg-[#0B1020]/80 border-0 min-h-[220px] !place-content-stretch !place-items-stretch"
+                  paused={reducedMotion || !isAvailable}
+                  className={cn(
+                    'bg-[#0B1020]/80 border-0 min-h-[220px] !place-content-stretch !place-items-stretch',
+                    !isAvailable && 'opacity-75',
+                  )}
                 >
                   <div className="p-6 w-full text-left">
                     <div className="flex items-start justify-between gap-4 mb-4">
-                      <div className="w-11 h-11 rounded-xl bg-[#22D3EE]/10 border border-[#22D3EE]/20 flex items-center justify-center">
-                        <Icon size={22} className="text-[#22D3EE]" />
+                      <div
+                        className={cn(
+                          'w-11 h-11 rounded-xl flex items-center justify-center',
+                          isAvailable
+                            ? 'bg-[#22D3EE]/10 border border-[#22D3EE]/20'
+                            : 'bg-white/5 border border-white/10',
+                        )}
+                      >
+                        <Icon
+                          size={22}
+                          className={isAvailable ? 'text-[#22D3EE]' : 'text-[#64748B]'}
+                        />
                       </div>
                       <span
                         className={cn(
                           'text-[10px] font-mono uppercase tracking-wider px-2.5 py-1 rounded-full border',
                           isAvailable
                             ? 'text-[#22D3EE] border-[#22D3EE]/30 bg-[#22D3EE]/10'
-                            : 'text-[#8B5CF6] border-[#8B5CF6]/30 bg-[#8B5CF6]/10',
+                            : 'text-[#64748B] border-white/15 bg-white/5',
                         )}
                       >
                         {clinic.status}
@@ -77,17 +92,28 @@ export default function ClinicTypes() {
                     </div>
 
                     <h3 className="text-lg font-semibold text-[#F8FAFC] mb-2">{clinic.title}</h3>
-                    <p className="text-sm text-[#94A3B8] leading-relaxed mb-4">
+                    <p className="text-sm text-[#94A3B8] leading-relaxed mb-3">
                       {clinic.description}
                     </p>
+                    {extendedDescription && (
+                      <p className="text-sm text-[#94A3B8]/90 leading-relaxed mb-4">
+                        {extendedDescription}
+                      </p>
+                    )}
 
-                    <MoriphingDisclosure
-                      id={`clinic-${clinic.id}`}
-                      title="View capabilities"
-                      description={clinic.details.join(' · ')}
-                      className="rounded-md border-[#22D3EE]/20 bg-[#070A12]/50 text-[#94A3B8] max-w-none"
-                      icon={<ArrowRight size={14} className="text-[#22D3EE]" />}
-                    />
+                    {isAvailable && clinic.details.length > 0 ? (
+                      <MoriphingDisclosure
+                        id={`clinic-${clinic.id}`}
+                        title="View capabilities"
+                        description={clinic.details.join(' · ')}
+                        className="rounded-md border-[#22D3EE]/20 bg-[#070A12]/50 text-[#94A3B8] max-w-none"
+                        icon={<ArrowRight size={14} className="text-[#22D3EE]" />}
+                      />
+                    ) : (
+                      <span className="inline-flex text-[10px] font-mono uppercase tracking-wider text-[#64748B] px-2.5 py-1 rounded-full border border-white/10 bg-white/5">
+                        Coming soon
+                      </span>
+                    )}
                   </div>
                 </GlowBorderCard>
               </div>

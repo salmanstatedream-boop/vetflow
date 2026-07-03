@@ -44,8 +44,8 @@ export default function PhoenixFooter() {
           </Link>
 
           <p className="text-[#64748B] text-sm leading-relaxed max-w-md mt-3">
-            Starting with veterinary clinics and scaling to dental, general, and specialty practices —
-            one intelligent OS for queue, records, billing, and audit-ready workflows.
+            Vet clinics live today. Dental, general, and specialty care on the roadmap — one
+            operating system built to grow with your practice.
           </p>
         </div>
 

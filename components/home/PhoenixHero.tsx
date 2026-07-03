@@ -100,7 +100,7 @@ export default function PhoenixHero() {
                   interval={2600}
                   fontSize="0.875rem"
                   fontFamily="inherit"
-                  minWidth="17ch"
+                  minWidth="20ch"
                   className="!flex-row items-center"
                   textClassName="font-mono uppercase tracking-wider text-[#22D3EE] !font-semibold"
                 />

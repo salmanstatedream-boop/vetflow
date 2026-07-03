@@ -317,7 +317,10 @@ export default function AnimatedPhoenixGrid() {
                 type="button"
                 data-phx-node
                 className={cn(
-                  'absolute z-30 flex flex-col items-center gap-1.5 cursor-pointer',
+                  'absolute z-30 flex flex-col items-center gap-1.5',
+                  node.live
+                    ? 'cursor-pointer'
+                    : 'cursor-default opacity-60 hover:opacity-75',
                   'transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#22D3EE]/50 rounded-xl',
                 )}
                 style={{
@@ -377,9 +380,13 @@ export default function AnimatedPhoenixGrid() {
                   style={{ backgroundColor: activeNodeData.color }}
                 />
                 <p className="text-xs font-semibold text-[#F8FAFC]">{activeNodeData.label}</p>
-                {activeNodeData.live && (
+                {activeNodeData.live ? (
                   <span className="text-[9px] font-mono uppercase tracking-wider text-[#22C55E] px-1.5 py-0.5 rounded bg-[#22C55E]/10">
                     Live
+                  </span>
+                ) : (
+                  <span className="text-[9px] font-mono uppercase tracking-wider text-[#64748B] px-1.5 py-0.5 rounded bg-white/5">
+                    Under development
                   </span>
                 )}
               </div>

@@ -29,9 +29,8 @@ export default function SecuritySection() {
               Secure by design.
             </h2>
             <p className="phx-subtext text-lg" data-security-fade>
-              Phoenix OS is built around role-based access, secure records, audit logs, multi-tenant
-              clinic separation, and structured workflows so every clinic can operate with
-              confidence.
+              Role-based access, encrypted records, per-clinic data separation, and a complete audit
+              trail — so your team can operate with confidence.
             </p>
           </div>
 

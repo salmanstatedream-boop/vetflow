@@ -53,8 +53,7 @@ export default function FinalCTA() {
           Launch your clinic on Phoenix OS.
         </h2>
         <p className="phx-subtext text-lg mb-6 max-w-2xl mx-auto" data-cta-fade>
-          Bring appointments, consultations, inventory, billing, and records into one intelligent
-          operating system.
+          Join early-access vet clinics on Phoenix OS.
         </p>
         <div data-cta-fade>
           <SharedTooltipAvatars

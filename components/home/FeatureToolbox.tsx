@@ -38,8 +38,7 @@ export default function FeatureToolbox() {
           The complete clinic operating toolbox.
         </h2>
         <p className="phx-subtext text-lg mb-10 max-w-2xl" data-feature-fade>
-          Every module connects inside one operating system — from queue to invoice, records to
-          audit.
+          Pick the module you need — each one stands alone and connects when it matters.
         </p>
 
         <div>

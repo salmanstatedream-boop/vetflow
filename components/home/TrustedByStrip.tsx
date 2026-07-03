@@ -29,7 +29,7 @@ export default function TrustedByStrip() {
     <section ref={sectionRef} className="relative py-12 sm:py-14 overflow-hidden">
       <div className="phx-container mb-8" data-trusted-fade>
         <p className="text-center text-xs font-mono uppercase tracking-[0.24em] text-[#64748B]">
-          One OS running every part of your clinic
+          Built for every role in your practice
         </p>
       </div>
       <div data-trusted-fade>

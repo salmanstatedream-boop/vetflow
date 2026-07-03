@@ -35,8 +35,7 @@ export default function PricingPreview() {
           Start simple. Scale when ready.
         </h2>
         <p className="phx-subtext text-lg text-center mb-10 max-w-xl mx-auto" data-pricing-fade>
-          Choose the plan that fits your clinic today. Every tier includes secure, audit-ready
-          workflows.
+          Choose the plan that fits your clinic today. Upgrade when your team grows.
         </p>
 
         <div className="grid md:grid-cols-3 gap-6 md:gap-4 max-w-5xl mx-auto items-start">

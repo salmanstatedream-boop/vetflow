@@ -3,7 +3,7 @@ import PhoenixHomePage from '@/components/home/PhoenixHomePage';
 
 const title = 'Phoenix OS — Clinic Operating System';
 const description =
-  'Phoenix OS is a secure clinic operating system. Starting with veterinary clinics — appointments, consultations, prescriptions, inventory, invoices, and audit-ready workflows — built to scale across dental, general, and specialty care.';
+  'Phoenix OS is the clinic operating system built for veterinary practices — live today, with dental, general, and specialty care on the roadmap.';
 
 export const metadata: Metadata = {
   title,
