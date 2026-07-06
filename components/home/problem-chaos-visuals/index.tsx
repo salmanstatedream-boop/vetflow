@@ -23,12 +23,12 @@ function VisualShell({
   return (
     <div
       className={cn(
-        'rounded-xl border bg-[#0B1020]/80 p-4 min-h-[200px] flex items-center justify-center',
+        'rounded-xl border bg-[#0B1020]/80 p-4 w-full min-h-[220px] flex items-stretch justify-start',
         toneBorder[tone] ?? toneBorder.purple,
         className,
       )}
     >
-      {children}
+      <div className="w-full">{children}</div>
     </div>
   );
 }
@@ -36,22 +36,22 @@ function VisualShell({
 function AppointmentsVisual() {
   return (
     <div className="w-full space-y-3 text-[10px]">
-      <div className="flex justify-center gap-2">
+      <div className="grid grid-cols-3 gap-2">
         {[
           { label: 'Instagram', icon: Camera, color: 'text-[#E879F9]' },
           { label: 'Website', icon: Globe, color: 'text-[#22D3EE]' },
           { label: 'Google', icon: Search, color: 'text-[#93C5FD]' },
         ].map((src) => (
           <div key={src.label} className="flex flex-col items-center gap-1">
-            <div className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
+            <div className="w-full max-w-[72px] mx-auto aspect-square rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
               <src.icon className={cn('w-4 h-4', src.color)} />
             </div>
-            <span className="text-[#64748B]">{src.label}</span>
+            <span className="text-[#64748B] text-center">{src.label}</span>
           </div>
         ))}
       </div>
       <div className="flex justify-center">
-        <div className="w-px h-4 bg-dashed border-l border-dashed border-[#64748B]/50" />
+        <div className="w-px h-4 border-l border-dashed border-[#64748B]/50" />
       </div>
       <div className="flex justify-center">
         <div className="w-12 h-12 rounded-xl bg-[#8B5CF6]/20 border border-[#8B5CF6]/40 flex items-center justify-center">
@@ -62,7 +62,7 @@ function AppointmentsVisual() {
         {['Double bookings', 'Missed slots', 'Manual updates', 'Frustrated clients'].map((w) => (
           <span
             key={w}
-            className="text-center px-2 py-1 rounded-md bg-[#F97316]/10 border border-[#F97316]/25 text-[#FDBA74]"
+            className="text-center px-2 py-1 rounded-md bg-[#F97316]/10 border border-[#F97316]/25 text-[#FDBA74] truncate"
           >
             {w}
           </span>
@@ -102,14 +102,24 @@ function LabsVisual() {
     { test: 'Glucose', value: '95', status: 'Normal', color: 'text-[#64748B]' },
   ];
   return (
-    <div className="w-full">
-      <p className="text-[10px] font-mono uppercase text-[#64748B] mb-2">IDEXX Lab Results</p>
-      <div className="rounded-lg border border-white/10 overflow-hidden">
+    <div className="w-full text-left">
+      <p className="text-[10px] font-mono uppercase tracking-wider text-[#64748B] mb-2">
+        IDEXX Lab Results
+      </p>
+      <div className="rounded-lg border border-white/10 overflow-hidden w-full">
+        <div className="grid grid-cols-3 gap-2 px-3 py-1.5 border-b border-white/10 text-[9px] font-mono uppercase text-[#64748B]">
+          <span>Test</span>
+          <span className="text-center">Value</span>
+          <span className="text-right">Status</span>
+        </div>
         {rows.map((row) => (
-          <div key={row.test} className="flex items-center justify-between px-3 py-2 border-b border-white/5 last:border-0 text-xs">
+          <div
+            key={row.test}
+            className="grid grid-cols-3 gap-2 items-center px-3 py-2 border-b border-white/5 last:border-0 text-xs"
+          >
             <span className="text-[#CBD5E1]">{row.test}</span>
-            <span className="text-[#F8FAFC] font-mono">{row.value}</span>
-            <span className={cn('text-[10px] font-medium', row.color)}>{row.status}</span>
+            <span className="text-[#F8FAFC] font-mono text-center">{row.value}</span>
+            <span className={cn('text-[10px] font-medium text-right', row.color)}>{row.status}</span>
           </div>
         ))}
       </div>
@@ -125,19 +135,21 @@ function InventoryVisual() {
   ];
   return (
     <div className="w-full space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-[10px] font-mono uppercase text-[#64748B]">Inventory Overview</p>
-        <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#EF4444]/15 text-[#EF4444] border border-[#EF4444]/30">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-mono uppercase tracking-wider text-[#64748B]">Inventory Overview</p>
+        <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#EF4444]/15 text-[#EF4444] border border-[#EF4444]/30 shrink-0">
           LOW
         </span>
       </div>
       {items.map((item) => (
-        <div key={item.label}>
+        <div key={item.label} className="w-full">
           <div className="flex justify-between text-[10px] mb-1">
-            <span className="text-[#CBD5E1]">{item.label}</span>
-            <span className={item.pct < 40 ? 'text-[#EF4444]' : 'text-[#64748B]'}>{item.pct}%</span>
+            <span className="text-[#CBD5E1] truncate pr-2">{item.label}</span>
+            <span className={cn('shrink-0', item.pct < 40 ? 'text-[#EF4444]' : 'text-[#64748B]')}>
+              {item.pct}%
+            </span>
           </div>
-          <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+          <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
             <div
               className={cn(
                 'h-full rounded-full',
@@ -162,13 +174,13 @@ function BillingVisual() {
   ];
   return (
     <div className="w-full">
-      <p className="text-[10px] font-mono uppercase text-[#64748B] mb-2">Billing Overview</p>
-      <div className="space-y-2">
+      <p className="text-[10px] font-mono uppercase tracking-wider text-[#64748B] mb-2">Billing Overview</p>
+      <div className="space-y-2 w-full">
         {invoices.map((inv) => (
           <div
             key={inv.id}
             className={cn(
-              'flex items-center justify-between rounded-lg px-3 py-2 border text-xs',
+              'flex items-center justify-between gap-2 rounded-lg px-3 py-2 border text-xs w-full',
               inv.warn
                 ? 'border-[#EF4444]/30 bg-[#EF4444]/5'
                 : 'border-white/10 bg-white/5',
@@ -176,7 +188,7 @@ function BillingVisual() {
           >
             <span className="text-[#CBD5E1]">{inv.id}</span>
             <span className="text-[#F8FAFC] font-mono">{inv.amount}</span>
-            <span className={inv.warn ? 'text-[#EF4444]' : 'text-[#64748B]'}>{inv.status}</span>
+            <span className={cn('shrink-0', inv.warn ? 'text-[#EF4444]' : 'text-[#64748B]')}>{inv.status}</span>
           </div>
         ))}
       </div>
@@ -189,14 +201,14 @@ function DischargeVisual() {
   return (
     <div className="w-full">
       <div className="flex items-center gap-2 mb-2">
-        <FileText className="w-4 h-4 text-[#FDBA74]" />
+        <FileText className="w-4 h-4 text-[#FDBA74] shrink-0" />
         <p className="text-xs font-semibold text-[#F8FAFC]">Discharge Note — Max</p>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-2 w-full">
         {fields.map((field) => (
-          <div key={field} className="rounded-md border border-white/10 bg-white/5 p-2">
+          <div key={field} className="rounded-md border border-white/10 bg-white/5 p-2 w-full">
             <p className="text-[9px] text-[#64748B] mb-1">{field}</p>
-            <div className="h-1.5 w-3/4 rounded bg-white/10" />
+            <div className="h-1.5 w-full max-w-[85%] rounded bg-white/10" />
           </div>
         ))}
       </div>
@@ -217,15 +229,18 @@ function FollowupVisual() {
   };
   return (
     <div className="w-full">
-      <p className="text-[10px] font-mono uppercase text-[#64748B] mb-2">Follow-up Dashboard</p>
-      <div className="space-y-2">
+      <p className="text-[10px] font-mono uppercase tracking-wider text-[#64748B] mb-2">Follow-up Dashboard</p>
+      <div className="space-y-2 w-full">
         {tasks.map((t) => (
-          <div key={t.pet} className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-            <div>
-              <p className="text-xs font-medium text-[#F8FAFC]">{t.pet}</p>
-              <p className="text-[10px] text-[#64748B]">{t.task}</p>
+          <div
+            key={t.pet}
+            className="flex items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 w-full"
+          >
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-[#F8FAFC] truncate">{t.pet}</p>
+              <p className="text-[10px] text-[#64748B] truncate">{t.task}</p>
             </div>
-            <span className={cn('text-[9px] px-2 py-0.5 rounded-full border', statusClass[t.tone])}>
+            <span className={cn('text-[9px] px-2 py-0.5 rounded-full border shrink-0', statusClass[t.tone])}>
               {t.status}
             </span>
           </div>
@@ -248,13 +263,15 @@ const visualMap: Record<ProblemChaosVisualKey, FC> = {
 export default function ProblemChaosVisual({
   visual,
   tone,
+  className,
 }: {
   visual: ProblemChaosVisualKey;
   tone: string;
+  className?: string;
 }) {
   const Component = visualMap[visual];
   return (
-    <VisualShell tone={tone}>
+    <VisualShell tone={tone} className={className}>
       <Component />
     </VisualShell>
   );
