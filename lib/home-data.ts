@@ -12,7 +12,6 @@ import {
   Grid3x3,
   Infinity,
   LayoutDashboard,
-  MessageSquare,
   MousePointerClick,
   Package,
   Receipt,
@@ -67,6 +66,17 @@ export const OS_DEMO = {
     { id: 'invoice', label: 'Generated', detail: 'PDF ready' },
   ],
 } as const;
+
+export const DASHBOARD_PREVIEW_STACK = [
+  { id: 'live', label: 'Live overview', type: 'component' as const },
+  { id: 'doctor', label: 'Doctor view', type: 'image' as const, image: '/dashboard-previews/doctor-dashboard.png' },
+  {
+    id: 'reception',
+    label: 'Reception view',
+    type: 'image' as const,
+    image: '/dashboard-previews/reception-dashboard.png',
+  },
+] as const;
 
 export const WORKFLOW_STEPS = [
   { id: 'arrival', label: 'Arrival', description: 'Front desk intake' },
@@ -481,38 +491,6 @@ export const PROBLEM_SECTION = {
       tone: 'orange' as const,
     },
   ],
-  summary: [
-    {
-      id: 'tools',
-      title: 'Too Many Tools',
-      description: 'Switch between multiple apps, tabs, and logins all day long.',
-      icon: Grid3x3,
-    },
-    {
-      id: 'time',
-      title: 'Wasted Time',
-      description: 'Hours lost to manual data entry, paperwork, and follow-ups.',
-      icon: FileText,
-    },
-    {
-      id: 'comms',
-      title: 'Communication Gaps',
-      description: 'Missed messages, lost updates, and unclear patient history.',
-      icon: MessageSquare,
-    },
-    {
-      id: 'revenue',
-      title: 'Revenue Leakage',
-      description: 'Missed appointments, unbilled services, and no-shows hurt growth.',
-      icon: TrendingUp,
-    },
-    {
-      id: 'burnout',
-      title: 'Team Burnout',
-      description: 'Overworked teams lead to stress and high turnover.',
-      icon: Users,
-    },
-  ],
   stats: [
     { id: 'admin', value: '2–3 hrs', label: 'lost every day to admin work', icon: Clock },
     { id: 'systems', value: '6+', label: 'different systems used daily', icon: Grid3x3 },
@@ -529,6 +507,7 @@ export const SOLUTION_SECTION = {
   rows: [
     {
       id: 'appointments',
+      tabLabel: 'Scheduling',
       problem: 'Lost time. Confused schedules.',
       title: 'Smart Scheduling. Zero Confusion.',
       description: 'AI-powered scheduling that keeps every role aligned.',
@@ -538,6 +517,7 @@ export const SOLUTION_SECTION = {
     },
     {
       id: 'records',
+      tabLabel: 'Records',
       problem: 'Hard to find information. Risk of errors.',
       title: 'Unified Patient Intelligence.',
       description: 'Every record, visit, and document in one searchable profile.',
@@ -547,6 +527,7 @@ export const SOLUTION_SECTION = {
     },
     {
       id: 'labs',
+      tabLabel: 'Labs',
       problem: 'Manual entry. Delayed updates.',
       title: 'Lab Results, Instantly.',
       description: 'Results flow into the chart without retyping.',
@@ -556,6 +537,7 @@ export const SOLUTION_SECTION = {
     },
     {
       id: 'inventory',
+      tabLabel: 'Inventory',
       problem: 'Stockouts. Overstocks. Money stuck.',
       title: 'Inventory That Thinks Ahead.',
       description: 'Stock moves with treatment so counts stay honest.',
@@ -565,6 +547,7 @@ export const SOLUTION_SECTION = {
     },
     {
       id: 'billing',
+      tabLabel: 'Billing',
       problem: 'Missed charges. Revenue leaks.',
       title: 'Billing That Captures Everything.',
       description: 'Turn visits into invoices without duplicate entry.',
@@ -574,6 +557,7 @@ export const SOLUTION_SECTION = {
     },
     {
       id: 'discharge',
+      tabLabel: 'Discharge',
       problem: 'Takes too long. Inconsistent follow-ups.',
       title: 'AI-Generated, Always Consistent.',
       description: 'Structured discharge notes and care instructions in minutes.',
@@ -583,6 +567,7 @@ export const SOLUTION_SECTION = {
     },
     {
       id: 'followup',
+      tabLabel: 'Follow-up',
       problem: 'Missed follow-ups. Lost patients.',
       title: 'Never Miss a Follow-up Again.',
       description: 'Automated reminders keep patients on track.',

@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import { OS_DEMO } from '@/lib/home-data';
 import { useScrollReveal } from '@/lib/hooks/useScrollReveal';
 import { BorderBeam } from '@/components/ui/border-beam';
-import LiveDashboardMockup from '@/components/home/LiveDashboardMockup';
+import DashboardPreviewStack from '@/components/home/DashboardPreviewStack';
 
 export default function AnimatedOSDemo() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -13,6 +13,22 @@ export default function AnimatedOSDemo() {
   const reducedMotion = useScrollReveal(sectionRef, {
     selector: '[data-demo-fade]',
     onReveal: () => setDemoAnimate(true),
+    y: 20,
+    staggerMs: 80,
+  });
+
+  useScrollReveal(sectionRef, {
+    selector: '[data-demo-slide-left]',
+    x: -24,
+    y: 0,
+    staggerMs: 70,
+  });
+
+  useScrollReveal(sectionRef, {
+    selector: '[data-demo-stack]',
+    y: 28,
+    staggerMs: 0,
+    durationMs: 850,
   });
 
   return (
@@ -22,13 +38,13 @@ export default function AnimatedOSDemo() {
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
           <div>
             <div className="phx-section-header max-w-xl">
-              <p className="phx-eyebrow" data-demo-fade>
+              <p className="phx-eyebrow" data-demo-slide-left>
                 05 / PRODUCT
               </p>
-              <h2 className="phx-heading text-3xl sm:text-4xl lg:text-5xl" data-demo-fade>
+              <h2 className="phx-heading text-3xl sm:text-4xl lg:text-5xl" data-demo-slide-left>
                 {OS_DEMO.heading}
               </h2>
-              <p className="phx-subtext text-lg" data-demo-fade>
+              <p className="phx-subtext text-lg" data-demo-slide-left>
                 {OS_DEMO.subheadline}
               </p>
             </div>
@@ -46,9 +62,12 @@ export default function AnimatedOSDemo() {
             </ul>
           </div>
 
-          <div className="relative rounded-2xl overflow-hidden" data-demo-fade>
-            <div className="phx-panel p-5 sm:p-6 phx-glow relative">
-              <LiveDashboardMockup animate={demoAnimate} reducedMotion={reducedMotion} />
+          <div className="relative rounded-2xl overflow-hidden" data-demo-stack>
+            <div className="phx-panel p-3 sm:p-4 phx-glow relative">
+              <DashboardPreviewStack
+                animate={demoAnimate}
+                reducedMotion={reducedMotion}
+              />
             </div>
             <BorderBeam colorFrom="#22D3EE" colorTo="#3B82F6" size={160} duration={14} />
           </div>

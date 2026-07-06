@@ -9,6 +9,8 @@ interface ScrollRevealOptions {
   selector?: string;
   /** Vertical offset the elements travel while fading in. */
   y?: number;
+  /** Horizontal offset the elements travel while fading in. */
+  x?: number;
   /** Stagger between elements in ms. */
   staggerMs?: number;
   /** Duration of each element's reveal in ms. */
@@ -39,6 +41,7 @@ export function useScrollReveal(
   {
     selector = '[data-reveal]',
     y = 24,
+    x = 0,
     staggerMs = 90,
     durationMs = 700,
     onReveal,
@@ -84,6 +87,7 @@ export function useScrollReveal(
         animate(items, {
           opacity: [0, 1],
           y: [y, 0],
+          x: [x, 0],
           scale: [0.96, 1],
           duration: durationMs,
           delay: stagger(staggerMs),
@@ -108,7 +112,7 @@ export function useScrollReveal(
     } else {
       for (const el of items) {
         el.style.opacity = '0';
-        el.style.transform = `translateY(${y}px) scale(0.96)`;
+        el.style.transform = `translate(${x}px, ${y}px) scale(0.96)`;
       }
 
       observer = new IntersectionObserver(
@@ -134,7 +138,7 @@ export function useScrollReveal(
       if (safetyTimer) clearTimeout(safetyTimer);
       if (!revealed) showStatic();
     };
-  }, [ref, reducedMotion, selector, y, staggerMs, durationMs]);
+  }, [ref, reducedMotion, selector, x, y, staggerMs, durationMs]);
 
   return reducedMotion;
 }

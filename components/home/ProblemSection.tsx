@@ -64,19 +64,6 @@ export default function ProblemSection() {
           })}
         </div>
 
-        <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          {PROBLEM_SECTION.summary.map((card) => {
-            const Icon = card.icon;
-            return (
-              <div key={card.id} data-problem-fade className="phx-card p-4 h-full">
-                <Icon className="w-5 h-5 text-[#8B5CF6] mb-3" />
-                <h3 className="text-sm font-semibold text-[#F8FAFC] mb-1">{card.title}</h3>
-                <p className="text-xs text-[#64748B] leading-relaxed">{card.description}</p>
-              </div>
-            );
-          })}
-        </div>
-
         <div className="mt-10 grid grid-cols-2 lg:grid-cols-4 gap-4">
           {PROBLEM_SECTION.stats.map((stat) => {
             const Icon = stat.icon;

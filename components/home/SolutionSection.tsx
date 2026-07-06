@@ -2,21 +2,16 @@
 
 import Link from 'next/link';
 import { useRef } from 'react';
-import { Check } from 'lucide-react';
 import PhoenixLogo from '@/components/brand/PhoenixLogo';
+import SolutionCarousel from '@/components/home/SolutionCarousel';
 import { PRODUCT_NAME } from '@/lib/brand';
 import { SOLUTION_SECTION } from '@/lib/home-data';
 import { useScrollReveal } from '@/lib/hooks/useScrollReveal';
-import { cn } from '@/lib/utils';
-
-const toneAccent: Record<string, string> = {
-  purple: 'text-[#C4B5FD]',
-  orange: 'text-[#FDBA74]',
-  blue: 'text-[#93C5FD]',
-};
+import { usePrefersReducedMotion } from '@/lib/hooks/usePrefersReducedMotion';
 
 export default function SolutionSection() {
   const sectionRef = useRef<HTMLElement>(null);
+  const reducedMotion = usePrefersReducedMotion();
   useScrollReveal(sectionRef, { selector: '[data-solution-fade]', staggerMs: 65, y: 18 });
 
   return (
@@ -40,41 +35,12 @@ export default function SolutionSection() {
           </p>
         </div>
 
-        <div className="mt-12 space-y-10">
-          {SOLUTION_SECTION.rows.map((row, index) => (
-            <div
-              key={row.id}
-              data-solution-fade
-              className={cn(
-                'grid lg:grid-cols-2 gap-6 lg:gap-10 items-center',
-                index % 2 === 1 && 'lg:[&>*:first-child]:order-2',
-              )}
-            >
-              <div className="phx-card p-5 sm:p-6">
-                <p className="text-xs text-[#64748B] mb-2">{row.problem}</p>
-                <h3 className={cn('text-xl font-bold mb-2 font-[family-name:var(--font-display)]', toneAccent[row.tone])}>
-                  {row.title}
-                </h3>
-                <p className="text-sm text-[#94A3B8] mb-4">{row.description}</p>
-                <ul className="space-y-2">
-                  {row.bullets.map((bullet) => (
-                    <li key={bullet} className="flex items-start gap-2 text-sm text-[#F8FAFC]">
-                      <Check className="w-4 h-4 text-[#22D3EE] shrink-0 mt-0.5" />
-                      {bullet}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="phx-card p-4 overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={row.preview} alt="" className="w-full h-auto rounded-lg" />
-              </div>
-            </div>
-          ))}
+        <div data-solution-fade>
+          <SolutionCarousel reducedMotion={reducedMotion} />
         </div>
 
-        <div className="mt-16 phx-card p-8 lg:p-10" data-solution-fade>
-          <div className="grid lg:grid-cols-2 gap-8 items-center">
+        <div className="mt-10 phx-card p-6 lg:p-8" data-solution-fade>
+          <div className="grid lg:grid-cols-2 gap-6 items-center">
             <div>
               <div className="flex items-center gap-3 mb-4">
                 <PhoenixLogo size={40} />
@@ -97,27 +63,19 @@ export default function SolutionSection() {
         </div>
 
         <div
-          className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 phx-card p-6"
+          className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 phx-card p-6"
           data-solution-fade
         >
           <p className="text-sm text-[#94A3B8]">
             Stop managing software. Start{' '}
             <span className="text-[#F8FAFC] font-semibold">delivering better care.</span>
           </p>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href="/request-access"
-              className="btn-sheen inline-flex items-center gap-2 bg-[#F97316] text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:opacity-90 transition-opacity"
-            >
-              Book a Demo →
-            </Link>
-            <Link
-              href="#product"
-              className="inline-flex items-center gap-2 border border-white/15 text-[#F8FAFC] px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-white/5 transition-colors"
-            >
-              See {PRODUCT_NAME} in Action
-            </Link>
-          </div>
+          <Link
+            href="/request-access"
+            className="btn-sheen inline-flex items-center gap-2 bg-[#F97316] text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:opacity-90 transition-opacity shrink-0"
+          >
+            Book a Demo →
+          </Link>
         </div>
       </div>
     </section>
