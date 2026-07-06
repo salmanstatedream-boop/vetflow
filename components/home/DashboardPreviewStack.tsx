@@ -127,7 +127,7 @@ export default function DashboardPreviewStack({
                     <img
                       src={item.image}
                       alt={item.label}
-                      className="w-full h-full object-cover object-top"
+                      className="w-full h-full object-contain object-top bg-[#0B1020]"
                       draggable={false}
                     />
                   )}
