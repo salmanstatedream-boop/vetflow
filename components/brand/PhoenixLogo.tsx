@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import { LOGO_ALT, LOGO_SRC } from '@/lib/brand';
 import { cn } from '@/lib/utils';
 
@@ -14,12 +13,14 @@ export default function PhoenixLogo({
   priority = false,
 }: PhoenixLogoProps) {
   return (
-    <Image
+    // eslint-disable-next-line @next/next/no-img-element -- static brand mark; plain img avoids optimizer issues in small chrome slots
+    <img
       src={LOGO_SRC}
       alt={LOGO_ALT}
       width={size}
       height={size}
-      priority={priority}
+      loading={priority ? 'eager' : 'lazy'}
+      decoding="async"
       className={cn('shrink-0 object-contain', className)}
     />
   );

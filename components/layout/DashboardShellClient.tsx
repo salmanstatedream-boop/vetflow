@@ -25,8 +25,7 @@ import { AttendanceProvider, useAttendance } from '@/lib/context/AttendanceConte
 import type { MyAttendance } from '@/components/dashboard/AttendanceWidgetClient';
 import { hasCapability } from '@/lib/auth/capabilities';
 import { EMPTY_ATTENDANCE } from '@/lib/dashboard/load-my-attendance';
-import { resolveClinicLogoSrc } from '@/lib/branding/clinic-logo';
-import PhoenixLogo from '@/components/brand/PhoenixLogo';
+import ClinicOrPlatformLogo from '@/components/brand/ClinicOrPlatformLogo';
 import { PRODUCT_NAME } from '@/lib/brand';
 import { Search, Menu, X, PanelLeftClose } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -89,17 +88,13 @@ function SidebarBrand({
   interactive?: boolean;
   onLogoClick?: () => void;
 }) {
-  const logoSrc = resolveClinicLogoSrc(clinicLogoUrl);
-  const logoMark = logoSrc ? (
-    <img
-      src={logoSrc}
-      alt=""
-      className="w-9 h-9 rounded-xl object-contain bg-white/10 border border-outline-variant/30"
+  const logoMark = (
+    <ClinicOrPlatformLogo
+      clinicLogoUrl={clinicLogoUrl}
+      size={36}
+      imgClassName="rounded-xl"
+      platformWrapperClassName="rounded-xl neon-accent-line"
     />
-  ) : (
-    <div className="w-9 h-9 flex items-center justify-center rounded-xl border border-primary/20 neon-accent-line overflow-hidden bg-surface-container/40">
-      <PhoenixLogo size={28} />
-    </div>
   );
 
   const rowClass = `h-16 flex items-center border-b border-outline-variant/50 shrink-0 ${collapsed ? 'justify-center px-2' : 'px-5 gap-2.5'}`;

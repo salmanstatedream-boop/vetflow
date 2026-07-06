@@ -2,10 +2,9 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Bell } from 'lucide-react';
-import PhoenixLogo from '@/components/brand/PhoenixLogo';
+import ClinicOrPlatformLogo from '@/components/brand/ClinicOrPlatformLogo';
 import { PRODUCT_NAME } from '@/lib/brand';
 import { resolvePageTitle } from '@/lib/navigation/dashboard-nav';
-import { resolveClinicLogoSrc } from '@/lib/branding/clinic-logo';
 import { cn } from '@/lib/utils';
 import type { DashboardNotification } from '@/lib/dashboard/notifications';
 import DashboardNotificationsPanel from '@/components/layout/DashboardNotificationsPanel';
@@ -48,21 +47,14 @@ function ClinicBrandCluster({
   clinicLogoUrl?: string | null;
   organizationName?: string | null;
 }) {
-  const logoSrc = resolveClinicLogoSrc(clinicLogoUrl);
-
   return (
     <div className="hidden xl:flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-outline-variant/40 bg-surface-container/30 shrink-0">
-      {logoSrc ? (
-        <img
-          src={logoSrc}
-          alt=""
-          className="w-8 h-8 rounded-lg object-contain bg-white/10 border border-outline-variant/30"
-        />
-      ) : (
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center border border-primary/20 overflow-hidden bg-surface-container/40">
-          <PhoenixLogo size={24} />
-        </div>
-      )}
+      <ClinicOrPlatformLogo
+        clinicLogoUrl={clinicLogoUrl}
+        size={32}
+        imgClassName="rounded-lg"
+        platformWrapperClassName="rounded-lg"
+      />
       <div className="min-w-0">
         <span className="text-[11px] font-bold text-on-surface block font-[family-name:var(--font-display)] leading-tight">
           {PRODUCT_NAME}
