@@ -7,6 +7,10 @@ import { useOutsideClick } from '@/hooks/use-outside-click'
 import { cn } from '@/lib/utils'
 import { X } from 'lucide-react'
 
+function isSvgDataUri(src: string) {
+    return src.startsWith('data:image/svg+xml')
+}
+
 export interface BentoGridProps {
     items: {
         id: string | number
@@ -32,6 +36,20 @@ function BentoThumbnail({
     className?: string
 }) {
     if (image) {
+        if (isSvgDataUri(image)) {
+            return (
+                <div
+                    className={cn(
+                        'phx-bento-thumb relative h-14 w-14 rounded-lg overflow-hidden border border-[#22D3EE]/20 shrink-0 bg-[#0B1020]',
+                        className,
+                    )}
+                >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={image} alt="" className="h-full w-full object-cover" />
+                </div>
+            )
+        }
+
         return (
             <div
                 className={cn(
@@ -66,6 +84,20 @@ function BentoHeroImage({
     title: string
 }) {
     if (image) {
+        if (isSvgDataUri(image)) {
+            return (
+                <div className="relative w-full h-40 md:h-52 lg:h-60 overflow-hidden bg-[#0B1020]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                        src={image}
+                        alt={title}
+                        className="h-full w-full object-contain p-4"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0B1020] via-transparent to-transparent pointer-events-none" />
+                </div>
+            )
+        }
+
         return (
             <div className="relative w-full h-40 md:h-52 lg:h-60 overflow-hidden">
                 <Image src={image} alt={title} fill className="object-cover" priority sizes="500px" />

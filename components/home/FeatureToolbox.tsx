@@ -20,7 +20,7 @@ export default function FeatureToolbox() {
       title: feature.title,
       subtitle: feature.description.slice(0, 72) + (feature.description.length > 72 ? '…' : ''),
       description: 'Phoenix OS module',
-      image: feature.image,
+      image: feature.previewImage,
       icon: <Icon size={22} />,
       content: <p className="leading-relaxed">{feature.description}</p>,
     };

@@ -70,13 +70,71 @@ export const WORKFLOW_STEPS = [
   { id: 'records', label: 'Secure Records', description: 'Audit-ready archive' },
 ] as const;
 
+const svgPreview = (body: string) =>
+  'data:image/svg+xml,' +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="140"><rect width="240" height="140" rx="8" fill="#0B1020"/><rect x="0.5" y="0.5" width="239" height="139" rx="8" fill="none" stroke="#22D3EE" stroke-opacity="0.15"/>${body}</svg>`,
+  );
+
 export type FeatureItem = {
   id: string;
   title: string;
   description: string;
-  image: string;
+  previewImage: string;
   icon: LucideIcon;
 };
+
+const featurePreviewById = {
+  queue: svgPreview(
+    '<rect x="16" y="22" width="208" height="22" rx="6" fill="#101A33" stroke="#22D3EE" stroke-opacity="0.35"/><circle cx="32" cy="33" r="5" fill="#22D3EE"/><rect x="46" y="29" width="72" height="7" rx="3.5" fill="#F8FAFC" opacity="0.75"/><rect x="160" y="29" width="48" height="8" rx="4" fill="#22D3EE" opacity="0.25"/>' +
+    '<rect x="16" y="54" width="208" height="22" rx="6" fill="#101A33" stroke="#3B82F6" stroke-opacity="0.3"/><circle cx="32" cy="65" r="5" fill="#3B82F6"/><rect x="46" y="61" width="88" height="7" rx="3.5" fill="#F8FAFC" opacity="0.65"/><rect x="160" y="61" width="48" height="8" rx="4" fill="#3B82F6" opacity="0.2"/>' +
+    '<rect x="16" y="86" width="208" height="22" rx="6" fill="#101A33" stroke="#8B5CF6" stroke-opacity="0.25"/><circle cx="32" cy="97" r="5" fill="#8B5CF6"/><rect x="46" y="93" width="64" height="7" rx="3.5" fill="#F8FAFC" opacity="0.55"/><rect x="160" y="93" width="48" height="8" rx="4" fill="#22C55E" opacity="0.25"/>',
+  ),
+  consultation: svgPreview(
+    '<rect x="14" y="18" width="212" height="104" rx="8" fill="#101A33" stroke="#22D3EE" stroke-opacity="0.35"/>' +
+    '<text x="24" y="36" fill="#22D3EE" font-size="9" font-family="monospace">SOAP</text>' +
+    '<rect x="24" y="44" width="80" height="6" rx="3" fill="#94A3B8" opacity="0.5"/><rect x="24" y="56" width="120" height="6" rx="3" fill="#94A3B8" opacity="0.4"/><rect x="24" y="68" width="96" height="6" rx="3" fill="#94A3B8" opacity="0.35"/>' +
+    '<rect x="24" y="84" width="56" height="14" rx="7" fill="#22D3EE" opacity="0.2"/><rect x="88" y="84" width="56" height="14" rx="7" fill="#3B82F6" opacity="0.15"/><rect x="152" y="84" width="62" height="14" rx="7" fill="#8B5CF6" opacity="0.15"/>',
+  ),
+  inventory: svgPreview(
+    '<rect x="20" y="24" width="200" height="92" rx="8" fill="#101A33" stroke="#22D3EE" stroke-opacity="0.3"/>' +
+    '<rect x="32" y="38" width="120" height="10" rx="4" fill="#22D3EE" opacity="0.55"/><rect x="32" y="56" width="90" height="10" rx="4" fill="#3B82F6" opacity="0.4"/><rect x="32" y="74" width="60" height="10" rx="4" fill="#8B5CF6" opacity="0.35"/>' +
+    '<rect x="162" y="36" width="44" height="20" rx="6" fill="#EF4444" opacity="0.2" stroke="#EF4444" stroke-opacity="0.5"/><text x="184" y="50" text-anchor="middle" fill="#EF4444" font-size="8" font-family="monospace">LOW</text>',
+  ),
+  billing: svgPreview(
+    '<rect x="52" y="14" width="136" height="112" rx="8" fill="#101A33" stroke="#22D3EE" stroke-opacity="0.35"/>' +
+    '<rect x="68" y="30" width="72" height="8" rx="4" fill="#F8FAFC" opacity="0.8"/><rect x="68" y="48" width="104" height="6" rx="3" fill="#94A3B8" opacity="0.45"/><rect x="68" y="60" width="88" height="6" rx="3" fill="#94A3B8" opacity="0.4"/><rect x="68" y="72" width="96" height="6" rx="3" fill="#94A3B8" opacity="0.35"/>' +
+    '<line x1="68" y1="88" x2="172" y2="88" stroke="#22D3EE" stroke-opacity="0.3"/><rect x="68" y="98" width="40" height="10" rx="5" fill="#94A3B8" opacity="0.4"/><rect x="130" y="96" width="42" height="14" rx="7" fill="#22D3EE" opacity="0.85"/>',
+  ),
+  documents: svgPreview(
+    '<path d="M70 30 h56 l18 18 v58 a6 6 0 0 1 -6 6 h-68 a6 6 0 0 1 -6 -6 v-70 a6 6 0 0 1 6 -6 z" fill="#101A33" stroke="#3B82F6" stroke-opacity="0.5"/><path d="M126 30 v18 h18 z" fill="#3B82F6" opacity="0.4"/>' +
+    '<rect x="78" y="60" width="48" height="6" rx="3" fill="#94A3B8" opacity="0.55"/><rect x="78" y="72" width="60" height="6" rx="3" fill="#94A3B8" opacity="0.4"/><rect x="78" y="84" width="38" height="6" rx="3" fill="#94A3B8" opacity="0.3"/>' +
+    '<rect x="140" y="88" width="34" height="26" rx="6" fill="#22D3EE"/><rect x="148" y="76" width="18" height="18" rx="9" fill="none" stroke="#22D3EE" stroke-width="4"/><circle cx="157" cy="100" r="4" fill="#03040A"/>',
+  ),
+  dashboards: svgPreview(
+    '<rect x="18" y="28" width="64" height="84" rx="8" fill="#101A33" stroke="#22D3EE" stroke-opacity="0.4"/><rect x="28" y="40" width="40" height="7" rx="3.5" fill="#22D3EE" opacity="0.7"/><rect x="28" y="56" width="44" height="6" rx="3" fill="#94A3B8" opacity="0.45"/>' +
+    '<rect x="88" y="28" width="64" height="84" rx="8" fill="#101A33" stroke="#3B82F6" stroke-opacity="0.4"/><rect x="98" y="40" width="40" height="7" rx="3.5" fill="#3B82F6" opacity="0.7"/><rect x="98" y="56" width="44" height="6" rx="3" fill="#94A3B8" opacity="0.45"/>' +
+    '<rect x="158" y="28" width="64" height="84" rx="8" fill="#101A33" stroke="#8B5CF6" stroke-opacity="0.4"/><rect x="168" y="40" width="40" height="7" rx="3.5" fill="#8B5CF6" opacity="0.7"/><rect x="168" y="56" width="44" height="6" rx="3" fill="#94A3B8" opacity="0.45"/>',
+  ),
+  audit: svgPreview(
+    '<rect x="20" y="18" width="90" height="8" rx="4" fill="#F8FAFC" opacity="0.7"/>' +
+    '<circle cx="30" cy="49" r="4" fill="#22D3EE"/><rect x="42" y="45" width="98" height="7" rx="3.5" fill="#94A3B8" opacity="0.55"/><rect x="168" y="45" width="48" height="7" rx="3.5" fill="#22D3EE" opacity="0.3"/>' +
+    '<circle cx="30" cy="74" r="4" fill="#3B82F6"/><rect x="42" y="70" width="118" height="7" rx="3.5" fill="#94A3B8" opacity="0.55"/><rect x="168" y="70" width="48" height="7" rx="3.5" fill="#3B82F6" opacity="0.3"/>' +
+    '<circle cx="30" cy="99" r="4" fill="#8B5CF6"/><rect x="42" y="95" width="84" height="7" rx="3.5" fill="#94A3B8" opacity="0.55"/><rect x="168" y="95" width="48" height="7" rx="3.5" fill="#8B5CF6" opacity="0.3"/>',
+  ),
+  appointments: svgPreview(
+    '<rect x="14" y="20" width="212" height="100" rx="8" fill="#101A33" stroke="#22D3EE" stroke-opacity="0.3"/>' +
+    '<rect x="24" y="32" width="28" height="24" rx="4" fill="#22D3EE" opacity="0.2"/><rect x="56" y="32" width="28" height="24" rx="4" fill="#3B82F6" opacity="0.15"/><rect x="88" y="32" width="28" height="24" rx="4" fill="#8B5CF6" opacity="0.15"/><rect x="120" y="32" width="28" height="24" rx="4" fill="#22D3EE" opacity="0.25"/>' +
+    '<rect x="24" y="64" width="124" height="8" rx="4" fill="#94A3B8" opacity="0.4"/><rect x="24" y="80" width="96" height="8" rx="4" fill="#94A3B8" opacity="0.35"/><rect x="156" y="72" width="58" height="22" rx="6" fill="#22D3EE" opacity="0.2"/><text x="185" y="86" text-anchor="middle" fill="#22D3EE" font-size="8" font-family="monospace">REMIND</text>',
+  ),
+  'multi-clinic': svgPreview(
+    '<rect x="18" y="28" width="92" height="84" rx="8" fill="#101A33" stroke="#22D3EE" stroke-opacity="0.4"/><rect x="28" y="40" width="40" height="7" rx="3.5" fill="#22D3EE" opacity="0.7"/><rect x="28" y="56" width="66" height="6" rx="3" fill="#94A3B8" opacity="0.45"/>' +
+    '<rect x="130" y="28" width="92" height="84" rx="8" fill="#101A33" stroke="#8B5CF6" stroke-opacity="0.4"/><rect x="140" y="40" width="40" height="7" rx="3.5" fill="#8B5CF6" opacity="0.7"/><rect x="140" y="56" width="66" height="6" rx="3" fill="#94A3B8" opacity="0.45"/>' +
+    '<line x1="120" y1="24" x2="120" y2="116" stroke="#F8FAFC" stroke-opacity="0.15" stroke-dasharray="4 4"/>',
+  ),
+} as const;
+
+export const FEATURE_PREVIEW_IMAGES = featurePreviewById;
 
 export const FEATURES: FeatureItem[] = [
   {
@@ -84,7 +142,7 @@ export const FEATURES: FeatureItem[] = [
     title: 'Live Clinic Queue',
     description:
       'Stop juggling three notebooks at the front desk — see who is waiting, who is with the vet, and who is ready to leave in one glance.',
-    image: '/features/queue.webp',
+    previewImage: featurePreviewById.queue,
     icon: Activity,
   },
   {
@@ -92,7 +150,7 @@ export const FEATURES: FeatureItem[] = [
     title: 'Smart Consultation Room',
     description:
       'Give vets a calm, focused screen for SOAP notes and treatment decisions without hunting through scattered files.',
-    image: '/features/consultation.svg',
+    previewImage: featurePreviewById.consultation,
     icon: Stethoscope,
   },
   {
@@ -100,7 +158,7 @@ export const FEATURES: FeatureItem[] = [
     title: 'Inventory Intelligence',
     description:
       'Know what is running low before a procedure starts — stock moves with prescriptions so counts stay honest.',
-    image: '/features/inventory.webp',
+    previewImage: featurePreviewById.inventory,
     icon: Package,
   },
   {
@@ -108,7 +166,7 @@ export const FEATURES: FeatureItem[] = [
     title: 'Billing & Invoices',
     description:
       'Turn a finished visit into a branded invoice in minutes, with taxes and line items already filled in.',
-    image: '/features/billing.webp',
+    previewImage: featurePreviewById.billing,
     icon: Receipt,
   },
   {
@@ -116,7 +174,7 @@ export const FEATURES: FeatureItem[] = [
     title: 'Secure Documents',
     description:
       'Keep lab results, discharge sheets, and clinic paperwork in one protected place — searchable when you need them.',
-    image: '/features/documents.webp',
+    previewImage: featurePreviewById.documents,
     icon: FileText,
   },
   {
@@ -124,7 +182,7 @@ export const FEATURES: FeatureItem[] = [
     title: 'Role-Based Dashboards',
     description:
       'Reception sees the queue, vets see cases, owners see revenue — each role gets exactly what they need.',
-    image: '/features/dashboards.webp',
+    previewImage: featurePreviewById.dashboards,
     icon: LayoutDashboard,
   },
   {
@@ -132,7 +190,7 @@ export const FEATURES: FeatureItem[] = [
     title: 'Audit Logs',
     description:
       'Answer "who changed this?" in seconds — every sensitive action is logged with user, role, and timestamp.',
-    image: '/features/audit.webp',
+    previewImage: featurePreviewById.audit,
     icon: ClipboardList,
   },
   {
@@ -140,7 +198,7 @@ export const FEATURES: FeatureItem[] = [
     title: 'Appointments & Reminders',
     description:
       'Fill the schedule without double-booking — send reminders so fewer visits slip through the cracks.',
-    image: '/features/appointments.webp',
+    previewImage: featurePreviewById.appointments,
     icon: CalendarCheck,
   },
   {
@@ -148,7 +206,7 @@ export const FEATURES: FeatureItem[] = [
     title: 'Multi-Clinic Foundation',
     description:
       'Open a second branch without starting from scratch — each location stays separate with shared oversight.',
-    image: '/features/multi-clinic.webp',
+    previewImage: featurePreviewById['multi-clinic'],
     icon: Building2,
   },
 ];
@@ -362,12 +420,6 @@ export const CTA_AVATARS = [
   { id: 'a4', name: 'Dr. Ali — Surgeon', initials: 'AL', color: '#A855F7' },
   { id: 'a5', name: 'Zara — Practice Manager', initials: 'ZA', color: '#0EA5E9' },
 ] as const;
-
-const svgPreview = (body: string) =>
-  'data:image/svg+xml,' +
-  encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="140"><rect width="240" height="140" rx="8" fill="#0B1020"/><rect x="0.5" y="0.5" width="239" height="139" rx="8" fill="none" stroke="#22D3EE" stroke-opacity="0.15"/>${body}</svg>`,
-  );
 
 /* Mini UI mockups matched to each security item. */
 export const SECURITY_PREVIEW_IMAGES = [
