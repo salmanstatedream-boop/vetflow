@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useGlobalLoadingOptional } from '@/components/layout/NavigationLoadingProvider';
 
-const STATIC_ICON = '/icon';
+const STATIC_ICON = '/favicon.ico';
 let spinnerFrame = 0;
 
 function drawSpinnerFavicon(): string {

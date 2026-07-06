@@ -21,7 +21,7 @@ export default function SecuritySection() {
           <div>
             <div className="phx-section-header max-w-xl">
               <p className="phx-eyebrow" data-security-fade>
-                05 / SECURITY
+                09 / SECURITY
               </p>
               <h2 className="phx-heading text-3xl sm:text-4xl lg:text-5xl" data-security-fade>
                 Secure by design.

@@ -23,7 +23,7 @@ export default function AnimatedOSDemo() {
           <div>
             <div className="phx-section-header max-w-xl">
               <p className="phx-eyebrow" data-demo-fade>
-                01 / PRODUCT
+                05 / PRODUCT
               </p>
               <h2 className="phx-heading text-3xl sm:text-4xl lg:text-5xl" data-demo-fade>
                 {OS_DEMO.heading}

@@ -17,15 +17,6 @@ interface ScrollRevealOptions {
   onReveal?: () => void;
 }
 
-/**
- * Reveals a section's child elements the moment the section enters the
- * viewport. Unlike scroll-position triggers tied to a section's bottom edge,
- * this fires early (top of section at ~88% viewport) and can never leave
- * content stuck invisible: elements are only hidden after mount, and if the
- * section is already on screen it reveals immediately.
- *
- * Returns `true` when reduced motion is active (content stays static).
- */
 function getVisibleElements(root: HTMLElement, selector: string) {
   return Array.from(root.querySelectorAll<HTMLElement>(selector)).filter((el) => {
     const rect = el.getBoundingClientRect();
@@ -33,6 +24,16 @@ function getVisibleElements(root: HTMLElement, selector: string) {
   });
 }
 
+function isSectionInView(root: HTMLElement) {
+  const rect = root.getBoundingClientRect();
+  return rect.top < window.innerHeight * 0.92 && rect.bottom > 0;
+}
+
+/**
+ * Reveals a section's child elements when the section enters the viewport.
+ * Listens for Lenis smooth-scroll via the phx:scroll custom event so content
+ * is never stuck invisible when IntersectionObserver misses virtual scroll.
+ */
 export function useScrollReveal(
   ref: RefObject<HTMLElement | null>,
   {
@@ -68,11 +69,14 @@ export function useScrollReveal(
 
     let revealed = false;
     let observer: IntersectionObserver | null = null;
+    let safetyTimer: ReturnType<typeof setTimeout> | null = null;
 
     const reveal = (instant: boolean) => {
       if (revealed) return;
+      if (!isSectionInView(root)) return;
       revealed = true;
       observer?.disconnect();
+      if (safetyTimer) clearTimeout(safetyTimer);
 
       if (instant || items.length === 0) {
         showStatic();
@@ -80,6 +84,7 @@ export function useScrollReveal(
         animate(items, {
           opacity: [0, 1],
           y: [y, 0],
+          scale: [0.96, 1],
           duration: durationMs,
           delay: stagger(staggerMs),
           ease: 'outExpo',
@@ -89,31 +94,44 @@ export function useScrollReveal(
       onRevealRef.current?.();
     };
 
-    const rect = root.getBoundingClientRect();
-    const inView = rect.top < window.innerHeight * 0.92 && rect.bottom > 0;
+    const checkInView = () => {
+      if (revealed) return;
+      if (isSectionInView(root)) {
+        const rect = root.getBoundingClientRect();
+        reveal(rect.top < window.innerHeight * 0.55);
+      }
+    };
 
-    if (inView) {
-      // Already visible (initial load or mid-page reload): never hide content.
-      reveal(rect.top < window.innerHeight * 0.4);
-      return;
+    if (isSectionInView(root)) {
+      const rect = root.getBoundingClientRect();
+      reveal(rect.top < window.innerHeight * 0.55);
+    } else {
+      for (const el of items) {
+        el.style.opacity = '0';
+        el.style.transform = `translateY(${y}px) scale(0.96)`;
+      }
+
+      observer = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((entry) => entry.isIntersecting)) reveal(false);
+        },
+        { rootMargin: '0px 0px -8% 0px', threshold: 0 },
+      );
+      observer.observe(root);
+
+      window.addEventListener('phx:scroll', checkInView);
+      window.addEventListener('scroll', checkInView, { passive: true });
+
+      safetyTimer = setTimeout(() => {
+        if (!revealed) reveal(true);
+      }, 2000);
     }
-
-    for (const el of items) {
-      el.style.opacity = '0';
-      el.style.transform = `translateY(${y}px)`;
-    }
-
-    observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) reveal(false);
-      },
-      { rootMargin: '0px 0px -12% 0px', threshold: 0 },
-    );
-    observer.observe(root);
 
     return () => {
       observer?.disconnect();
-      // Safety: never leave content hidden across effect re-runs.
+      window.removeEventListener('phx:scroll', checkInView);
+      window.removeEventListener('scroll', checkInView);
+      if (safetyTimer) clearTimeout(safetyTimer);
       if (!revealed) showStatic();
     };
   }, [ref, reducedMotion, selector, y, staggerMs, durationMs]);

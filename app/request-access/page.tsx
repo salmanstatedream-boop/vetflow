@@ -7,43 +7,14 @@ import Link from 'next/link';
 import { RequestAccessSchema, type RequestAccessInput } from '@/lib/validations/auth';
 import { requestAccessAction } from '@/lib/services/auth-actions';
 import AuthPageShell from '@/components/layout/AuthPageShell';
-import PhoenixLogo from '@/components/brand/PhoenixLogo';
+import RequestAccessLayout from '@/components/request-access/RequestAccessLayout';
 import { PRODUCT_NAME } from '@/lib/brand';
-import { Loader2, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { Loader2, CheckCircle2 } from 'lucide-react';
 
 const inputCls =
   'w-full px-4 py-3 bg-surface-container border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary rounded-2xl outline-none text-sm text-on-surface';
 const labelCls =
   'block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2';
-
-const requestAccessSidebar = (
-  <div className="w-full md:w-5/12 bg-surface-container/60 border-b md:border-b-0 md:border-r border-outline-variant/40 p-8 flex flex-col justify-between">
-    <div>
-      <div className="flex items-center gap-2.5 mb-8">
-        <div className="w-9 h-9 bg-primary/15 border border-primary/20 flex items-center justify-center rounded-xl overflow-hidden">
-          <PhoenixLogo size={28} />
-        </div>
-        <span className="font-black tracking-tight text-lg font-[family-name:var(--font-display)]">
-          {PRODUCT_NAME}
-        </span>
-      </div>
-      <h3 className="text-xl font-black font-[family-name:var(--font-display)] tracking-tight">
-        Request <span className="gradient-text">access</span>
-      </h3>
-      <p className="text-xs text-on-surface-variant/75 mt-3 leading-relaxed">
-        {PRODUCT_NAME} clinics are provisioned by our team to guarantee secure, compliant, multi-tenant
-        isolation. Tell us about your clinic and we&apos;ll get you set up.
-      </p>
-      <div className="mt-6 flex items-center gap-2 text-[11px] text-on-surface-variant/80">
-        <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
-        HIPAA-ready architecture & audited access
-      </div>
-    </div>
-    <div className="mt-8 md:mt-0 text-[10px] text-on-surface-variant/50">
-      © 2026 {PRODUCT_NAME}. All rights reserved.
-    </div>
-  </div>
-);
 
 export default function RequestAccessPage() {
   const [error, setError] = useState<string | null>(null);
@@ -101,10 +72,9 @@ export default function RequestAccessPage() {
   }
 
   return (
-    <AuthPageShell
-      sidebar={requestAccessSidebar}
-      title="Tell us about"
-      titleAccent="your clinic"
+    <RequestAccessLayout
+      title="Request"
+      titleAccent="access"
       footer={
         <>
           Already have an account?{' '}
@@ -185,6 +155,6 @@ export default function RequestAccessPage() {
           )}
         </button>
       </form>
-    </AuthPageShell>
+    </RequestAccessLayout>
   );
 }

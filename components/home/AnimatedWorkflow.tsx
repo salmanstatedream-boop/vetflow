@@ -16,20 +16,24 @@ export default function AnimatedWorkflow() {
   const pathAnimatedRef = useRef(false);
 
   const drawPath = () => {
-    const path = pathRef.current;
-    if (!path || pathAnimatedRef.current) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      path.style.strokeDashoffset = '0';
-      pathAnimatedRef.current = true;
-      return;
-    }
-    pathAnimatedRef.current = true;
-    const drawable = svg.createDrawable(path);
-    animate(drawable, {
-      draw: ['0 0', '0 1'],
-      duration: 1800,
-      delay: 250,
-      ease: 'inOut(3)',
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const path = pathRef.current;
+        if (!path || pathAnimatedRef.current) return;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          path.style.strokeDashoffset = '0';
+          pathAnimatedRef.current = true;
+          return;
+        }
+        pathAnimatedRef.current = true;
+        const drawable = svg.createDrawable(path);
+        animate(drawable, {
+          draw: ['0 0', '0 1'],
+          duration: 1800,
+          delay: 250,
+          ease: 'inOut(3)',
+        });
+      });
     });
   };
 
@@ -62,7 +66,7 @@ export default function AnimatedWorkflow() {
       <div className="phx-container relative">
         <div className="phx-section-header max-w-3xl mb-8 lg:mb-10">
           <p className="phx-eyebrow" data-workflow-fade>
-            02 / WORKFLOWS
+            06 / WORKFLOWS
           </p>
           <h2 className="phx-heading text-3xl sm:text-4xl lg:text-5xl" data-workflow-fade>
             From front desk to final invoice.

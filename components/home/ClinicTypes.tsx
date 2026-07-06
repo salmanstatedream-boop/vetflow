@@ -131,7 +131,7 @@ export default function ClinicTypes() {
       <div className="phx-container">
         <div className="phx-section-header max-w-3xl">
           <p className="phx-eyebrow" data-clinic-fade>
-            04 / CLINIC TYPES
+            08 / CLINIC TYPES
           </p>
           <h2 className="phx-heading text-3xl sm:text-4xl lg:text-5xl" data-clinic-fade>
             Built for vet clinics first. Ready for every clinic next.

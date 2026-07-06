@@ -29,7 +29,13 @@ export default function SmoothScrollProvider({ children }: { children: ReactNode
     });
     setLenis(instance);
 
+    const emitScroll = () => {
+      window.dispatchEvent(new CustomEvent('phx:scroll'));
+    };
+    instance.on('scroll', emitScroll);
+
     return () => {
+      instance.off('scroll', emitScroll);
       cancelAnimationFrame(rafId);
       instance.destroy();
       setLenis(null);

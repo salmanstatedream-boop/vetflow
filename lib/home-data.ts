@@ -1,25 +1,33 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   Activity,
+  Bell,
   Building2,
   CalendarCheck,
   ClipboardList,
   Clock,
   FileText,
+  FlaskConical,
+  FolderOpen,
+  Grid3x3,
+  Infinity,
   LayoutDashboard,
+  MessageSquare,
+  MousePointerClick,
   Package,
   Receipt,
   Shield,
   Stethoscope,
   TrendingUp,
   Users,
+  DollarSign,
 } from 'lucide-react';
 
 export const NAV_LINKS = [
+  { label: 'Problem', href: '#problem' },
+  { label: 'Solution', href: '#solution' },
   { label: 'Product', href: '#product' },
   { label: 'Workflows', href: '#workflows' },
-  { label: 'Clinic Types', href: '#clinic-types' },
-  { label: 'Security', href: '#security' },
   { label: 'Pricing', href: '#pricing' },
 ] as const;
 
@@ -308,9 +316,10 @@ export const FOOTER_COLUMNS = [
   {
     title: 'Product',
     links: [
+      { label: 'Problem', href: '#problem' },
+      { label: 'Solution', href: '#solution' },
       { label: 'Features', href: '#product' },
       { label: 'Pricing', href: '#pricing' },
-      { label: 'Updates', href: '#' },
     ],
   },
   {
@@ -362,28 +371,237 @@ export const TESTIMONIALS = [
   {
     id: 'reception',
     title: 'Front Desk Lead',
+    subtitle: 'Early-access clinic',
     description:
-      '"Our mornings used to be chaos. Now I know exactly who is waiting, who the vet is seeing, and who is ready to pay — without shouting down the hallway."',
+      'Our mornings used to be chaos. Now I know exactly who is waiting, who the vet is seeing, and who is ready to pay — without shouting down the hallway.',
+    image:
+      'data:image/svg+xml,' +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#22D3EE"/><stop offset="100%" stop-color="#3B82F6"/></linearGradient></defs><rect width="400" height="400" fill="#0B1020"/><rect width="400" height="400" fill="url(#g)" opacity="0.35"/><text x="200" y="210" text-anchor="middle" fill="#F8FAFC" font-size="28" font-family="sans-serif" font-weight="700">Front Desk</text></svg>',
+      ),
   },
   {
     id: 'vet',
     title: 'Lead Veterinarian',
+    subtitle: 'Early-access clinic',
     description:
-      '"I used to stay late finishing paperwork. Now my notes are done before the pet leaves — I actually get home on time."',
+      'I used to stay late finishing paperwork. Now my notes are done before the pet leaves — I actually get home on time.',
+    image:
+      'data:image/svg+xml,' +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#3B82F6"/><stop offset="100%" stop-color="#8B5CF6"/></linearGradient></defs><rect width="400" height="400" fill="#0B1020"/><rect width="400" height="400" fill="url(#g)" opacity="0.35"/><text x="200" y="210" text-anchor="middle" fill="#F8FAFC" font-size="28" font-family="sans-serif" font-weight="700">Veterinarian</text></svg>',
+      ),
   },
   {
     id: 'owner',
     title: 'Clinic Owner',
+    subtitle: 'Early-access clinic',
     description:
-      '"For the first time I can see what is happening across the practice without standing over everyone\'s shoulder. That peace of mind is worth everything."',
+      'For the first time I can see what is happening across the practice without standing over everyone\'s shoulder. That peace of mind is worth everything.',
+    image:
+      'data:image/svg+xml,' +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#F97316"/><stop offset="100%" stop-color="#8B5CF6"/></linearGradient></defs><rect width="400" height="400" fill="#0B1020"/><rect width="400" height="400" fill="url(#g)" opacity="0.35"/><text x="200" y="210" text-anchor="middle" fill="#F8FAFC" font-size="28" font-family="sans-serif" font-weight="700">Clinic Owner</text></svg>',
+      ),
   },
   {
     id: 'manager',
     title: 'Practice Manager',
+    subtitle: 'Early-access clinic',
     description:
-      '"We onboarded the whole team in one afternoon. Nobody needed a manual — they just logged in and started working."',
+      'We onboarded the whole team in one afternoon. Nobody needed a manual — they just logged in and started working.',
+    image:
+      'data:image/svg+xml,' +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#22D3EE"/><stop offset="100%" stop-color="#A855F7"/></linearGradient></defs><rect width="400" height="400" fill="#0B1020"/><rect width="400" height="400" fill="url(#g)" opacity="0.35"/><text x="200" y="210" text-anchor="middle" fill="#F8FAFC" font-size="26" font-family="sans-serif" font-weight="700">Practice Mgr</text></svg>',
+      ),
   },
 ] as const;
+
+export const PROBLEM_SECTION = {
+  eyebrow: 'THE PROBLEM',
+  headline: ['Running a clinic is', 'hard enough.', 'Software shouldn\'t make it harder.'],
+  subheadline:
+    'Veterinary teams juggle too many tools, too much data, and endless manual work — every single day.',
+  flow: [
+    {
+      id: 'appointments',
+      label: 'Appointments',
+      problem: 'Bookings come from multiple platforms, causing double entries and missed slots.',
+      outcome: 'Lost time. Confused schedules. Unhappy pet parents.',
+      icon: CalendarCheck,
+      tone: 'purple' as const,
+    },
+    {
+      id: 'records',
+      label: 'Patient Records',
+      problem: 'Patient data is scattered across different systems and files.',
+      outcome: 'Hard to find information. Risk of errors and duplicates.',
+      icon: FolderOpen,
+      tone: 'orange' as const,
+    },
+    {
+      id: 'labs',
+      label: 'Laboratory',
+      problem: 'Lab results arrive from different labs in different formats.',
+      outcome: 'Manual entry. Delayed updates. Treatment decisions get slower.',
+      icon: FlaskConical,
+      tone: 'purple' as const,
+    },
+    {
+      id: 'inventory',
+      label: 'Inventory',
+      problem: 'Stock levels aren\'t updated in real-time across locations.',
+      outcome: 'Stockouts. Overstocks. Money stuck in inventory.',
+      icon: Package,
+      tone: 'blue' as const,
+    },
+    {
+      id: 'billing',
+      label: 'Billing',
+      problem: 'Charges, payments, and invoices managed in multiple places.',
+      outcome: 'Missed charges. Revenue leaks every day.',
+      icon: DollarSign,
+      tone: 'blue' as const,
+    },
+    {
+      id: 'discharge',
+      label: 'Discharge Notes',
+      problem: 'Discharge summaries and notes are written manually.',
+      outcome: 'Takes too long. Inconsistent follow-ups.',
+      icon: FileText,
+      tone: 'orange' as const,
+    },
+    {
+      id: 'followup',
+      label: 'Follow-up',
+      problem: 'Reminders and follow-ups rely on memory or sticky notes.',
+      outcome: 'Missed follow-ups. Lost patients. Lost trust.',
+      icon: Bell,
+      tone: 'orange' as const,
+    },
+  ],
+  summary: [
+    {
+      id: 'tools',
+      title: 'Too Many Tools',
+      description: 'Switch between multiple apps, tabs, and logins all day long.',
+      icon: Grid3x3,
+    },
+    {
+      id: 'time',
+      title: 'Wasted Time',
+      description: 'Hours lost to manual data entry, paperwork, and follow-ups.',
+      icon: FileText,
+    },
+    {
+      id: 'comms',
+      title: 'Communication Gaps',
+      description: 'Missed messages, lost updates, and unclear patient history.',
+      icon: MessageSquare,
+    },
+    {
+      id: 'revenue',
+      title: 'Revenue Leakage',
+      description: 'Missed appointments, unbilled services, and no-shows hurt growth.',
+      icon: TrendingUp,
+    },
+    {
+      id: 'burnout',
+      title: 'Team Burnout',
+      description: 'Overworked teams lead to stress and high turnover.',
+      icon: Users,
+    },
+  ],
+  stats: [
+    { id: 'admin', value: '2–3 hrs', label: 'lost every day to admin work', icon: Clock },
+    { id: 'systems', value: '6+', label: 'different systems used daily', icon: Grid3x3 },
+    { id: 'clicks', value: '1000+', label: 'clicks before lunch', icon: MousePointerClick },
+    { id: 'interrupts', value: '∞', label: 'interruptions every single day', icon: Infinity },
+  ],
+} as const;
+
+export const SOLUTION_SECTION = {
+  eyebrow: 'THE SOLUTION',
+  headline: ['How Phoenix OS', 'solves these', 'problems'],
+  subheadline:
+    'Phoenix OS brings everything together in one intelligent platform. No more switching, no more chasing — just seamless clinical workflows.',
+  rows: [
+    {
+      id: 'appointments',
+      problem: 'Lost time. Confused schedules.',
+      title: 'Smart Scheduling. Zero Confusion.',
+      description: 'AI-powered scheduling that keeps every role aligned.',
+      bullets: ['Smart availability & resources', 'Automated reminders', 'Real-time updates for the whole team'],
+      preview: featurePreviewById.appointments,
+      tone: 'purple' as const,
+    },
+    {
+      id: 'records',
+      problem: 'Hard to find information. Risk of errors.',
+      title: 'Unified Patient Intelligence.',
+      description: 'Every record, visit, and document in one searchable profile.',
+      bullets: ['Complete medical history', 'Smart search & filters', 'Secure cloud storage'],
+      preview: featurePreviewById.consultation,
+      tone: 'orange' as const,
+    },
+    {
+      id: 'labs',
+      problem: 'Manual entry. Delayed updates.',
+      title: 'Lab Results, Instantly.',
+      description: 'Results flow into the chart without retyping.',
+      bullets: ['Auto-import & parse', 'Real-time notifications', 'Historical trends & insights'],
+      preview: featurePreviewById.documents,
+      tone: 'purple' as const,
+    },
+    {
+      id: 'inventory',
+      problem: 'Stockouts. Overstocks. Money stuck.',
+      title: 'Inventory That Thinks Ahead.',
+      description: 'Stock moves with treatment so counts stay honest.',
+      bullets: ['Low stock & expiry alerts', 'Usage analytics', 'Auto reorder suggestions'],
+      preview: featurePreviewById.inventory,
+      tone: 'blue' as const,
+    },
+    {
+      id: 'billing',
+      problem: 'Missed charges. Revenue leaks.',
+      title: 'Billing That Captures Everything.',
+      description: 'Turn visits into invoices without duplicate entry.',
+      bullets: ['One-click invoicing', 'Treatment-to-invoice automation', 'Payment tracking & history'],
+      preview: featurePreviewById.billing,
+      tone: 'blue' as const,
+    },
+    {
+      id: 'discharge',
+      problem: 'Takes too long. Inconsistent follow-ups.',
+      title: 'AI-Generated, Always Consistent.',
+      description: 'Structured discharge notes and care instructions in minutes.',
+      bullets: ['AI SOAP notes & summaries', 'Custom templates', 'Consistent & professional'],
+      preview: featurePreviewById.consultation,
+      tone: 'orange' as const,
+    },
+    {
+      id: 'followup',
+      problem: 'Missed follow-ups. Lost patients.',
+      title: 'Never Miss a Follow-up Again.',
+      description: 'Automated reminders keep patients on track.',
+      bullets: ['Automated SMS / WhatsApp / Email', 'Task assignment', 'Better patient retention'],
+      preview: featurePreviewById.appointments,
+      tone: 'orange' as const,
+    },
+  ],
+  connected: {
+    title: 'One Platform. Everything Connected.',
+    subtitle: 'Your Team, Unstuck.',
+    pillars: [
+      { id: 'all', title: 'All-in-One Platform', description: 'No more switching between apps.' },
+      { id: 'sync', title: 'Real-time Sync', description: 'Across all departments.' },
+      { id: 'ai', title: 'AI-Powered', description: 'Smarter every day.' },
+      { id: 'secure', title: 'Secure & Compliant', description: 'Your data, always protected.' },
+    ],
+  },
+} as const;
 
 export const FAQS = [
   {

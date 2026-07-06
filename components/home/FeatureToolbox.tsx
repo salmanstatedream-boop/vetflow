@@ -32,7 +32,7 @@ export default function FeatureToolbox() {
       <div className="phx-container">
         <div className="phx-section-header max-w-3xl">
           <p className="phx-eyebrow" data-feature-fade>
-            03 / TOOLBOX
+            07 / TOOLBOX
           </p>
           <h2 className="phx-heading text-3xl sm:text-4xl lg:text-5xl" data-feature-fade>
             The complete clinic operating toolbox.

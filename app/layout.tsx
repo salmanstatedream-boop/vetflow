@@ -35,7 +35,10 @@ export const metadata: Metadata = {
       'Secure multi-tenant clinic platform — appointments, consult, billing, and inventory for modern care teams.',
   },
   icons: {
-    icon: '/icon',
+    icon: [
+      { url: '/favicon.ico', sizes: '32x32' },
+      { url: '/icon', type: 'image/png', sizes: '32x32' },
+    ],
     apple: '/apple-icon',
   },
 };

@@ -28,7 +28,7 @@ export default function PricingPreview() {
       <div className="phx-container">
         <div className="phx-section-header text-center max-w-xl mx-auto">
           <p className="phx-eyebrow" data-pricing-fade>
-            07 / PRICING
+            11 / PRICING
           </p>
           <h2 className="phx-heading text-3xl sm:text-4xl lg:text-5xl" data-pricing-fade>
             Start simple. Scale when ready.

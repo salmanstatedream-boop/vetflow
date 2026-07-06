@@ -1,9 +1,9 @@
 import PhoenixNavbar from './PhoenixNavbar';
 import PhoenixHero from './PhoenixHero';
 import EarlyAccessSection from './EarlyAccessSection';
-import StatsStrip from './StatsStrip';
+import ProblemSection from './ProblemSection';
+import SolutionSection from './SolutionSection';
 import AnimatedOSDemo from './AnimatedOSDemo';
-import TrustedByStrip from './TrustedByStrip';
 import AnimatedWorkflow from './AnimatedWorkflow';
 import FeatureToolbox from './FeatureToolbox';
 import ClinicTypes from './ClinicTypes';
@@ -23,9 +23,9 @@ export default function PhoenixHomePage() {
         <main>
           <PhoenixHero />
           <EarlyAccessSection />
-          <StatsStrip />
+          <ProblemSection />
+          <SolutionSection />
           <AnimatedOSDemo />
-          <TrustedByStrip />
           <AnimatedWorkflow />
           <FeatureToolbox />
           <ClinicTypes />

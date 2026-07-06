@@ -45,7 +45,7 @@ export default function FinalCTA() {
 
       <div className="phx-container relative text-center z-10 w-full">
         <p className="phx-eyebrow mb-4" data-cta-fade>
-          09 / GET STARTED
+          13 / GET STARTED
         </p>
         <h2
           className="phx-heading text-3xl sm:text-4xl lg:text-5xl mb-4 max-w-3xl mx-auto"

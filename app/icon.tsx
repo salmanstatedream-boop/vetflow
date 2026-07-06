@@ -19,10 +19,9 @@ export default async function Icon() {
           alignItems: 'center',
           justifyContent: 'center',
           background: '#03040a',
-          borderRadius: 8,
         }}
       >
-        <img src={logoSrc} width={28} height={28} alt="" style={{ objectFit: 'contain' }} />
+        <img src={logoSrc} width={30} height={30} alt="" />
       </div>
     ),
     { ...size }

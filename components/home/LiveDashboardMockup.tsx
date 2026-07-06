@@ -24,9 +24,9 @@ const ACTIVITY = [
 ] as const;
 
 const INVENTORY = [
-  { label: 'Rabies vaccine', pct: 82 },
-  { label: 'Antibiotics', pct: 34 },
-  { label: 'Surgical gloves', pct: 61 },
+  { label: 'Royal Canine Puppy', pct: 82 },
+  { label: 'Cat Litter', pct: 34 },
+  { label: 'Rabies Vaccine', pct: 61 },
 ] as const;
 
 const FLOW_PATH = 'M 8 52 C 48 18, 88 78, 128 44 S 208 22, 248 48 S 288 62, 312 38';
