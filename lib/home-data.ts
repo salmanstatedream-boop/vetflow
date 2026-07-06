@@ -9,16 +9,16 @@ import {
   FileText,
   FlaskConical,
   FolderOpen,
-  Grid3x3,
-  Infinity,
   LayoutDashboard,
-  MousePointerClick,
   Package,
   Receipt,
   Shield,
   Stethoscope,
   TrendingUp,
   Users,
+  Heart,
+  ThumbsDown,
+  TrendingDown,
   DollarSign,
 } from 'lucide-react';
 
@@ -436,68 +436,140 @@ export const PROBLEM_SECTION = {
   flow: [
     {
       id: 'appointments',
+      index: '01',
       label: 'Appointments',
-      problem: 'Bookings come from multiple platforms, causing double entries and missed slots.',
-      outcome: 'Lost time. Confused schedules. Unhappy pet parents.',
       icon: CalendarCheck,
       tone: 'purple' as const,
+      chaos: {
+        bullets: [
+          'Bookings come from multiple platforms, causing double entries and missed slots.',
+          'Lost time trying to find the right information.',
+          'Confused schedules. Unhappy pet parents.',
+        ],
+        visual: 'appointments' as const,
+      },
     },
     {
       id: 'records',
+      index: '02',
       label: 'Patient Records',
-      problem: 'Patient data is scattered across different systems and files.',
-      outcome: 'Hard to find information. Risk of errors and duplicates.',
       icon: FolderOpen,
       tone: 'orange' as const,
+      chaos: {
+        bullets: [
+          'Patient data is scattered across different systems and files.',
+          'Hard to find history when you need it most.',
+          'Duplicate records and errors put patients at risk.',
+        ],
+        visual: 'records' as const,
+      },
     },
     {
       id: 'labs',
+      index: '03',
       label: 'Laboratory',
-      problem: 'Lab results arrive from different labs in different formats.',
-      outcome: 'Manual entry. Delayed updates. Treatment decisions get slower.',
       icon: FlaskConical,
       tone: 'purple' as const,
+      chaos: {
+        bullets: [
+          'Lab results arrive from different labs in different formats.',
+          'Manual entry and transcription lead to delays and mistakes.',
+          'Treatment decisions get delayed when critical results are hard to find.',
+        ],
+        visual: 'labs' as const,
+      },
     },
     {
       id: 'inventory',
+      index: '04',
       label: 'Inventory',
-      problem: 'Stock levels aren\'t updated in real-time across locations.',
-      outcome: 'Stockouts. Overstocks. Money stuck in inventory.',
       icon: Package,
       tone: 'blue' as const,
+      chaos: {
+        bullets: [
+          'Stock levels aren\'t updated in real-time across locations.',
+          'Overstocks and stockouts happen constantly.',
+          'Money gets tied up in inventory that\'s not moving.',
+        ],
+        visual: 'inventory' as const,
+      },
     },
     {
       id: 'billing',
+      index: '05',
       label: 'Billing',
-      problem: 'Charges, payments, and invoices managed in multiple places.',
-      outcome: 'Missed charges. Revenue leaks every day.',
       icon: DollarSign,
       tone: 'blue' as const,
+      chaos: {
+        bullets: [
+          'Charges, payments, and invoices are scattered across multiple systems.',
+          'Insurance claims are delayed or denied due to incomplete information.',
+          'Revenue leaks go unnoticed and reconciliation takes hours every day.',
+        ],
+        visual: 'billing' as const,
+      },
     },
     {
       id: 'discharge',
+      index: '06',
       label: 'Discharge Notes',
-      problem: 'Discharge summaries and notes are written manually.',
-      outcome: 'Takes too long. Inconsistent follow-ups.',
       icon: FileText,
       tone: 'orange' as const,
+      chaos: {
+        bullets: [
+          'Discharge summaries and notes are written manually.',
+          'Important details are missed or inconsistently recorded.',
+          'Follow-up instructions get lost or aren\'t communicated clearly.',
+        ],
+        visual: 'discharge' as const,
+      },
     },
     {
       id: 'followup',
+      index: '07',
       label: 'Follow-up',
-      problem: 'Reminders and follow-ups rely on memory or sticky notes.',
-      outcome: 'Missed follow-ups. Lost patients. Lost trust.',
       icon: Bell,
       tone: 'orange' as const,
+      chaos: {
+        bullets: [
+          'Reminders and follow-ups rely on memory or sticky notes.',
+          'Important follow-ups get missed or delayed.',
+          'No clear overview of what\'s due, making it hard to stay consistent.',
+        ],
+        visual: 'followup' as const,
+      },
     },
   ],
-  stats: [
-    { id: 'admin', value: '2–3 hrs', label: 'lost every day to admin work', icon: Clock },
-    { id: 'systems', value: '6+', label: 'different systems used daily', icon: Grid3x3 },
-    { id: 'clicks', value: '1000+', label: 'clicks before lunch', icon: MousePointerClick },
-    { id: 'interrupts', value: '∞', label: 'interruptions every single day', icon: Infinity },
+  impact: {
+    losses: [
+      { id: 'time', label: 'Time lost', icon: Clock },
+      { id: 'trust', label: 'Trust lost', icon: Users },
+      { id: 'revenue', label: 'Revenue lost', icon: TrendingUp },
+    ],
+    stats: [
+      { id: 'admin', value: '2–3 hrs', label: 'lost every day to admin work', tone: 'purple' as const },
+      { id: 'errors', value: '30%', label: 'appointments affected by errors', tone: 'orange' as const },
+      { id: 'revenue', value: '18%', label: 'revenue lost due to inefficient workflows', tone: 'pink' as const },
+    ],
+  },
+  consequences: [
+    { id: 'days', label: 'Longer days', icon: Clock },
+    { id: 'stress', label: 'Stressed teams', icon: Users },
+    { id: 'clients', label: 'Frustrated clients', icon: ThumbsDown },
+    { id: 'growth', label: 'Slower growth', icon: TrendingDown },
+    { id: 'care', label: 'Lower quality of care', icon: Heart },
   ],
+  cta: {
+    lead: "You didn't become a vet to fight",
+    highlight: 'broken software.',
+    trailing: 'Phoenix OS is built to take the',
+    trailingHighlight: 'chaos off your plate.',
+    href: '#solution',
+  },
 } as const;
+
+export type ProblemChaosVisualKey = (typeof PROBLEM_SECTION.flow)[number]['chaos']['visual'];
+export type ProblemFlowId = (typeof PROBLEM_SECTION.flow)[number]['id'];
 
 export const SOLUTION_SECTION = {
   eyebrow: 'THE SOLUTION',
