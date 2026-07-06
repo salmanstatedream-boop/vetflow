@@ -235,7 +235,7 @@ export default function InvoicesListClient({
             onClick={() => setPaymentFilter(method)}
             className={`px-3 py-1.5 rounded-lg text-[10px] font-bold capitalize transition-colors ${
               paymentFilter === method
-                ? 'bg-violet-600 text-white'
+                ? 'app-btn-primary'
                 : 'bg-surface-container border border-outline-variant text-on-surface-variant'
             }`}
           >
@@ -315,7 +315,7 @@ export default function InvoicesListClient({
                   <div className="flex items-center gap-2">
                     {inv.invoice_number}
                     {inv.sale_type === 'retail' && (
-                      <span className="inline-flex bg-violet-500/10 text-violet-400 border border-violet-500/20 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase">
+                      <span className="inline-flex bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase">
                         Retail
                       </span>
                     )}

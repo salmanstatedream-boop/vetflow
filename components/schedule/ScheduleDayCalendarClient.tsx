@@ -71,7 +71,7 @@ const STATUS_COLORS: Record<string, string> = {
   confirmed: 'bg-blue-500/20 border-blue-500/40 text-blue-200',
   requested: 'bg-amber-500/20 border-amber-500/40 text-amber-200',
   checked_in: 'bg-emerald-500/20 border-emerald-500/40 text-emerald-200',
-  rescheduled: 'bg-violet-500/20 border-violet-500/40 text-violet-200',
+  rescheduled: 'bg-cyan-500/20 border-cyan-500/40 text-cyan-200',
 };
 
 function appointmentHref(appt: ScheduleAppointment): string {

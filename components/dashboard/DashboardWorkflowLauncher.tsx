@@ -11,6 +11,7 @@ import AiAssistantClient from '@/components/ai/AiAssistantClient';
 import { useCurrency } from '@/lib/context/CurrencyContext';
 import SocialAutomationClient from '@/components/social/SocialAutomationClient';
 import { globalClinicSearchAction } from '@/lib/services/search-actions';
+import { PRODUCT_NAME } from '@/lib/brand';
 import {
   getDoctorTreatmentRecordsTodayAction,
   getFollowUpAppointmentsTodayAction,
@@ -201,7 +202,7 @@ function RolePermissionsModal({ open, onClose }: { open: boolean; onClose: () =>
   return (
     <Modal open={open} onClose={onClose} title="Role Creation" description="Fixed roles with permission sets" size="lg">
       <p className="text-xs text-on-surface-variant mb-4">
-        ClinixDev uses predefined roles for security. Assign roles when inviting staff.
+        {PRODUCT_NAME} uses predefined roles for security. Assign roles when inviting staff.
       </p>
       <div className="space-y-3">
         {roles.map((r) => (

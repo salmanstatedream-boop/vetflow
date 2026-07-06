@@ -7,7 +7,7 @@ const VARIANTS: Record<BadgeVariant, string> = {
   warning: 'bg-amber-500/15 text-amber-400 border-amber-500/25',
   danger: 'bg-red-500/15 text-red-400 border-red-500/25',
   info: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/25',
-  purple: 'bg-violet-500/15 text-violet-400 border-violet-500/25',
+  purple: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/25',
   neutral: 'bg-surface-container-high text-on-surface-variant border-outline-variant/40',
 };
 

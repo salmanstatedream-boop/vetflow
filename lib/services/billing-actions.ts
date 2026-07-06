@@ -341,9 +341,9 @@ export async function createInvoiceFromVisitAction(payload: unknown, proofFile?:
     if (parsed.sendEmailReceipt && customer?.email) {
       await sendEmail({
         to: customer.email,
-        subject: `Invoice ${invoiceNumber} — ${ctx.organizationName || 'ClinixDev'}`,
+        subject: `Invoice ${invoiceNumber} — ${ctx.organizationName || 'Phoenix OS'}`,
         html: compileInvoiceDeliveryTemplate(
-          ctx.organizationName || 'ClinixDev',
+          ctx.organizationName || 'Phoenix OS',
           invoiceNumber,
           formatMoney(total, ctx.currency)
         ),
@@ -354,9 +354,9 @@ export async function createInvoiceFromVisitAction(payload: unknown, proofFile?:
     if (isPaid && customer?.email) {
       await sendEmail({
         to: customer.email,
-        subject: `Thank you for your payment — ${ctx.organizationName || 'ClinixDev'}`,
+        subject: `Thank you for your payment — ${ctx.organizationName || 'Phoenix OS'}`,
         html: compileThankYouTemplate(
-          ctx.organizationName || 'ClinixDev',
+          ctx.organizationName || 'Phoenix OS',
           invoiceNumber,
           formatMoney(total, ctx.currency),
           [customer.first_name, customer.last_name].filter(Boolean).join(' ') || undefined
@@ -491,9 +491,9 @@ export async function updateInvoicePaymentStatusAction(payload: unknown, proofFi
     if (isFullyPaid && customer?.email) {
       await sendEmail({
         to: customer.email,
-        subject: `Thank you for your payment — ${ctx.organizationName || 'ClinixDev'}`,
+        subject: `Thank you for your payment — ${ctx.organizationName || 'Phoenix OS'}`,
         html: compileThankYouTemplate(
-          ctx.organizationName || 'ClinixDev',
+          ctx.organizationName || 'Phoenix OS',
           invoice.invoice_number,
           formatMoney(total, ctx.currency),
           [customer.first_name, customer.last_name].filter(Boolean).join(' ') || undefined
@@ -540,9 +540,9 @@ export async function resendInvoiceEmailAction(invoiceId: string) {
 
     const emailRes = await sendEmail({
       to: customer.email,
-      subject: `Invoice ${invoice.invoice_number} — ${ctx.organizationName || 'ClinixDev'}`,
+      subject: `Invoice ${invoice.invoice_number} — ${ctx.organizationName || 'Phoenix OS'}`,
       html: compileInvoiceDeliveryTemplate(
-        ctx.organizationName || 'ClinixDev',
+        ctx.organizationName || 'Phoenix OS',
         invoice.invoice_number,
         formatMoney(Number(invoice.total), ctx.currency)
       ),

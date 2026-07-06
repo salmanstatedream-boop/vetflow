@@ -793,11 +793,11 @@ export default function ConsultationWorkspaceClient({
       )}
 
       {consultPausedAt && (
-        <div className="p-4 bg-violet-500/10 border border-violet-500/30 rounded-2xl flex items-start gap-3">
-          <Pause className="w-5 h-5 text-violet-400 flex-shrink-0 mt-0.5" />
+        <div className="p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-2xl flex items-start gap-3">
+          <Pause className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-black text-violet-300 uppercase tracking-wide">Consultation paused</p>
-            <p className="text-xs text-violet-200/80 mt-1">{consultPauseReason}</p>
+            <p className="text-sm font-black text-cyan-300 uppercase tracking-wide">Consultation paused</p>
+            <p className="text-xs text-cyan-200/80 mt-1">{consultPauseReason}</p>
             <p className="text-[10px] text-on-surface-variant/60 mt-1">Reception can see this status. Resume when ready to continue charting.</p>
           </div>
         </div>
@@ -827,7 +827,7 @@ export default function ConsultationWorkspaceClient({
                 type="button"
                 onClick={handlePauseConsult}
                 disabled={pauseLoading || pauseReasonInput.trim().length < 3}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-violet-600 text-white disabled:opacity-50 flex items-center gap-2"
+                className="px-4 py-2 rounded-xl text-xs font-bold app-btn-primary disabled:opacity-50 flex items-center gap-2"
               >
                 {pauseLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 Pause Consultation
@@ -952,7 +952,7 @@ export default function ConsultationWorkspaceClient({
               type="button"
               onClick={() => setShowPauseModal(true)}
               disabled={pauseLoading || isSubmitting}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold border border-violet-500/30 text-violet-300 hover:bg-violet-500/10 disabled:opacity-60"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold border border-primary/30 text-cyan-300 hover:bg-primary/10 disabled:opacity-60"
             >
               <Pause className="w-3 h-3" />
               Pause
@@ -976,7 +976,7 @@ export default function ConsultationWorkspaceClient({
               type="button"
               onClick={() => setShowPauseModal(true)}
               disabled={pauseLoading || isSubmitting}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold border border-violet-500/30 text-violet-300 hover:bg-violet-500/10 disabled:opacity-60"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold border border-primary/30 text-cyan-300 hover:bg-primary/10 disabled:opacity-60"
             >
               <Pause className="w-3 h-3" />
               Pause

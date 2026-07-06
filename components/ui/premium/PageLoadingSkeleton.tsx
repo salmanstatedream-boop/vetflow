@@ -6,7 +6,7 @@ function Shimmer({ className }: { className?: string }) {
       className={`relative overflow-hidden bg-surface-container ${className ?? ''}`}
     >
       <div
-        className="absolute inset-0 -translate-x-full animate-[shimmer_1.4s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-on-surface/5 to-transparent"
+        className="absolute inset-0 -translate-x-full animate-[shimmer_1.4s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-primary/10 to-transparent"
         aria-hidden
       />
     </div>

@@ -10,11 +10,12 @@ import DeniedState from '@/components/ui/premium/DeniedState';
 import GlassPanel from '@/components/ui/premium/GlassPanel';
 import PageHeader from '@/components/ui/premium/PageHeader';
 import UpgradeCheckoutButton from '@/components/dashboard/UpgradeCheckoutButton';
+import { PRODUCT_NAME } from '@/lib/brand';
 import { Sparkles, Check } from 'lucide-react';
 
 export const metadata = {
   title: 'Upgrade Plan',
-  description: 'ClinixDev premium upgrade pathway',
+  description: `${PRODUCT_NAME} premium upgrade pathway`,
 };
 
 const PLANS = [

@@ -12,11 +12,12 @@ import {
 } from '@/lib/services/auth';
 import { logoutAction } from '@/lib/services/auth-actions';
 import AuthPageShell from '@/components/layout/AuthPageShell';
+import { PRODUCT_NAME } from '@/lib/brand';
 import { AlertCircle, Building2, LogOut, RefreshCw } from 'lucide-react';
 
 export const metadata = {
   title: 'Account Setup',
-  description: 'Complete your ClinixDev account setup.',
+  description: `Complete your ${PRODUCT_NAME} account setup.`,
 };
 
 function bootstrapMessage(status: ProfileBootstrapStatus | null, missingServiceRole: boolean): string {
@@ -26,7 +27,7 @@ function bootstrapMessage(status: ProfileBootstrapStatus | null, missingServiceR
   if (status === 'upsert_failed') {
     return 'We could not provision your profile in the database. Wait a moment and refresh, or contact support if this continues.';
   }
-  return 'Your sign-in succeeded, but your ClinixDev profile is not ready yet. Contact your platform administrator to finish clinic provisioning.';
+  return `Your sign-in succeeded, but your ${PRODUCT_NAME} profile is not ready yet. Contact your platform administrator to finish clinic provisioning.`;
 }
 
 function SetupActions({

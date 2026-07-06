@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { PRODUCT_NAME } from '@/lib/brand';
 
 export const metadata: Metadata = {
   title: 'Portfolio — Cinematic Experience',
@@ -11,7 +12,7 @@ export default function PortfolioPage() {
     <div className="min-h-screen bg-surface text-on-surface flex flex-col items-center justify-center px-6 text-center mesh-gradient">
       <div className="glass-panel rounded-3xl p-10 max-w-md border border-outline-variant/40">
         <h1 className="text-2xl font-black font-[family-name:var(--font-display)]">
-          <span className="gradient-text">ClinixDev</span>
+          <span className="gradient-text">{PRODUCT_NAME}</span>
         </h1>
         <p className="text-sm text-on-surface-variant mt-4 mb-6">
           The cinematic portfolio has moved. Explore the full marketing experience on our homepage.

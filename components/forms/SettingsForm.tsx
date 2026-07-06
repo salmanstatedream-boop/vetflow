@@ -13,6 +13,7 @@ import {
 } from '@/lib/utils/timezones';
 import { Loader2, Save, Upload } from 'lucide-react';
 import { clinicLogoApiUrl, isStorageLogoPath, isValidLogoPasteUrl, resolveClinicLogoSrc } from '@/lib/branding/clinic-logo';
+import { PRODUCT_NAME } from '@/lib/brand';
 
 const PRESET_CURRENCIES = ['USD', 'PKR', 'EUR', 'GBP', 'AED', 'SAR', 'INR'] as const;
 
@@ -275,7 +276,7 @@ export default function SettingsForm({ defaultValues, brandedPdfsAllowed = false
         </div>
         <p className="text-[11px] text-on-surface-variant/70 leading-relaxed">
           These details appear on invoice and prescription PDFs. Branded PDFs must be enabled for
-          your clinic by the ClinixDev platform team before custom branding renders on documents.
+          your clinic by the {PRODUCT_NAME} platform team before custom branding renders on documents.
         </p>
 
         <div className="grid md:grid-cols-2 gap-4">

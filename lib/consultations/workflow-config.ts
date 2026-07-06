@@ -57,7 +57,7 @@ export function createProcessSteps(keys: { key: string; label: string }[]): Proc
 export const groomingWorkflowConfig: WorkflowConfig = {
   workflowType: 'grooming',
   label: 'Grooming',
-  badgeClass: 'bg-violet-500/15 text-violet-300 border-violet-500/30',
+  badgeClass: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30',
   steps: [
     { id: 'arrival', label: 'Arrival / Check-in' },
     { id: 'assignment', label: 'Groomer Assignment' },
@@ -87,7 +87,7 @@ export const vaccinationWorkflowConfig: WorkflowConfig = {
 export const dewormingWorkflowConfig: WorkflowConfig = {
   workflowType: 'deworming',
   label: 'Deworming',
-  badgeClass: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
+  badgeClass: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
   steps: [
     { id: 'arrival', label: 'Arrival / Check-in' },
     { id: 'triage', label: 'History & Triage' },

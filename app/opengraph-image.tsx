@@ -1,11 +1,16 @@
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { ImageResponse } from 'next/og';
+import { PRODUCT_NAME } from '@/lib/brand';
 
-export const runtime = 'edge';
-export const alt = 'ClinixDev — Cinematic Clinic Management Platform';
+export const alt = `${PRODUCT_NAME} — Clinic Operating System`;
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
-export default function OpenGraphImage() {
+export default async function OpenGraphImage() {
+  const logoData = await readFile(join(process.cwd(), 'public/phoenix-logo.png'));
+  const logoSrc = `data:image/png;base64,${logoData.toString('base64')}`;
+
   return new ImageResponse(
     (
       <div
@@ -16,8 +21,8 @@ export default function OpenGraphImage() {
           flexDirection: 'column',
           justifyContent: 'center',
           padding: 64,
-          background: 'linear-gradient(135deg, #15121b 0%, #211e27 50%, #2c2832 100%)',
-          color: '#e8e0ec',
+          background: 'linear-gradient(135deg, #03040a 0%, #0b1020 50%, #101a33 100%)',
+          color: '#f8fafc',
           fontFamily: 'system-ui, sans-serif',
         }}
       >
@@ -25,25 +30,12 @@ export default function OpenGraphImage() {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 16,
+            gap: 20,
             marginBottom: 32,
           }}
         >
-          <div
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: 16,
-              background: 'rgba(208, 188, 255, 0.15)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 28,
-            }}
-          >
-            +
-          </div>
-          <span style={{ fontSize: 36, fontWeight: 800, letterSpacing: '-0.02em' }}>ClinixDev</span>
+          <img src={logoSrc} width={72} height={72} alt="" style={{ objectFit: 'contain' }} />
+          <span style={{ fontSize: 40, fontWeight: 800, letterSpacing: '-0.02em' }}>{PRODUCT_NAME}</span>
         </div>
         <div
           style={{
@@ -54,9 +46,9 @@ export default function OpenGraphImage() {
             maxWidth: 900,
           }}
         >
-          Run your clinic with cinematic clarity
+          Your whole clinic, one live workspace
         </div>
-        <div style={{ fontSize: 24, marginTop: 24, color: 'rgba(232, 224, 236, 0.7)', maxWidth: 800 }}>
+        <div style={{ fontSize: 24, marginTop: 24, color: 'rgba(148, 163, 184, 0.9)', maxWidth: 800 }}>
           Secure multi-tenant platform for veterinary clinics — appointments, consult, billing, and inventory.
         </div>
       </div>

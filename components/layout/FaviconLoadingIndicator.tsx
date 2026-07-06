@@ -13,13 +13,13 @@ function drawSpinnerFavicon(): string {
   const ctx = canvas.getContext('2d');
   if (!ctx) return STATIC_ICON;
 
-  ctx.fillStyle = '#15121b';
+  ctx.fillStyle = '#03040a';
   ctx.fillRect(0, 0, 32, 32);
 
   const angle = (spinnerFrame / 8) * Math.PI * 2;
   spinnerFrame = (spinnerFrame + 1) % 8;
 
-  ctx.strokeStyle = '#d0bcff';
+  ctx.strokeStyle = '#22d3ee';
   ctx.lineWidth = 3;
   ctx.lineCap = 'round';
   ctx.beginPath();

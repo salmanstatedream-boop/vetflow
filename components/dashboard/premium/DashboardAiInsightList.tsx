@@ -33,7 +33,7 @@ function insightColor(text: string) {
   if (lower.includes('up') || lower.includes('above')) {
     return 'text-emerald-400 bg-emerald-500/15 border-emerald-500/25';
   }
-  return 'text-violet-400 bg-violet-500/15 border-violet-500/25';
+  return 'text-cyan-400 bg-cyan-500/15 border-cyan-500/25';
 }
 
 interface DashboardAiInsightListProps {

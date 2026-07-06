@@ -1,8 +1,8 @@
-# 🏥 ClinixDev
+# 🏥 Phoenix OS
 
-ClinixDev is a high-performance, multi-tenant clinic software-as-a-service (SaaS) platform. The MVP is purpose-built for **veterinary clinics** — owners/patients, appointments, doctor consultations, prescriptions, lab tests, medical documents, inventory, and tax-aware branded invoicing — while the underlying model is **generic (patients + clinic types)** so it scales to dental, general, and specialty clinics over time.
+Phoenix OS is a high-performance, multi-tenant clinic software-as-a-service (SaaS) platform. The MVP is purpose-built for **veterinary clinics** — owners/patients, appointments, doctor consultations, prescriptions, lab tests, medical documents, inventory, and tax-aware branded invoicing — while the underlying model is **generic (patients + clinic types)** so it scales to dental, general, and specialty clinics over time.
 
-Designed with robust architectural patterns, ClinixDev enforces strict tenant isolation using **PostgreSQL Row-Level Security (RLS)** and **Storage object policies**, writes **compliance-grade audit logs** for sensitive actions, and is engineered as a **HIPAA-ready** architecture for future human clinics.
+Designed with robust architectural patterns, Phoenix OS enforces strict tenant isolation using **PostgreSQL Row-Level Security (RLS)** and **Storage object policies**, writes **compliance-grade audit logs** for sensitive actions, and is engineered as a **HIPAA-ready** architecture for future human clinics.
 
 ### Architecture highlights
 - **Generic patient model** (`patients` with `patient_type` + `metadata` JSONB) — vet-first, multi-clinic-type ready.
@@ -16,7 +16,7 @@ Designed with robust architectural patterns, ClinixDev enforces strict tenant is
 
 ## 📸 Platform Tour & Screenshots
 
-Here is a visual overview of the ClinixDev system, captured via automated E2E testing:
+Here is a visual overview of the Phoenix OS system, captured via automated E2E testing:
 
 ### 🌐 Public Portal & Authentication
 
@@ -175,6 +175,7 @@ Required for production:
 - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
 - `NEXT_PUBLIC_APP_URL` (e.g. `http://localhost:3000` locally)
 - `NEXT_PUBLIC_DEMO_MODE=false`
+- `PHOENIX_OS_SALES_EMAIL` and `PHOENIX_OS_NOREPLY_FROM` (email sender identities on your domain)
 
 ### 5. Supabase setup (production)
 Run migrations in order against your Supabase SQL editor or CLI:

@@ -255,18 +255,18 @@ export async function createRetailSaleAction(payload: unknown, proofFile?: File 
     if (parsed.sendEmailReceipt && customer.email) {
       await sendEmail({
         to: customer.email,
-        subject: `Invoice ${invoiceNumber} — ${ctx.organizationName || 'ClinixDev'}`,
+        subject: `Invoice ${invoiceNumber} — ${ctx.organizationName || 'Phoenix OS'}`,
         html: compileInvoiceDeliveryTemplate(
-          ctx.organizationName || 'ClinixDev',
+          ctx.organizationName || 'Phoenix OS',
           invoiceNumber,
           formatMoney(total, ctx.currency)
         ),
       });
       await sendEmail({
         to: customer.email,
-        subject: `Thank you for your purchase — ${ctx.organizationName || 'ClinixDev'}`,
+        subject: `Thank you for your purchase — ${ctx.organizationName || 'Phoenix OS'}`,
         html: compileThankYouTemplate(
-          ctx.organizationName || 'ClinixDev',
+          ctx.organizationName || 'Phoenix OS',
           invoiceNumber,
           formatMoney(total, ctx.currency),
           `${parsed.customerFirstName} ${parsed.customerLastName}`.trim()

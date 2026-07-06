@@ -5,6 +5,7 @@ import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { LoginSchema, RequestAccessSchema } from '@/lib/validations/auth';
 import { sendEmail } from '@/lib/email';
+import { PRODUCT_NAME, SALES_EMAIL } from '@/lib/brand';
 import {
   resolveServerSession,
   resolveAuthenticatedDestination,
@@ -80,16 +81,16 @@ export async function loginAction(payload: unknown): Promise<ActionResponse> {
 /**
  * Public self-serve registration is disabled. Clinics are provisioned by a
  * platform super admin only. Prospective clinics submit a request for access
- * which is routed to the ClinixDev team (Resend email + console fallback).
+ * which is routed to the Phoenix OS team (Resend email + console fallback).
  */
 export async function requestAccessAction(payload: unknown): Promise<ActionResponse> {
   try {
     const parsed = RequestAccessSchema.parse(payload);
 
-    const salesInbox = process.env.CLINIXDEV_SALES_EMAIL || 'sales@clinixdev.com';
+    const salesInbox = SALES_EMAIL;
     const html = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color:#0b132b;">New ClinixDev access request</h2>
+        <h2 style="color:#0b132b;">New ${PRODUCT_NAME} access request</h2>
         <p><strong>Name:</strong> ${parsed.fullName}</p>
         <p><strong>Email:</strong> ${parsed.email}</p>
         <p><strong>Clinic:</strong> ${parsed.clinicName}</p>

@@ -5,10 +5,11 @@ import { usePathname } from 'next/navigation';
 import DashboardNavLink from '@/components/layout/DashboardNavLink';
 import ThemeToggle from '@/components/layout/ThemeToggle';
 import LogoutButton from '@/components/ui/premium/LogoutButton';
+import PhoenixLogo from '@/components/brand/PhoenixLogo';
+import { PRODUCT_NAME } from '@/lib/brand';
 import { platformTenantSearchAction } from '@/lib/services/super-admin-actions';
 import type { LucideIcon } from 'lucide-react';
 import {
-  Stethoscope,
   LayoutDashboard,
   Building2,
   CreditCard,
@@ -101,12 +102,12 @@ export default function SuperAdminShellClient({
 
   const sidebarHeader = (
     <div className="h-16 flex items-center px-6 gap-2.5 border-b border-outline-variant">
-      <div className="w-8 h-8 bg-primary-container flex items-center justify-center rounded-xl">
-        <Stethoscope className="w-4 h-4 text-on-primary" />
+      <div className="w-8 h-8 flex items-center justify-center rounded-xl border border-primary/20 overflow-hidden bg-surface-container/40">
+        <PhoenixLogo size={24} />
       </div>
       <div>
         <span className="font-bold text-sm text-on-surface block font-[family-name:var(--font-display)]">
-          ClinixDev Central
+          {PRODUCT_NAME}
         </span>
         <span className="text-[9px] text-on-surface-variant uppercase tracking-wider flex items-center gap-1">
           <Shield className="w-3 h-3 text-primary" />
@@ -222,10 +223,10 @@ export default function SuperAdminShellClient({
             <aside className="relative w-64 bg-surface-container h-full z-10 border-r border-outline-variant flex flex-col">
               <div className="h-16 flex items-center px-6 justify-between border-b border-outline-variant">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-8 h-8 bg-primary-container flex items-center justify-center rounded-xl shrink-0">
-                    <Stethoscope className="w-4 h-4 text-on-primary" />
+                  <div className="w-8 h-8 flex items-center justify-center rounded-xl border border-primary/20 overflow-hidden bg-surface-container/40 shrink-0">
+                    <PhoenixLogo size={24} />
                   </div>
-                  <span className="font-bold text-sm text-on-surface truncate">ClinixDev Central</span>
+                  <span className="font-bold text-sm text-on-surface truncate">{PRODUCT_NAME}</span>
                 </div>
                 <button type="button" onClick={() => setIsMobileMenuOpen(false)}>
                   <X className="w-5 h-5 text-on-surface-variant" />

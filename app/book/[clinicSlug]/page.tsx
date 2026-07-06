@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/server';
 import PublicBookingFormClient from '@/components/forms/PublicBookingFormClient';
 import AuthPageShell from '@/components/layout/AuthPageShell';
+import { PRODUCT_NAME } from '@/lib/brand';
 import { Stethoscope } from 'lucide-react';
 
 export const metadata = {
@@ -31,7 +32,7 @@ export default async function PublicBookingPage({
         headerIcon={<Stethoscope className="w-10 h-10 text-destructive" />}
       >
         <p className="text-sm text-on-surface-variant/80 text-center leading-relaxed">
-          The requested clinic address is not registered on the ClinixDev network.
+          The requested clinic address is not registered on the {PRODUCT_NAME} network.
         </p>
       </AuthPageShell>
     );

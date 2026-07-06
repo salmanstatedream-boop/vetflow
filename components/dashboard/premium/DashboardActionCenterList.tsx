@@ -12,7 +12,7 @@ const VARIANT_STYLES: Record<
   warning: { icon: Receipt, chip: 'bg-amber-500/15 border-amber-500/25', iconClass: 'text-amber-400' },
   danger: { icon: Layers, chip: 'bg-red-500/15 border-red-500/25', iconClass: 'text-red-400' },
   info: { icon: BadgeCheck, chip: 'bg-cyan-500/15 border-cyan-500/25', iconClass: 'text-cyan-400' },
-  purple: { icon: Calendar, chip: 'bg-violet-500/15 border-violet-500/25', iconClass: 'text-violet-400' },
+  purple: { icon: Calendar, chip: 'bg-cyan-500/15 border-cyan-500/25', iconClass: 'text-cyan-400' },
 };
 
 interface DashboardActionCenterListProps {

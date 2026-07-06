@@ -32,7 +32,7 @@ export default function ReceptionistPrimaryActions({
         </button>
         <AppLink
           href="/dashboard/sales/new"
-          className="flex items-center justify-center gap-3 w-full py-4 px-6 rounded-2xl bg-violet-600 text-white font-bold text-sm shadow-premium hover:opacity-90 transition-all"
+          className="flex items-center justify-center gap-3 w-full py-4 px-6 rounded-2xl app-btn-primary font-bold text-sm shadow-premium transition-all"
         >
           <ShoppingBag className="w-5 h-5" />
           Retail sale — products & services

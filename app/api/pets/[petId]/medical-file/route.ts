@@ -6,6 +6,7 @@ import { assertOrganization, resolveServerAuthContext } from '@/lib/auth/context
 import { getPdfBranding } from '@/lib/services/branding';
 import { getPatientMedicalProfileAction } from '@/lib/services/patient-medical-actions';
 import { buildHealthTimeline } from '@/lib/patients/health-timeline';
+import { PRODUCT_NAME } from '@/lib/brand';
 
 export async function GET(
   _request: Request,
@@ -35,7 +36,7 @@ export async function GET(
     const branding = await getPdfBranding(
       supabase,
       ctx.organizationId!,
-      ctx.organizationName || 'ClinixDev'
+      ctx.organizationName || PRODUCT_NAME
     );
     const { metricPoints } = buildHealthTimeline(profile);
 

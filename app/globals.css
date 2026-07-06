@@ -4,40 +4,57 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Phoenix OS — shared palette (homepage + app) */
+:root {
+  --phx-bg: #03040a;
+  --phx-bg-alt: #070a12;
+  --phx-panel: #0b1020;
+  --phx-border: rgba(255, 255, 255, 0.1);
+  --phx-text: #f8fafc;
+  --phx-muted: #94a3b8;
+  --phx-label: #64748b;
+  --phx-cyan: #22d3ee;
+  --phx-blue: #3b82f6;
+  --phx-violet: #8b5cf6;
+  --phx-purple: #a855f7;
+  --phx-nav-height: 3.5rem;
+  --phx-panel-high: #101a33;
+}
+
 @theme {
-  /* ClinicOS dark palette */
-  --color-surface: #15121b;
-  --color-surface-dim: #15121b;
-  --color-surface-container: #211e27;
-  --color-surface-container-high: #2c2832;
-  --color-surface-container-highest: #37333d;
-  --color-on-surface: #e7e0ed;
-  --color-on-surface-variant: #cbc3d7;
-  --color-outline: #958ea0;
-  --color-outline-variant: #494454;
-  --color-primary: #d0bcff;
-  --color-on-primary: #3c0091;
-  --color-primary-container: #a078ff;
-  --color-secondary: #89ceff;
-  --color-secondary-container: #00a2e6;
+  /* Phoenix OS semantic palette (ClinicOS token names preserved) */
+  --color-surface: var(--phx-bg);
+  --color-surface-dim: var(--phx-bg);
+  --color-surface-container: var(--phx-panel);
+  --color-surface-container-high: var(--phx-panel-high);
+  --color-surface-container-highest: #141c30;
+  --color-on-surface: var(--phx-text);
+  --color-on-surface-variant: var(--phx-muted);
+  --color-outline: var(--phx-label);
+  --color-outline-variant: var(--phx-border);
+  --color-primary: var(--phx-cyan);
+  --color-on-primary: #03040a;
+  --color-primary-container: color-mix(in srgb, var(--phx-cyan) 35%, var(--phx-blue));
+  --color-secondary: var(--phx-blue);
+  --color-secondary-container: #0e7490;
   --color-tertiary: #ffb869;
   --color-destructive: #ffb4ab;
-  --color-border: #37333d;
+  --color-border: var(--phx-border);
 
-  /* Legacy aliases for gradual migration */
-  --color-primary-navy: #15121b;
-  --color-primary-ivory: #211e27;
-  --color-primary-teal: #a078ff;
-  --color-primary-teal-light: #d0bcff;
+  /* Legacy aliases */
+  --color-primary-navy: var(--phx-bg);
+  --color-primary-ivory: var(--phx-panel);
+  --color-primary-teal: var(--phx-cyan);
+  --color-primary-teal-light: var(--phx-blue);
   --color-gold: #ffb869;
-  --color-graphite: #cbc3d7;
-  --color-accent: #ffb869;
+  --color-graphite: var(--phx-muted);
+  --color-accent: var(--phx-cyan);
 
-  /* ClinicOS landing accents (stitch dermatology vertical) */
-  --color-landing-bg: #0b1326;
-  --color-landing-cyan: #4cd7f6;
-  --color-landing-pink: #ffafd3;
-  --color-landing-surface: #171f33;
+  /* Landing accents */
+  --color-landing-bg: var(--phx-bg-alt);
+  --color-landing-cyan: var(--phx-cyan);
+  --color-landing-pink: var(--phx-violet);
+  --color-landing-surface: var(--phx-panel);
 
   --radius-lg: 0.5rem;
   --radius-xl: 0.75rem;
@@ -45,8 +62,8 @@
   --radius-3xl: 1.5rem;
 
   --shadow-premium: 0 10px 40px -12px rgba(0, 0, 0, 0.45);
-  --shadow-premium-hover: 0 20px 50px -15px rgba(160, 120, 255, 0.15);
-  --dashboard-glow-purple: rgba(168, 85, 247, 0.35);
+  --shadow-premium-hover: 0 20px 50px -15px rgba(34, 211, 238, 0.15);
+  --dashboard-glow-purple: rgba(34, 211, 238, 0.35);
   --dashboard-border-subtle: rgba(255, 255, 255, 0.08);
 }
 
@@ -124,16 +141,16 @@ body {
 }
 
 .glass-panel {
-  background: rgba(33, 30, 39, 0.72);
+  background: color-mix(in srgb, var(--phx-panel) 88%, transparent);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--color-outline-variant);
+  border: 1px solid var(--phx-border);
   border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-premium);
 }
 
 .dashboard-card {
-  background: rgba(33, 30, 39, 0.78);
+  background: color-mix(in srgb, var(--phx-panel) 92%, transparent);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   border: 1px solid var(--dashboard-border-subtle, rgba(255, 255, 255, 0.08));
@@ -152,40 +169,41 @@ body {
 }
 
 .dashboard-kpi-icon {
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.22), rgba(6, 182, 212, 0.12));
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.22), rgba(59, 130, 246, 0.12));
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .sidebar-section-label {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--color-on-surface-variant);
-  opacity: 0.65;
+  color: var(--phx-label);
+  opacity: 0.85;
   padding: 0.5rem 0.75rem 0.35rem;
 }
 
 .neon-accent-line {
-  box-shadow: 0 0 12px rgba(168, 85, 247, 0.35);
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.35);
 }
 
 .glass {
-  background: rgba(44, 40, 50, 0.55);
+  background: color-mix(in srgb, var(--phx-panel-high) 75%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--color-outline-variant);
+  border: 1px solid var(--phx-border);
 }
 
 .glass-dark {
-  background: rgba(15, 13, 21, 0.85);
+  background: color-mix(in srgb, var(--phx-bg) 92%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--color-outline-variant);
+  border: 1px solid var(--phx-border);
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  background: linear-gradient(135deg, var(--phx-cyan), var(--phx-blue), var(--phx-violet));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -193,10 +211,10 @@ body {
 
 .mesh-gradient {
   background:
-    radial-gradient(at 40% 20%, rgba(160, 120, 255, 0.12) 0px, transparent 50%),
-    radial-gradient(at 80% 0%, rgba(255, 184, 105, 0.08) 0px, transparent 50%),
-    radial-gradient(at 0% 50%, rgba(137, 206, 255, 0.06) 0px, transparent 50%),
-    radial-gradient(at 80% 80%, rgba(160, 120, 255, 0.05) 0px, transparent 50%);
+    radial-gradient(at 40% 20%, rgba(34, 211, 238, 0.1) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, rgba(59, 130, 246, 0.08) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, rgba(139, 92, 246, 0.06) 0px, transparent 50%),
+    radial-gradient(at 80% 80%, rgba(34, 211, 238, 0.05) 0px, transparent 50%);
 }
 
 .landing-page {
@@ -669,73 +687,85 @@ body {
   }
 }
 
-/* Light theme — warm clinic palette (dark remains default via html.dark) */
+/* Light theme — adapted Phoenix palette */
 html.light {
-  --color-surface: #f8f7fc;
-  --color-surface-dim: #f3f1f8;
-  --color-surface-container: #ffffff;
-  --color-surface-container-high: #eeecf4;
-  --color-surface-container-highest: #e4e1ec;
-  --color-on-surface: #1c1b22;
-  --color-on-surface-variant: #49454e;
-  --color-outline: #79747e;
-  --color-outline-variant: #cac4d4;
-  --color-primary: #6750a4;
+  --phx-bg: #f5f7fa;
+  --phx-bg-alt: #eef2f7;
+  --phx-panel: #ffffff;
+  --phx-panel-high: #f0f4f8;
+  --phx-border: rgba(34, 211, 238, 0.15);
+  --phx-text: #0f172a;
+  --phx-muted: #64748b;
+  --phx-label: #94a3b8;
+  --phx-cyan: #0891b2;
+  --phx-blue: #2563eb;
+  --phx-violet: #7c3aed;
+
+  --color-surface: var(--phx-bg);
+  --color-surface-dim: var(--phx-bg-alt);
+  --color-surface-container: var(--phx-panel);
+  --color-surface-container-high: var(--phx-panel-high);
+  --color-surface-container-highest: #e2e8f0;
+  --color-on-surface: var(--phx-text);
+  --color-on-surface-variant: var(--phx-muted);
+  --color-outline: var(--phx-label);
+  --color-outline-variant: var(--phx-border);
+  --color-primary: var(--phx-cyan);
   --color-on-primary: #ffffff;
-  --color-primary-container: #e9ddff;
-  --color-secondary: #006493;
-  --color-secondary-container: #c8e6ff;
-  --color-tertiary: #7d5700;
-  --color-destructive: #ba1a1a;
-  --color-border: #e4e1ec;
+  --color-primary-container: color-mix(in srgb, var(--phx-cyan) 20%, white);
+  --color-secondary: var(--phx-blue);
+  --color-secondary-container: #e0f2fe;
+  --color-tertiary: #b45309;
+  --color-destructive: #dc2626;
+  --color-border: var(--phx-border);
 
-  --color-landing-bg: #f5f3fa;
-  --color-landing-surface: #ffffff;
-  --color-landing-cyan: #006493;
-  --color-landing-pink: #6750a4;
+  --color-landing-bg: var(--phx-bg);
+  --color-landing-surface: var(--phx-panel);
+  --color-landing-cyan: var(--phx-cyan);
+  --color-landing-pink: var(--phx-violet);
 
-  --shadow-premium: 0 4px 24px -8px rgba(28, 27, 34, 0.08);
-  --shadow-premium-hover: 0 12px 32px -10px rgba(103, 80, 164, 0.12);
+  --shadow-premium: 0 4px 24px -8px rgba(15, 23, 42, 0.08);
+  --shadow-premium-hover: 0 12px 32px -10px rgba(8, 145, 178, 0.12);
+  --dashboard-glow-purple: rgba(8, 145, 178, 0.25);
 
-  --background: 270 20% 97%;
-  --foreground: 260 10% 12%;
+  --background: 210 20% 97%;
+  --foreground: 222 47% 11%;
   --card: 0 0% 100%;
-  --card-foreground: 260 10% 12%;
-  --primary: 263 44% 48%;
+  --card-foreground: 222 47% 11%;
+  --primary: 188 94% 37%;
   --primary-foreground: 0 0% 100%;
-  --muted: 270 15% 94%;
-  --muted-foreground: 260 8% 40%;
-  --border: 270 12% 88%;
+  --muted: 210 20% 94%;
+  --muted-foreground: 215 16% 40%;
+  --border: 210 20% 88%;
 }
 
 html.light .glass-panel {
   background: rgba(255, 255, 255, 0.92);
-  border-color: rgba(103, 80, 164, 0.1);
+  border-color: rgba(34, 211, 238, 0.12);
   box-shadow: var(--shadow-premium);
 }
 
 html.light .glass {
   background: rgba(255, 255, 255, 0.88);
-  border-color: rgba(103, 80, 164, 0.1);
+  border-color: rgba(34, 211, 238, 0.1);
 }
 
 html.light .mesh-gradient {
   background:
-    radial-gradient(at 40% 20%, rgba(103, 80, 164, 0.04) 0px, transparent 50%),
-    radial-gradient(at 80% 0%, rgba(0, 100, 147, 0.03) 0px, transparent 50%),
-    radial-gradient(at 0% 50%, rgba(103, 80, 164, 0.03) 0px, transparent 50%),
-    radial-gradient(at 80% 80%, rgba(103, 80, 164, 0.02) 0px, transparent 50%);
+    radial-gradient(at 40% 20%, rgba(8, 145, 178, 0.05) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, rgba(37, 99, 235, 0.04) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, rgba(124, 58, 237, 0.03) 0px, transparent 50%),
+    radial-gradient(at 80% 80%, rgba(8, 145, 178, 0.03) 0px, transparent 50%);
 }
 
 html.dark .dashboard-shell {
   background:
-    radial-gradient(at 20% 10%, rgba(88, 28, 135, 0.25) 0px, transparent 45%),
-    radial-gradient(at 80% 0%, rgba(168, 85, 247, 0.12) 0px, transparent 50%),
-    radial-gradient(at 40% 20%, rgba(160, 120, 255, 0.12) 0px, transparent 50%),
-    radial-gradient(at 80% 0%, rgba(255, 184, 105, 0.08) 0px, transparent 50%),
-    radial-gradient(at 0% 50%, rgba(137, 206, 255, 0.06) 0px, transparent 50%),
-    radial-gradient(at 80% 80%, rgba(160, 120, 255, 0.05) 0px, transparent 50%),
-    linear-gradient(180deg, #0f0b14 0%, var(--color-surface) 40%, #120e18 100%);
+    radial-gradient(at 20% 10%, rgba(34, 211, 238, 0.08) 0px, transparent 45%),
+    radial-gradient(at 80% 0%, rgba(59, 130, 246, 0.06) 0px, transparent 50%),
+    radial-gradient(at 40% 20%, rgba(139, 92, 246, 0.05) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, rgba(34, 211, 238, 0.04) 0px, transparent 50%),
+    radial-gradient(at 80% 80%, rgba(59, 130, 246, 0.04) 0px, transparent 50%),
+    linear-gradient(180deg, #020308 0%, var(--color-surface) 40%, #05070f 100%);
 }
 
 html.light .dashboard-shell {
@@ -755,10 +785,10 @@ html.light .nav-scrolled {
 html.light .aurora-bg {
   opacity: 0.35;
   background:
-    radial-gradient(ellipse at 20% 20%, rgba(103, 80, 164, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(0, 100, 147, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse at 40% 80%, rgba(103, 80, 164, 0.05) 0%, transparent 50%),
-    radial-gradient(ellipse at 90% 70%, rgba(103, 80, 164, 0.04) 0%, transparent 50%);
+    radial-gradient(ellipse at 20% 20%, rgba(8, 145, 178, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(37, 99, 235, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 40% 80%, rgba(124, 58, 237, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 90% 70%, rgba(8, 145, 178, 0.04) 0%, transparent 50%);
 }
 
 html.light .floating-orb-1,
@@ -769,15 +799,15 @@ html.light .floating-orb-3 {
 
 html.light .landing-hero-mesh {
   background:
-    radial-gradient(ellipse at 50% 40%, rgba(0, 100, 147, 0.06) 0%, transparent 55%),
-    radial-gradient(ellipse at 80% 20%, rgba(103, 80, 164, 0.05) 0%, transparent 45%),
+    radial-gradient(ellipse at 50% 40%, rgba(8, 145, 178, 0.06) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 20%, rgba(37, 99, 235, 0.05) 0%, transparent 45%),
     linear-gradient(to top, var(--color-landing-bg) 0%, transparent 40%);
 }
 
 html.light .landing-grid-bg {
   background-image:
-    linear-gradient(rgba(103, 80, 164, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(103, 80, 164, 0.04) 1px, transparent 1px);
+    linear-gradient(rgba(8, 145, 178, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(8, 145, 178, 0.04) 1px, transparent 1px);
 }
 
 html,
@@ -801,19 +831,59 @@ html.screenshotting .sticky-showcase-container {
 
 /* ─── Phoenix OS marketing homepage ─── */
 .phx-page {
-  --phx-bg: #03040a;
-  --phx-bg-alt: #070a12;
-  --phx-panel: #0b1020;
-  --phx-border: rgba(255, 255, 255, 0.1);
-  --phx-text: #f8fafc;
-  --phx-muted: #94a3b8;
-  --phx-cyan: #22d3ee;
-  --phx-blue: #3b82f6;
-  --phx-violet: #8b5cf6;
-  --phx-purple: #a855f7;
-  --phx-nav-height: 3.5rem;
   background-color: var(--phx-bg);
   color: var(--phx-text);
+}
+
+/* App-wide utilities (dashboard + auth) */
+.app-focus-ring {
+  outline: none;
+}
+
+.app-focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--phx-cyan) 40%, transparent);
+}
+
+.app-eyebrow {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--phx-cyan);
+}
+
+.app-heading {
+  font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--phx-text);
+}
+
+.app-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.625rem 1rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: #03040a;
+  background: linear-gradient(135deg, var(--phx-cyan), var(--phx-blue));
+  transition: opacity 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.app-btn-primary:hover {
+  opacity: 0.95;
+  box-shadow: 0 6px 24px rgba(34, 211, 238, 0.2);
+}
+
+html.light .app-btn-primary {
+  color: #ffffff;
 }
 
 .phx-section {

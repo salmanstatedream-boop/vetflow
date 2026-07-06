@@ -26,7 +26,9 @@ import type { MyAttendance } from '@/components/dashboard/AttendanceWidgetClient
 import { hasCapability } from '@/lib/auth/capabilities';
 import { EMPTY_ATTENDANCE } from '@/lib/dashboard/load-my-attendance';
 import { resolveClinicLogoSrc } from '@/lib/branding/clinic-logo';
-import { Stethoscope, Search, Menu, X, PanelLeftClose } from 'lucide-react';
+import PhoenixLogo from '@/components/brand/PhoenixLogo';
+import { PRODUCT_NAME } from '@/lib/brand';
+import { Search, Menu, X, PanelLeftClose } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 function UserAvatar({
@@ -95,8 +97,8 @@ function SidebarBrand({
       className="w-9 h-9 rounded-xl object-contain bg-white/10 border border-outline-variant/30"
     />
   ) : (
-    <div className="w-9 h-9 bg-gradient-to-br from-violet-500/30 to-purple-800/40 flex items-center justify-center rounded-xl border border-violet-500/20 neon-accent-line">
-      <Stethoscope className="w-4 h-4 text-primary" />
+    <div className="w-9 h-9 flex items-center justify-center rounded-xl border border-primary/20 neon-accent-line overflow-hidden bg-surface-container/40">
+      <PhoenixLogo size={28} />
     </div>
   );
 
@@ -124,10 +126,10 @@ function SidebarBrand({
       {!collapsed && (
         <div className="min-w-0">
           <span className="font-bold text-sm text-on-surface block font-[family-name:var(--font-display)] truncate">
-            VetFlow
+            {PRODUCT_NAME}
           </span>
           <span className="text-[9px] text-on-surface-variant uppercase tracking-wider block truncate">
-            {organizationName || 'AI Clinic OS'}
+            {organizationName || 'Clinic'}
           </span>
         </div>
       )}

@@ -1,9 +1,14 @@
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { ImageResponse } from 'next/og';
 
 export const size = { width: 32, height: 32 };
 export const contentType = 'image/png';
 
-export default function Icon() {
+export default async function Icon() {
+  const logoData = await readFile(join(process.cwd(), 'public/phoenix-logo.png'));
+  const logoSrc = `data:image/png;base64,${logoData.toString('base64')}`;
+
   return new ImageResponse(
     (
       <div
@@ -13,26 +18,11 @@ export default function Icon() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'linear-gradient(135deg, #15121b 0%, #2c2832 100%)',
+          background: '#03040a',
           borderRadius: 8,
         }}
       >
-        <div
-          style={{
-            width: 20,
-            height: 20,
-            borderRadius: 6,
-            background: 'rgba(208, 188, 255, 0.2)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#d0bcff',
-            fontSize: 14,
-            fontWeight: 800,
-          }}
-        >
-          +
-        </div>
+        <img src={logoSrc} width={28} height={28} alt="" style={{ objectFit: 'contain' }} />
       </div>
     ),
     { ...size }

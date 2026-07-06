@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { NOREPLY_FROM, PRODUCT_NAME } from '@/lib/brand';
 
 const resendApiKey = process.env.RESEND_API_KEY;
 
@@ -6,7 +7,7 @@ export async function sendEmail({
   to,
   subject,
   html,
-  from = 'ClinixDev Notification <noreply@clinixdev.com>',
+  from = NOREPLY_FROM,
 }: {
   to: string;
   subject: string;
@@ -59,7 +60,7 @@ export function compileAppointmentRequestTemplate(clinicName: string, petName: s
       </div>
       <p style="font-size: 13px; color: #5a5a5a;">Attending staff will review and confirm this request shortly. You will receive an email confirmation containing branch directions.</p>
       <hr style="border: 0; border-top: 1px solid #e3e2de; margin: 20px 0;" />
-      <p style="font-size: 10px; color: #a1a1a1; text-align: center;">Powered by ClinixDev Clinic Operations</p>
+      <p style="font-size: 10px; color: #a1a1a1; text-align: center;">Powered by ${PRODUCT_NAME}</p>
     </div>
   `;
 }
@@ -77,7 +78,7 @@ export function compileAppointmentConfirmedTemplate(clinicName: string, petName:
       </div>
       <p style="font-size: 13px; color: #5a5a5a;">Please arrive 10 minutes before your scheduled slot. We look forward to seeing you and your pet.</p>
       <hr style="border: 0; border-top: 1px solid #e3e2de; margin: 20px 0;" />
-      <p style="font-size: 10px; color: #a1a1a1; text-align: center;">Powered by ClinixDev Clinic Operations</p>
+      <p style="font-size: 10px; color: #a1a1a1; text-align: center;">Powered by ${PRODUCT_NAME}</p>
     </div>
   `;
 }
@@ -88,9 +89,9 @@ export function compilePrescriptionDeliveryTemplate(clinicName: string, petName:
       <h2 style="color: #0b132b;">Prescription Issued</h2>
       <p>Dear Pet Parent,</p>
       <p>Dr. ${doctorName} has finalized the medical prescription for <strong>${petName}</strong> at <strong>${clinicName}</strong>.</p>
-      <p>You can find the prescription details in your ClinixDev patient folder, or download the official prescription PDF attached directly to this message.</p>
+      <p>You can find the prescription details in your ${PRODUCT_NAME} patient folder, or download the official prescription PDF attached directly to this message.</p>
       <hr style="border: 0; border-top: 1px solid #e3e2de; margin: 20px 0;" />
-      <p style="font-size: 10px; color: #a1a1a1; text-align: center;">Powered by ClinixDev Clinic Operations</p>
+      <p style="font-size: 10px; color: #a1a1a1; text-align: center;">Powered by ${PRODUCT_NAME}</p>
     </div>
   `;
 }
@@ -112,7 +113,7 @@ export function compileThankYouTemplate(
       </div>
       <p style="font-size: 13px; color: #5a5a5a;">We hope to see you again. If you have any questions about this payment, please contact our front-desk.</p>
       <hr style="border: 0; border-top: 1px solid #e3e2de; margin: 20px 0;" />
-      <p style="font-size: 10px; color: #a1a1a1; text-align: center;">Powered by ClinixDev Clinic Operations</p>
+      <p style="font-size: 10px; color: #a1a1a1; text-align: center;">Powered by ${PRODUCT_NAME}</p>
     </div>
   `;
 }
@@ -129,7 +130,7 @@ export function compileInvoiceDeliveryTemplate(clinicName: string, invoiceNumber
       </div>
       <p style="font-size: 13px; color: #5a5a5a;">The receipt is attached to this email. If you have any questions, please contact our front-desk.</p>
       <hr style="border: 0; border-top: 1px solid #e3e2de; margin: 20px 0;" />
-      <p style="font-size: 10px; color: #a1a1a1; text-align: center;">Powered by ClinixDev Clinic Operations</p>
+      <p style="font-size: 10px; color: #a1a1a1; text-align: center;">Powered by ${PRODUCT_NAME}</p>
     </div>
   `;
 }

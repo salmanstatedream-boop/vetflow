@@ -329,7 +329,7 @@ export default async function CustomerDetailPage({
                       <span
                         className={`inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
                           inv.saleType === 'retail'
-                            ? 'bg-violet-500/10 text-violet-400 border border-violet-500/20'
+                            ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
                             : 'bg-primary/10 text-primary border border-primary/20'
                         }`}
                       >

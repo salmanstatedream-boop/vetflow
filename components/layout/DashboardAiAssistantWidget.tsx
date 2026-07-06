@@ -85,7 +85,7 @@ export default function DashboardAiAssistantWidget({
           'pointer-events-auto w-14 h-14 rounded-full flex items-center justify-center shadow-premium border border-primary/30 transition-all',
           open
             ? 'bg-surface-container text-primary'
-            : 'bg-gradient-to-br from-violet-600 to-purple-700 text-white hover:opacity-90'
+            : 'bg-gradient-to-br from-cyan-500 to-blue-600 text-[#03040a] hover:opacity-90'
         )}
         aria-label={open ? 'Close AI assistant' : 'Open AI assistant'}
         aria-expanded={open}

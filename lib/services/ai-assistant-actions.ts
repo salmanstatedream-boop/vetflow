@@ -9,6 +9,7 @@ import {
 } from '@/lib/auth/context';
 import { chatCompletion, type ChatMessage } from '@/lib/ai/llm-client';
 import { createClient } from '@/lib/supabase/server';
+import { PRODUCT_NAME } from '@/lib/brand';
 
 const ChatSchema = z.object({
   messages: z.array(
@@ -19,7 +20,7 @@ const ChatSchema = z.object({
   ),
 });
 
-const SYSTEM_PROMPT = `You are ClinixDev AI, a helpful assistant for veterinary clinic staff using the ClinixDev platform.
+const SYSTEM_PROMPT = `You are ${PRODUCT_NAME} AI, a helpful assistant for veterinary clinic staff using the ${PRODUCT_NAME} platform.
 Answer questions using ONLY the clinic data provided in the context block below.
 If the data does not contain an answer, say you do not have that information in the clinic records.
 Never invent patient, customer, or staff data.

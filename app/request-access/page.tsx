@@ -7,7 +7,9 @@ import Link from 'next/link';
 import { RequestAccessSchema, type RequestAccessInput } from '@/lib/validations/auth';
 import { requestAccessAction } from '@/lib/services/auth-actions';
 import AuthPageShell from '@/components/layout/AuthPageShell';
-import { Stethoscope, Loader2, CheckCircle2, ShieldCheck } from 'lucide-react';
+import PhoenixLogo from '@/components/brand/PhoenixLogo';
+import { PRODUCT_NAME } from '@/lib/brand';
+import { Loader2, CheckCircle2, ShieldCheck } from 'lucide-react';
 
 const inputCls =
   'w-full px-4 py-3 bg-surface-container border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary rounded-2xl outline-none text-sm text-on-surface';
@@ -18,18 +20,18 @@ const requestAccessSidebar = (
   <div className="w-full md:w-5/12 bg-surface-container/60 border-b md:border-b-0 md:border-r border-outline-variant/40 p-8 flex flex-col justify-between">
     <div>
       <div className="flex items-center gap-2.5 mb-8">
-        <div className="w-9 h-9 bg-primary/15 border border-primary/20 flex items-center justify-center rounded-xl">
-          <Stethoscope className="w-4 h-4 text-primary" />
+        <div className="w-9 h-9 bg-primary/15 border border-primary/20 flex items-center justify-center rounded-xl overflow-hidden">
+          <PhoenixLogo size={28} />
         </div>
         <span className="font-black tracking-tight text-lg font-[family-name:var(--font-display)]">
-          ClinixDev
+          {PRODUCT_NAME}
         </span>
       </div>
       <h3 className="text-xl font-black font-[family-name:var(--font-display)] tracking-tight">
         Request <span className="gradient-text">access</span>
       </h3>
       <p className="text-xs text-on-surface-variant/75 mt-3 leading-relaxed">
-        ClinixDev clinics are provisioned by our team to guarantee secure, compliant, multi-tenant
+        {PRODUCT_NAME} clinics are provisioned by our team to guarantee secure, compliant, multi-tenant
         isolation. Tell us about your clinic and we&apos;ll get you set up.
       </p>
       <div className="mt-6 flex items-center gap-2 text-[11px] text-on-surface-variant/80">
@@ -38,7 +40,7 @@ const requestAccessSidebar = (
       </div>
     </div>
     <div className="mt-8 md:mt-0 text-[10px] text-on-surface-variant/50">
-      © 2026 ClinixDev Inc. All rights reserved.
+      © 2026 {PRODUCT_NAME}. All rights reserved.
     </div>
   </div>
 );
@@ -91,7 +93,7 @@ export default function RequestAccessPage() {
         }
       >
         <p className="text-sm text-on-surface-variant/80 text-center leading-relaxed">
-          Thanks for your interest in ClinixDev. Our team will review your request and reach out to
+          Thanks for your interest in {PRODUCT_NAME}. Our team will review your request and reach out to
           set up your clinic workspace.
         </p>
       </AuthPageShell>

@@ -67,7 +67,7 @@ export default function Modal({
         >
           <X className="w-5 h-5" />
         </button>
-        <h3 id="modal-title" className="text-base font-bold text-on-surface mb-1 pr-8">
+        <h3 id="modal-title" className="app-heading text-base mb-1 pr-8">
           {title}
         </h3>
         {description && (

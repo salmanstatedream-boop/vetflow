@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { resolveServerAuthContext } from '@/lib/auth/context';
 import { guardRoute, guardFeature } from '@/lib/auth/page-guards';
 import PageHeader from '@/components/ui/premium/PageHeader';
+import { PRODUCT_NAME } from '@/lib/brand';
 import AiAnalyticsClient from '@/components/dashboard/AiAnalyticsClient';
 import { Sparkles } from 'lucide-react';
 
@@ -24,7 +25,7 @@ export default async function AiAnalyticsPage() {
     <div className="space-y-8">
       <PageHeader
         title="AI Analytics"
-        description="Executive narrative and key metrics powered by ClinixDev AI."
+        description={`Executive narrative and key metrics powered by ${PRODUCT_NAME} AI.`}
         icon={Sparkles}
       />
       <AiAnalyticsClient showChartsLink />

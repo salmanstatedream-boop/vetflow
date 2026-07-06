@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { aiAssistantChatAction } from '@/lib/services/ai-assistant-actions';
+import { PRODUCT_NAME } from '@/lib/brand';
 import Button from '@/components/ui/premium/Button';
 import { Bot, Send, Sparkles } from 'lucide-react';
 
@@ -88,7 +89,7 @@ export default function AiAssistantClient({ variant = 'page' }: AiAssistantClien
             <div className="w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center mx-auto mb-4">
               <Bot className="w-7 h-7 text-primary" />
             </div>
-            <p className="text-sm font-bold text-on-surface">ClinixDev AI Assistant</p>
+            <p className="text-sm font-bold text-on-surface">{PRODUCT_NAME} AI Assistant</p>
             <p className="text-xs text-on-surface-variant mt-2 max-w-sm mx-auto">
               Ask about workflows, draft owner communications, or get help navigating clinic operations.
             </p>
@@ -161,7 +162,7 @@ export default function AiAssistantClient({ variant = 'page' }: AiAssistantClien
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onInput={resizeTextarea}
-            placeholder="Ask ClinixDev AI…"
+            placeholder={`Ask ${PRODUCT_NAME} AI…`}
             className="flex-1 px-4 py-3 bg-surface-container border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary rounded-2xl outline-none text-sm text-on-surface resize-none min-h-[44px]"
             disabled={loading}
             onKeyDown={(e) => {
@@ -175,7 +176,7 @@ export default function AiAssistantClient({ variant = 'page' }: AiAssistantClien
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask ClinixDev AI…"
+            placeholder={`Ask ${PRODUCT_NAME} AI…`}
             className="flex-1 px-4 py-3 bg-surface-container border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary rounded-2xl outline-none text-sm text-on-surface"
             disabled={loading}
           />

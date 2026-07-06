@@ -103,7 +103,7 @@ export default function LiveOperationsPanel({
                   {v.customerName} · {v.doctorName}
                 </p>
                 {v.consultPauseReason && isConsultPaused(v) && (
-                  <p className="text-[10px] text-violet-300/90 max-w-md">{v.consultPauseReason}</p>
+                  <p className="text-[10px] text-cyan-300/90 max-w-md">{v.consultPauseReason}</p>
                 )}
                 <p className="text-[10px] text-blue-400 font-semibold">
                   {statusLabel(v.status, { consultPausedAt: v.consultPausedAt })}

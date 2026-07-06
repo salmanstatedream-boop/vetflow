@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter, Plus_Jakarta_Sans, Geist } from 'next/font/google';
 import { ThemeProvider } from '@/components/layout/ThemeProvider';
+import { APP_URL, PRODUCT_NAME } from '@/lib/brand';
 import './globals.css';
 import { cn } from "@/lib/utils";
 
@@ -13,23 +14,23 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://clinixdev.com'),
+  metadataBase: new URL(APP_URL),
   title: {
-    default: 'ClinixDev — Cinematic Clinic Management Platform',
-    template: '%s | ClinixDev',
+    default: `${PRODUCT_NAME} — Clinic Operating System`,
+    template: `%s | ${PRODUCT_NAME}`,
   },
   description:
-    'ClinixDev is a premium, multi-tenant clinic management platform. Launching first for veterinary clinics, built to support dental, general, and specialty clinics over time.',
+    `${PRODUCT_NAME} is a premium, multi-tenant clinic management platform. Launching first for veterinary clinics, built to support dental, general, and specialty clinics over time.`,
   openGraph: {
-    title: 'ClinixDev — Cinematic Clinic Management Platform',
+    title: `${PRODUCT_NAME} — Clinic Operating System`,
     description:
       'Secure multi-tenant clinic platform — appointments, consult, billing, and inventory for modern care teams.',
-    siteName: 'ClinixDev',
+    siteName: PRODUCT_NAME,
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ClinixDev — Cinematic Clinic Management Platform',
+    title: `${PRODUCT_NAME} — Clinic Operating System`,
     description:
       'Secure multi-tenant clinic platform — appointments, consult, billing, and inventory for modern care teams.',
   },

@@ -190,7 +190,7 @@ export default function ReceptionistHomeClient({
                   {isConsultPaused(v) ? ' — paused' : ' — consulting'}
                 </span>
                 {v.consultPauseReason && isConsultPaused(v) && (
-                  <span className="text-[10px] text-violet-300/90 max-w-xs text-right">{v.consultPauseReason}</span>
+                  <span className="text-[10px] text-cyan-300/90 max-w-xs text-right">{v.consultPauseReason}</span>
                 )}
               </div>
             </div>
@@ -277,7 +277,7 @@ export default function ReceptionistHomeClient({
                     <td className="py-2.5 pr-3 font-mono text-[10px]">
                       {r.invoiceNumber}
                       {r.saleType === 'retail' && (
-                        <span className="ml-1 inline-flex px-1 py-0.5 rounded text-[8px] font-bold uppercase bg-violet-500/10 text-violet-400 border border-violet-500/20">
+                        <span className="ml-1 inline-flex px-1 py-0.5 rounded text-[8px] font-bold uppercase bg-primary/10 text-primary border border-primary/20">
                           Retail
                         </span>
                       )}

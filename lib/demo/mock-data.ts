@@ -332,7 +332,7 @@ export const MOCK_PRODUCTS = [
   {
     id: 'pr3',
     name: 'General Consultation',
-    brand: 'ClinixDev',
+    brand: 'Phoenix OS',
     sku: 'SVC-CONSULT',
     unit: 'session',
     type: 'service',

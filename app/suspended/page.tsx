@@ -3,9 +3,10 @@ import { redirect } from 'next/navigation';
 import { resolveServerAuthContext } from '@/lib/auth/context';
 import { ShieldAlert } from 'lucide-react';
 import AuthPageShell from '@/components/layout/AuthPageShell';
+import { PRODUCT_NAME } from '@/lib/brand';
 
 export const metadata = {
-  title: 'Account Suspended — ClinixDev',
+  title: `Account Suspended — ${PRODUCT_NAME}`,
   description: 'Your clinic account has been suspended.',
 };
 
@@ -37,10 +38,10 @@ export default async function SuspendedPage() {
     >
       <p className="text-sm text-on-surface-variant/80 text-center leading-relaxed mb-6">
         {ctx.organizationName ?? 'Your clinic'} has been suspended. Staff cannot access dashboard
-        features until ClinixDev support reactivates the account.
+        features until {PRODUCT_NAME} support reactivates the account.
       </p>
       <p className="text-xs text-on-surface-variant/60 text-center mb-8">
-        Contact ClinixDev support or your platform administrator for assistance.
+        Contact {PRODUCT_NAME} support or your platform administrator for assistance.
       </p>
       <div className="flex flex-col gap-3">
         <Link

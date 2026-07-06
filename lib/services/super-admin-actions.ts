@@ -22,7 +22,7 @@ export async function provisionClinicAction(payload: unknown) {
   try {
     const session = await resolveServerSession();
     if (!session || !session.isSuperAdmin) {
-      throw new Error('Unauthorized: Restricted to ClinixDev Platform Super Admins.');
+      throw new Error('Unauthorized: Restricted to Phoenix OS Platform Super Admins.');
     }
 
     const parsed = ProvisionClinicSchema.parse(payload);
@@ -225,7 +225,7 @@ export async function updateSubscriptionAction(payload: unknown) {
   try {
     const session = await resolveServerSession();
     if (!session || !session.isSuperAdmin) {
-      throw new Error('Unauthorized: Restricted to ClinixDev Platform Super Admins.');
+      throw new Error('Unauthorized: Restricted to Phoenix OS Platform Super Admins.');
     }
 
     const parsed = SubscriptionSchema.parse(payload);
@@ -320,7 +320,7 @@ export async function toggleOrganizationStateAction(orgId: string, isSuspended: 
   try {
     const session = await resolveServerSession();
     if (!session || !session.isSuperAdmin) {
-      throw new Error('Unauthorized: Restricted to ClinixDev Platform Super Admins.');
+      throw new Error('Unauthorized: Restricted to Phoenix OS Platform Super Admins.');
     }
 
     const adminClient = await createAdminClient();
@@ -379,7 +379,7 @@ export async function updateOrganizationFeaturesAction(payload: unknown) {
   try {
     const session = await resolveServerSession();
     if (!session || !session.isSuperAdmin) {
-      throw new Error('Unauthorized: Restricted to ClinixDev Platform Super Admins.');
+      throw new Error('Unauthorized: Restricted to Phoenix OS Platform Super Admins.');
     }
 
     const parsed = OrganizationFeaturesSchema.parse(payload);

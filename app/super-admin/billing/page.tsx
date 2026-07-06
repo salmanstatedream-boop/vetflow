@@ -4,6 +4,7 @@ import BillingTableClient, {
   type BillingRow,
 } from '@/components/super-admin/BillingTableClient';
 import PageHeader from '@/components/ui/premium/PageHeader';
+import { PRODUCT_NAME } from '@/lib/brand';
 import KpiCard from '@/components/ui/premium/KpiCard';
 import { buildPlanPriceMap, computeArr, computeMrr } from '@/lib/super-admin/mrr';
 import { loadSuperAdminPlans } from '@/lib/super-admin/plans';
@@ -99,7 +100,7 @@ export default async function SuperAdminBillingPage() {
     <div className="space-y-8">
       <PageHeader
         title="Platform billing"
-        description="SaaS subscription management for all ClinixDev clinic tenants. Patient-visit payments remain in each clinic's dashboard."
+        description={`SaaS subscription management for all ${PRODUCT_NAME} clinic tenants. Patient-visit payments remain in each clinic's dashboard.`}
         icon={CreditCard}
       />
 

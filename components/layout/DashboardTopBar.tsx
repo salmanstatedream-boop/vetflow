@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Bell, Stethoscope } from 'lucide-react';
+import { Bell } from 'lucide-react';
+import PhoenixLogo from '@/components/brand/PhoenixLogo';
+import { PRODUCT_NAME } from '@/lib/brand';
 import { resolvePageTitle } from '@/lib/navigation/dashboard-nav';
 import { resolveClinicLogoSrc } from '@/lib/branding/clinic-logo';
 import { cn } from '@/lib/utils';
@@ -57,13 +59,13 @@ function ClinicBrandCluster({
           className="w-8 h-8 rounded-lg object-contain bg-white/10 border border-outline-variant/30"
         />
       ) : (
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500/30 to-purple-800/40 flex items-center justify-center border border-violet-500/20">
-          <Stethoscope className="w-4 h-4 text-primary" />
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center border border-primary/20 overflow-hidden bg-surface-container/40">
+          <PhoenixLogo size={24} />
         </div>
       )}
       <div className="min-w-0">
         <span className="text-[11px] font-bold text-on-surface block font-[family-name:var(--font-display)] leading-tight">
-          VetFlow
+          {PRODUCT_NAME}
         </span>
         <span className="text-[9px] text-on-surface-variant block truncate max-w-[120px]">
           {organizationName || 'Clinic'}

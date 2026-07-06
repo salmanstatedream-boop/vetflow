@@ -1,6 +1,6 @@
-import { Stethoscope } from 'lucide-react';
 import Link from 'next/link';
-
+import PhoenixLogo from '@/components/brand/PhoenixLogo';
+import { PRODUCT_NAME } from '@/lib/brand';
 interface AuthPageShellProps {
   title?: string;
   titleAccent?: string;
@@ -25,12 +25,12 @@ function TitleBlock({
   return (
     <div className="mb-6">
       {badge && (
-        <p className="text-[10px] font-black text-primary uppercase tracking-wider text-center mb-1.5">
+        <p className="app-eyebrow text-center mb-1.5 text-[10px]">
           {badge}
         </p>
       )}
       {(title || titleAccent) && (
-        <h2 className="text-xl md:text-2xl font-black text-on-surface text-center font-[family-name:var(--font-display)] tracking-tight leading-tight">
+        <h2 className="app-heading text-xl md:text-2xl text-center leading-tight">
           {title && <span>{title}{titleAccent ? ' ' : ''}</span>}
           {titleAccent && (
             <span className={title ? 'gradient-text' : 'block gradient-text'}>{titleAccent}</span>
@@ -45,13 +45,12 @@ function BrandHeader({ subtitle }: { subtitle?: string }) {
   return (
     <div className="flex flex-col items-center mb-8">
       <Link href="/" className="flex flex-col items-center group">
-        <div className="w-12 h-12 bg-primary/15 border border-primary/20 flex items-center justify-center rounded-2xl mb-3 transition-colors group-hover:bg-primary/20">
-          <Stethoscope className="w-6 h-6 text-primary" />
+        <div className="w-12 h-12 bg-primary/15 border border-primary/20 flex items-center justify-center rounded-2xl mb-3 transition-colors group-hover:bg-primary/20 overflow-hidden">
+          <PhoenixLogo size={40} />
         </div>
         <span className="text-2xl font-black tracking-tight text-on-surface font-[family-name:var(--font-display)]">
-          ClinixDev
-        </span>
-      </Link>
+          {PRODUCT_NAME}
+        </span>      </Link>
       {subtitle && (
         <p className="text-xs text-on-surface-variant/80 mt-1.5 text-center max-w-xs leading-relaxed">
           {subtitle}

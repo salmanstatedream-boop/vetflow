@@ -3,7 +3,7 @@ import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypt
 const ALGO = 'aes-256-gcm';
 const IV_LEN = 12;
 const TAG_LEN = 16;
-const SALT = 'clinixdev-social-token-v1';
+const SALT = 'clinixdev-social-token-v1'; // Do not change — would invalidate stored Meta tokens
 
 function deriveKey(): Buffer {
   const secret = process.env.SOCIAL_TOKEN_ENCRYPTION_KEY;

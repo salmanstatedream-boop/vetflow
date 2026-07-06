@@ -11,6 +11,7 @@ import {
   resolveServerAuthContext,
 } from '@/lib/auth/context';
 import { writeAuditLog } from '@/lib/services/audit';
+import { PRODUCT_NAME } from '@/lib/brand';
 import { 
   sendEmail, 
   compileAppointmentRequestTemplate, 
@@ -148,7 +149,7 @@ export async function createAppointmentRequestAction(payload: unknown) {
       .single();
 
     const emailHtml = compileAppointmentRequestTemplate(
-      org?.name || 'ClinixDev Clinic',
+      org?.name || `${PRODUCT_NAME} Clinic`,
       parsed.petName,
       parsed.preferredDate,
       parsed.preferredTime
@@ -156,7 +157,7 @@ export async function createAppointmentRequestAction(payload: unknown) {
 
     await sendEmail({
       to: parsed.customerEmail,
-      subject: `Appointment Request Received - ${org?.name || 'ClinixDev Clinic'}`,
+      subject: `Appointment Request Received - ${org?.name || `${PRODUCT_NAME} Clinic`}`,
       html: emailHtml,
     });
 
@@ -199,7 +200,7 @@ export async function confirmAppointmentAction(appointmentId: string) {
 
     const branchObj = appt.branches as { name?: string; address?: string } | null;
     const emailHtml = compileAppointmentConfirmedTemplate(
-      ctx.organizationName || 'ClinixDev Center',
+      ctx.organizationName || PRODUCT_NAME,
       appt.patient_name,
       appt.preferred_date,
       appt.preferred_time,

@@ -31,7 +31,7 @@ export default function KpiCard({
         <span className="text-[11px] font-bold uppercase tracking-wide text-on-surface-variant leading-snug line-clamp-2">
           {label}
         </span>
-        <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+        <div className="w-8 h-8 rounded-xl dashboard-kpi-icon flex items-center justify-center shrink-0">
           <Icon className="w-4 h-4 text-primary" />
         </div>
       </div>

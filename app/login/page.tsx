@@ -18,8 +18,8 @@ const DEMO_CREDENTIALS = [
     email: 'salmanjoyiaa@gmail.com',
     password: 'password123',
     icon: Shield,
-    color: 'text-violet-400',
-    bg: 'bg-violet-500/10 border-violet-500/20',
+    color: 'text-cyan-400',
+    bg: 'bg-cyan-500/10 border-cyan-500/20',
     desc: 'Platform-wide admin console',
   },
   {
@@ -51,7 +51,7 @@ const DEMO_CREDENTIALS = [
   },
   {
     label: 'New User',
-    email: 'setup.demo@clinixdev.com',
+    email: 'setup.demo@localhost',
     password: 'password123',
     icon: UserPlus,
     color: 'text-rose-400',

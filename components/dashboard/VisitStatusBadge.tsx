@@ -35,7 +35,7 @@ export default function VisitStatusBadge({
         {label}
       </span>
       {showPauseReason && display === 'consult_paused' && reason && (
-        <span className="text-[10px] text-violet-300/90 max-w-[220px] leading-snug" title={reason}>
+        <span className="text-[10px] text-cyan-300/90 max-w-[220px] leading-snug" title={reason}>
           {reason}
         </span>
       )}

@@ -13,11 +13,11 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantClass: Record<ButtonVariant, string> = {
-  primary: 'bg-primary text-on-primary hover:opacity-90 shadow-sm',
+  primary: 'app-btn-primary app-focus-ring disabled:opacity-50 disabled:cursor-not-allowed',
   secondary:
-    'border border-outline-variant text-on-surface hover:bg-surface-container-high',
-  ghost: 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface',
-  danger: 'bg-destructive text-white hover:opacity-90',
+    'border border-outline-variant text-on-surface hover:bg-surface-container-high hover:border-primary/25 app-focus-ring',
+  ghost: 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface app-focus-ring',
+  danger: 'bg-destructive text-white hover:opacity-90 app-focus-ring',
 };
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Loader2, ArrowRight } from 'lucide-react';
+import { SALES_EMAIL } from '@/lib/brand';
 
 interface UpgradeCheckoutButtonProps {
   plan: 'growth' | 'enterprise';
@@ -19,7 +20,7 @@ export default function UpgradeCheckoutButton({
 
   const handleCheckout = async () => {
     if (!stripeEnabled) {
-      setError('Contact sales@clinixdev.com for enterprise billing.');
+      setError(`Contact ${SALES_EMAIL} for enterprise billing.`);
       return;
     }
 

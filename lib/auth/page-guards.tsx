@@ -15,6 +15,7 @@ import {
   ROUTE_FEATURES,
   type Feature,
 } from '@/lib/auth/features';
+import { PRODUCT_NAME } from '@/lib/brand';
 
 export const CAPABILITY_LABELS: Record<Capability, string> = {
   view_dashboard: 'Dashboard overview',
@@ -55,7 +56,7 @@ export function renderFeatureDenied(feature: Feature) {
   return (
     <DeniedState
       title="Feature not enabled"
-      message={`${FEATURE_LABELS[feature]} is not enabled for your clinic. Contact ClinixDev support or upgrade your plan.`}
+      message={`${FEATURE_LABELS[feature]} is not enabled for your clinic. Contact ${PRODUCT_NAME} support or upgrade your plan.`}
     />
   );
 }

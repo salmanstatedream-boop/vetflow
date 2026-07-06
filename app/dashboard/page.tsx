@@ -1373,7 +1373,7 @@ function getStatusBadge(status: string) {
     case 'consulting':
       return 'bg-blue-500/15 text-blue-400';
     case 'consult_paused':
-      return 'bg-violet-500/15 text-violet-400';
+      return 'bg-cyan-500/15 text-cyan-400';
     case 'ready_for_checkout':
       return 'bg-emerald-500/15 text-emerald-400';
     case 'completed':

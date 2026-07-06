@@ -55,3 +55,21 @@ Dark professional glassmorphism. Deep navy base, cyan accent, restrained motion 
 - `cursor-pointer` on all clickable elements
 - `focus-visible:ring-2 focus-visible:ring-[#22D3EE]/40` on buttons/links
 - Marquee continues on hover; no text cursor on chips
+
+## App surfaces (dashboard, auth, booking)
+
+Phoenix tokens on `:root` map into ClinicOS semantic Tailwind colors so existing `bg-surface`, `text-primary`, and `glass-panel` classes inherit the Phoenix look without layout changes.
+
+| Semantic token | Dark | Light (adapted) |
+|----------------|------|-----------------|
+| `--color-surface` | `--phx-bg` `#03040A` | `#F5F7FA` |
+| `--color-surface-container` | `--phx-panel` `#0B1020` | `#FFFFFF` |
+| `--color-primary` | `--phx-cyan` `#22D3EE` | `#0891B2` |
+| `--color-on-primary` | `#03040A` | `#FFFFFF` |
+| `--color-secondary` | `--phx-blue` `#3B82F6` | `#2563EB` |
+
+**App utilities:** `.app-heading`, `.app-eyebrow`, `.app-focus-ring`, `.app-btn-primary` (cyan→blue gradient primary CTA).
+
+**Charts:** `lib/ui/dashboard-tokens.ts` — primary `#22D3EE`, secondary `#3B82F6`.
+
+**Do not** wrap dashboards in `.phx-page`; use semantic tokens + app utilities only.

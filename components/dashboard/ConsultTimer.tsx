@@ -52,7 +52,7 @@ export default function ConsultTimer({
     <span
       className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${
         isPaused
-          ? 'text-violet-400 bg-violet-500/10 border-violet-500/25'
+          ? 'text-cyan-400 bg-cyan-500/10 border-cyan-500/25'
           : 'text-blue-400 bg-blue-500/10 border-blue-500/20'
       }`}
     >
