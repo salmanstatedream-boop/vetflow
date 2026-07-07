@@ -1,23 +1,26 @@
 'use client';
 
 import { Download, FileText } from 'lucide-react';
+import type { SolutionPetKey } from '@/lib/solution-mockup-assets';
 import {
   DashboardShell,
   FileCountCard,
   MetricTile,
+  PaginationPills,
   PanelHeader,
-  PetAvatar,
+  PetStockAvatar,
   SearchRow,
   StatusPill,
   TabBar,
 } from './shared';
 
-const PATIENTS = [
-  { name: 'Bella', id: 'P-2026-00010', date: 'May 12, 2024', variant: 'golden' as const },
-  { name: 'Max', id: 'P-2026-00008', date: 'May 11, 2024', variant: 'husky' as const },
-  { name: 'Luna', id: 'P-2026-00007', date: 'May 10, 2024', variant: 'tabby' as const },
-  { name: 'Rocky', id: 'P-2026-00006', date: 'May 09, 2024', variant: 'beagle' as const },
-  { name: 'Milo', id: 'P-2026-00005', date: 'May 08, 2024', variant: 'poodle' as const },
+const PATIENTS: { name: string; id: string; date: string; pet: SolutionPetKey }[] = [
+  { name: 'Bella', id: 'P-2026-00010', date: 'May 12, 2024', pet: 'bella' },
+  { name: 'Max', id: 'P-2026-00008', date: 'May 11, 2024', pet: 'max' },
+  { name: 'Luna', id: 'P-2026-00007', date: 'May 10, 2024', pet: 'luna' },
+  { name: 'Rocky', id: 'P-2026-00006', date: 'May 09, 2024', pet: 'rocky' },
+  { name: 'Milo', id: 'P-2026-00005', date: 'May 08, 2024', pet: 'milo' },
+  { name: 'Charlie', id: 'P-2026-00004', date: 'May 07, 2024', pet: 'charlie' },
 ];
 
 const TIMELINE = [
@@ -46,7 +49,7 @@ export default function PatientRecordsVisual() {
                 className={`rounded-lg border p-2 ${i === 0 ? 'border-[#8B5CF6]/50 bg-[#8B5CF6]/10' : 'border-white/10 bg-white/[0.02]'}`}
               >
                 <div className="flex items-center gap-2">
-                  <PetAvatar variant={p.variant} size="sm" />
+                  <PetStockAvatar pet={p.pet} size="sm" />
                   <div className="min-w-0">
                     <p className="text-[9px] font-semibold text-[#F8FAFC] truncate">{p.name}</p>
                     <p className="text-[7px] text-[#64748B]">{p.id}</p>
@@ -56,12 +59,12 @@ export default function PatientRecordsVisual() {
               </div>
             ))}
           </div>
-          <p className="text-[7px] text-[#64748B] text-center">&lt; 1 2 3 … 12 &gt;</p>
+          <PaginationPills active={1} total={12} />
         </div>
 
         <div className="rounded-lg border border-white/10 bg-white/[0.02] p-2.5 space-y-2.5 overflow-hidden">
           <div className="flex items-start gap-3">
-            <PetAvatar variant="golden" size="lg" showCamera />
+            <PetStockAvatar pet="bella" size="xl" showCamera />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h4 className="text-sm font-bold text-[#F8FAFC]">Bella</h4>

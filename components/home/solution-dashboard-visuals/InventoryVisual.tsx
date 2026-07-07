@@ -1,10 +1,14 @@
 'use client';
 
 import { AlertTriangle, Info, Package } from 'lucide-react';
+import type { SolutionProductKey } from '@/lib/solution-mockup-assets';
+import { cn } from '@/lib/utils';
 import {
+  CategoryPill,
   DashboardShell,
   MiniStatCard,
   PanelHeader,
+  ProductThumb,
   ProgressBar,
   SearchRow,
   StatusPill,
@@ -12,17 +16,33 @@ import {
   ToolbarButton,
 } from './shared';
 
-const ITEMS = [
-  { name: 'Royal Canine Puppy', category: 'Food', location: 'Main Store', stock: '82 units', status: 'In Stock', tone: 'green' as const, thumb: '#F59E0B' },
-  { name: 'Cat Litter Premium', category: 'Supplies', location: 'Storage A', stock: '12 units', status: 'Low Stock', tone: 'orange' as const, thumb: '#8B5CF6' },
-  { name: 'Rabies Vaccine', category: 'Medication', location: 'Pharmacy', stock: '0 units', status: 'Out of Stock', tone: 'red' as const, thumb: '#EF4444' },
-  { name: 'Surgical Gloves', category: 'Consumables', location: 'Surgery', stock: '240 units', status: 'In Stock', tone: 'green' as const, thumb: '#3B82F6' },
+const ITEMS: {
+  name: string;
+  category: string;
+  categoryTone: 'purple' | 'blue' | 'orange' | 'green';
+  location: string;
+  stock: string;
+  status: string;
+  tone: 'green' | 'orange' | 'red';
+  product: SolutionProductKey;
+}[] = [
+  { name: 'Amoxicillin 500mg', category: 'Medication', categoryTone: 'purple', location: 'Pharmacy', stock: '142 units', status: 'In Stock', tone: 'green', product: 'amoxicillin' },
+  { name: 'Syringe 5ml', category: 'Consumable', categoryTone: 'blue', location: 'Surgery', stock: '320 units', status: 'In Stock', tone: 'green', product: 'syringe' },
+  { name: 'Nitrile Gloves', category: 'Consumable', categoryTone: 'blue', location: 'Main Store', stock: '28 boxes', status: 'Low Stock', tone: 'orange', product: 'gloves' },
+  { name: 'Vacutainer Tubes', category: 'Supply', categoryTone: 'orange', location: 'Lab', stock: '86 units', status: 'In Stock', tone: 'green', product: 'vacutainer' },
+  { name: 'Glucometer Strips', category: 'Supply', categoryTone: 'orange', location: 'Pharmacy', stock: '54 packs', status: 'In Stock', tone: 'green', product: 'strips' },
+];
+
+const ALERTS = [
+  { type: 'Out of Stock', branch: 'Downtown Branch', tone: 'text-[#FCA5A5]' },
+  { type: 'Low Stock', branch: 'Main Clinic', tone: 'text-[#FDBA74]' },
+  { type: 'Expiring Soon', branch: 'North Branch', tone: 'text-[#93C5FD]' },
 ];
 
 const LOW_STOCK = [
-  { name: 'Nitrile Gloves', pct: 18 },
-  { name: 'Surgical Mask', pct: 24 },
-  { name: 'Cat Litter Premium', pct: 34 },
+  { name: 'Nitrile Gloves', label: '28 boxes left', pct: 18 },
+  { name: 'Surgical Mask', label: '42 boxes left', pct: 24 },
+  { name: 'Rabies Vaccine', label: '6 vials left', pct: 34 },
 ];
 
 export default function InventoryVisual() {
@@ -64,10 +84,10 @@ export default function InventoryVisual() {
                 className="grid grid-cols-[1.3fr_0.7fr_0.7fr_0.6fr_0.7fr] gap-1 px-2 py-1.5 border-t border-white/5 text-[8px] items-center even:bg-white/[0.02]"
               >
                 <span className="flex items-center gap-1.5 text-[#F8FAFC] truncate">
-                  <span className="w-6 h-6 rounded-md shrink-0 border border-white/10" style={{ backgroundColor: `${row.thumb}33` }} />
+                  <ProductThumb product={row.product} />
                   {row.name}
                 </span>
-                <span className="text-[#94A3B8]">{row.category}</span>
+                <CategoryPill label={row.category} tone={row.categoryTone} />
                 <span className="text-[#64748B]">{row.location}</span>
                 <span className="text-[#94A3B8]">{row.stock}</span>
                 <StatusPill label={row.status} tone={row.tone} />
@@ -83,10 +103,16 @@ export default function InventoryVisual() {
               <h4 className="text-[9px] font-semibold text-[#F8FAFC]">Alerts</h4>
               <span className="w-4 h-4 rounded-full bg-[#EF4444] text-[8px] text-white flex items-center justify-center font-bold">3</span>
             </div>
-            <div className="space-y-1.5 text-[8px]">
-              <div className="flex items-center gap-2 text-[#FCA5A5]"><AlertTriangle className="w-3 h-3" /> Out of Stock</div>
-              <div className="flex items-center gap-2 text-[#FDBA74]"><AlertTriangle className="w-3 h-3" /> Low Stock</div>
-              <div className="flex items-center gap-2 text-[#93C5FD]"><Info className="w-3 h-3" /> Expiring Soon</div>
+            <div className="space-y-2 text-[8px]">
+              {ALERTS.map((alert) => (
+                <div key={alert.branch} className="space-y-0.5">
+                  <div className={cn('flex items-center gap-2', alert.tone)}>
+                    {alert.type === 'Expiring Soon' ? <Info className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
+                    {alert.type}
+                  </div>
+                  <p className="text-[#64748B] pl-5">{alert.branch}</p>
+                </div>
+              ))}
             </div>
           </div>
           <div className="rounded-lg border border-white/10 bg-white/[0.02] p-2.5">
@@ -96,7 +122,7 @@ export default function InventoryVisual() {
                 <div key={item.name}>
                   <div className="flex justify-between text-[8px] mb-0.5">
                     <span className="text-[#94A3B8]">{item.name}</span>
-                    <span className="text-[#FDBA74]">{item.pct}%</span>
+                    <span className="text-[#FDBA74]">{item.label}</span>
                   </div>
                   <ProgressBar pct={item.pct} tone="orange" />
                 </div>

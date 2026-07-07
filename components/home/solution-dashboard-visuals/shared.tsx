@@ -1,7 +1,10 @@
 'use client';
 
 import type { LucideIcon } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { Mail, MessageCircle } from 'lucide-react';
+import Image from 'next/image';
+import { useState, type ReactNode } from 'react';
+import { SOLUTION_MOCKUP_ASSETS } from '@/lib/solution-mockup-assets';
 import { cn } from '@/lib/utils';
 
 export function DashboardShell({
@@ -35,6 +38,136 @@ const petGradients: Record<string, string> = {
   shiba: 'linear-gradient(135deg, #EF4444 0%, #B91C1C 100%)',
 };
 
+const avatarSizes = {
+  sm: { box: 'w-7 h-7', px: 28 },
+  md: { box: 'w-9 h-9', px: 36 },
+  lg: { box: 'w-11 h-11', px: 44 },
+  xl: { box: 'w-14 h-14', px: 56 },
+};
+
+export function StockAvatar({
+  src,
+  alt,
+  size = 'md',
+  ringColor,
+  showCamera,
+  className,
+}: {
+  src: string;
+  alt: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  ringColor?: string;
+  showCamera?: boolean;
+  className?: string;
+}) {
+  const [failed, setFailed] = useState(false);
+  const { box, px } = avatarSizes[size];
+
+  const fallback = (
+    <span
+      className={cn('rounded-full shrink-0 border-2 bg-[#8B5CF6]/30 flex items-center justify-center text-[8px] font-semibold text-[#F8FAFC]', box, className)}
+      style={{ borderColor: ringColor ?? 'transparent' }}
+    >
+      {alt.slice(0, 2).toUpperCase()}
+    </span>
+  );
+
+  if (failed) {
+    return showCamera ? (
+      <span className="relative shrink-0">
+        {fallback}
+        <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#0B1020] border border-white/20 flex items-center justify-center text-[8px]">
+          📷
+        </span>
+      </span>
+    ) : (
+      fallback
+    );
+  }
+
+  return (
+    <span className={cn('relative shrink-0', className)}>
+      <Image
+        src={src}
+        alt={alt}
+        width={px}
+        height={px}
+        className={cn('rounded-full object-cover border-2', box)}
+        style={{ borderColor: ringColor ?? 'transparent' }}
+        onError={() => setFailed(true)}
+      />
+      {showCamera && (
+        <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#0B1020] border border-white/20 flex items-center justify-center text-[8px]">
+          📷
+        </span>
+      )}
+    </span>
+  );
+}
+
+export function DoctorStockAvatar({
+  variant,
+  size = 'md',
+  ringColor,
+}: {
+  variant: keyof typeof doctorGradients;
+  size?: 'sm' | 'md' | 'lg';
+  ringColor?: string;
+}) {
+  const name = variant.charAt(0).toUpperCase() + variant.slice(1);
+  return (
+    <StockAvatar
+      src={SOLUTION_MOCKUP_ASSETS.doctors[variant]}
+      alt={`Dr. ${name}`}
+      size={size}
+      ringColor={ringColor}
+    />
+  );
+}
+
+export function PetStockAvatar({
+  pet,
+  size = 'sm',
+  showCamera,
+}: {
+  pet: keyof typeof SOLUTION_MOCKUP_ASSETS.pets;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  showCamera?: boolean;
+}) {
+  const name = pet.charAt(0).toUpperCase() + pet.slice(1);
+  return (
+    <StockAvatar
+      src={SOLUTION_MOCKUP_ASSETS.pets[pet]}
+      alt={name}
+      size={size}
+      showCamera={showCamera}
+    />
+  );
+}
+
+export function ProductThumb({
+  product,
+  className,
+}: {
+  product: keyof typeof SOLUTION_MOCKUP_ASSETS.products;
+  className?: string;
+}) {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    return <span className={cn('w-6 h-6 rounded-md shrink-0 border border-white/10 bg-white/5', className)} />;
+  }
+  return (
+    <Image
+      src={SOLUTION_MOCKUP_ASSETS.products[product]}
+      alt={product}
+      width={24}
+      height={24}
+      className={cn('w-6 h-6 rounded-md shrink-0 border border-white/10 object-cover', className)}
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 export function DoctorAvatar({
   variant,
   size = 'md',
@@ -44,17 +177,17 @@ export function DoctorAvatar({
   size?: 'sm' | 'md' | 'lg';
   ringColor?: string;
 }) {
-  const sizes = { sm: 'w-7 h-7', md: 'w-9 h-9', lg: 'w-11 h-11' };
-  return (
-    <span
-      className={cn('rounded-full shrink-0 border-2', sizes[size])}
-      style={{
-        background: doctorGradients[variant],
-        borderColor: ringColor ?? 'transparent',
-      }}
-    />
-  );
+  return <DoctorStockAvatar variant={variant} size={size} ringColor={ringColor} />;
 }
+
+const petVariantMap: Record<keyof typeof petGradients, keyof typeof SOLUTION_MOCKUP_ASSETS.pets> = {
+  golden: 'bella',
+  husky: 'max',
+  tabby: 'luna',
+  beagle: 'rocky',
+  poodle: 'milo',
+  shiba: 'cooper',
+};
 
 export function PetAvatar({
   variant,
@@ -65,20 +198,8 @@ export function PetAvatar({
   size?: 'sm' | 'md' | 'lg';
   showCamera?: boolean;
 }) {
-  const sizes = { sm: 'w-7 h-7', md: 'w-10 h-10', lg: 'w-14 h-14' };
-  return (
-    <span className="relative shrink-0">
-      <span
-        className={cn('rounded-full block border border-white/20', sizes[size])}
-        style={{ background: petGradients[variant] }}
-      />
-      {showCamera && (
-        <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#0B1020] border border-white/20 flex items-center justify-center text-[8px]">
-          📷
-        </span>
-      )}
-    </span>
-  );
+  const mappedSize = size === 'lg' ? 'xl' : size;
+  return <PetStockAvatar pet={petVariantMap[variant]} size={mappedSize} showCamera={showCamera} />;
 }
 
 export function AvatarChip({
@@ -489,6 +610,107 @@ export function ToolbarButton({ children, primary }: { children: ReactNode; prim
     >
       {children}
     </span>
+  );
+}
+
+export function ChannelIcon({ channel }: { channel: 'WhatsApp' | 'SMS' | 'Email' }) {
+  const styles = {
+    WhatsApp: 'bg-[#22C55E]/15 text-[#86EFAC] border-[#22C55E]/30',
+    SMS: 'bg-[#3B82F6]/15 text-[#93C5FD] border-[#3B82F6]/30',
+    Email: 'bg-[#F97316]/15 text-[#FDBA74] border-[#F97316]/30',
+  };
+  return (
+    <span className={cn('inline-flex w-5 h-5 rounded-full border items-center justify-center shrink-0', styles[channel])}>
+      {channel === 'Email' ? <Mail className="w-2.5 h-2.5" /> : <MessageCircle className="w-2.5 h-2.5" />}
+    </span>
+  );
+}
+
+export function JourneyStep({
+  title,
+  subtitle,
+  active,
+  last,
+}: {
+  title: string;
+  subtitle: string;
+  active?: boolean;
+  last?: boolean;
+}) {
+  return (
+    <div className={cn('relative pl-4 pb-3', last && 'pb-0')}>
+      {!last && <span className="absolute left-[5px] top-3 bottom-0 w-px bg-white/10" />}
+      <span
+        className={cn(
+          'absolute left-0 top-1 w-2.5 h-2.5 rounded-full border-2',
+          active ? 'bg-[#8B5CF6] border-[#8B5CF6]' : 'bg-[#0B1020] border-[#64748B]',
+        )}
+      />
+      <p className={cn('text-[8px] font-medium', active ? 'text-[#F8FAFC]' : 'text-[#94A3B8]')}>{title}</p>
+      <p className="text-[7px] text-[#64748B]">{subtitle}</p>
+    </div>
+  );
+}
+
+export function PaymentDonut({
+  collectedPct,
+  centerValue,
+}: {
+  collectedPct: number;
+  centerValue: string;
+}) {
+  return (
+    <DonutRing
+      centerValue={centerValue}
+      centerLabel="Collected"
+      segments={[
+        { pct: collectedPct, color: '#22C55E', label: 'Collected' },
+        { pct: 100 - collectedPct, color: '#334155', label: 'Outstanding' },
+      ]}
+    />
+  );
+}
+
+export function CategoryPill({
+  label,
+  tone = 'purple',
+}: {
+  label: string;
+  tone?: 'purple' | 'blue' | 'orange' | 'green';
+}) {
+  const tones = {
+    purple: 'bg-[#8B5CF6]/15 text-[#C4B5FD] border-[#8B5CF6]/30',
+    blue: 'bg-[#3B82F6]/15 text-[#93C5FD] border-[#3B82F6]/30',
+    orange: 'bg-[#F97316]/15 text-[#FDBA74] border-[#F97316]/30',
+    green: 'bg-[#22C55E]/15 text-[#86EFAC] border-[#22C55E]/30',
+  };
+  return (
+    <span className={cn('inline-flex px-1.5 py-0.5 rounded text-[7px] font-medium border', tones[tone])}>
+      {label}
+    </span>
+  );
+}
+
+export function PaginationPills({ total = 12, active = 1 }: { total?: number; active?: number }) {
+  const pages = [1, 2, 3];
+  return (
+    <div className="flex items-center justify-center gap-1 text-[7px] text-[#64748B]">
+      <span className="px-1">&lt;</span>
+      {pages.map((page) => (
+        <span
+          key={page}
+          className={cn(
+            'w-4 h-4 rounded flex items-center justify-center',
+            page === active ? 'bg-[#8B5CF6]/20 text-[#C4B5FD] font-semibold' : '',
+          )}
+        >
+          {page}
+        </span>
+      ))}
+      <span>…</span>
+      <span>{total}</span>
+      <span className="px-1">&gt;</span>
+    </div>
   );
 }
 

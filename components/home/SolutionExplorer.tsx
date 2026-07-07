@@ -179,7 +179,14 @@ function StatsBar({ row }: { row: (typeof SOLUTION_SECTION.rows)[number] }) {
   }
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 border-t border-white/10 px-5 py-4 lg:px-6 bg-[#0B1020]/30">
+    <div
+      className={cn(
+        'grid gap-4 border-t border-white/10 px-5 py-4 lg:px-6 bg-[#0B1020]/30',
+        row.stats.length === 5
+          ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5'
+          : 'grid-cols-2 lg:grid-cols-4',
+      )}
+    >
       {row.stats.map((stat) => {
         const Icon = stat.icon;
         return (
@@ -253,7 +260,7 @@ export default function SolutionExplorer({ reducedMotion: reducedMotionProp }: S
             <div className="grid lg:grid-cols-[260px_1fr]">
               <FeaturePanel row={row} />
               <div className="min-w-0 p-3 lg:p-4">
-                <div className="rounded-xl border border-white/10 bg-[#0B1020]/80 overflow-hidden min-h-[420px]">
+                <div className="rounded-xl border border-white/10 bg-[#0B1020]/80 overflow-hidden min-h-[440px]">
                   <SolutionDashboardVisual visual={row.visual} />
                 </div>
               </div>

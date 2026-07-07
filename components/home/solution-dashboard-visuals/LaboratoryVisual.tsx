@@ -1,24 +1,33 @@
 'use client';
 
-import { AlertTriangle, Clock, Droplets, FlaskConical, TestTube2 } from 'lucide-react';
+import { AlertTriangle, Clock, FlaskConical, TestTube2 } from 'lucide-react';
+import type { SolutionPetKey } from '@/lib/solution-mockup-assets';
 import {
-  AvatarChip,
   CategoryBar,
   DashboardShell,
   DonutRing,
   MiniStatCard,
   PanelHeader,
+  PetStockAvatar,
   SearchRow,
   StatusPill,
   TabBar,
   ToolbarButton,
 } from './shared';
 
-const TESTS = [
-  { test: 'Complete Blood Count (CBC)', patient: 'Bella', status: 'Completed', priority: 'Normal', tat: '1.2 hrs', Icon: TestTube2 },
-  { test: 'Biochemistry Panel', patient: 'Max', status: 'In Progress', priority: 'Normal', tat: '0.8 hrs', Icon: FlaskConical },
-  { test: 'Urinalysis', patient: 'Luna', status: 'Pending', priority: 'Normal', tat: '—', Icon: Droplets },
-  { test: 'Thyroid Panel', patient: 'Rocky', status: 'In Progress', priority: 'Critical', tat: '1.5 hrs', Icon: TestTube2 },
+const TESTS: {
+  test: string;
+  pet: SolutionPetKey;
+  status: string;
+  priority: string;
+  tat: string;
+  Icon: typeof TestTube2;
+}[] = [
+  { test: 'Complete Blood Count (CBC)', pet: 'bella', status: 'Completed', priority: 'Normal', tat: '1h 20m', Icon: TestTube2 },
+  { test: 'Biochemistry Panel', pet: 'max', status: 'In Progress', priority: 'Normal', tat: '0h 48m', Icon: FlaskConical },
+  { test: 'Liver Function Test (LFT)', pet: 'luna', status: 'In Progress', priority: 'Normal', tat: '1h 05m', Icon: TestTube2 },
+  { test: 'Kidney Function Test (KFT)', pet: 'rocky', status: 'Pending', priority: 'Normal', tat: '—', Icon: FlaskConical },
+  { test: 'Thyroid Profile', pet: 'milo', status: 'Completed', priority: 'Critical', tat: '1h 35m', Icon: TestTube2 },
 ];
 
 export default function LaboratoryVisual() {
@@ -67,9 +76,9 @@ export default function LaboratoryVisual() {
                   <row.Icon className="w-3 h-3 text-[#C4B5FD] shrink-0" />
                   {row.test}
                 </span>
-                <span className="flex items-center gap-1">
-                  <AvatarChip name={row.patient} color="#8B5CF6" />
-                  <span className="text-[#94A3B8]">{row.patient}</span>
+                <span className="flex items-center gap-1 min-w-0">
+                  <PetStockAvatar pet={row.pet} size="sm" />
+                  <span className="text-[#94A3B8] truncate capitalize">{row.pet}</span>
                 </span>
                 <StatusPill
                   label={row.status}

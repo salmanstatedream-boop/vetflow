@@ -1,23 +1,34 @@
 'use client';
 
 import { AlertTriangle, CheckCircle2, Clock, ClipboardList } from 'lucide-react';
+import type { SolutionPetKey } from '@/lib/solution-mockup-assets';
 import {
-  AvatarChip,
   DashboardShell,
   InsightRing,
   MiniStatCard,
   PanelHeader,
+  PetStockAvatar,
   SearchRow,
   StatusPill,
   TabBar,
   ToolbarButton,
 } from './shared';
 
-const NOTES = [
-  { patient: 'Bella', id: 'PID-7821', admit: 'May 10', discharge: 'May 12', diagnosis: 'Acute Tonsillitis', status: 'Completed', tone: 'green' as const },
-  { patient: 'Max', id: 'PID-7819', admit: 'May 09', discharge: 'May 11', diagnosis: 'Post-op Recovery', status: 'In Progress', tone: 'blue' as const },
-  { patient: 'Luna', id: 'PID-7815', admit: 'May 08', discharge: '—', diagnosis: 'Dental Procedure', status: 'Pending Review', tone: 'orange' as const },
-  { patient: 'Rocky', id: 'PID-7812', admit: 'May 07', discharge: 'May 09', diagnosis: 'Fracture Repair', status: 'Completed', tone: 'green' as const },
+const NOTES: {
+  patient: string;
+  pet: SolutionPetKey;
+  id: string;
+  admit: string;
+  discharge: string;
+  diagnosis: string;
+  status: string;
+  tone: 'green' | 'blue' | 'orange';
+}[] = [
+  { patient: 'Bella', pet: 'bella', id: 'PID-7821', admit: 'May 10', discharge: 'May 12', diagnosis: 'Acute Tonsillitis', status: 'Completed', tone: 'green' },
+  { patient: 'Max', pet: 'max', id: 'PID-7819', admit: 'May 09', discharge: 'May 11', diagnosis: 'Post-op Recovery', status: 'In Progress', tone: 'blue' },
+  { patient: 'Luna', pet: 'luna', id: 'PID-7815', admit: 'May 08', discharge: '—', diagnosis: 'Dental Procedure', status: 'Pending Review', tone: 'orange' },
+  { patient: 'Rocky', pet: 'rocky', id: 'PID-7812', admit: 'May 07', discharge: 'May 09', diagnosis: 'Fracture Repair', status: 'Completed', tone: 'green' },
+  { patient: 'Milo', pet: 'milo', id: 'PID-7808', admit: 'May 06', discharge: 'May 08', diagnosis: 'Gastroenteritis', status: 'Completed', tone: 'green' },
 ];
 
 export default function DischargeVisual() {
@@ -59,7 +70,7 @@ export default function DischargeVisual() {
                 className="grid grid-cols-[1fr_0.65fr_0.65fr_1fr_0.75fr] gap-1 px-2 py-1.5 border-t border-white/5 text-[8px] items-center even:bg-white/[0.02]"
               >
                 <span className="flex items-center gap-1.5 min-w-0">
-                  <AvatarChip name={row.patient} color="#8B5CF6" />
+                  <PetStockAvatar pet={row.pet} size="sm" />
                   <span className="min-w-0">
                     <span className="text-[#F8FAFC] block truncate">{row.patient}</span>
                     <span className="text-[#64748B]">{row.id}</span>
@@ -87,7 +98,10 @@ export default function DischargeVisual() {
                 <p className="font-semibold text-[#F8FAFC]">Phoenix Clinic</p>
               </div>
               <p className="text-[#64748B]">Discharge Summary</p>
-              <p className="font-medium text-[#F8FAFC]">Bella · Golden Retriever</p>
+              <div className="flex items-center gap-1.5">
+                <PetStockAvatar pet="bella" size="sm" />
+                <p className="font-medium text-[#F8FAFC]">Bella · Golden Retriever</p>
+              </div>
               <p className="text-[#94A3B8]"><span className="text-[#64748B]">Diagnosis:</span> Acute Tonsillitis</p>
               <p className="text-[#94A3B8] leading-relaxed">Patient responded well to treatment. Rest recommended for 5 days with follow-up in 1 week.</p>
               <p className="text-[#64748B] font-medium">Medications:</p>
