@@ -23,7 +23,7 @@ export default function Testimonials() {
             Real teams. Calmer mornings.
           </h2>
           <p className="phx-subtext text-lg" data-testimonial-fade>
-            Early-access clinics share what changed when everyone finally worked from the same screen.
+            Early-access members share what changed when everyone finally worked from the same screen.
           </p>
         </div>
 

@@ -28,9 +28,9 @@ export default function PhoenixHomePage() {
           <AnimatedOSDemo />
           <AnimatedWorkflow />
           <FeatureToolbox />
-          <ClinicTypes />
           <SecuritySection />
           <Testimonials />
+          <ClinicTypes />
           <PricingPreview />
           <FaqSection />
           <FinalCTA />

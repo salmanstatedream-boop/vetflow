@@ -85,7 +85,7 @@ export default function TestimonialCard({
 
       <footer className="mt-auto pt-4 border-t border-white/5">
         <p className="font-semibold text-[#F8FAFC]">{title}</p>
-        <p className="text-xs text-[#64748B] mt-1">Early-access clinic</p>
+        <p className="text-xs text-[#64748B] mt-1">Early-access member</p>
       </footer>
     </article>
   );

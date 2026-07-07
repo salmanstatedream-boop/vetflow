@@ -381,7 +381,7 @@ export const TESTIMONIALS = [
   {
     id: 'reception',
     title: 'Front Desk Lead',
-    subtitle: 'Early-access clinic',
+    subtitle: 'Early-access member',
     description:
       'Our mornings used to be chaos. Now I know exactly who is waiting, who the vet is seeing, and who is ready to pay — without shouting down the hallway.',
     image:
@@ -393,7 +393,7 @@ export const TESTIMONIALS = [
   {
     id: 'vet',
     title: 'Lead Veterinarian',
-    subtitle: 'Early-access clinic',
+    subtitle: 'Early-access member',
     description:
       'I used to stay late finishing paperwork. Now my notes are done before the pet leaves — I actually get home on time.',
     image:
@@ -405,7 +405,7 @@ export const TESTIMONIALS = [
   {
     id: 'owner',
     title: 'Clinic Owner',
-    subtitle: 'Early-access clinic',
+    subtitle: 'Early-access member',
     description:
       'For the first time I can see what is happening across the practice without standing over everyone\'s shoulder. That peace of mind is worth everything.',
     image:
@@ -417,7 +417,7 @@ export const TESTIMONIALS = [
   {
     id: 'manager',
     title: 'Practice Manager',
-    subtitle: 'Early-access clinic',
+    subtitle: 'Early-access member',
     description:
       'We onboarded the whole team in one afternoon. Nobody needed a manual — they just logged in and started working.',
     image:

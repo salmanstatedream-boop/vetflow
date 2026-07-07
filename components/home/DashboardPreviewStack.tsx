@@ -8,7 +8,7 @@ import { DASHBOARD_PREVIEW_STACK } from '@/lib/home-data';
 import { cn } from '@/lib/utils';
 
 const ROTATIONS = [3, -2, -6];
-const AUTO_PLAY_MS = 5000;
+const AUTO_PLAY_MS = 4200;
 const DRAG_THRESHOLD = 60;
 
 interface DashboardPreviewStackProps {
@@ -78,7 +78,7 @@ export default function DashboardPreviewStack({
               <motion.div
                 key={item.id}
                 className={cn(
-                  'absolute inset-0 rounded-xl overflow-hidden border border-white/10 bg-[#0B1020] shadow-2xl',
+                  'absolute inset-0 rounded-xl overflow-hidden border border-white/10 bg-[#0B1020] shadow-xl',
                   isActive && 'cursor-grab active:cursor-grabbing',
                 )}
                 style={{ transformStyle: 'preserve-3d' }}

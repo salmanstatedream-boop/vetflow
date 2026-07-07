@@ -63,12 +63,11 @@ export default function AnimatedOSDemo() {
           </div>
 
           <div className="relative rounded-2xl overflow-hidden" data-demo-stack>
-            <div className="phx-panel p-3 sm:p-4 phx-glow relative">
-              <DashboardPreviewStack
-                animate={demoAnimate}
-                reducedMotion={reducedMotion}
-              />
-            </div>
+            <DashboardPreviewStack
+              className="relative"
+              animate={demoAnimate}
+              reducedMotion={reducedMotion}
+            />
             <BorderBeam colorFrom="#22D3EE" colorTo="#3B82F6" size={160} duration={14} />
           </div>
         </div>

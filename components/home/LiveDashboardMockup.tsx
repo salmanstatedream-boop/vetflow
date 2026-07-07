@@ -55,7 +55,7 @@ export default function LiveDashboardMockup({
 
     if (reducedMotion || !animate) return;
 
-    const duration = 5000;
+    const duration = 2800;
     let start: number | null = null;
     let raf = 0;
 

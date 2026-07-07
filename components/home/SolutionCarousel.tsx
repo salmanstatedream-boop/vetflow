@@ -6,7 +6,7 @@ import { Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { SOLUTION_SECTION } from '@/lib/home-data';
 import { cn } from '@/lib/utils';
 
-const AUTO_PLAY_MS = 6000;
+const AUTO_PLAY_MS = 3800;
 
 const toneAccent: Record<string, string> = {
   purple: 'text-[#C4B5FD]',
@@ -80,7 +80,7 @@ export default function SolutionCarousel({ reducedMotion = false }: SolutionCaro
             initial={{ opacity: 0, x: direction * 40 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: direction * -40 }}
-            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className="grid lg:grid-cols-2 gap-4 lg:gap-6 items-stretch"
           >
             <div className="phx-card p-4 flex flex-col justify-center">
