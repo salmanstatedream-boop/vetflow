@@ -35,34 +35,38 @@ function VisualShell({
 
 function AppointmentsVisual() {
   return (
-    <div className="w-full space-y-3 text-[10px]">
-      <div className="grid grid-cols-3 gap-2">
+    <div className="w-full space-y-1.5 text-[10px]">
+      <div className="grid grid-cols-3 gap-2 relative">
         {[
           { label: 'Instagram', icon: Camera, color: 'text-[#E879F9]' },
           { label: 'Website', icon: Globe, color: 'text-[#22D3EE]' },
           { label: 'Google', icon: Search, color: 'text-[#93C5FD]' },
         ].map((src) => (
-          <div key={src.label} className="flex flex-col items-center gap-1">
+          <div key={src.label} className="flex flex-col items-center gap-1 relative">
             <div className="w-full max-w-[72px] mx-auto aspect-square rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
               <src.icon className={cn('w-4 h-4', src.color)} />
             </div>
             <span className="text-[#64748B] text-center">{src.label}</span>
+            <div
+              aria-hidden
+              className="absolute left-1/2 -translate-x-1/2 top-full w-px h-3 border-l border-dashed border-[#64748B]/40"
+            />
           </div>
         ))}
       </div>
-      <div className="flex justify-center">
-        <div className="w-px h-4 border-l border-dashed border-[#64748B]/50" />
-      </div>
-      <div className="flex justify-center">
-        <div className="w-12 h-12 rounded-xl bg-[#8B5CF6]/20 border border-[#8B5CF6]/40 flex items-center justify-center">
+      <div className="flex justify-center pt-1">
+        <div className="w-12 h-12 rounded-xl bg-[#8B5CF6]/20 border border-[#8B5CF6]/40 flex items-center justify-center shadow-[0_0_20px_rgba(139,92,246,0.15)]">
           <Calendar className="w-6 h-6 text-[#C4B5FD]" />
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-1.5 pt-1">
-        {['Double bookings', 'Missed slots', 'Manual updates', 'Frustrated clients'].map((w) => (
+      <div className="flex justify-center">
+        <div className="w-px h-2 border-l border-dashed border-[#64748B]/40" />
+      </div>
+      <div className="flex flex-wrap justify-center gap-1.5">
+        {['Double bookings', 'Missed slots'].map((w) => (
           <span
             key={w}
-            className="text-center px-2 py-1 rounded-md bg-[#F97316]/10 border border-[#F97316]/25 text-[#FDBA74] truncate"
+            className="text-center px-2.5 py-1 rounded-full bg-[#F97316]/15 border border-[#F97316]/35 text-[#FDBA74] text-[9px] font-medium"
           >
             {w}
           </span>

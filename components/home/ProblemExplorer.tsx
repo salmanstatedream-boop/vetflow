@@ -72,7 +72,7 @@ function ExplorerCard({
   return (
     <div className={cn('rounded-xl border border-white/10 bg-[#0B1020]/80 p-6', className)}>
       {title && (
-        <div className={cn('mb-5', subtitle ? '' : '')}>
+        <div className={cn('mb-4', subtitle ? '' : '')}>
           <h3 className="text-sm font-semibold text-[#F8FAFC] tracking-tight">{title}</h3>
           {subtitle && <p className="text-xs text-[#64748B] mt-1">{subtitle}</p>}
         </div>
@@ -142,7 +142,7 @@ function TimelineNav({
                 onClick={() => onSelect(step.id)}
                 aria-selected={isActive}
                 className={cn(
-                  'w-full flex items-center gap-3 py-3 pr-2 rounded-lg text-left transition-all phx-focus-ring',
+                  'w-full flex items-center gap-3 py-3.5 pr-2 rounded-lg text-left transition-all phx-focus-ring',
                   isActive ? 'text-[#F8FAFC] opacity-100' : 'text-[#64748B] opacity-60 hover:opacity-80 hover:text-[#94A3B8]',
                 )}
               >
@@ -164,15 +164,10 @@ function TimelineNav({
                   </div>
                 </div>
                 <div className="min-w-0">
-                  <p
-                    className={cn(
-                      'text-[10px] font-mono',
-                      isActive ? toneIndexText[step.tone] : 'text-[#64748B]',
-                    )}
-                  >
-                    {step.index}
-                  </p>
-                  <p className={cn('text-sm font-medium truncate', isActive && 'text-[#F8FAFC]')}>
+                  <p className={cn('text-sm font-medium truncate', isActive ? 'text-[#F8FAFC]' : 'text-[#64748B]')}>
+                    <span className={cn('font-mono text-[11px] mr-1.5', isActive ? toneIndexText[step.tone] : 'text-[#64748B]')}>
+                      {step.index}
+                    </span>
                     {step.label}
                   </p>
                 </div>

@@ -31,7 +31,7 @@ export default function DashboardPreviewSection() {
           </p>
         </div>
 
-        <div className="relative max-w-5xl mx-auto" data-dashboard-fade>
+        <div className="relative max-w-6xl mx-auto" data-dashboard-fade>
           <div
             aria-hidden
             className="pointer-events-none absolute -inset-6 bg-gradient-to-br from-[#22D3EE]/8 via-transparent to-[#8B5CF6]/8 blur-3xl"

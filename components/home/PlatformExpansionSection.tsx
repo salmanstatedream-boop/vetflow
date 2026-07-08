@@ -1,9 +1,20 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
-import { ArrowRight, Cloud, HeartPulse, Shield, Smile, Sparkles, Stethoscope, Users } from 'lucide-react';
+import {
+  Bell,
+  Calendar,
+  Cloud,
+  FileText,
+  HeartPulse,
+  Shield,
+  Smile,
+  Sparkles,
+  Stethoscope,
+  Users,
+} from 'lucide-react';
 import { useRef } from 'react';
+import { GradientPillButton, OutlinedPillButton } from '@/components/home/marketing-visuals/shared';
 import { CLINIC_TYPES, PLATFORM_EXPANSION } from '@/lib/home-data';
 import { useScrollReveal } from '@/lib/hooks/useScrollReveal';
 import { cn } from '@/lib/utils';
@@ -16,13 +27,19 @@ const ICONS = {
 } as const;
 
 const TONE_STYLES = {
-  cyan: { border: 'border-[#22D3EE]/50', glow: 'shadow-[0_0_32px_rgba(34,211,238,0.15)]', badge: 'text-[#22D3EE] bg-[#22D3EE]/10 border-[#22D3EE]/30', accent: '#22D3EE' },
-  purple: { border: 'border-[#8B5CF6]/40', glow: '', badge: 'text-[#C4B5FD] bg-[#8B5CF6]/10 border-[#8B5CF6]/30', accent: '#8B5CF6' },
-  blue: { border: 'border-[#3B82F6]/40', glow: '', badge: 'text-[#93C5FD] bg-[#3B82F6]/10 border-[#3B82F6]/30', accent: '#3B82F6' },
-  orange: { border: 'border-[#F97316]/40', glow: '', badge: 'text-[#FDBA74] bg-[#F97316]/10 border-[#F97316]/30', accent: '#F97316' },
+  cyan: { border: 'border-[#22D3EE]/50', glow: 'shadow-[0_0_32px_rgba(34,211,238,0.15)]', badge: 'text-[#22D3EE] bg-[#22D3EE]/10 border-[#22D3EE]/30', accent: '#22D3EE', ctaTone: 'cyan' as const },
+  purple: { border: 'border-[#8B5CF6]/40', glow: '', badge: 'text-[#C4B5FD] bg-[#8B5CF6]/10 border-[#8B5CF6]/30', accent: '#8B5CF6', ctaTone: 'purple' as const },
+  blue: { border: 'border-[#3B82F6]/40', glow: '', badge: 'text-[#93C5FD] bg-[#3B82F6]/10 border-[#3B82F6]/30', accent: '#3B82F6', ctaTone: 'blue' as const },
+  orange: { border: 'border-[#F97316]/40', glow: '', badge: 'text-[#FDBA74] bg-[#F97316]/10 border-[#F97316]/30', accent: '#F97316', ctaTone: 'orange' as const },
 };
 
 const TRUST_ICONS = [Shield, Cloud, Shield, Users];
+
+const OTHER_CLINIC_ICONS = [
+  [Calendar, FileText, Sparkles],
+  [HeartPulse, Bell, FileText],
+  [Sparkles, Stethoscope, Users],
+];
 
 export default function PlatformExpansionSection() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -48,24 +65,38 @@ export default function PlatformExpansionSection() {
               {PLATFORM_EXPANSION.subheadline}
             </p>
           </div>
-          <div className="relative w-32 h-32 shrink-0 hidden lg:block" data-platform-fade>
-            <div aria-hidden className="absolute inset-0 rounded-full border border-dashed border-[#22D3EE]/30 animate-spin" style={{ animationDuration: '24s' }} />
-            <div aria-hidden className="absolute inset-3 rounded-full border border-[#8B5CF6]/20" />
-            <Image src="/phoenix-logo.png" alt="" fill className="object-contain p-4" />
+          <div className="relative w-36 h-36 shrink-0 hidden lg:block" data-platform-fade>
+            <div aria-hidden className="absolute inset-0 rounded-full border border-dashed border-[#22D3EE]/40 animate-spin" style={{ animationDuration: '24s' }} />
+            <div aria-hidden className="absolute inset-3 rounded-full border border-[#8B5CF6]/25" />
+            <div aria-hidden className="absolute inset-6 rounded-full border border-[#F97316]/15" />
+            {[0, 1, 2, 3].map((i) => (
+              <span
+                key={i}
+                aria-hidden
+                className="absolute w-1.5 h-1.5 rounded-full bg-[#22D3EE]"
+                style={{
+                  top: `${20 + i * 18}%`,
+                  left: `${85 - i * 5}%`,
+                  opacity: 0.4 + i * 0.15,
+                }}
+              />
+            ))}
+            <Image src="/phoenix-logo.png" alt="" fill className="object-contain p-5" />
           </div>
         </div>
 
-        <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-10" data-platform-fade>
-          {CLINIC_TYPES.map((clinic) => {
+        <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-10 items-stretch" data-platform-fade>
+          {CLINIC_TYPES.map((clinic, clinicIndex) => {
             const Icon = ICONS[clinic.id];
             const styles = TONE_STYLES[clinic.tone];
             const isLive = clinic.status === 'Live Now';
+            const isComing = clinic.statusBadge.includes('COMING');
 
             return (
               <article
                 key={clinic.id}
                 className={cn(
-                  'rounded-2xl border bg-[#0B1020]/80 p-5 flex flex-col min-h-[320px]',
+                  'rounded-2xl border bg-[#0B1020]/80 p-5 flex flex-col h-full min-h-[360px]',
                   styles.border,
                   isLive && styles.glow,
                 )}
@@ -83,37 +114,64 @@ export default function PlatformExpansionSection() {
                 </div>
                 <h3 className="text-lg font-bold text-[#F8FAFC] mb-2">{clinic.title}</h3>
                 <p className="text-sm text-[#64748B] leading-relaxed mb-4">{clinic.description}</p>
-                <ul className="space-y-1.5 flex-1">
-                  {clinic.details.map((detail) => (
-                    <li key={detail} className="flex items-start gap-2 text-[11px] text-[#94A3B8]">
-                      <span className="text-[#22D3EE] mt-0.5">✓</span>
-                      {detail}
-                    </li>
-                  ))}
-                </ul>
-                <p className="text-[11px] font-medium mt-4 flex items-center gap-1" style={{ color: styles.accent }}>
-                  {isLive ? '→' : clinic.statusBadge.includes('COMING') ? '🔔' : ''} {clinic.cta}
-                  {!clinic.statusBadge.includes('COMING') && <ArrowRight className="w-3 h-3" />}
-                </p>
+
+                {clinic.id === 'vet' ? (
+                  <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 flex-1">
+                    {clinic.details.map((detail, i) => (
+                      <li key={detail} className="flex items-start gap-1.5 text-[10px] text-[#94A3B8]">
+                        <span className="text-[#22D3EE] mt-0.5 shrink-0">✓</span>
+                        <span className="leading-snug">{detail}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <ul className="space-y-2 flex-1">
+                    {clinic.details.map((detail, i) => {
+                      const rowIcons = OTHER_CLINIC_ICONS[clinicIndex - 1] ?? OTHER_CLINIC_ICONS[0];
+                      const FeatIcon = rowIcons[i % rowIcons.length];
+                      return (
+                        <li key={detail} className="flex items-start gap-2 text-[11px] text-[#94A3B8]">
+                          <FeatIcon className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: styles.accent }} />
+                          {detail}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+
+                <div className="mt-4">
+                  <OutlinedPillButton href="/request-access" tone={styles.ctaTone}>
+                    {isLive && '→ '}
+                    {isComing && '🔔 '}
+                    {clinic.cta}
+                    {!isComing && ' →'}
+                  </OutlinedPillButton>
+                </div>
               </article>
             );
           })}
         </div>
 
-        <div className="relative mb-10 hidden sm:block" data-platform-fade>
-          <div className="absolute top-4 left-[12%] right-[12%] h-px bg-gradient-to-r from-[#22D3EE] via-[#8B5CF6] to-[#F97316]" />
-          <div className="grid grid-cols-4 gap-4">
+        <div className="relative mb-10 hidden sm:block px-2 lg:px-4" data-platform-fade>
+          <div className="absolute top-[22px] left-[10%] right-[5%] h-0.5 bg-gradient-to-r from-[#22D3EE] via-[#8B5CF6] to-[#F97316]" />
+          <div
+            aria-hidden
+            className="absolute top-[18px] right-[4%] w-0 h-0 border-t-[5px] border-b-[5px] border-l-[9px] border-t-transparent border-b-transparent border-l-[#F97316]"
+          />
+          <div className="grid grid-cols-4 gap-4 pt-1">
             {PLATFORM_EXPANSION.timeline.map((node, i) => {
               const colors = ['#22D3EE', '#8B5CF6', '#3B82F6', '#F97316'];
               return (
-                <div key={node.clinic} className="text-center pt-0">
+                <div key={node.clinic} className="text-center flex flex-col items-center">
+                  <p className="text-[10px] font-mono uppercase tracking-wide text-[#64748B] mb-2 min-h-[28px] flex items-end justify-center">
+                    {node.label}
+                  </p>
                   <span
-                    className="inline-block w-3 h-3 rounded-full mb-3 ring-4 ring-[#0B1020]"
-                    style={{ backgroundColor: colors[i] }}
+                    className="inline-block w-4 h-4 rounded-full mb-2 ring-4 ring-[#0B1020] shadow-[0_0_20px_currentColor]"
+                    style={{ backgroundColor: colors[i], color: colors[i] }}
                   />
-                  <p className="text-[10px] font-mono uppercase text-[#64748B]">{node.label}</p>
-                  <p className="text-xs font-semibold text-[#F8FAFC] mt-1">{node.clinic}</p>
-                  <p className="text-[10px] text-[#64748B]">{node.note}</p>
+                  <p className="text-xs font-semibold text-[#F8FAFC]">{node.clinic}</p>
+                  <p className="text-[10px] text-[#64748B] mt-0.5">{node.note}</p>
                 </div>
               );
             })}
@@ -121,10 +179,10 @@ export default function PlatformExpansionSection() {
         </div>
 
         <div
-          className="rounded-2xl border border-white/10 bg-[#0B1020]/80 p-5 grid lg:grid-cols-[1fr_auto] gap-6 items-center"
+          className="rounded-2xl border border-white/10 bg-[#0B1020]/80 p-5 sm:p-6 flex flex-col lg:flex-row gap-6 items-stretch lg:items-center justify-between w-full"
           data-platform-fade
         >
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 flex-1 lg:flex-[1_1_auto]">
             {PLATFORM_EXPANSION.trustBar.map((item, i) => {
               const Icon = TRUST_ICONS[i];
               return (
@@ -138,12 +196,9 @@ export default function PlatformExpansionSection() {
               );
             })}
           </div>
-          <Link
-            href="/request-access"
-            className="phx-btn-primary text-sm px-6 py-3 shrink-0 text-center phx-focus-ring bg-gradient-to-r from-[#22D3EE] to-[#8B5CF6]"
-          >
+          <GradientPillButton href="/request-access">
             {PLATFORM_EXPANSION.cta} →
-          </Link>
+          </GradientPillButton>
         </div>
       </div>
     </section>

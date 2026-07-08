@@ -1245,6 +1245,25 @@ html.light .app-btn-primary {
   animation: phx-float 4s ease-in-out infinite;
 }
 
+@keyframes phx-hub-pulse {
+  0%, 100% {
+    box-shadow: 0 0 48px rgba(139, 92, 246, 0.35), 0 0 24px rgba(59, 130, 246, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 72px rgba(139, 92, 246, 0.55), 0 0 36px rgba(59, 130, 246, 0.25);
+  }
+}
+
+.phx-animate-hub-pulse {
+  animation: phx-hub-pulse 3.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phx-animate-hub-pulse {
+    animation: none;
+  }
+}
+
 @keyframes phx-orbit-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }

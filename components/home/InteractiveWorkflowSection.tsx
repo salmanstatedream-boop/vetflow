@@ -1,25 +1,83 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { PetStockAvatar } from '@/components/home/solution-dashboard-visuals/shared';
+import { motionSpring } from '@/components/home/marketing-visuals/animations';
+import { GradientPillButton } from '@/components/home/marketing-visuals/shared';
+import { WorkflowDetailCard, WorkflowStepPreview } from '@/components/home/workflow-step-previews';
 import { INTERACTIVE_WORKFLOW } from '@/lib/home-data';
 import { usePrefersReducedMotion } from '@/lib/hooks/usePrefersReducedMotion';
 import { useScrollReveal } from '@/lib/hooks/useScrollReveal';
 import { cn } from '@/lib/utils';
 
 const GLOW_MS = 2500;
+const STEP_CARD_WIDTH = 128;
+const INITIAL_ACTIVE_STEP = 4;
+
+type ConnectorLine = { x1: number; y1: number; x2: number; y2: number };
 
 export default function InteractiveWorkflowSection() {
   const sectionRef = useRef<HTMLElement>(null);
+  const stepRowRef = useRef<HTMLDivElement>(null);
+  const stepScrollRef = useRef<HTMLDivElement>(null);
+  const badgeRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const stepButtonRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const reducedMotion = usePrefersReducedMotion();
-  const [activeStep, setActiveStep] = useState(0);
+  const [activeStep, setActiveStep] = useState(INITIAL_ACTIVE_STEP);
   const [paused, setPaused] = useState(false);
+  const [connector, setConnector] = useState<ConnectorLine | null>(null);
   const steps = INTERACTIVE_WORKFLOW.steps;
 
   useScrollReveal(sectionRef, { selector: '[data-workflow-fade]', staggerMs: 60, y: 18 });
+
+  const measureConnector = useCallback(() => {
+    const row = stepRowRef.current;
+    const badges = badgeRefs.current.filter(Boolean) as HTMLSpanElement[];
+    if (!row || badges.length < 2) {
+      setConnector(null);
+      return;
+    }
+
+    const rowRect = row.getBoundingClientRect();
+    const first = badges[0].getBoundingClientRect();
+    const last = badges[badges.length - 1].getBoundingClientRect();
+
+    setConnector({
+      x1: first.left + first.width / 2 - rowRect.left,
+      y1: first.top + first.height / 2 - rowRect.top,
+      x2: last.left + last.width / 2 - rowRect.left,
+      y2: last.top + last.height / 2 - rowRect.top,
+    });
+  }, []);
+
+  useEffect(() => {
+    measureConnector();
+    const row = stepRowRef.current;
+    if (!row) return;
+
+    const observer = new ResizeObserver(measureConnector);
+    observer.observe(row);
+    window.addEventListener('resize', measureConnector);
+
+    const t = window.setTimeout(measureConnector, 100);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', measureConnector);
+      window.clearTimeout(t);
+    };
+  }, [measureConnector, steps.length]);
+
+  useEffect(() => {
+    const btn = stepButtonRefs.current[activeStep];
+    if (!btn) return;
+    btn.scrollIntoView({
+      inline: 'center',
+      block: 'nearest',
+      behavior: reducedMotion ? 'auto' : 'smooth',
+    });
+  }, [activeStep, reducedMotion]);
 
   const goNext = useCallback(() => {
     setActiveStep((i) => (i + 1) % steps.length);
@@ -59,107 +117,117 @@ export default function InteractiveWorkflowSection() {
           </p>
         </div>
 
-        <div className="overflow-x-auto pb-2 mb-8 scrollbar-none" data-workflow-fade>
-          <div className="flex gap-3 min-w-max px-1">
-            {steps.map((step, index) => {
-              const isActive = index === activeStep;
-              return (
-                <motion.div
-                  key={step.id}
-                  className={cn(
-                    'w-[140px] shrink-0 rounded-xl border p-3 transition-all duration-300',
-                    isActive
-                      ? 'border-[#8B5CF6] bg-[#8B5CF6]/10 shadow-[0_0_24px_rgba(139,92,246,0.35)]'
-                      : 'border-white/10 bg-white/[0.03] opacity-70',
-                  )}
+        <div
+          ref={stepScrollRef}
+          className="overflow-x-auto pb-2 mb-8 scrollbar-none xl:overflow-visible"
+          data-workflow-fade
+        >
+          <div className="relative min-w-max px-1 pt-1 mx-auto xl:flex xl:justify-center">
+            <div ref={stepRowRef} className="relative">
+              {connector && (
+                <svg
+                  className="absolute inset-0 w-full h-full pointer-events-none overflow-visible"
+                  aria-hidden
                 >
-                  <span className="text-[10px] font-mono text-[#8B5CF6]">{String(step.index).padStart(2, '0')}</span>
-                  <div className="h-12 rounded-md bg-[#0B1020]/80 border border-white/5 my-2 flex items-center justify-center">
-                    <span className="text-[8px] text-[#64748B] text-center px-1">{step.title}</span>
-                  </div>
-                  <p className="text-[10px] font-semibold text-[#F8FAFC] leading-tight">{step.title}</p>
-                  <p className="text-[8px] text-[#64748B] mt-1 leading-snug">{step.caption}</p>
-                </motion.div>
-              );
-            })}
+                  <line
+                    x1={connector.x1}
+                    y1={connector.y1}
+                    x2={connector.x2}
+                    y2={connector.y2}
+                    stroke="#64748B"
+                    strokeOpacity="0.45"
+                    strokeWidth="1"
+                    strokeDasharray="4 6"
+                  />
+                </svg>
+              )}
+              <div className="flex gap-2.5 relative">
+                {steps.map((step, index) => {
+                  const isActive = index === activeStep;
+                  return (
+                    <button
+                      key={step.id}
+                      ref={(el) => {
+                        stepButtonRefs.current[index] = el;
+                      }}
+                      type="button"
+                      onClick={() => setActiveStep(index)}
+                      className="text-left shrink-0"
+                      style={{ width: STEP_CARD_WIDTH }}
+                    >
+                      <motion.div
+                        layout
+                        animate={{
+                          scale: isActive ? 1.02 : 0.98,
+                          opacity: isActive ? 1 : 0.72,
+                        }}
+                        transition={reducedMotion ? { duration: 0 } : motionSpring}
+                        className={cn(
+                          'rounded-xl border p-2.5 h-full',
+                          isActive
+                            ? 'border-[#8B5CF6] bg-[#8B5CF6]/10 ring-2 ring-[#8B5CF6]/35'
+                            : 'border-white/10 bg-white/[0.03]',
+                        )}
+                        style={{
+                          boxShadow: isActive
+                            ? '0 0 40px rgba(139, 92, 246, 0.5), 0 0 12px rgba(139, 92, 246, 0.25)'
+                            : 'none',
+                        }}
+                      >
+                        <div className="flex justify-start mb-2 relative z-10">
+                          <span
+                            ref={(el) => {
+                              badgeRefs.current[index] = el;
+                            }}
+                            className={cn(
+                              'w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold transition-colors duration-300',
+                              isActive
+                                ? 'bg-gradient-to-br from-[#8B5CF6] to-[#3B82F6] text-white shadow-[0_0_12px_rgba(139,92,246,0.6)]'
+                                : 'bg-white/10 text-[#64748B] border border-white/10',
+                            )}
+                          >
+                            {String(step.index).padStart(2, '0')}
+                          </span>
+                        </div>
+                        <WorkflowStepPreview index={index} isActive={isActive} />
+                        <p
+                          className={cn(
+                            'text-[9px] font-semibold leading-tight mt-2 line-clamp-2',
+                            isActive ? 'text-[#F8FAFC]' : 'text-[#94A3B8]',
+                          )}
+                        >
+                          {step.title}
+                        </p>
+                        <p className="text-[8px] text-[#64748B] mt-1 leading-snug line-clamp-2">{step.caption}</p>
+                      </motion.div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-[1fr_220px] gap-4 mb-8" data-workflow-fade>
-          <div className="grid md:grid-cols-3 gap-3">
-            <div className="rounded-xl border border-white/10 bg-[#0B1020]/80 p-4">
-              <p className="text-[10px] font-mono uppercase text-[#64748B] mb-3">Visit in Progress</p>
-              <div className="flex items-start gap-3">
-                <PetStockAvatar pet="max" size="md" />
-                <div>
-                  <p className="text-sm font-semibold text-[#F8FAFC]">Bruno</p>
-                  <p className="text-[10px] text-[#64748B]">3y · Male · 32kg</p>
-                  <p className="text-[10px] text-[#94A3B8] mt-2">Sarah Johnson</p>
-                  <p className="text-[10px] text-[#64748B]">Vomiting, loss of appetite</p>
-                </div>
-              </div>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-[#0B1020]/80 p-4">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-[10px] font-mono uppercase text-[#64748B]">AI Voice Capture</p>
-                <span className="text-[8px] px-1.5 py-0.5 rounded bg-[#8B5CF6]/20 text-[#C4B5FD]">Live</span>
-              </div>
-              <div className="flex items-end gap-0.5 h-8 mb-2">
-                {Array.from({ length: 16 }).map((_, i) => (
-                  <span
-                    key={i}
-                    className="w-1 rounded-full bg-[#8B5CF6]/60"
-                    style={{ height: `${20 + (i % 5) * 12}%` }}
-                  />
-                ))}
-              </div>
-              <p className="text-[9px] text-[#94A3B8] leading-relaxed italic">
-                &quot;Dr. Smith, Bruno has been vomiting since yesterday…&quot;
-              </p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-[#0B1020]/80 p-4">
-              <p className="text-[10px] font-mono uppercase text-[#64748B] mb-3">Generated SOAP (Preview)</p>
-              <div className="space-y-1.5 text-[9px] text-[#94A3B8]">
-                <p><span className="text-[#C4B5FD]">S:</span> Vomiting, reduced appetite</p>
-                <p><span className="text-[#C4B5FD]">O:</span> Mild dehydration noted</p>
-                <p><span className="text-[#C4B5FD]">A:</span> Acute gastroenteritis</p>
-                <p><span className="text-[#C4B5FD]">P:</span> Fluids, anti-emetic, recheck 48h</p>
-              </div>
-              <button type="button" className="mt-3 w-full py-2 rounded-lg bg-gradient-to-r from-[#8B5CF6] to-[#3B82F6] text-[10px] font-semibold text-white">
-                Approve & Continue
-              </button>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-white/10 bg-[#0B1020]/80 p-4">
-            <p className="text-sm font-semibold text-[#22D3EE] mb-4">The Phoenix OS Advantage</p>
-            <ul className="space-y-3">
-              {INTERACTIVE_WORKFLOW.advantages.map((item) => (
-                <li key={item.title}>
-                  <p className="text-[11px] font-semibold text-[#F8FAFC]">{item.title}</p>
-                  <p className="text-[10px] text-[#64748B] mt-0.5">{item.description}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
+        <div className="mb-8" data-workflow-fade>
+          <WorkflowDetailCard activeStep={activeStep} />
         </div>
 
         <div
-          className="rounded-2xl border border-white/10 bg-[#0B1020]/80 p-5 sm:p-6 flex flex-col sm:flex-row items-center gap-4 justify-between"
+          className="rounded-2xl border border-white/10 bg-[#0B1020]/80 p-5 sm:p-6 flex flex-col sm:flex-row items-center gap-4 justify-between shadow-[0_12px_40px_rgba(0,0,0,0.25)]"
           data-workflow-fade
         >
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-1">
             <div className="relative w-12 h-12 shrink-0">
               <Image src="/phoenix-logo.png" alt="" fill className="object-contain" />
             </div>
-            <div>
+            <div className="text-left">
               <p className="text-sm font-semibold text-[#F8FAFC]">{INTERACTIVE_WORKFLOW.cta.headline}</p>
               <p className="text-xs text-[#64748B] mt-1 max-w-xl">{INTERACTIVE_WORKFLOW.cta.sub}</p>
             </div>
           </div>
-          <Link href="/request-access" className="phx-btn-primary text-sm px-5 py-2.5 shrink-0 phx-focus-ring">
+          <GradientPillButton href="/request-access" className="hover:scale-[1.02] transition-transform">
             {INTERACTIVE_WORKFLOW.cta.button} →
-          </Link>
+          </GradientPillButton>
         </div>
       </div>
     </section>

@@ -45,7 +45,7 @@ export const NAV_LINKS = [
 ] as const;
 
 export const DASHBOARD_PREVIEW = {
-  eyebrow: '04 / DASHBOARD PREVIEW',
+  eyebrow: 'DASHBOARD PREVIEW',
   headline: ['Your clinic.', 'One live overview.'],
   subheadline:
     'Every module, every metric, every handoff — visible in a single intelligent workspace built for veterinary teams.',
@@ -105,7 +105,7 @@ export const WORKFLOW_STEPS = [
 ] as const;
 
 export const INTERACTIVE_WORKFLOW = {
-  eyebrow: '05 / INTERACTIVE WORKFLOW',
+  eyebrow: 'INTERACTIVE WORKFLOW',
   headline: ['See How Phoenix OS Powers Every', 'Step of Care.'],
   subheadline:
     'From the first appointment to follow-up and beyond, Phoenix OS connects every workflow seamlessly.',
@@ -118,8 +118,6 @@ export const INTERACTIVE_WORKFLOW = {
     { id: 'rx', index: 6, title: 'Prescription Created', caption: 'Prescriptions are created and sent digitally.' },
     { id: 'invoice', index: 7, title: 'Invoice Generated', caption: 'Invoices are auto-created and ready to send.' },
     { id: 'followup', index: 8, title: 'Follow-up Scheduled', caption: 'Follow-ups are scheduled before they leave.' },
-    { id: 'notify', index: 9, title: 'Owner Notified', caption: 'Owners receive summaries and instructions.' },
-    { id: 'analytics', index: 10, title: 'Analytics Updated', caption: 'Real-time insights update across your dashboards.' },
   ],
   advantages: [
     { title: 'Real-time AI Assistance', description: 'Captures and structures conversations automatically.' },
@@ -131,65 +129,65 @@ export const INTERACTIVE_WORKFLOW = {
 } as const;
 
 export const FEATURE_ECOSYSTEM = {
-  eyebrow: '06 / FEATURE ECOSYSTEM',
+  eyebrow: 'FEATURE ECOSYSTEM',
   headline: ['Everything Your Clinic Needs.', 'One Intelligent Ecosystem.'],
   subheadline:
-    'Phoenix OS integrates every workflow, team, and data point into one connected platform built for veterinary care.',
+    'Phoenix OS brings every workflow, every team, and every data point together in one seamless operating system.',
   categories: [
     {
       id: 'clinical',
       title: 'Clinical Care',
       tone: 'purple' as const,
-      description: 'Complete patient care from intake to discharge.',
+      description: 'Streamline patient care from appointment to recovery.',
       features: ['Appointments', 'Patients', 'Medical Records', 'SOAP Notes', 'Diagnostics', 'Treatments', 'Follow-ups', 'Protocols'],
     },
     {
       id: 'ai',
       title: 'AI Intelligence',
       tone: 'purple' as const,
-      description: 'Smart tools that reduce documentation burden.',
+      description: 'AI that thinks, works and helps your team every day.',
       features: ['Voice Assistant', 'AI SOAP', 'Auto Coding', 'Smart Triage', 'AI Insights', 'Predictive Alerts', 'Summary Gen', 'Task Automation'],
     },
     {
       id: 'team',
       title: 'Team & Collaboration',
       tone: 'blue' as const,
-      description: 'Keep every role aligned in real time.',
+      description: 'Empower your team to work together seamlessly.',
       features: ['Staff Roles', 'Task Management', 'Internal Chat', 'Activity Log', 'Approvals', 'Shift & Roster', 'Performance', 'Documents'],
     },
     {
       id: 'business',
       title: 'Business Operations',
       tone: 'blue' as const,
-      description: 'Run the clinic with clarity and control.',
+      description: 'Run your clinic efficiently with powerful business tools.',
       features: ['Billing & Invoices', 'Payments', 'Inventory', 'Accounting', 'Expenses', 'Reports', 'Payroll', 'Compliance'],
     },
     {
       id: 'communication',
       title: 'Communication',
       tone: 'purple' as const,
-      description: 'Reach pet owners on their preferred channels.',
+      description: 'Stay connected with pet owners across every channel.',
       features: ['SMS', 'WhatsApp', 'Email', 'Owner Portal', 'Notifications', 'Teleconsult', 'Broadcasts', 'Surveys'],
     },
     {
       id: 'analytics',
       title: 'Analytics & Growth',
       tone: 'purple' as const,
-      description: 'Insights that drive better decisions.',
+      description: 'Make smarter decisions with real-time insights and analytics.',
       features: ['Dashboards', 'KPIs', 'Financial Reports', 'Patient Trends', 'Performance', 'Custom Reports', 'Forecasting', 'Goal Tracking'],
     },
   ],
   trustBar: [
-    { label: 'Secure & Reliable', description: 'Enterprise-grade security built in.' },
-    { label: 'Cloud Native', description: 'Access from anywhere, anytime.' },
-    { label: 'Always Evolving', description: 'Regular updates and improvements.' },
-    { label: '24/7 Support', description: 'Human support when you need it.' },
-    { label: 'Mobile Ready', description: 'Works on web, tablet, and mobile.' },
+    { label: 'Secure & Reliable', description: 'Enterprise-grade security and data protection.' },
+    { label: 'Cloud Native', description: 'Access your clinic from anywhere, anytime.' },
+    { label: 'Always Evolving', description: 'Regular updates with new features and improvements.' },
+    { label: '24/7 Support', description: 'Real humans, whenever you need us.' },
+    { label: 'Mobile Ready', description: 'Powerful experience on web, tablet and mobile.' },
   ],
 } as const;
 
 export const SECURITY_TRUST = {
-  eyebrow: '07 / SECURITY & TRUST',
+  eyebrow: 'SECURITY & TRUST',
   headline: ['Security You Can Count On.', 'Trust You Can Feel.'],
   subheadline:
     'Phoenix OS protects your clinic, your clients, and your data with enterprise-grade security built into every layer.',
@@ -215,7 +213,7 @@ export const SECURITY_TRUST = {
 } as const;
 
 export const PLATFORM_EXPANSION = {
-  eyebrow: '10 / PLATFORM EXPANSION',
+  eyebrow: 'PLATFORM EXPANSION',
   headline: ['Built for vet clinics first.', 'Ready for', 'every clinic next.'],
   subheadline: 'One intelligent operating system. Purpose-built experiences for every healthcare specialty.',
   timeline: [
@@ -608,7 +606,7 @@ export const TESTIMONIALS = [
 ] as const;
 
 export const PROBLEM_SECTION = {
-  eyebrow: '02 / THE PROBLEM',
+  eyebrow: 'THE PROBLEM',
   headline: ['Running a clinic is', 'hard enough.', 'Software shouldn\'t make it harder.'],
   subheadline:
     'Veterinary teams juggle too many tools, too much data, and endless manual work — every single day.',
@@ -762,7 +760,7 @@ export type SolutionVisualKey =
 export type SolutionTone = 'purple' | 'orange' | 'blue';
 
 export const SOLUTION_SECTION = {
-  eyebrow: '03 / THE SOLUTION',
+  eyebrow: 'THE SOLUTION',
   headline: ['One platform.', 'Every', 'workflow.'],
   subheadline:
     'Phoenix OS brings every part of your clinic together. Click any module to see how it solves the chaos.',
