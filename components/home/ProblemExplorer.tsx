@@ -70,7 +70,7 @@ function ExplorerCard({
   className?: string;
 }) {
   return (
-    <div className={cn('phx-card p-6', className)}>
+    <div className={cn('rounded-xl border border-white/10 bg-[#0B1020]/80 p-6', className)}>
       {title && (
         <div className={cn('mb-5', subtitle ? '' : '')}>
           <h3 className="text-sm font-semibold text-[#F8FAFC] tracking-tight">{title}</h3>

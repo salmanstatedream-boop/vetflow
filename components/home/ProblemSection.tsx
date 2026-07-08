@@ -11,7 +11,7 @@ export default function ProblemSection() {
   useScrollReveal(sectionRef, { selector: '[data-problem-header]', staggerMs: 70, y: 20 });
 
   return (
-    <section ref={sectionRef} id="problem" className="phx-section relative overflow-hidden">
+    <section ref={sectionRef} id="problem" className="phx-section phx-section-alt relative overflow-hidden">
       <div aria-hidden className="phx-section-divider" />
       <div className="phx-container relative">
         <div className="text-center max-w-3xl mx-auto phx-section-header">
@@ -24,7 +24,8 @@ export default function ProblemSection() {
           <h2 className="phx-heading text-3xl sm:text-4xl lg:text-5xl mb-4" data-problem-header>
             Running a clinic is <span className="text-[#F97316]">hard enough.</span>
             <br />
-            Software shouldn&apos;t make it <span className="text-[#8B5CF6]">harder.</span>
+            Software shouldn&apos;t make it{' '}
+            <span className="bg-gradient-to-r from-[#F97316] to-[#8B5CF6] bg-clip-text text-transparent">harder.</span>
           </h2>
           <p className="phx-subtext text-lg" data-problem-header>
             {PROBLEM_SECTION.subheadline}

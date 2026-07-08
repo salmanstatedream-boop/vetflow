@@ -39,10 +39,17 @@ import {
 export const NAV_LINKS = [
   { label: 'Problem', href: '#problem' },
   { label: 'Solution', href: '#solution' },
-  { label: 'Product', href: '#product' },
+  { label: 'Dashboard', href: '#dashboard' },
   { label: 'Workflows', href: '#workflows' },
   { label: 'Pricing', href: '#pricing' },
 ] as const;
+
+export const DASHBOARD_PREVIEW = {
+  eyebrow: '04 / DASHBOARD PREVIEW',
+  headline: ['Your clinic.', 'One live overview.'],
+  subheadline:
+    'Every module, every metric, every handoff — visible in a single intelligent workspace built for veterinary teams.',
+} as const;
 
 export const HERO = {
   eyebrow: 'PHOENIX OS',
@@ -82,14 +89,9 @@ export const OS_DEMO = {
 } as const;
 
 export const DASHBOARD_PREVIEW_STACK = [
-  { id: 'live', label: 'Live overview', type: 'component' as const },
-  { id: 'doctor', label: 'Doctor view', type: 'image' as const, image: '/dashboard-previews/doctor-dashboard.png' },
-  {
-    id: 'reception',
-    label: 'Reception view',
-    type: 'image' as const,
-    image: '/dashboard-previews/reception-dashboard.png',
-  },
+  { id: 'live', label: 'Live overview', type: 'component' as const, visual: 'live' as const },
+  { id: 'doctor', label: 'Doctor view', type: 'component' as const, visual: 'doctor' as const },
+  { id: 'reception', label: 'Reception view', type: 'component' as const, visual: 'reception' as const },
 ] as const;
 
 export const WORKFLOW_STEPS = [
@@ -101,6 +103,135 @@ export const WORKFLOW_STEPS = [
   { id: 'invoice', label: 'Invoice', description: 'Billing and payments' },
   { id: 'records', label: 'Secure Records', description: 'Audit-ready archive' },
 ] as const;
+
+export const INTERACTIVE_WORKFLOW = {
+  eyebrow: '05 / INTERACTIVE WORKFLOW',
+  headline: ['See How Phoenix OS Powers Every', 'Step of Care.'],
+  subheadline:
+    'From the first appointment to follow-up and beyond, Phoenix OS connects every workflow seamlessly.',
+  steps: [
+    { id: 'booked', index: 1, title: 'Appointment Booked', caption: 'Owner books online or staff books instantly.' },
+    { id: 'checkin', index: 2, title: 'Patient Check-In', caption: 'Quick digital check-in and history capture.' },
+    { id: 'listening', index: 3, title: 'AI Starts Listening', caption: 'AI captures the conversation in real time.' },
+    { id: 'soap', index: 4, title: 'SOAP Generated', caption: 'AI instantly generates structured SOAP notes.' },
+    { id: 'review', index: 5, title: 'Doctor Reviews', caption: 'Doctor reviews and approves with ease.' },
+    { id: 'rx', index: 6, title: 'Prescription Created', caption: 'Prescriptions are created and sent digitally.' },
+    { id: 'invoice', index: 7, title: 'Invoice Generated', caption: 'Invoices are auto-created and ready to send.' },
+    { id: 'followup', index: 8, title: 'Follow-up Scheduled', caption: 'Follow-ups are scheduled before they leave.' },
+    { id: 'notify', index: 9, title: 'Owner Notified', caption: 'Owners receive summaries and instructions.' },
+    { id: 'analytics', index: 10, title: 'Analytics Updated', caption: 'Real-time insights update across your dashboards.' },
+  ],
+  advantages: [
+    { title: 'Real-time AI Assistance', description: 'Captures and structures conversations automatically.' },
+    { title: 'Zero Double Entry', description: 'Data flows through every step without retyping.' },
+    { title: 'Stronger Client Experience', description: 'Faster visits and clearer communication.' },
+    { title: 'Better Business Outcomes', description: 'Higher efficiency and measurable growth.' },
+  ],
+  cta: { headline: 'Experience the Power of an Intelligent Workflow.', sub: 'Phoenix OS brings every step together so your team can focus on exceptional care.', button: 'Book a Demo' },
+} as const;
+
+export const FEATURE_ECOSYSTEM = {
+  eyebrow: '06 / FEATURE ECOSYSTEM',
+  headline: ['Everything Your Clinic Needs.', 'One Intelligent Ecosystem.'],
+  subheadline:
+    'Phoenix OS integrates every workflow, team, and data point into one connected platform built for veterinary care.',
+  categories: [
+    {
+      id: 'clinical',
+      title: 'Clinical Care',
+      tone: 'purple' as const,
+      description: 'Complete patient care from intake to discharge.',
+      features: ['Appointments', 'Patients', 'Medical Records', 'SOAP Notes', 'Diagnostics', 'Treatments', 'Follow-ups', 'Protocols'],
+    },
+    {
+      id: 'ai',
+      title: 'AI Intelligence',
+      tone: 'purple' as const,
+      description: 'Smart tools that reduce documentation burden.',
+      features: ['Voice Assistant', 'AI SOAP', 'Auto Coding', 'Smart Triage', 'AI Insights', 'Predictive Alerts', 'Summary Gen', 'Task Automation'],
+    },
+    {
+      id: 'team',
+      title: 'Team & Collaboration',
+      tone: 'blue' as const,
+      description: 'Keep every role aligned in real time.',
+      features: ['Staff Roles', 'Task Management', 'Internal Chat', 'Activity Log', 'Approvals', 'Shift & Roster', 'Performance', 'Documents'],
+    },
+    {
+      id: 'business',
+      title: 'Business Operations',
+      tone: 'blue' as const,
+      description: 'Run the clinic with clarity and control.',
+      features: ['Billing & Invoices', 'Payments', 'Inventory', 'Accounting', 'Expenses', 'Reports', 'Payroll', 'Compliance'],
+    },
+    {
+      id: 'communication',
+      title: 'Communication',
+      tone: 'purple' as const,
+      description: 'Reach pet owners on their preferred channels.',
+      features: ['SMS', 'WhatsApp', 'Email', 'Owner Portal', 'Notifications', 'Teleconsult', 'Broadcasts', 'Surveys'],
+    },
+    {
+      id: 'analytics',
+      title: 'Analytics & Growth',
+      tone: 'purple' as const,
+      description: 'Insights that drive better decisions.',
+      features: ['Dashboards', 'KPIs', 'Financial Reports', 'Patient Trends', 'Performance', 'Custom Reports', 'Forecasting', 'Goal Tracking'],
+    },
+  ],
+  trustBar: [
+    { label: 'Secure & Reliable', description: 'Enterprise-grade security built in.' },
+    { label: 'Cloud Native', description: 'Access from anywhere, anytime.' },
+    { label: 'Always Evolving', description: 'Regular updates and improvements.' },
+    { label: '24/7 Support', description: 'Human support when you need it.' },
+    { label: 'Mobile Ready', description: 'Works on web, tablet, and mobile.' },
+  ],
+} as const;
+
+export const SECURITY_TRUST = {
+  eyebrow: '07 / SECURITY & TRUST',
+  headline: ['Security You Can Count On.', 'Trust You Can Feel.'],
+  subheadline:
+    'Phoenix OS protects your clinic, your clients, and your data with enterprise-grade security built into every layer.',
+  features: [
+    { id: 'enterprise', title: 'Enterprise-Grade Security', description: 'Multi-layered security with end-to-end encryption at every step.', side: 'left' as const },
+    { id: 'cloud', title: 'Secure Cloud Infrastructure', description: 'Hosted on certified cloud infrastructure with redundancy across zones.', side: 'left' as const },
+    { id: 'rbac', title: 'Role-Based Access', description: 'Granular permissions ensure the right people see the right information.', side: 'left' as const },
+    { id: 'backup', title: 'Automatic Backups', description: 'Continuous backups and disaster recovery keep your data safe.', side: 'right' as const },
+    { id: 'audit', title: 'Audit Logs & Monitoring', description: 'Comprehensive audit trails and real-time monitoring for accountability.', side: 'right' as const },
+    { id: 'privacy', title: 'Privacy by Design', description: 'Privacy-first principles keep client and patient data confidential.', side: 'right' as const },
+  ],
+  compliance: ['HIPAA Ready', 'GDPR Aligned', 'Encrypted at Rest', 'SOC 2 Practices', 'RLS Protected'],
+  summary: {
+    headline: 'Your data is protected. Your trust is earned.',
+    sub: 'Phoenix OS is committed to keeping your clinic data secure, available, and compliant.',
+    items: [
+      { label: 'Data Encrypted', description: 'In transit and at rest using industry-standard encryption.' },
+      { label: 'Always Available', description: 'Built for reliability so your clinic never stops.' },
+      { label: 'Dedicated Support', description: 'Real humans ready when you need help.' },
+      { label: "We're Compliant", description: 'We continuously monitor and exceed standards.' },
+    ],
+  },
+} as const;
+
+export const PLATFORM_EXPANSION = {
+  eyebrow: '10 / PLATFORM EXPANSION',
+  headline: ['Built for vet clinics first.', 'Ready for', 'every clinic next.'],
+  subheadline: 'One intelligent operating system. Purpose-built experiences for every healthcare specialty.',
+  timeline: [
+    { label: 'Live Now', clinic: 'Veterinary Clinics', note: 'Available today' },
+    { label: 'In Development', clinic: 'Dental Clinics', note: 'Building now' },
+    { label: 'Coming Soon', clinic: 'General Practice', note: 'On the roadmap' },
+    { label: 'Coming Soon', clinic: 'Specialty Clinics', note: 'On the roadmap' },
+  ],
+  trustBar: [
+    { label: 'Enterprise Security', description: 'Your data is protected with enterprise-grade security.' },
+    { label: '99.9% Uptime', description: 'Built for reliability so your clinic never stops.' },
+    { label: 'Your Data, Yours', description: 'You own your data. We keep it secure.' },
+    { label: 'Real People, Real Support', description: 'Our team is here whenever you need us.' },
+  ],
+  cta: 'Join the Journey',
+} as const;
 
 const svgPreview = (body: string) =>
   'data:image/svg+xml,' +
@@ -246,43 +377,76 @@ export const FEATURES: FeatureItem[] = [
 export const CLINIC_TYPES = [
   {
     id: 'vet',
-    title: 'Vet Clinic',
-    status: 'Available Now' as const,
+    title: 'Veterinary Clinics',
+    status: 'Live Now' as const,
+    statusBadge: 'LIVE NOW',
+    tone: 'cyan' as const,
     description:
       'Purpose-built for veterinary practices — live today with reception, clinical workflows, and billing in one workspace.',
     extendedDescription:
-      'Vets get a dedicated SOAP workspace, lab order tracking, prescription-to-inventory sync, and branded PDF outputs. Every role — reception, doctor, practice manager, and owner — sees a dashboard tailored to their day.',
+      'Vets get a dedicated SOAP workspace, lab order tracking, prescription-to-inventory sync, and branded PDF outputs.',
     details: [
       'Pet & owner profiles',
       'SOAP & treatment plans',
       'Vaccination reminders',
       'Lab orders & results',
       'Rx with stock deduction',
-      'Branded invoices & documents',
+      'Branded invoices & docs',
       'Role-based dashboards',
       'Full audit trail',
     ],
+    cta: 'Explore Vet Clinic',
   },
   {
     id: 'dental',
-    title: 'Dental Clinic',
-    status: 'Under Development' as const,
-    description: 'Under development — launching on the Phoenix OS roadmap.',
-    details: [] as const,
+    title: 'Dental Clinics',
+    status: 'In Development' as const,
+    statusBadge: 'IN DEVELOPMENT',
+    tone: 'purple' as const,
+    description: 'Currently in development — bringing modern dental workflows to the Phoenix OS platform.',
+    details: [
+      'Dental charting & procedures',
+      'Appointment & chair scheduling',
+      'X-ray & imaging management',
+      'Treatment plans & estimates',
+      'Insurance claims',
+      'Patient communication',
+    ],
+    cta: 'Learn more',
   },
   {
     id: 'general',
-    title: 'General Clinic',
-    status: 'Under Development' as const,
-    description: 'Under development — launching on the Phoenix OS roadmap.',
-    details: [] as const,
+    title: 'General Practice',
+    status: 'Coming Soon' as const,
+    statusBadge: 'COMING SOON',
+    tone: 'blue' as const,
+    description: 'Coming soon — expanding Phoenix OS to support general practice clinics and multi-provider teams.',
+    details: [
+      'General consultations',
+      'Chronic care management',
+      'Preventive care reminders',
+      'Inventory & pharmacy',
+      'Billing & payments',
+      'Reports & analytics',
+    ],
+    cta: 'Notify me',
   },
   {
     id: 'specialty',
-    title: 'Specialty Clinic',
-    status: 'Under Development' as const,
-    description: 'Under development — launching on the Phoenix OS roadmap.',
-    details: [] as const,
+    title: 'Specialty Clinics',
+    status: 'Coming Soon' as const,
+    statusBadge: 'COMING SOON',
+    tone: 'orange' as const,
+    description: 'Coming soon — advanced tools and specialized workflows for every veterinary specialty.',
+    details: [
+      'Specialty workflows',
+      'Advanced diagnostics',
+      'Referral management',
+      'Procedure tracking',
+      'Multi-location support',
+      'Performance insights',
+    ],
+    cta: 'Notify me',
   },
 ] as const;
 
@@ -342,7 +506,8 @@ export const FOOTER_COLUMNS = [
     links: [
       { label: 'Problem', href: '#problem' },
       { label: 'Solution', href: '#solution' },
-      { label: 'Features', href: '#product' },
+      { label: 'Dashboard', href: '#dashboard' },
+      { label: 'Features', href: '#ecosystem' },
       { label: 'Pricing', href: '#pricing' },
     ],
   },
@@ -443,7 +608,7 @@ export const TESTIMONIALS = [
 ] as const;
 
 export const PROBLEM_SECTION = {
-  eyebrow: 'THE PROBLEM',
+  eyebrow: '02 / THE PROBLEM',
   headline: ['Running a clinic is', 'hard enough.', 'Software shouldn\'t make it harder.'],
   subheadline:
     'Veterinary teams juggle too many tools, too much data, and endless manual work — every single day.',
@@ -597,7 +762,7 @@ export type SolutionVisualKey =
 export type SolutionTone = 'purple' | 'orange' | 'blue';
 
 export const SOLUTION_SECTION = {
-  eyebrow: 'THE SOLUTION',
+  eyebrow: '03 / THE SOLUTION',
   headline: ['One platform.', 'Every', 'workflow.'],
   subheadline:
     'Phoenix OS brings every part of your clinic together. Click any module to see how it solves the chaos.',

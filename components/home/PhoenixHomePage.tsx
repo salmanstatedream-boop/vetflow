@@ -1,15 +1,14 @@
 import PhoenixNavbar from './PhoenixNavbar';
 import PhoenixHero from './PhoenixHero';
-import EarlyAccessSection from './EarlyAccessSection';
 import ProblemSection from './ProblemSection';
 import SolutionSection from './SolutionSection';
-import AnimatedOSDemo from './AnimatedOSDemo';
-import AnimatedWorkflow from './AnimatedWorkflow';
-import FeatureToolbox from './FeatureToolbox';
-import ClinicTypes from './ClinicTypes';
+import DashboardPreviewSection from './DashboardPreviewSection';
+import InteractiveWorkflowSection from './InteractiveWorkflowSection';
+import FeatureEcosystemSection from './FeatureEcosystemSection';
 import SecuritySection from './SecuritySection';
 import Testimonials from './Testimonials';
 import PricingPreview from './PricingPreview';
+import PlatformExpansionSection from './PlatformExpansionSection';
 import FaqSection from './FaqSection';
 import FinalCTA from './FinalCTA';
 import PhoenixFooter from './PhoenixFooter';
@@ -22,16 +21,15 @@ export default function PhoenixHomePage() {
         <PhoenixNavbar />
         <main>
           <PhoenixHero />
-          <EarlyAccessSection />
           <ProblemSection />
           <SolutionSection />
-          <AnimatedOSDemo />
-          <AnimatedWorkflow />
-          <FeatureToolbox />
+          <DashboardPreviewSection />
+          <InteractiveWorkflowSection />
+          <FeatureEcosystemSection />
           <SecuritySection />
           <Testimonials />
-          <ClinicTypes />
           <PricingPreview />
+          <PlatformExpansionSection />
           <FaqSection />
           <FinalCTA />
         </main>

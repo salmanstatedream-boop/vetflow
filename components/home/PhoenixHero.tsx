@@ -7,7 +7,8 @@ import { useEffect, useRef } from 'react';
 import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
 import { LightLines } from '@/components/ui/light-lines';
 import MorphText from '@/components/ui/morph-text';
-import { CLINIC_TYPE_WORDS, HERO } from '@/lib/home-data';
+import Link from 'next/link';
+import { CLINIC_TYPE_WORDS, EARLY_ACCESS, HERO } from '@/lib/home-data';
 import { usePrefersReducedMotion } from '@/lib/hooks/usePrefersReducedMotion';
 import { cn } from '@/lib/utils';
 
@@ -178,6 +179,27 @@ export default function PhoenixHero() {
           >
             {HERO.microcopy}
           </p>
+
+          <div
+            className="mt-10 max-w-2xl mx-auto rounded-2xl border border-[#22D3EE]/25 bg-[#0B1020]/60 px-5 py-5 sm:px-6 sm:py-6 text-left sm:text-center"
+            data-phx-fade
+            style={{ opacity: reducedMotion ? 1 : 0 }}
+          >
+            <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#22D3EE] mb-2">
+              {EARLY_ACCESS.eyebrow}
+            </p>
+            <p className="text-base sm:text-lg font-semibold text-[#F8FAFC] mb-2">{EARLY_ACCESS.headline}</p>
+            <p className="text-sm text-[#94A3B8] mb-4">{EARLY_ACCESS.subtext}</p>
+            <Link
+              href="/request-access"
+              className="phx-btn-primary text-sm px-5 py-2.5 inline-flex phx-focus-ring"
+            >
+              {EARLY_ACCESS.cta}
+            </Link>
+            <p className="text-[10px] font-mono uppercase tracking-[0.16em] text-[#64748B] mt-3">
+              {EARLY_ACCESS.note}
+            </p>
+          </div>
 
           <div
             className="flex items-center justify-center gap-2 mt-12"

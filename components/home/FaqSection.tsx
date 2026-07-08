@@ -19,7 +19,7 @@ export default function FaqSection() {
       <div className="phx-container">
         <div className="phx-section-header text-center max-w-3xl mx-auto">
           <p className="phx-eyebrow" data-faq-fade>
-            12 / FAQ
+            11 / FAQ
           </p>
           <h2 className="phx-heading text-3xl sm:text-4xl lg:text-5xl" data-faq-fade>
             Questions clinics ask us.

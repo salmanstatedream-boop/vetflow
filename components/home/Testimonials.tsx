@@ -14,7 +14,7 @@ export default function Testimonials() {
       <div className="phx-container">
         <div className="text-center max-w-2xl mx-auto phx-section-header">
           <p className="phx-eyebrow mb-4" data-testimonial-fade>
-            10 / TESTIMONIALS
+            08 / TESTIMONIALS
           </p>
           <h2
             className="phx-heading text-3xl sm:text-4xl lg:text-5xl mb-4"
