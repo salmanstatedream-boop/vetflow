@@ -9,6 +9,7 @@ export default function ProblemSection() {
   const sectionRef = useRef<HTMLElement>(null);
 
   useScrollReveal(sectionRef, { selector: '[data-problem-header]', staggerMs: 70, y: 20 });
+  useScrollReveal(sectionRef, { selector: '[data-problem-explorer]', staggerMs: 85, y: 22 });
 
   return (
     <section ref={sectionRef} id="problem" className="phx-section phx-section-alt relative overflow-hidden">
@@ -32,7 +33,9 @@ export default function ProblemSection() {
           </p>
         </div>
 
-        <ProblemExplorer />
+        <div data-problem-explorer>
+          <ProblemExplorer />
+        </div>
       </div>
     </section>
   );

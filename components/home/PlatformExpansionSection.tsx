@@ -51,9 +51,12 @@ export default function PlatformExpansionSection() {
       <div className="phx-container">
         <div className="grid lg:grid-cols-[1fr_auto] gap-8 items-start mb-10">
           <div className="phx-section-header max-w-2xl">
-            <p className="phx-eyebrow" data-platform-fade>
+            <span
+              className="inline-flex items-center px-4 py-1.5 rounded-full border border-[#22D3EE]/30 bg-[#22D3EE]/10 text-[#22D3EE] text-[11px] font-mono uppercase tracking-[0.2em] mb-6"
+              data-platform-fade
+            >
               {PLATFORM_EXPANSION.eyebrow}
-            </p>
+            </span>
             <h2 className="phx-heading text-3xl sm:text-4xl lg:text-5xl" data-platform-fade>
               {PLATFORM_EXPANSION.headline[0]}{' '}
               {PLATFORM_EXPANSION.headline[1]}{' '}

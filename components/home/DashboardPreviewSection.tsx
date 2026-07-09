@@ -31,12 +31,12 @@ export default function DashboardPreviewSection() {
           </p>
         </div>
 
-        <div className="relative max-w-6xl mx-auto" data-dashboard-fade>
+        <div className="relative max-w-6xl mx-auto mt-2" data-dashboard-fade>
           <div
             aria-hidden
-            className="pointer-events-none absolute -inset-6 bg-gradient-to-br from-[#22D3EE]/8 via-transparent to-[#8B5CF6]/8 blur-3xl"
+            className="pointer-events-none absolute -inset-8 bg-gradient-to-br from-[#22D3EE]/10 via-transparent to-[#8B5CF6]/10 blur-3xl"
           />
-          <div className="relative rounded-2xl border border-white/10 bg-[#0B1020] overflow-x-auto shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
+          <div className="relative rounded-2xl border border-white/10 ring-1 ring-white/[0.06] bg-[#0B1020] overflow-x-auto shadow-[0_24px_80px_rgba(0,0,0,0.45)] transition-shadow hover:shadow-[0_28px_90px_rgba(34,211,238,0.08)]">
             <OverviewDashboardVisual />
           </div>
         </div>

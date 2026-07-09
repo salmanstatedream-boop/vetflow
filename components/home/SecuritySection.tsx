@@ -226,7 +226,9 @@ function SecurityCard({
         </span>
         <p className="text-[11px] font-semibold text-[#F8FAFC] pt-1.5 leading-snug">{feat.title}</p>
       </div>
-      <p className="text-[10px] text-[#64748B] leading-relaxed">{feat.description}</p>
+      <p className={cn('text-[10px] text-[#64748B] leading-relaxed', align === 'right' && 'lg:text-right')}>
+        {feat.description}
+      </p>
     </div>
   );
 }

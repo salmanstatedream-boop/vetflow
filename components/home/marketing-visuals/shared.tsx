@@ -263,6 +263,16 @@ export function HubConnectorOverlay({
   }, [containerRef, measure]);
 
   useEffect(() => {
+    if (!revealed) return;
+    const t1 = window.setTimeout(measure, 80);
+    const t2 = window.setTimeout(measure, 350);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
+  }, [revealed, measure]);
+
+  useEffect(() => {
     if (!revealed || !shouldAnimate || reducedMotion || !lines.length) {
       if (lines.length) {
         pathRefs.current.forEach((path) => {

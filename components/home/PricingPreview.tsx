@@ -27,9 +27,12 @@ export default function PricingPreview() {
       <div aria-hidden className="phx-section-divider" />
       <div className="phx-container">
         <div className="phx-section-header text-center max-w-xl mx-auto">
-          <p className="phx-eyebrow" data-pricing-fade>
-            09 / PRICING
-          </p>
+          <span
+            className="inline-flex items-center px-4 py-1.5 rounded-full border border-[#22D3EE]/30 bg-[#22D3EE]/10 text-[#22D3EE] text-[11px] font-mono uppercase tracking-[0.2em] mb-6"
+            data-pricing-fade
+          >
+            PRICING
+          </span>
           <h2 className="phx-heading text-3xl sm:text-4xl lg:text-5xl" data-pricing-fade>
             Start simple. Scale when ready.
           </h2>

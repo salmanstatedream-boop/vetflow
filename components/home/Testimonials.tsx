@@ -13,9 +13,12 @@ export default function Testimonials() {
       <div aria-hidden className="phx-section-divider" />
       <div className="phx-container">
         <div className="text-center max-w-2xl mx-auto phx-section-header">
-          <p className="phx-eyebrow mb-4" data-testimonial-fade>
-            08 / TESTIMONIALS
-          </p>
+          <span
+            className="inline-flex items-center px-4 py-1.5 rounded-full border border-[#8B5CF6]/30 bg-[#8B5CF6]/10 text-[#C4B5FD] text-[11px] font-mono uppercase tracking-[0.2em] mb-6"
+            data-testimonial-fade
+          >
+            TESTIMONIALS
+          </span>
           <h2
             className="phx-heading text-3xl sm:text-4xl lg:text-5xl mb-4"
             data-testimonial-fade

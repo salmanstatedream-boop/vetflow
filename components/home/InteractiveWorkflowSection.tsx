@@ -208,7 +208,11 @@ export default function InteractiveWorkflowSection() {
           </div>
         </div>
 
-        <div className="mb-8" data-workflow-fade>
+        <div className="mb-8 relative" data-workflow-fade>
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -inset-4 bg-[radial-gradient(ellipse_at_center,rgba(139,92,246,0.08)_0%,transparent_70%)]"
+          />
           <WorkflowDetailCard activeStep={activeStep} />
         </div>
 

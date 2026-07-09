@@ -18,9 +18,12 @@ export default function FaqSection() {
       <div aria-hidden className="phx-section-divider" />
       <div className="phx-container">
         <div className="phx-section-header text-center max-w-3xl mx-auto">
-          <p className="phx-eyebrow" data-faq-fade>
-            11 / FAQ
-          </p>
+          <span
+            className="inline-flex items-center px-4 py-1.5 rounded-full border border-[#8B5CF6]/30 bg-[#8B5CF6]/10 text-[#C4B5FD] text-[11px] font-mono uppercase tracking-[0.2em] mb-6"
+            data-faq-fade
+          >
+            FAQ
+          </span>
           <h2 className="phx-heading text-3xl sm:text-4xl lg:text-5xl" data-faq-fade>
             Questions clinics ask us.
           </h2>
