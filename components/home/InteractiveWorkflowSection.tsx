@@ -70,11 +70,21 @@ export default function InteractiveWorkflowSection() {
   }, [measureConnector, steps.length]);
 
   useEffect(() => {
+    const scroller = stepScrollRef.current;
     const btn = stepButtonRefs.current[activeStep];
-    if (!btn) return;
-    btn.scrollIntoView({
-      inline: 'center',
-      block: 'nearest',
+    if (!scroller || !btn) return;
+    if (scroller.scrollWidth <= scroller.clientWidth) return;
+
+    const scrollerRect = scroller.getBoundingClientRect();
+    const btnRect = btn.getBoundingClientRect();
+    const target =
+      scroller.scrollLeft +
+      btnRect.left -
+      scrollerRect.left -
+      (scroller.clientWidth - btnRect.width) / 2;
+
+    scroller.scrollTo({
+      left: Math.max(0, Math.min(target, scroller.scrollWidth - scroller.clientWidth)),
       behavior: reducedMotion ? 'auto' : 'smooth',
     });
   }, [activeStep, reducedMotion]);
