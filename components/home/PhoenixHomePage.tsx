@@ -1,3 +1,4 @@
+import PhoenixBootPreloader from './PhoenixBootPreloader';
 import PhoenixNavbar from './PhoenixNavbar';
 import PhoenixHero from './PhoenixHero';
 import ProblemSection from './ProblemSection';
@@ -14,9 +15,19 @@ import FinalCTA from './FinalCTA';
 import PhoenixFooter from './PhoenixFooter';
 import SmoothScrollProvider from './SmoothScrollProvider';
 
+const BOOT_GATE_SCRIPT = `
+try {
+  if (sessionStorage.getItem('phx_boot_seen')) {
+    document.documentElement.classList.add('phx-boot-done');
+  }
+} catch (e) {}
+`;
+
 export default function PhoenixHomePage() {
   return (
     <SmoothScrollProvider>
+      <script dangerouslySetInnerHTML={{ __html: BOOT_GATE_SCRIPT }} />
+      <PhoenixBootPreloader />
       <div className="phx-page min-h-screen">
         <PhoenixNavbar />
         <main>

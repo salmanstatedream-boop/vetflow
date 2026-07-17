@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Phoenix OS - Connected Veterinary Care</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Hanken+Grotesk:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-container": "#4da6ff",
+                      "tertiary-container": "#de9200",
+                      "outline": "#8a919d",
+                      "surface-tint": "#a0caff",
+                      "on-primary-fixed": "#001c37",
+                      "on-primary-container": "#003a67",
+                      "on-primary": "#003259",
+                      "on-surface": "#e0e2ea",
+                      "background": "#101419",
+                      "surface-variant": "#31353b",
+                      "error-container": "#93000a",
+                      "error": "#ffb4ab",
+                      "tertiary": "#ffb956",
+                      "on-secondary": "#532200",
+                      "surface-container-high": "#262a30",
+                      "primary-fixed": "#d2e4ff",
+                      "secondary-fixed": "#ffdbca",
+                      "on-tertiary-fixed": "#2a1800",
+                      "surface-container-lowest": "#0b0e14",
+                      "on-tertiary-fixed-variant": "#633f00",
+                      "on-secondary-fixed": "#331200",
+                      "surface": "#101419",
+                      "on-secondary-fixed-variant": "#763300",
+                      "on-tertiary-container": "#503200",
+                      "primary-fixed-dim": "#a0caff",
+                      "inverse-surface": "#e0e2ea",
+                      "on-error-container": "#ffdad6",
+                      "on-surface-variant": "#c0c7d4",
+                      "on-tertiary": "#452b00",
+                      "on-error": "#690005",
+                      "on-primary-fixed-variant": "#00497e",
+                      "on-background": "#e0e2ea",
+                      "surface-dim": "#101419",
+                      "secondary": "#ffb68e",
+                      "outline-variant": "#404752",
+                      "on-secondary-container": "#491d00",
+                      "inverse-primary": "#0061a5",
+                      "surface-container": "#1c2025",
+                      "surface-container-highest": "#31353b",
+                      "surface-bright": "#36393f",
+                      "tertiary-fixed": "#ffddb5",
+                      "secondary-container": "#ea6b00",
+                      "surface-container-low": "#181c21",
+                      "inverse-on-surface": "#2d3136",
+                      "tertiary-fixed-dim": "#ffb956",
+                      "primary": "#a0caff",
+                      "secondary-fixed-dim": "#ffb68e"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "unit": "8px",
+                      "container-max": "1440px",
+                      "margin-desktop": "64px",
+                      "gutter": "24px",
+                      "margin-mobile": "20px"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": ["Hanken Grotesk"],
+                      "headline-lg": ["Hanken Grotesk"],
+                      "label-sm": ["Geist"],
+                      "body-md": ["Hanken Grotesk"],
+                      "display-lg": ["Hanken Grotesk"]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": ["28px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                      "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "label-sm": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                      "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "display-lg": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        body { background-color: #050505; color: #e0e2ea; overflow-x: hidden; }
+        
+        /* Boot Sequence Animations */
+        #boot-sequence {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #000; z-index: 100;
+            display: flex; flex-direction: column; justify-content: center; items-align: center;
+            transition: opacity 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .logo-container {
+            position: relative; width: 120px; height: 120px; margin: 0 auto;
+            transition: all 1.5s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+        
+        .logo-image {
+            width: 100%; height: 100%; object-fit: contain; opacity: 0;
+            animation: fadeInReveal 2s ease-out forwards;
+        }
+
+        .dot-pulse {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 4px; height: 4px; border-radius: 50%; background: #4da6ff;
+            box-shadow: 0 0 10px 2px rgba(77, 166, 255, 0.8);
+            animation: pulseDot 2s infinite ease-in-out;
+            opacity: 1;
+        }
+
+        .text-container {
+            text-align: center; margin-top: 32px;
+            opacity: 0; animation: fadeInText 1s 2.5s forwards;
+        }
+
+        .system-messages {
+            height: 20px; overflow: hidden; margin-top: 8px; font-family: 'Geist', sans-serif;
+            font-size: 12px; color: #a0caff; opacity: 0.7;
+        }
+
+        .message-list {
+            list-style: none; padding: 0; margin: 0;
+            animation: scrollMessages 6s steps(6) forwards 3s;
+        }
+
+        /* Hero Animations */
+        #hero-content { opacity: 0; transition: opacity 2s ease-in 1s; }
+        
+        .glass-button {
+            background: rgba(11, 11, 15, 0.6); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease; position: relative; overflow: hidden;
+        }
+        .glass-button::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(160, 202, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        .glass-button:hover::before { left: 100%; }
+        
+        .magnetic { transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+        /* Keyframes */
+        @keyframes fadeInReveal { 0% { opacity: 0; filter: blur(10px); transform: scale(0.9); } 100% { opacity: 1; filter: blur(0); transform: scale(1); } }
+        @keyframes pulseDot { 0% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 50% { transform: translate(-50%, -50%) scale(3); opacity: 0; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
+        @keyframes fadeInText { to { opacity: 1; } }
+        @keyframes scrollMessages { 100% { transform: translateY(-120px); } }
+        
+        /* State Classes */
+        .boot-complete #boot-sequence { opacity: 0; pointer-events: none; }
+        .boot-complete .logo-container { 
+            position: fixed; top: 40px; left: 32px; width: 48px; height: 48px; 
+            margin: 0; z-index: 50; 
+        }
+        .boot-complete .dot-pulse { display: none; }
+        .boot-complete .text-container { opacity: 0; display: none; }
+        .boot-complete #hero-content { opacity: 1; }
+
+        /* Mouse Glow */
+        #mouse-glow {
+            position: fixed; top: 0; left: 0; width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(160, 202, 255, 0.05) 0%, transparent 70%);
+            border-radius: 50%; pointer-events: none; z-index: 0;
+            transform: translate(-50%, -50%); transition: opacity 0.3s; opacity: 0;
+        }
+    </style>
+</head>
+<body class="font-body-md text-on-background relative">
+<div id="mouse-glow"></div>
+<!-- Background Shader -->
+<div class="fixed inset-0 z-0 pointer-events-none opacity-40">
+<!-- STITCH_SHADER_START:ANIMATION_189 class="absolute inset-0 w-full h-full" -->
+<div class="absolute inset-0 w-full h-full" style="display:block;">
+<canvas id="shader-canvas-ANIMATION_189" style="display:block;width:100%;height:100%"></canvas>
+<script>
+(function() {
+  const canvas = document.getElementById('shader-canvas-ANIMATION_189');
+
+  // Sync the WebGL drawing-buffer size with the CSS-driven layout size.
+  // This fires on initial layout and whenever the element is resized.
+  function syncSize() {
+    const w = canvas.clientWidth  || 1280;
+    const h = canvas.clientHeight || 720;
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width  = w;
+      canvas.height = h;
+    }
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(syncSize).observe(canvas);
+  }
+  syncSize();
+
+  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!gl) return;
+  const vs = `attribute vec2 a_position;
+varying vec2 v_texCoord;
+void main() {
+  v_texCoord = a_position * 0.5 + 0.5;
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}`;
+  const fs = `precision highp float;
+varying vec2 v_texCoord;
+uniform float u_time;
+uniform vec2 u_resolution;
+uniform vec2 u_mouse;
+
+float noise(vec2 p) {
+    return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+void main() {
+    vec2 uv = v_texCoord;
+    vec2 center = uv - 0.5;
+    center.x *= u_resolution.x / u_resolution.y;
+    
+    // Deep Matte Black (#050505)
+    vec3 color = vec3(0.02, 0.02, 0.02);
+    
+    // Soft Medical Grid
+    vec2 gridUv = v_texCoord * 50.0;
+    vec2 grid = abs(fract(gridUv - 0.5) - 0.5) / fwidth(gridUv);
+    float line = min(grid.x, grid.y);
+    float gridAlpha = (1.0 - smoothstep(0.0, 0.03, line)) * 0.05;
+    color += vec3(0.3, 0.65, 1.0) * gridAlpha;
+
+    // Ambient Glowing Connection Lines
+    float lines = 0.0;
+    for(float i = 0.0; i < 3.0; i++) {
+        float speed = u_time * (0.1 + i * 0.05);
+        float y = fract(uv.y + speed + noise(vec2(i, 0.0)));
+        float intensity = smoothstep(0.002, 0.0, abs(uv.x - 0.5 + sin(uv.y * 2.0 + speed) * 0.2));
+        lines += intensity * (1.0 - y) * 0.1;
+    }
+    color += vec3(0.3, 0.65, 1.0) * lines;
+    
+    // Subtle Floating Particles
+    float stars = 0.0;
+    vec2 starPos = uv * 30.0;
+    vec2 ipos = floor(starPos);
+    vec2 fpos = fract(starPos);
+    float n = noise(ipos);
+    if (n > 0.98) {
+        float size = 0.2 + 0.8 * sin(u_time * 0.5 + n * 10.0);
+        stars = smoothstep(0.1, 0.0, length(fpos - 0.5)) * size * 0.2;
+    }
+    color += stars * vec3(1.0, 1.0, 1.0);
+
+    // Mouse Glow
+    float mDist = length(center - (u_mouse / u_resolution - 0.5) * vec2(u_resolution.x/u_resolution.y, 1.0));
+    color += vec3(0.3, 0.65, 1.0) * (0.05 / (mDist + 0.8)) * 0.3;
+
+    gl_FragColor = vec4(color, 1.0);
+}`;
+  function cs(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, cs(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, cs(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const pos = gl.getAttribLocation(prog, 'a_position');
+  gl.enableVertexAttribArray(pos);
+  gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+  const uTime = gl.getUniformLocation(prog, 'u_time');
+  const uRes = gl.getUniformLocation(prog, 'u_resolution');
+  const uMouse = gl.getUniformLocation(prog, 'u_mouse');
+
+  // u_mouse is in pixel coordinates matching u_resolution (ShaderToy convention).
+  // Shaders that need normalized coords should use: u_mouse / u_resolution.
+  let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+  window.addEventListener('mousemove', (event) => {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width && rect.height) {
+      const nx = (event.clientX - rect.left) / rect.width;
+      const ny = 1.0 - (event.clientY - rect.top) / rect.height;
+      mouse.x = nx * canvas.width;
+      mouse.y = ny * canvas.height;
+    }
+  });
+
+  function render(t) {
+    if (typeof ResizeObserver === 'undefined') syncSize();
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    if (uTime) gl.uniform1f(uTime, t * 0.001);
+    if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+    if (uMouse) gl.uniform2f(uMouse, mouse.x, mouse.y);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(render);
+  }
+  render(0);
+})();
+</script>
+</div>
+<!-- STITCH_SHADER_END:ANIMATION_189 -->
+</div>
+<!-- Top Navigation (Shared Component) -->
+<nav class="fixed top-0 left-0 w-full flex justify-between items-center px-8 py-10 z-50 bg-transparent no borders, glassmorphic backdrop-blur-md opacity-0 transition-opacity duration-1000 delay-[2000ms]" id="top-nav">
+<!-- Logo moves here via CSS -->
+<div class="w-12"></div>
+<div class="text-label-md font-label-md font-bold tracking-widest text-on-background uppercase hidden md:block">Phoenix OS</div>
+<div class="flex items-center gap-6">
+<span class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors cursor-pointer magnetic" data-icon="menu">menu</span>
+</div>
+</nav>
+<!-- Boot Sequence / Initial State -->
+<div id="boot-sequence">
+<div class="logo-container" id="main-logo">
+<div class="dot-pulse" id="boot-dot"></div>
+<img class="logo-image" data-alt="A glowing blue and orange futuristic medical shield logo with a cross in the center, emerging from darkness, high-end digital aesthetic, deep black background." id="logo-img" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDYVCeHq7oEDE890g2EprBkaMgqWZOb522hOXVJSIc06LIYi1fLOuC0GK31BiNw6T4grIpK-AS2yXLDGkLf9jc7t5uIHLTqyKUpu5E6bGl2u9TbE0hpf2YAEzpQhdGPA6M-o6Hd0SQ77QobBVMV0NbEUPA4S75fGCrWlbOLTdaLsk5CBs6d45m3Sc6jQt-K22gswpEr6lwt_aEnobjNGsn-SNSmqNuMW3vKuTsprvMGJ65LRlpnG3YIPqQoUDEn_LsQ80CMGtrHpLEw" style="animation-delay: 1.5s;"/>
+</div>
+<div class="text-container">
+<h1 class="font-headline-lg text-primary tracking-widest">PHOENIX OS</h1>
+<p class="font-label-sm text-on-surface-variant mt-2 uppercase tracking-[0.2em]">Initializing Clinic...</p>
+<div class="system-messages">
+<ul class="message-list">
+<li class="h-[20px]">Connecting Reception...</li>
+<li class="h-[20px]">Connecting Doctors...</li>
+<li class="h-[20px]">Connecting Patients...</li>
+<li class="h-[20px]">Connecting Inventory...</li>
+<li class="h-[20px]">Connecting AI Assistant...</li>
+<li class="h-[20px] text-primary">Clinic Ready.</li>
+</ul>
+</div>
+</div>
+</div>
+<!-- Hero Section -->
+<main class="relative z-10 min-h-screen flex flex-col items-center justify-center px-margin-mobile md:px-margin-desktop pt-32 pb-20" id="hero-content">
+<div class="max-w-4xl text-center space-y-8 relative z-20">
+<h1 class="font-display-lg text-display-lg text-on-background">
+                Your clinic. <br/>
+<span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Finally connected.</span>
+</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl mx-auto leading-relaxed text-lg">
+                Phoenix OS connects appointments, patients, doctors, inventory, communication, and AI into one intelligent operating system built for modern veterinary care.
+            </p>
+<div class="flex flex-col sm:flex-row items-center justify-center gap-6 pt-8">
+<button class="magnetic bg-primary text-on-primary-fixed px-8 py-4 rounded-full font-label-sm text-label-sm uppercase tracking-widest hover:bg-primary-fixed transition-colors shadow-[0_0_20px_rgba(77,166,255,0.2)]">
+                    Book a Demo
+                </button>
+<button class="magnetic glass-button text-on-surface px-8 py-4 rounded-full font-label-sm text-label-sm uppercase tracking-widest flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">play_circle</span>
+                    Watch Experience
+                </button>
+</div>
+</div>
+<!-- Dashboard Preview Mock -->
+<div class="mt-32 w-full max-w-5xl relative z-10 perspective-[1000px]">
+<div class="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent z-10 h-full w-full bottom-0"></div>
+<div class="bg-surface-container-low/40 backdrop-blur-3xl rounded-xl border-t border-white/10 p-4 transform rotate-x-[15deg] translate-y-10 opacity-60 transition-all duration-1000 hover:rotate-x-[5deg] hover:translate-y-0 hover:opacity-100 shadow-[0_-20px_60px_-15px_rgba(77,166,255,0.1)] h-64 overflow-hidden">
+<div class="flex gap-4 mb-4">
+<div class="w-12 h-12 rounded-full bg-surface-variant"></div>
+<div class="flex-1 space-y-2">
+<div class="h-4 w-1/4 bg-surface-variant rounded"></div>
+<div class="h-3 w-1/3 bg-surface-variant/50 rounded"></div>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-4">
+<div class="h-24 bg-surface-variant/30 rounded-lg"></div>
+<div class="h-24 bg-surface-variant/30 rounded-lg"></div>
+<div class="h-24 bg-surface-variant/30 rounded-lg"></div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer (Shared Component) -->
+<footer class="fixed bottom-0 left-0 w-full flex justify-between items-center px-8 py-8 z-40 bg-transparent no borders flat no shadows opacity-0 transition-opacity duration-1000 delay-[2500ms]" id="footer-nav">
+<div class="text-on-surface-variant font-label-sm text-label-sm opacity-60">© 2024 PHOENIX OPERATING SYSTEM. ALL RIGHTS RESERVED.</div>
+<div class="flex gap-6 font-label-sm text-label-sm">
+<a class="text-on-surface-variant/60 hover:text-primary transition-colors opacity-80 hover:opacity-100 duration-300" href="#">Documentation</a>
+<a class="text-on-surface-variant/60 hover:text-primary transition-colors opacity-80 hover:opacity-100 duration-300" href="#">Privacy</a>
+<a class="text-on-surface-variant/60 hover:text-primary transition-colors opacity-80 hover:opacity-100 duration-300" href="#">Terms</a>
+</div>
+</footer>
+<script>
+        // Boot Sequence Logic
+        setTimeout(() => {
+            document.getElementById('boot-dot').style.display = 'none';
+        }, 1500);
+
+        setTimeout(() => {
+            document.body.classList.add('boot-complete');
+            document.getElementById('top-nav').classList.remove('opacity-0');
+            document.getElementById('footer-nav').classList.remove('opacity-0');
+        }, 9500); // Wait for messages to finish
+
+        // Mouse Glow
+        const glow = document.getElementById('mouse-glow');
+        let mouseX = 0, mouseY = 0;
+        let glowX = 0, glowY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            glow.style.opacity = 1;
+        });
+
+        document.addEventListener('mouseleave', () => {
+            glow.style.opacity = 0;
+        });
+
+        function animateGlow() {
+            glowX += (mouseX - glowX) * 0.1;
+            glowY += (mouseY - glowY) * 0.1;
+            glow.style.left = `${glowX}px`;
+            glow.style.top = `${glowY}px`;
+            requestAnimationFrame(animateGlow);
+        }
+        animateGlow();
+
+        // Magnetic Buttons
+        const magneticElements = document.querySelectorAll('.magnetic');
+        
+        magneticElements.forEach((el) => {
+            el.addEventListener('mousemove', (e) => {
+                const rect = el.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+                
+                el.style.transform = `translate(${x * 0.2}px, ${y * 0.2}px)`;
+            });
+            
+            el.addEventListener('mouseleave', () => {
+                el.style.transform = 'translate(0px, 0px)';
+            });
+        });
+    </script>
+</body></html>

@@ -1511,3 +1511,8 @@ html.light .app-btn-primary {
     @apply font-sans;
   }
 }
+
+/* Hide homepage boot preloader for return visitors (set before paint via inline script) */
+html.phx-boot-done .phx-boot-preloader {
+  display: none !important;
+}
