@@ -3,7 +3,6 @@ import PhoenixNavbar from './PhoenixNavbar';
 import PhoenixHero from './PhoenixHero';
 import ProblemSection from './ProblemSection';
 import SolutionSection from './SolutionSection';
-import DashboardPreviewSection from './DashboardPreviewSection';
 import InteractiveWorkflowSection from './InteractiveWorkflowSection';
 import FeatureEcosystemSection from './FeatureEcosystemSection';
 import SecuritySection from './SecuritySection';
@@ -34,7 +33,6 @@ export default function PhoenixHomePage() {
           <PhoenixHero />
           <ProblemSection />
           <SolutionSection />
-          <DashboardPreviewSection />
           <InteractiveWorkflowSection />
           <FeatureEcosystemSection />
           <SecuritySection />

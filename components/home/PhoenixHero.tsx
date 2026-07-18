@@ -4,11 +4,11 @@ import { animate, stagger } from 'animejs';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
+import OverviewDashboardVisual from '@/components/home/overview-dashboard-visual/OverviewDashboardVisual';
 import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
 import { LightLines } from '@/components/ui/light-lines';
 import MorphText from '@/components/ui/morph-text';
-import Link from 'next/link';
-import { CLINIC_TYPE_WORDS, EARLY_ACCESS, HERO } from '@/lib/home-data';
+import { CLINIC_TYPE_WORDS, HERO } from '@/lib/home-data';
 import { usePrefersReducedMotion } from '@/lib/hooks/usePrefersReducedMotion';
 import { cn } from '@/lib/utils';
 
@@ -59,161 +59,157 @@ export default function PhoenixHero() {
       <div className="absolute inset-0 phx-grid-bg opacity-20 pointer-events-none" />
 
       <div className="phx-container relative">
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="flex flex-col items-center">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-10 lg:gap-12 xl:gap-14 items-center">
+          <div className="text-center lg:text-left">
+            <div className="flex flex-col items-center lg:items-start">
+              <div
+                className="relative z-10 w-[161px] h-[161px] sm:w-[204px] sm:h-[204px] lg:w-[234px] lg:h-[234px] shrink-0 -mb-10 sm:-mb-12 lg:-mb-14"
+                data-phx-fade
+                style={{ opacity: reducedMotion ? 1 : 0 }}
+              >
+                <Image
+                  src="/phoenix-logo.png"
+                  alt="Phoenix OS"
+                  fill
+                  priority
+                  className="object-contain object-top"
+                  sizes="(max-width: 640px) 161px, (max-width: 1024px) 204px, 234px"
+                />
+              </div>
+
+              <p
+                className="phx-eyebrow leading-none m-0"
+                data-phx-fade
+                style={{ opacity: reducedMotion ? 1 : 0 }}
+              >
+                {HERO.eyebrow}
+              </p>
+
+              <h1 className="phx-heading phx-hero-heading text-4xl sm:text-5xl lg:text-5xl xl:text-[3.5rem] max-w-xl mx-auto lg:mx-0 flex flex-col gap-y-1 sm:gap-y-2 mt-2 sm:mt-2.5">
+                {HERO.headline.map((line, lineIndex) => (
+                  <span key={line} className="block overflow-visible">
+                    {line.split(' ').map((word, i) => {
+                      const isAccentLine = lineIndex === 1;
+                      return (
+                        <span
+                          key={`${line}-${word}-${i}`}
+                          data-phx-word
+                          className={cn(
+                            'inline-block mr-[0.25em]',
+                            isAccentLine && 'phx-gradient-text',
+                          )}
+                          style={{ opacity: reducedMotion ? 1 : 0 }}
+                        >
+                          {word}
+                        </span>
+                      );
+                    })}
+                  </span>
+                ))}
+              </h1>
+            </div>
+
             <div
-              className="relative z-10 w-[161px] h-[161px] sm:w-[204px] sm:h-[204px] lg:w-[234px] lg:h-[234px] shrink-0 -mb-10 sm:-mb-12 lg:-mb-14"
+              className="flex items-center justify-center lg:justify-start gap-2 mb-6 flex-wrap mt-4"
               data-phx-fade
               style={{ opacity: reducedMotion ? 1 : 0 }}
             >
-              <Image
-                src="/phoenix-logo.png"
-                alt="Phoenix OS"
-                fill
-                priority
-                className="object-contain object-top"
-                sizes="(max-width: 640px) 161px, (max-width: 1024px) 204px, 234px"
-              />
+              <span className="text-sm text-[#94A3B8]">Built for</span>
+              {reducedMotion ? (
+                <span className="text-sm font-mono uppercase tracking-wider text-[#22D3EE]">
+                  {CLINIC_TYPE_WORDS[0]}
+                </span>
+              ) : (
+                <MorphText
+                  words={[...CLINIC_TYPE_WORDS]}
+                  interval={2600}
+                  fontSize="0.875rem"
+                  fontFamily="inherit"
+                  minWidth="20ch"
+                  className="!flex-row items-center"
+                  textClassName="font-mono uppercase tracking-wider text-[#22D3EE] !font-semibold"
+                />
+              )}
             </div>
 
             <p
-              className="phx-eyebrow leading-none m-0"
+              className="phx-subtext text-lg sm:text-xl max-w-xl mx-auto lg:mx-0 mb-8"
               data-phx-fade
               style={{ opacity: reducedMotion ? 1 : 0 }}
             >
-              {HERO.eyebrow}
+              {HERO.subheadline}
             </p>
 
-            <h1 className="phx-heading phx-hero-heading text-4xl sm:text-5xl lg:text-6xl xl:text-[4.25rem] max-w-4xl mx-auto flex flex-col gap-y-1 sm:gap-y-2 mt-2 sm:mt-2.5">
-            {HERO.headline.map((line, lineIndex) => (
-              <span key={line} className="block overflow-visible">
-                {line.split(' ').map((word, i) => {
-                  const isAccentLine = lineIndex === 1;
-                  return (
-                    <span
-                      key={`${line}-${word}-${i}`}
-                      data-phx-word
-                      className={cn(
-                        'inline-block mr-[0.25em]',
-                        isAccentLine && 'phx-gradient-text',
-                      )}
-                      style={{ opacity: reducedMotion ? 1 : 0 }}
-                    >
-                      {word}
-                    </span>
-                  );
-                })}
-              </span>
-            ))}
-            </h1>
-          </div>
-
-          <div
-            className="flex items-center justify-center gap-2 mb-6 flex-wrap mt-4"
-            data-phx-fade
-            style={{ opacity: reducedMotion ? 1 : 0 }}
-          >
-            <span className="text-sm text-[#94A3B8]">Built for</span>
-            {reducedMotion ? (
-              <span className="text-sm font-mono uppercase tracking-wider text-[#22D3EE]">
-                {CLINIC_TYPE_WORDS[0]}
-              </span>
-            ) : (
-              <MorphText
-                words={[...CLINIC_TYPE_WORDS]}
-                interval={2600}
-                fontSize="0.875rem"
-                fontFamily="inherit"
-                minWidth="20ch"
-                className="!flex-row items-center"
-                textClassName="font-mono uppercase tracking-wider text-[#22D3EE] !font-semibold"
-              />
-            )}
-          </div>
-
-          <p
-            className="phx-subtext text-lg sm:text-xl max-w-3xl mx-auto mb-8"
-            data-phx-fade
-            style={{ opacity: reducedMotion ? 1 : 0 }}
-          >
-            {HERO.subheadline}
-          </p>
-
-          <div
-            className="flex flex-wrap items-center justify-center gap-3 mb-6"
-            data-phx-fade
-            style={{ opacity: reducedMotion ? 1 : 0 }}
-          >
-            <InteractiveHoverButton
-              onClick={() => router.push('/request-access')}
-              className="border-[#22D3EE]/30 text-[#F8FAFC] phx-focus-ring transition-colors duration-200"
-              style={
-                {
-                  '--background': '#0B1020',
-                  '--primary': '#22D3EE',
-                  '--primary-foreground': '#03040A',
-                } as React.CSSProperties
-              }
+            <div
+              className="flex flex-wrap items-center justify-center lg:justify-start gap-3 mb-6"
+              data-phx-fade
+              style={{ opacity: reducedMotion ? 1 : 0 }}
             >
-              Request Access
-            </InteractiveHoverButton>
-            <InteractiveHoverButton
-              onClick={() => router.push('/login')}
-              className="border-white/15 text-[#94A3B8] hover:text-[#F8FAFC] phx-focus-ring transition-colors duration-200"
-              style={
-                {
-                  '--background': 'transparent',
-                  '--primary': '#1E293B',
-                  '--primary-foreground': '#F8FAFC',
-                } as React.CSSProperties
-              }
-            >
-              Sign In
-            </InteractiveHoverButton>
-          </div>
-
-          <p
-            className="text-sm text-[#64748B] max-w-2xl mx-auto"
-            data-phx-fade
-            style={{ opacity: reducedMotion ? 1 : 0 }}
-          >
-            {HERO.microcopy}
-          </p>
-
-          <div
-            className="mt-10 max-w-2xl mx-auto rounded-2xl border border-[#22D3EE]/25 bg-[#0B1020]/60 px-5 py-5 sm:px-6 sm:py-6 text-left sm:text-center"
-            data-phx-fade
-            style={{ opacity: reducedMotion ? 1 : 0 }}
-          >
-            <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#22D3EE] mb-2">
-              {EARLY_ACCESS.eyebrow}
-            </p>
-            <p className="text-base sm:text-lg font-semibold text-[#F8FAFC] mb-2">{EARLY_ACCESS.headline}</p>
-            <p className="text-sm text-[#94A3B8] mb-4">{EARLY_ACCESS.subtext}</p>
-            <Link
-              href="/request-access"
-              className="phx-btn-primary text-sm px-5 py-2.5 inline-flex phx-focus-ring"
-            >
-              {EARLY_ACCESS.cta}
-            </Link>
-            <p className="text-[10px] font-mono uppercase tracking-[0.16em] text-[#64748B] mt-3">
-              {EARLY_ACCESS.note}
-            </p>
-          </div>
-
-          <div
-            className="flex items-center justify-center gap-2 mt-12"
-            data-phx-fade
-            style={{ opacity: reducedMotion ? 1 : 0 }}
-            aria-hidden
-          >
-            <div className="w-5 h-8 rounded-full border border-white/20 flex items-start justify-center p-1.5">
-              <span className="phx-scroll-cue-dot w-1 h-1.5 rounded-full bg-[#22D3EE]" />
+              <InteractiveHoverButton
+                onClick={() => router.push('/request-access')}
+                className="border-[#22D3EE]/30 text-[#F8FAFC] phx-focus-ring transition-colors duration-200"
+                style={
+                  {
+                    '--background': '#0B1020',
+                    '--primary': '#22D3EE',
+                    '--primary-foreground': '#03040A',
+                  } as React.CSSProperties
+                }
+              >
+                Request Access
+              </InteractiveHoverButton>
+              <InteractiveHoverButton
+                onClick={() => router.push('/login')}
+                className="border-white/15 text-[#94A3B8] hover:text-[#F8FAFC] phx-focus-ring transition-colors duration-200"
+                style={
+                  {
+                    '--background': 'transparent',
+                    '--primary': '#1E293B',
+                    '--primary-foreground': '#F8FAFC',
+                  } as React.CSSProperties
+                }
+              >
+                Sign In
+              </InteractiveHoverButton>
             </div>
-            <span className="text-[11px] font-mono uppercase tracking-[0.2em] text-[#64748B]">
-              Scroll
-            </span>
+
+            <p
+              className="text-sm text-[#64748B] max-w-xl mx-auto lg:mx-0"
+              data-phx-fade
+              style={{ opacity: reducedMotion ? 1 : 0 }}
+            >
+              {HERO.microcopy}
+            </p>
           </div>
+
+          <div
+            id="dashboard"
+            className="relative w-full min-w-0"
+            data-phx-fade
+            style={{ opacity: reducedMotion ? 1 : 0 }}
+          >
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -inset-6 sm:-inset-8 bg-gradient-to-br from-[#22D3EE]/10 via-transparent to-[#8B5CF6]/10 blur-3xl"
+            />
+            <div className="relative rounded-2xl border border-white/10 ring-1 ring-white/[0.06] bg-[#0B1020] overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.45)] transition-shadow hover:shadow-[0_28px_90px_rgba(34,211,238,0.08)]">
+              <OverviewDashboardVisual />
+            </div>
+          </div>
+        </div>
+
+        <div
+          className="flex items-center justify-center gap-2 mt-12"
+          data-phx-fade
+          style={{ opacity: reducedMotion ? 1 : 0 }}
+          aria-hidden
+        >
+          <div className="w-5 h-8 rounded-full border border-white/20 flex items-start justify-center p-1.5">
+            <span className="phx-scroll-cue-dot w-1 h-1.5 rounded-full bg-[#22D3EE]" />
+          </div>
+          <span className="text-[11px] font-mono uppercase tracking-[0.2em] text-[#64748B]">
+            Scroll
+          </span>
         </div>
       </div>
     </section>

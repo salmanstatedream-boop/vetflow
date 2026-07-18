@@ -42,8 +42,8 @@ export default function PhoenixBootPreloader() {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
-    const exitDelay = prefersReduced ? 300 : 2400;
-    const removeDelay = prefersReduced ? 500 : 3100;
+    const exitDelay = prefersReduced ? 300 : 4800;
+    const removeDelay = prefersReduced ? 500 : 5600;
 
     const exitTimer = window.setTimeout(() => {
       persistBootSeen();
@@ -85,20 +85,20 @@ export default function PhoenixBootPreloader() {
           transition={{ duration: reducedMotion ? 0.25 : 0.65, ease: [0.22, 1, 0.36, 1] }}
         >
           <div className="relative flex flex-col items-center text-center px-6">
-            <div className="relative w-[104px] h-[104px] sm:w-[120px] sm:h-[120px] mb-8">
+            <div className="relative w-[161px] h-[161px] sm:w-[204px] sm:h-[204px] lg:w-[234px] lg:h-[234px] mb-8">
               <motion.div
                 aria-hidden
                 className="absolute inset-[-20%] rounded-full bg-[radial-gradient(circle,rgba(77,166,255,0.35)_0%,transparent_70%)]"
                 initial={reducedMotion ? false : { opacity: 0.3, scale: 0.85 }}
                 animate={
                   phase === 'playing' && !reducedMotion
-                    ? { opacity: [0.35, 0.85, 0.45], scale: [0.9, 1.08, 1] }
+                    ? { opacity: [0.35, 0.85, 0.45, 0.7, 0.4], scale: [0.9, 1.08, 1, 1.04, 1] }
                     : { opacity: 0.5, scale: 1 }
                 }
                 transition={
                   reducedMotion
                     ? { duration: 0 }
-                    : { duration: 2.2, ease: 'easeInOut', times: [0, 0.55, 1] }
+                    : { duration: 4.2, ease: 'easeInOut', times: [0, 0.3, 0.55, 0.8, 1] }
                 }
               />
               <motion.div
@@ -108,7 +108,7 @@ export default function PhoenixBootPreloader() {
                 transition={
                   reducedMotion
                     ? { duration: 0.2 }
-                    : { duration: 1.1, delay: 0.15, ease: [0.22, 1, 0.36, 1] }
+                    : { duration: 1.2, delay: 0.2, ease: [0.22, 1, 0.36, 1] }
                 }
               >
                 <Image
@@ -117,7 +117,7 @@ export default function PhoenixBootPreloader() {
                   fill
                   priority
                   className="object-contain"
-                  sizes="120px"
+                  sizes="(max-width: 640px) 161px, (max-width: 1024px) 204px, 234px"
                 />
               </motion.div>
             </div>
@@ -129,7 +129,7 @@ export default function PhoenixBootPreloader() {
               transition={
                 reducedMotion
                   ? { duration: 0.15 }
-                  : { duration: 0.55, delay: 0.85, ease: 'easeOut' }
+                  : { duration: 0.6, delay: 1.1, ease: 'easeOut' }
               }
             >
               Phoenix OS
@@ -141,7 +141,7 @@ export default function PhoenixBootPreloader() {
               transition={
                 reducedMotion
                   ? { duration: 0.15 }
-                  : { duration: 0.5, delay: 1.15, ease: 'easeOut' }
+                  : { duration: 0.55, delay: 1.55, ease: 'easeOut' }
               }
             >
               Initializing Clinic…
