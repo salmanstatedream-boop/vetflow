@@ -185,11 +185,11 @@ export default function PlatformExpansionSection() {
                       <>
                         <div
                           aria-hidden
-                          className="absolute left-[-50%] right-1/2 top-1/2 -translate-y-1/2 h-0.5 bg-[#F97316]"
+                          className="absolute left-[-50%] right-[6px] top-1/2 -translate-y-1/2 h-0.5 bg-[#F97316]"
                         />
                         <div
                           aria-hidden
-                          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 w-0 h-0 border-t-[5px] border-b-[5px] border-l-[9px] border-t-transparent border-b-transparent border-l-[#F97316]"
+                          className="absolute right-0 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[5px] border-b-[5px] border-l-[9px] border-t-transparent border-b-transparent border-l-[#F97316]"
                         />
                       </>
                     )}

@@ -604,10 +604,10 @@ export function ToolbarButton({ children, primary }: { children: ReactNode; prim
   return (
     <span
       className={cn(
-        'inline-flex items-center px-2 py-1 rounded-md text-[8px] font-medium border whitespace-nowrap',
+        'inline-flex items-center px-2.5 py-1 rounded-md text-[8px] font-medium border whitespace-nowrap transition-colors',
         primary
-          ? 'bg-[#8B5CF6] text-white border-[#8B5CF6]'
-          : 'border-white/10 bg-white/[0.03] text-[#94A3B8]',
+          ? 'bg-[#8B5CF6] text-white border-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.35)]'
+          : 'border-[#8B5CF6]/20 bg-[#8B5CF6]/[0.06] text-[#C4B5FD]',
       )}
     >
       {children}
