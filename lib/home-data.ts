@@ -102,7 +102,7 @@ export const SOLUTION_JOURNEY = {
   cta: {
     headline: 'Experience the Power of an Intelligent Workflow.',
     sub: 'Phoenix OS brings every step together so your team can focus on exceptional care.',
-    button: 'Request Access',
+    button: 'Book a Demo',
   },
 } as const;
 

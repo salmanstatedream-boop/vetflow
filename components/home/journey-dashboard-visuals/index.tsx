@@ -10,7 +10,7 @@ import TreatmentJourneyVisual from './TreatmentJourneyVisual';
 import BillingJourneyVisual from './BillingJourneyVisual';
 import FollowUpJourneyVisual from './FollowUpJourneyVisual';
 
-const MAP: Record<JourneyVisualKey, ComponentType> = {
+const MAP: Record<JourneyVisualKey, ComponentType<{ reducedMotion?: boolean }>> = {
   appointment: AppointmentJourneyVisual,
   checkin: CheckInJourneyVisual,
   aiAnalysis: AiAnalysisJourneyVisual,
@@ -20,7 +20,13 @@ const MAP: Record<JourneyVisualKey, ComponentType> = {
   followup: FollowUpJourneyVisual,
 };
 
-export default function JourneyDashboardVisual({ visual }: { visual: JourneyVisualKey }) {
+export default function JourneyDashboardVisual({
+  visual,
+  reducedMotion = false,
+}: {
+  visual: JourneyVisualKey;
+  reducedMotion?: boolean;
+}) {
   const Comp = MAP[visual];
-  return <Comp />;
+  return <Comp reducedMotion={reducedMotion} />;
 }
