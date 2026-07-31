@@ -128,7 +128,8 @@ export default function FeatureEcosystemSection() {
                   src="/phoenix-logo.png"
                   alt="Phoenix OS"
                   fill
-                  className="object-contain p-4 xl:p-5 object-[center_52%]"
+                  className="object-contain p-6 xl:p-7 translate-y-[8.5%]"
+                  sizes="(min-width: 1280px) 208px, 176px"
                 />
               </motion.div>
               <p className="text-sm font-bold text-[#F8FAFC] tracking-wide">PHOENIX OS</p>

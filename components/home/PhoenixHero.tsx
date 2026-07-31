@@ -44,7 +44,7 @@ export default function PhoenixHero() {
   return (
     <section
       ref={rootRef}
-      className="relative pt-[calc(var(--phx-nav-height)-0.25rem)] pb-16 lg:pb-24 overflow-hidden"
+      className="relative pt-[calc(var(--phx-nav-height)+0.75rem)] pb-16 lg:pb-24 overflow-hidden"
     >
       <div className="absolute inset-0 z-0 pointer-events-none" aria-hidden>
         <LightLines
@@ -75,27 +75,24 @@ export default function PhoenixHero() {
             />
             <div className="relative flex flex-col items-center lg:items-start">
               <div
-                className="relative z-10 w-[161px] h-[161px] sm:w-[204px] sm:h-[204px] lg:w-[234px] lg:h-[234px] shrink-0 -mb-10 sm:-mb-12 lg:-mb-14"
+                className="relative inline-flex flex-col items-center self-center lg:self-start gap-0 mb-1"
                 data-phx-fade
                 style={{ opacity: reducedMotion ? 1 : 0 }}
               >
-                <Image
-                  src="/phoenix-logo.png"
-                  alt="Phoenix OS"
-                  fill
-                  priority
-                  className="object-contain object-top"
-                  sizes="(max-width: 640px) 161px, (max-width: 1024px) 204px, 234px"
-                />
+                <div className="relative z-10 w-[140px] h-[160px] sm:w-[176px] sm:h-[196px] lg:w-[200px] lg:h-[220px] shrink-0">
+                  <Image
+                    src="/phoenix-logo.png"
+                    alt="Phoenix OS"
+                    fill
+                    priority
+                    className="object-contain object-bottom scale-[1.12] origin-bottom"
+                    sizes="(max-width: 640px) 140px, (max-width: 1024px) 176px, 200px"
+                  />
+                </div>
+                <p className="phx-eyebrow leading-none m-0 -mt-6 sm:-mt-7 lg:-mt-8 text-center tracking-[0.2em]">
+                  {HERO.eyebrow}
+                </p>
               </div>
-
-              <p
-                className="phx-eyebrow leading-none m-0"
-                data-phx-fade
-                style={{ opacity: reducedMotion ? 1 : 0 }}
-              >
-                {HERO.eyebrow}
-              </p>
 
               <h1 className="phx-heading phx-hero-heading text-4xl sm:text-5xl lg:text-5xl xl:text-[3.5rem] max-w-xl mx-auto lg:mx-0 flex flex-col gap-y-1 sm:gap-y-2 mt-2 sm:mt-2.5">
                 {HERO.headline.map((line, lineIndex) => (

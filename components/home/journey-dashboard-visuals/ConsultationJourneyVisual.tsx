@@ -297,13 +297,10 @@ export default function ConsultationJourneyVisual({
                   </div>
                 ))}
               </div>
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-white/10">
+              <div className="pt-2 border-t border-white/10">
                 <p className="text-[10px] text-[#94A3B8] text-center sm:text-left">
                   Experience the Power of an Intelligent Workflow. Phoenix OS brings every step together.
                 </p>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#8B5CF6] px-4 py-2 text-[10px] font-semibold text-white shrink-0">
-                  Book a Demo →
-                </span>
               </div>
             </div>
           </MotionSlot>

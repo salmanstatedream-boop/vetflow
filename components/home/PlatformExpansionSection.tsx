@@ -68,7 +68,7 @@ export default function PlatformExpansionSection() {
               {PLATFORM_EXPANSION.subheadline}
             </p>
           </div>
-          <div className="relative w-36 h-36 shrink-0 hidden lg:block" data-platform-fade>
+          <div className="relative w-40 h-40 shrink-0 hidden lg:block" data-platform-fade>
             <div
               aria-hidden
               className="pointer-events-none absolute left-1/2 top-1/2 w-[90%] h-[90%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.22)_0%,transparent_70%)]"
@@ -76,7 +76,13 @@ export default function PlatformExpansionSection() {
             <div aria-hidden className="absolute inset-0 rounded-full border border-dashed border-[#22D3EE]/40 animate-spin" style={{ animationDuration: '24s' }} />
             <div aria-hidden className="absolute inset-3 rounded-full border border-[#8B5CF6]/25" />
             <div aria-hidden className="absolute inset-6 rounded-full border border-[#F97316]/15" />
-            <Image src="/phoenix-logo.png" alt="" fill className="object-contain p-5 object-[center_52%]" />
+            <Image
+              src="/phoenix-logo.png"
+              alt=""
+              fill
+              className="object-contain p-6 translate-y-[8.5%] translate-x-[1%]"
+              sizes="160px"
+            />
           </div>
         </div>
 

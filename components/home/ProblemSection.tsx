@@ -17,9 +17,9 @@ export default function ProblemSection() {
     <section ref={sectionRef} id="problem" className="phx-section phx-section-alt relative overflow-hidden">
       <div aria-hidden className="phx-section-divider" />
       <div className="phx-container relative">
-        <div className="grid lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)] gap-10 lg:gap-12 items-center">
+        <div className="grid lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.35fr)] gap-10 lg:gap-12 items-stretch">
           {/* Left column — three stacked blocks, shared left edge + rhythm */}
-          <div className="flex flex-col gap-5 w-full max-w-xl">
+          <div className="flex flex-col gap-5 w-full max-w-xl h-full">
             <div data-problem-fade className="w-full">
               <span className="inline-flex items-center px-4 py-1.5 rounded-full border border-[#8B5CF6]/35 bg-[#8B5CF6]/10 text-[#C4B5FD] text-[11px] font-mono uppercase tracking-[0.2em] mb-6">
                 {PROBLEM_SECTION.eyebrow}
@@ -102,8 +102,8 @@ export default function ProblemSection() {
             </div>
           </div>
 
-          {/* Right chaos canvas */}
-          <div data-problem-fade className="w-full">
+          {/* Right chaos canvas — stretches to match left column (through Daily Reality) */}
+          <div data-problem-fade className="w-full h-full min-h-[560px] lg:min-h-0">
             <ProblemChaosDesk />
           </div>
         </div>
