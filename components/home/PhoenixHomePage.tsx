@@ -2,8 +2,7 @@ import PhoenixBootPreloader from './PhoenixBootPreloader';
 import PhoenixNavbar from './PhoenixNavbar';
 import PhoenixHero from './PhoenixHero';
 import ProblemSection from './ProblemSection';
-import SolutionSection from './SolutionSection';
-import InteractiveWorkflowSection from './InteractiveWorkflowSection';
+import SolutionJourneySection from './SolutionJourneySection';
 import FeatureEcosystemSection from './FeatureEcosystemSection';
 import SecuritySection from './SecuritySection';
 import Testimonials from './Testimonials';
@@ -32,8 +31,7 @@ export default function PhoenixHomePage() {
         <main>
           <PhoenixHero />
           <ProblemSection />
-          <SolutionSection />
-          <InteractiveWorkflowSection />
+          <SolutionJourneySection />
           <FeatureEcosystemSection />
           <SecuritySection />
           <Testimonials />

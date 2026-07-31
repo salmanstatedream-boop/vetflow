@@ -107,7 +107,7 @@ export default function SecuritySection() {
                 initial={{ scale: 0.94, opacity: 0.85 }}
                 animate={hubRevealed ? { scale: 1, opacity: 1 } : undefined}
                 transition={motionSpring}
-                className="relative w-36 h-36 xl:w-40 xl:h-40 mb-4 phx-animate-hub-pulse rounded-full"
+                className="relative w-44 h-44 xl:w-52 xl:h-52 mb-2 phx-animate-hub-pulse rounded-full"
               >
                 <div
                   aria-hidden
@@ -119,10 +119,15 @@ export default function SecuritySection() {
                 >
                   <div className="w-full h-full rounded-full bg-[#030712]/90" />
                 </div>
-                <Image src="/phoenix-logo.png" alt="Phoenix OS" fill className="object-contain p-5 xl:p-6" />
+                <Image
+                  src="/phoenix-logo.png"
+                  alt="Phoenix OS"
+                  fill
+                  className="object-contain p-4 xl:p-5 object-[center_52%]"
+                />
               </motion.div>
               <p className="text-sm font-bold text-[#F8FAFC] tracking-wide">PHOENIX OS</p>
-              <p className="text-[10px] mt-1 font-medium bg-gradient-to-r from-[#8B5CF6] to-[#EC4899] bg-clip-text text-transparent">
+              <p className="text-xs mt-1 font-medium bg-gradient-to-r from-[#8B5CF6] to-[#EC4899] bg-clip-text text-transparent">
                 Secure. Reliable. Always.
               </p>
             </div>
@@ -144,10 +149,10 @@ export default function SecuritySection() {
         </div>
 
         <div className="mb-10" data-security-fade>
-          <p className="text-center text-[10px] font-mono uppercase tracking-[0.2em] text-[#64748B] mb-4">
+          <p className="text-center text-xs font-mono uppercase tracking-[0.2em] text-[#94A3B8] mb-4">
             Built to Meet Global Standards
           </p>
-          <div className="flex flex-wrap justify-center gap-2.5">
+          <div className="flex flex-wrap justify-center gap-3">
             {SECURITY_TRUST.compliance.map((badge, i) => {
               const Icon = COMPLIANCE_ICONS[i];
               return (
@@ -155,7 +160,7 @@ export default function SecuritySection() {
                   key={badge}
                   data-security-compliance
                   className={cn(
-                    'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-[10px] font-medium leading-none transition-transform hover:scale-[1.03]',
+                    'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-xs font-medium leading-none transition-transform hover:scale-[1.03]',
                     COMPLIANCE_TONES[i],
                   )}
                 >
@@ -187,8 +192,8 @@ export default function SecuritySection() {
               return (
                 <div key={item.label}>
                   <Icon className="w-4 h-4 text-[#22D3EE] mb-2 drop-shadow-[0_0_6px_rgba(34,211,238,0.35)]" />
-                  <p className="text-[11px] font-semibold text-[#F8FAFC]">{item.label}</p>
-                  <p className="text-[10px] text-[#64748B] mt-0.5 leading-snug">{item.description}</p>
+                  <p className="text-sm font-semibold text-[#F8FAFC]">{item.label}</p>
+                  <p className="text-xs text-[#CBD5E1] mt-0.5 leading-snug">{item.description}</p>
                 </div>
               );
             })}
@@ -216,17 +221,17 @@ function SecurityCard({
       data-security-card
       className={cn(
         'rounded-xl border border-white/10 bg-[#0B1020]/85 backdrop-blur-sm p-4 transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-1 hover:border-[#8B5CF6]/35 hover:shadow-[0_0_28px_rgba(139,92,246,0.12)]',
-        align === 'right' && 'lg:text-right lg:ml-auto lg:max-w-[280px]',
-        align === 'left' && 'lg:max-w-[280px]',
+        align === 'right' && 'lg:text-right lg:ml-auto lg:max-w-[320px]',
+        align === 'left' && 'lg:max-w-[320px]',
       )}
     >
       <div className={cn('flex items-start gap-2.5 mb-2', align === 'right' && 'lg:flex-row-reverse')}>
         <span className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#8B5CF6] to-[#6366F1] flex items-center justify-center shrink-0 shadow-[0_0_16px_rgba(139,92,246,0.2)]">
           <Icon className="w-4 h-4 text-white" />
         </span>
-        <p className="text-[11px] font-semibold text-[#F8FAFC] pt-1.5 leading-snug">{feat.title}</p>
+        <p className="text-base font-semibold text-[#F8FAFC] pt-1.5 leading-snug">{feat.title}</p>
       </div>
-      <p className={cn('text-[10px] text-[#64748B] leading-relaxed', align === 'right' && 'lg:text-right')}>
+      <p className={cn('text-sm text-[#CBD5E1] leading-relaxed', align === 'right' && 'lg:text-right')}>
         {feat.description}
       </p>
     </div>

@@ -115,7 +115,7 @@ export default function FeatureEcosystemSection() {
                 initial={{ scale: 0.94, opacity: 0.85 }}
                 animate={hubRevealed ? { scale: 1, opacity: 1 } : undefined}
                 transition={motionSpring}
-                className="relative w-36 h-36 xl:w-40 xl:h-40 mb-4 phx-animate-hub-pulse rounded-full"
+                className="relative w-44 h-44 xl:w-52 xl:h-52 mb-2 phx-animate-hub-pulse rounded-full"
               >
                 <div
                   aria-hidden
@@ -124,11 +124,16 @@ export default function FeatureEcosystemSection() {
                   <div className="w-full h-full rounded-full bg-[#030712]" />
                 </div>
                 <div aria-hidden className="absolute inset-3 rounded-full border border-[#22D3EE]/25" />
-                <Image src="/phoenix-logo.png" alt="Phoenix OS" fill className="object-contain p-5 xl:p-6" />
+                <Image
+                  src="/phoenix-logo.png"
+                  alt="Phoenix OS"
+                  fill
+                  className="object-contain p-4 xl:p-5 object-[center_52%]"
+                />
               </motion.div>
               <p className="text-sm font-bold text-[#F8FAFC] tracking-wide">PHOENIX OS</p>
-              <p className="text-[10px] text-[#8B5CF6] mt-1 font-medium">Intelligent Operating System</p>
-              <p className="text-[10px] text-[#64748B]">for Veterinary Clinics</p>
+              <p className="text-xs text-[#A78BFA] mt-1 font-medium">Intelligent Operating System</p>
+              <p className="text-xs text-[#94A3B8]">for Veterinary Clinics</p>
             </div>
 
             <div className="space-y-4">
@@ -163,8 +168,8 @@ export default function FeatureEcosystemSection() {
                 )}
               >
                 <Icon className="w-5 h-5 text-[#22D3EE] mx-auto mb-2 drop-shadow-[0_0_8px_rgba(34,211,238,0.35)]" />
-                <p className="text-[11px] font-semibold text-[#F8FAFC]">{item.label}</p>
-                <p className="text-[9px] text-[#64748B] mt-1 leading-snug">{item.description}</p>
+                <p className="text-xs font-semibold text-[#F8FAFC]">{item.label}</p>
+                <p className="text-sm text-[#CBD5E1] mt-1 leading-snug">{item.description}</p>
               </div>
             );
           })}
@@ -215,21 +220,21 @@ function CategoryCard({
           <Icon className="w-5 h-5 text-white" />
         </span>
         <div className="min-w-0 pt-0.5">
-          <p className={cn('text-[10px] font-mono uppercase tracking-[0.15em] font-semibold', toneText)}>
+          <p className={cn('text-sm font-mono uppercase tracking-[0.12em] font-semibold', toneText)}>
             {cat.title.toUpperCase()}
           </p>
-          <p className="text-[10px] text-[#64748B] mt-1 leading-snug">{cat.description}</p>
+          <p className="text-sm text-[#CBD5E1] mt-1 leading-snug">{cat.description}</p>
         </div>
       </div>
-      <div className="grid grid-cols-4 gap-1.5 mt-3">
+      <div className="grid grid-cols-4 gap-2 mt-3">
         {cat.features.map((feat, i) => {
           const FeatIcon = FEATURE_ICONS[i % FEATURE_ICONS.length];
           return (
             <div key={feat} className="text-center">
-              <span className="w-6 h-6 rounded border border-white/[0.08] bg-white/[0.02] flex items-center justify-center mx-auto mb-1">
-                <FeatIcon className="w-2.5 h-2.5 text-[#94A3B8]" strokeWidth={1.5} />
+              <span className="w-7 h-7 rounded border border-white/[0.08] bg-white/[0.02] flex items-center justify-center mx-auto mb-1">
+                <FeatIcon className="w-3.5 h-3.5 text-[#CBD5E1]" strokeWidth={1.5} />
               </span>
-              <p className="text-[7px] text-[#64748B] leading-tight">{feat}</p>
+              <p className="text-[11px] text-[#CBD5E1] leading-tight">{feat}</p>
             </div>
           );
         })}

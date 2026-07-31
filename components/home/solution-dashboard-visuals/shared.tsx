@@ -430,10 +430,12 @@ export function MiniStatCard({
   return (
     <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2.5">
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="text-base sm:text-lg font-bold text-[#F8FAFC] leading-none">{value}</p>
-          <p className="text-[9px] text-[#64748B] mt-1">{label}</p>
-          {delta && <p className={cn('text-[8px] mt-0.5 truncate', deltaColors[deltaTone])}>{delta}</p>}
+        <div className="min-w-0 flex flex-col gap-1.5">
+          <p className="text-base sm:text-lg font-bold text-[#F8FAFC] leading-snug">{value}</p>
+          <p className="text-[10px] text-[#94A3B8] leading-snug">{label}</p>
+          {delta && (
+            <p className={cn('text-[9px] leading-snug truncate', deltaColors[deltaTone])}>{delta}</p>
+          )}
         </div>
         <span className={cn('w-7 h-7 rounded-lg border flex items-center justify-center shrink-0', iconColors[iconTone])}>
           <Icon className="w-3.5 h-3.5" />

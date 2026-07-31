@@ -69,22 +69,14 @@ export default function PlatformExpansionSection() {
             </p>
           </div>
           <div className="relative w-36 h-36 shrink-0 hidden lg:block" data-platform-fade>
+            <div
+              aria-hidden
+              className="pointer-events-none absolute left-1/2 top-1/2 w-[90%] h-[90%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.22)_0%,transparent_70%)]"
+            />
             <div aria-hidden className="absolute inset-0 rounded-full border border-dashed border-[#22D3EE]/40 animate-spin" style={{ animationDuration: '24s' }} />
             <div aria-hidden className="absolute inset-3 rounded-full border border-[#8B5CF6]/25" />
             <div aria-hidden className="absolute inset-6 rounded-full border border-[#F97316]/15" />
-            {[0, 1, 2, 3].map((i) => (
-              <span
-                key={i}
-                aria-hidden
-                className="absolute w-1.5 h-1.5 rounded-full bg-[#22D3EE]"
-                style={{
-                  top: `${20 + i * 18}%`,
-                  left: `${85 - i * 5}%`,
-                  opacity: 0.4 + i * 0.15,
-                }}
-              />
-            ))}
-            <Image src="/phoenix-logo.png" alt="" fill className="object-contain p-5" />
+            <Image src="/phoenix-logo.png" alt="" fill className="object-contain p-5 object-[center_52%]" />
           </div>
         </div>
 
@@ -156,25 +148,52 @@ export default function PlatformExpansionSection() {
         </div>
 
         <div className="relative mb-10 hidden sm:block px-2 lg:px-4" data-platform-fade>
-          <div className="absolute top-[22px] left-[10%] right-[5%] h-0.5 bg-gradient-to-r from-[#22D3EE] via-[#8B5CF6] to-[#F97316]" />
-          <div
-            aria-hidden
-            className="absolute top-[18px] right-[4%] w-0 h-0 border-t-[5px] border-b-[5px] border-l-[9px] border-t-transparent border-b-transparent border-l-[#F97316]"
-          />
-          <div className="grid grid-cols-4 gap-4 pt-1">
+          <div className="grid grid-cols-4 gap-4">
             {PLATFORM_EXPANSION.timeline.map((node, i) => {
               const colors = ['#22D3EE', '#8B5CF6', '#3B82F6', '#F97316'];
               return (
-                <div key={node.clinic} className="text-center flex flex-col items-center">
-                  <p className="text-[10px] font-mono uppercase tracking-wide text-[#64748B] mb-2 min-h-[28px] flex items-end justify-center">
+                <div key={node.clinic} className="text-center flex flex-col items-center relative">
+                  <p className="text-[10px] font-mono uppercase tracking-wide text-[#94A3B8] mb-3 min-h-[20px] flex items-end justify-center leading-none">
                     {node.label}
                   </p>
-                  <span
-                    className="inline-block w-4 h-4 rounded-full mb-2 ring-4 ring-[#0B1020] shadow-[0_0_20px_currentColor]"
-                    style={{ backgroundColor: colors[i], color: colors[i] }}
-                  />
+                  <div className="relative w-full flex items-center justify-center h-4 mb-3">
+                    {i === 0 && (
+                      <div
+                        aria-hidden
+                        className="absolute left-1/2 right-[-50%] top-1/2 -translate-y-1/2 h-0.5 bg-gradient-to-r from-[#22D3EE] via-[#8B5CF6] to-[#3B82F6]"
+                      />
+                    )}
+                    {i === 1 && (
+                      <div
+                        aria-hidden
+                        className="absolute left-[-50%] right-[-50%] top-1/2 -translate-y-1/2 h-0.5 bg-gradient-to-r from-[#8B5CF6] to-[#3B82F6]"
+                      />
+                    )}
+                    {i === 2 && (
+                      <div
+                        aria-hidden
+                        className="absolute left-[-50%] right-[-50%] top-1/2 -translate-y-1/2 h-0.5 bg-gradient-to-r from-[#3B82F6] to-[#F97316]"
+                      />
+                    )}
+                    {i === 3 && (
+                      <>
+                        <div
+                          aria-hidden
+                          className="absolute left-[-50%] right-1/2 top-1/2 -translate-y-1/2 h-0.5 bg-[#F97316]"
+                        />
+                        <div
+                          aria-hidden
+                          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 w-0 h-0 border-t-[5px] border-b-[5px] border-l-[9px] border-t-transparent border-b-transparent border-l-[#F97316]"
+                        />
+                      </>
+                    )}
+                    <span
+                      className="relative z-10 inline-block w-4 h-4 rounded-full ring-4 ring-[#030712] shadow-[0_0_20px_currentColor]"
+                      style={{ backgroundColor: colors[i], color: colors[i] }}
+                    />
+                  </div>
                   <p className="text-xs font-semibold text-[#F8FAFC]">{node.clinic}</p>
-                  <p className="text-[10px] text-[#64748B] mt-0.5">{node.note}</p>
+                  <p className="text-[10px] text-[#94A3B8] mt-1">{node.note}</p>
                 </div>
               );
             })}

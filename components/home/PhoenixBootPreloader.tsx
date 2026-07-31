@@ -85,10 +85,11 @@ export default function PhoenixBootPreloader() {
           transition={{ duration: reducedMotion ? 0.25 : 0.65, ease: [0.22, 1, 0.36, 1] }}
         >
           <div className="relative flex flex-col items-center text-center px-6">
-            <div className="relative w-[161px] h-[161px] sm:w-[204px] sm:h-[204px] lg:w-[234px] lg:h-[234px] mb-8">
+            <div className="relative w-[200px] h-[200px] sm:w-[248px] sm:h-[248px] lg:w-[280px] lg:h-[280px] -mb-2 sm:-mb-3">
+              {/* Glow centered on visual mark (hex + wing), slightly below box center */}
               <motion.div
                 aria-hidden
-                className="absolute inset-[-20%] rounded-full bg-[radial-gradient(circle,rgba(77,166,255,0.35)_0%,transparent_70%)]"
+                className="pointer-events-none absolute left-1/2 top-[52%] w-[85%] h-[85%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(77,166,255,0.4)_0%,transparent_68%)]"
                 initial={reducedMotion ? false : { opacity: 0.3, scale: 0.85 }}
                 animate={
                   phase === 'playing' && !reducedMotion
@@ -117,7 +118,7 @@ export default function PhoenixBootPreloader() {
                   fill
                   priority
                   className="object-contain"
-                  sizes="(max-width: 640px) 161px, (max-width: 1024px) 204px, 234px"
+                  sizes="(max-width: 640px) 200px, (max-width: 1024px) 248px, 280px"
                 />
               </motion.div>
             </div>
@@ -135,7 +136,7 @@ export default function PhoenixBootPreloader() {
               Phoenix OS
             </motion.h1>
             <motion.p
-              className="mt-3 text-[11px] font-mono uppercase tracking-[0.22em] text-[#8A919D]"
+              className="mt-2 text-[11px] font-mono uppercase tracking-[0.22em] text-[#8A919D]"
               initial={reducedMotion ? false : { opacity: 0, y: 8 }}
               animate={{ opacity: 0.85, y: 0 }}
               transition={

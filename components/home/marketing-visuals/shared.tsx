@@ -217,18 +217,21 @@ export function HubConnectorOverlay({
         const ux = dx / len;
         const uy = dy / len;
 
-        const x1 = hubX + ux * (hubRadius * 0.92);
-        const y1 = hubY + uy * (hubRadius * 0.92);
-        const x2 = endX - ux * (anchor === 'edge' ? 2 : 8);
-        const y2 = endY - uy * (anchor === 'edge' ? 2 : 8);
+        // Start on hub ring edge; end at vertical midpoint of card inner edge
+        const x1 = hubX + ux * hubRadius;
+        const y1 = hubY + uy * hubRadius;
+        const x2 = endX;
+        const y2 = endY;
 
         const midX = (x1 + x2) / 2;
         const midY = (y1 + y2) / 2;
         const perpX = -uy;
         const perpY = ux;
-        const curveOffset = Math.min(Math.abs(dx), Math.abs(dy)) * 0.28 + 24;
-        const ctrlX = midX + perpX * curveOffset * (i % 2 === 0 ? 1 : -1);
-        const ctrlY = midY + perpY * curveOffset * (i % 2 === 0 ? 1 : -1);
+        // Gentler curve so lines land cleanly without overshooting
+        const curveOffset = Math.min(40, Math.abs(dx) * 0.12 + Math.abs(dy) * 0.08 + 12);
+        const sideSign = cardCenterX < hubX ? 1 : -1;
+        const ctrlX = midX + perpX * curveOffset * sideSign * (i % 2 === 0 ? 0.6 : -0.35);
+        const ctrlY = midY + perpY * curveOffset * sideSign * (i % 2 === 0 ? 0.6 : -0.35);
 
         return {
           path: `M ${x1} ${y1} Q ${ctrlX} ${ctrlY} ${x2} ${y2}`,
@@ -253,12 +256,14 @@ export function HubConnectorOverlay({
 
     const t1 = window.setTimeout(measure, 0);
     const t2 = window.setTimeout(measure, 150);
+    const t3 = window.setTimeout(measure, 400);
 
     return () => {
       observer.disconnect();
       window.removeEventListener('resize', measure);
       window.clearTimeout(t1);
       window.clearTimeout(t2);
+      window.clearTimeout(t3);
     };
   }, [containerRef, measure]);
 
@@ -266,9 +271,11 @@ export function HubConnectorOverlay({
     if (!revealed) return;
     const t1 = window.setTimeout(measure, 80);
     const t2 = window.setTimeout(measure, 350);
+    const t3 = window.setTimeout(measure, 600);
     return () => {
       window.clearTimeout(t1);
       window.clearTimeout(t2);
+      window.clearTimeout(t3);
     };
   }, [revealed, measure]);
 

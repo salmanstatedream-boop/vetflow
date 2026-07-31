@@ -1387,7 +1387,7 @@ html.light .app-btn-primary {
 
 .phx-page .phx-header-wordmark {
   display: block;
-  transform: translateY(18%);
+  transform: translateY(8%);
   line-height: 0.85;
   background: linear-gradient(
     180deg,
@@ -1399,6 +1399,8 @@ html.light .app-btn-primary {
   background-clip: text;
   color: transparent;
   text-shadow: 0 0 40px rgba(34, 211, 238, 0.08);
+  -webkit-mask-image: linear-gradient(180deg, black 0%, black 55%, transparent 95%);
+  mask-image: linear-gradient(180deg, black 0%, black 55%, transparent 95%);
 }
 
 .phx-orbit-spin {

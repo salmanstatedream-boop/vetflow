@@ -40,9 +40,73 @@ export const NAV_LINKS = [
   { label: 'Problem', href: '#problem' },
   { label: 'Solution', href: '#solution' },
   { label: 'Dashboard', href: '#dashboard' },
-  { label: 'Workflows', href: '#workflows' },
   { label: 'Pricing', href: '#pricing' },
 ] as const;
+
+export const SOLUTION_JOURNEY = {
+  eyebrow: 'THE SOLUTION',
+  headline: ['One Patient Journey. Every Workflow.', 'One Platform.'],
+  subheadline:
+    'Phoenix OS connects every department and automates every step so your clinic runs smarter, faster and stress-free.',
+  steps: [
+    {
+      id: 'appointment',
+      index: 1,
+      title: 'Appointment',
+      caption: 'Client books an appointment',
+      visual: 'appointment' as const,
+    },
+    {
+      id: 'checkin',
+      index: 2,
+      title: 'Check-in',
+      caption: 'Patient check-in & records access',
+      visual: 'checkin' as const,
+    },
+    {
+      id: 'aiAnalysis',
+      index: 3,
+      title: 'AI Analysis',
+      caption: 'AI listens, extracts insights instantly',
+      visual: 'aiAnalysis' as const,
+    },
+    {
+      id: 'consultation',
+      index: 4,
+      title: 'Consultation',
+      caption: 'SOAP notes & diagnosis with AI assistance',
+      visual: 'consultation' as const,
+    },
+    {
+      id: 'treatment',
+      index: 5,
+      title: 'Treatment',
+      caption: 'Prescriptions & lab orders generated',
+      visual: 'treatment' as const,
+    },
+    {
+      id: 'billing',
+      index: 6,
+      title: 'Billing',
+      caption: 'Invoices created & payments recorded',
+      visual: 'billing' as const,
+    },
+    {
+      id: 'followup',
+      index: 7,
+      title: 'Follow-up',
+      caption: 'Reminders & follow-ups scheduled automatically',
+      visual: 'followup' as const,
+    },
+  ],
+  cta: {
+    headline: 'Experience the Power of an Intelligent Workflow.',
+    sub: 'Phoenix OS brings every step together so your team can focus on exceptional care.',
+    button: 'Request Access',
+  },
+} as const;
+
+export type JourneyVisualKey = (typeof SOLUTION_JOURNEY.steps)[number]['visual'];
 
 export const DASHBOARD_PREVIEW = {
   eyebrow: 'DASHBOARD PREVIEW',
@@ -607,9 +671,25 @@ export const TESTIMONIALS = [
 
 export const PROBLEM_SECTION = {
   eyebrow: 'THE PROBLEM',
-  headline: ['Running a clinic is', 'hard enough.', 'Software shouldn\'t make it harder.'],
+  headline: ['One patient shouldn\'t create', 'chaos.'],
   subheadline:
-    'Veterinary teams juggle too many tools, too much data, and endless manual work — every single day.',
+    'Every clinic runs on too many tools, scattered data, and manual work. Interruptions never stop. Delays cost time. And time costs revenue.',
+  scrollHint: 'Scroll to experience a typical morning.',
+  costCard: {
+    title: 'THE COST OF CHAOS (YEARLY)',
+    subtitle: 'Hidden leaks. Real impact. Every single year.',
+    total: '$127,500+',
+    totalLabel: 'estimated revenue lost to workflow chaos',
+    totalFooterLabel: 'TOTAL LOST EVERY YEAR',
+    lineItems: [
+      { label: 'Missed appointments', amount: '-$24,000' },
+      { label: 'Forgotten charges', amount: '-$31,000' },
+      { label: 'No follow-ups', amount: '-$19,500' },
+      { label: 'Admin & manual work', amount: '-$28,000' },
+      { label: 'Double bookings', amount: '-$25,000' },
+    ],
+  },
+  callout: 'And this repeats all day. Every day.',
   flow: [
     {
       id: 'appointments',

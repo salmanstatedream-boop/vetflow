@@ -4,7 +4,7 @@ import { animate, stagger } from 'animejs';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
-import OverviewDashboardVisual from '@/components/home/overview-dashboard-visual/OverviewDashboardVisual';
+import ScaledOverviewDashboard from '@/components/home/overview-dashboard-visual/ScaledOverviewDashboard';
 import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
 import { LightLines } from '@/components/ui/light-lines';
 import MorphText from '@/components/ui/morph-text';
@@ -46,22 +46,34 @@ export default function PhoenixHero() {
       ref={rootRef}
       className="relative pt-[calc(var(--phx-nav-height)-0.25rem)] pb-16 lg:pb-24 overflow-hidden"
     >
-      <LightLines
-        className="absolute inset-0 pointer-events-none opacity-60 phx-hero-mask"
-        showBackground={false}
-        linesOpacity={0.05}
-        lightsOpacity={0.5}
-        gradientFrom="#22D3EE"
-        gradientTo="#8B5CF6"
-        lightColor="#22D3EE"
-        lineColor="#3B82F6"
-      />
-      <div className="absolute inset-0 phx-grid-bg opacity-20 pointer-events-none" />
+      <div className="absolute inset-0 z-0 pointer-events-none" aria-hidden>
+        <LightLines
+          className="absolute inset-0 opacity-60 phx-hero-mask"
+          showBackground={false}
+          linesOpacity={0.05}
+          lightsOpacity={0.5}
+          gradientFrom="#22D3EE"
+          gradientTo="#8B5CF6"
+          lightColor="#22D3EE"
+          lineColor="#3B82F6"
+        />
+        <div
+          className="absolute inset-0 phx-grid-bg opacity-10"
+          style={{
+            maskImage: 'radial-gradient(ellipse 70% 80% at 75% 40%, black 20%, transparent 70%)',
+            WebkitMaskImage: 'radial-gradient(ellipse 70% 80% at 75% 40%, black 20%, transparent 70%)',
+          }}
+        />
+      </div>
 
-      <div className="phx-container relative">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-10 lg:gap-12 xl:gap-14 items-center">
-          <div className="text-center lg:text-left">
-            <div className="flex flex-col items-center lg:items-start">
+      <div className="phx-container relative z-10">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.4fr)] gap-10 lg:gap-12 xl:gap-14 items-center">
+          <div className="relative text-center lg:text-left isolate">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -inset-4 sm:-inset-6 rounded-3xl bg-[radial-gradient(ellipse_at_left_center,rgba(3,4,10,0.85)_0%,transparent_70%)]"
+            />
+            <div className="relative flex flex-col items-center lg:items-start">
               <div
                 className="relative z-10 w-[161px] h-[161px] sm:w-[204px] sm:h-[204px] lg:w-[234px] lg:h-[234px] shrink-0 -mb-10 sm:-mb-12 lg:-mb-14"
                 data-phx-fade
@@ -110,7 +122,7 @@ export default function PhoenixHero() {
             </div>
 
             <div
-              className="flex items-center justify-center lg:justify-start gap-2 mb-6 flex-wrap mt-4"
+              className="relative flex items-center justify-center lg:justify-start gap-2 mb-6 flex-wrap mt-4"
               data-phx-fade
               style={{ opacity: reducedMotion ? 1 : 0 }}
             >
@@ -133,7 +145,7 @@ export default function PhoenixHero() {
             </div>
 
             <p
-              className="phx-subtext text-lg sm:text-xl max-w-xl mx-auto lg:mx-0 mb-8"
+              className="relative phx-subtext text-lg sm:text-xl max-w-xl mx-auto lg:mx-0 mb-8"
               data-phx-fade
               style={{ opacity: reducedMotion ? 1 : 0 }}
             >
@@ -141,7 +153,7 @@ export default function PhoenixHero() {
             </p>
 
             <div
-              className="flex flex-wrap items-center justify-center lg:justify-start gap-3 mb-6"
+              className="relative flex flex-wrap items-center justify-center lg:justify-start gap-3 mb-6"
               data-phx-fade
               style={{ opacity: reducedMotion ? 1 : 0 }}
             >
@@ -174,7 +186,7 @@ export default function PhoenixHero() {
             </div>
 
             <p
-              className="text-sm text-[#64748B] max-w-xl mx-auto lg:mx-0"
+              className="relative text-sm text-[#64748B] max-w-xl mx-auto lg:mx-0"
               data-phx-fade
               style={{ opacity: reducedMotion ? 1 : 0 }}
             >
@@ -189,11 +201,15 @@ export default function PhoenixHero() {
             style={{ opacity: reducedMotion ? 1 : 0 }}
           >
             <div
-              aria-hidden
-              className="pointer-events-none absolute -inset-6 sm:-inset-8 bg-gradient-to-br from-[#22D3EE]/10 via-transparent to-[#8B5CF6]/10 blur-3xl"
-            />
-            <div className="relative rounded-2xl border border-white/10 ring-1 ring-white/[0.06] bg-[#0B1020] overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.45)] transition-shadow hover:shadow-[0_28px_90px_rgba(34,211,238,0.08)]">
-              <OverviewDashboardVisual />
+              className="relative w-full rounded-2xl border border-white/10 ring-1 ring-white/[0.06] bg-[#0B1020] overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.45)] transition-shadow hover:shadow-[0_28px_90px_rgba(34,211,238,0.08)]"
+            >
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#22D3EE]/8 via-transparent to-[#8B5CF6]/8 blur-2xl"
+              />
+              <div className="relative w-full">
+                <ScaledOverviewDashboard />
+              </div>
             </div>
           </div>
         </div>
