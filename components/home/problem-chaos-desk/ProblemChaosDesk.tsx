@@ -36,6 +36,7 @@ import {
 } from 'react';
 import { usePrefersReducedMotion } from '@/lib/hooks/usePrefersReducedMotion';
 import { cn } from '@/lib/utils';
+import { playResetLayoutFanfare } from '@/components/home/problem-chaos-desk/resetLayoutSound';
 
 const STORAGE_KEY = 'phx-chaos-desk-positions';
 
@@ -244,6 +245,9 @@ export default function ProblemChaosDesk() {
   }, []);
 
   const resetLayout = useCallback(() => {
+    if (!reducedMotion) {
+      playResetLayoutFanfare();
+    }
     setPositions({});
     try {
       localStorage.removeItem(STORAGE_KEY);
@@ -252,7 +256,7 @@ export default function ProblemChaosDesk() {
     }
     setFrontId(null);
     setResetKey((k) => k + 1);
-  }, []);
+  }, [reducedMotion]);
 
   const dragCtx = useMemo(
     () => ({
