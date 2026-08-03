@@ -931,23 +931,27 @@ html.light .app-btn-primary {
   top: 0;
   left: 0;
   z-index: 9999;
-  width: 32px;
-  height: 32px;
+  width: 18px;
+  height: 22px;
   margin: 0;
   padding: 0;
   pointer-events: none;
   will-change: transform, opacity, filter;
   opacity: 0;
-  filter: drop-shadow(0 0 5px rgba(34, 211, 238, 0.55))
-    drop-shadow(0 0 12px rgba(56, 189, 248, 0.28));
-  transition: filter 0.15s ease, width 0.15s ease, height 0.15s ease;
+  filter: drop-shadow(0 0 4px rgba(34, 211, 238, 0.5))
+    drop-shadow(0 1px 2px rgba(2, 44, 58, 0.35));
+  transition: filter 0.15s ease, width 0.12s ease, height 0.12s ease;
 }
 
 .phx-cursor-tip[data-mode='grab'],
-.phx-cursor-tip[data-mode='grabbing'],
+.phx-cursor-tip[data-mode='grabbing'] {
+  width: 22px;
+  height: 22px;
+}
+
 .phx-cursor-tip[data-mode='click'] {
-  width: 34px;
-  height: 34px;
+  width: 20px;
+  height: 24px;
 }
 
 .phx-cursor-tip[data-intensity='lift'] {
@@ -964,6 +968,11 @@ html.light .app-btn-primary {
 
 .phx-cursor-trail[data-intensity='lift'] .phx-cursor-bubble {
   filter: blur(2px);
+}
+
+.phx-tubes-cursor {
+  mix-blend-mode: screen;
+  opacity: 0.72;
 }
 
 .phx-section {

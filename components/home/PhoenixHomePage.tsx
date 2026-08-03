@@ -14,6 +14,7 @@ import PhoenixFooter from './PhoenixFooter';
 import PhoenixCursorTrail from './PhoenixCursorTrail';
 import RequestAccessProvider from './RequestAccessProvider';
 import SmoothScrollProvider from './SmoothScrollProvider';
+import TubesCursor from '@/components/ui/tubes-curor';
 
 const BOOT_GATE_SCRIPT = `
 try {
@@ -30,6 +31,7 @@ export default function PhoenixHomePage() {
       <PhoenixBootPreloader />
       <RequestAccessProvider>
         <PhoenixCursorTrail>
+          <TubesCursor />
           <div className="phx-page min-h-screen">
             <PhoenixNavbar />
             <main>

@@ -32,9 +32,6 @@ export function usePhoenixCursorTrail(): CursorTrailApi {
   );
 }
 
-const COLORS = ['#22D3EE', '#38BDF8', '#3B82F6', '#67E8F9'] as const;
-const TRAIL_COUNT = 9;
-
 const CLICKABLE_SEL = [
   'a[href]',
   'button:not([disabled])',
@@ -72,38 +69,27 @@ function useFinePointerDesktop(): boolean {
 
 function PointerArrow() {
   return (
-    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+    <svg viewBox="0 0 18 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
       <defs>
-        <linearGradient id="phxPtrBody" x1="4" y1="2" x2="22" y2="28" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#A5F3FC" />
-          <stop offset="0.4" stopColor="#22D3EE" />
-          <stop offset="1" stopColor="#0369A1" />
+        <linearGradient id="phxPtrBody" x1="1" y1="1" x2="12" y2="18" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#67E8F9" />
+          <stop offset="1" stopColor="#0284C7" />
         </linearGradient>
-        <linearGradient id="phxPtrEdge" x1="4" y1="2" x2="18" y2="20" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#ECFEFF" stopOpacity="0.9" />
-          <stop offset="1" stopColor="#22D3EE" stopOpacity="0.15" />
-        </linearGradient>
-        <filter id="phxPtrSoft" x="-40%" y="-40%" width="180%" height="180%">
-          <feDropShadow dx="0" dy="1.5" stdDeviation="1.2" floodColor="#022c3a" floodOpacity="0.45" />
-        </filter>
       </defs>
-      {/* Soft contact glow under tip */}
-      <circle cx="5" cy="5" r="3.2" fill="#22D3EE" opacity="0.22" />
       <path
-        d="M4.2 2.4 C3.7 2.15 3.15 2.55 3.2 3.15 L4.05 20.4 C4.1 21.15 5.05 21.4 5.5 20.8 L9.35 15.95 L13.9 26.05 C14.15 26.6 14.9 26.7 15.3 26.25 L18.05 23.2 C18.45 22.75 18.35 22 17.85 21.7 L12.95 18.7 L18.9 17.55 C19.65 17.4 19.85 16.4 19.2 16 L4.2 2.4 Z"
+        d="M1.2 1.1 L1.2 15.4 L5 11.8 L8.2 18.6 L11 17.2 L7.7 10.3 L13.2 10.3 Z"
         fill="url(#phxPtrBody)"
         stroke="#0E7490"
-        strokeWidth="1.15"
+        strokeWidth="1"
         strokeLinejoin="round"
-        filter="url(#phxPtrSoft)"
       />
       <path
-        d="M5.1 4.6 L5.7 16.8 L9.1 12.7"
-        stroke="url(#phxPtrEdge)"
-        strokeWidth="1.2"
+        d="M2.4 3 L2.55 12.2 L5.1 9.7"
+        stroke="#ECFEFF"
+        strokeWidth="0.9"
         strokeLinecap="round"
         strokeLinejoin="round"
-        fill="none"
+        opacity="0.55"
       />
     </svg>
   );
@@ -111,112 +97,82 @@ function PointerArrow() {
 
 function HandClick() {
   return (
-    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+    <svg viewBox="0 0 20 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
       <defs>
-        <linearGradient id="phxHandClick" x1="8" y1="4" x2="24" y2="28" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#A5F3FC" />
-          <stop offset="0.45" stopColor="#22D3EE" />
+        <linearGradient id="phxHandClick" x1="6" y1="2" x2="16" y2="20" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#67E8F9" />
           <stop offset="1" stopColor="#0284C7" />
         </linearGradient>
-        <filter id="phxHandClickSoft" x="-35%" y="-35%" width="170%" height="170%">
-          <feDropShadow dx="0" dy="1" stdDeviation="1" floodColor="#022c3a" floodOpacity="0.4" />
-        </filter>
       </defs>
-      {/* Pointing hand — index finger up (link / click affordance) */}
       <g
         fill="url(#phxHandClick)"
         stroke="#0E7490"
-        strokeWidth="1.15"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        filter="url(#phxHandClickSoft)"
-      >
-        <path d="M13.2 14.5 V5.6 a1.55 1.55 0 0 1 3.1 0 V14.5" />
-        <path d="M16.3 15.2 V10.2 a1.4 1.4 0 0 1 2.8 0 V15.4" />
-        <path d="M19.1 15.6 V11.4 a1.35 1.35 0 0 1 2.7 0 V16" />
-        <path d="M21.8 16.2 V13.2 a1.3 1.3 0 0 1 2.6 0 V18.2 c0 3.4 -2.2 6.2 -5.4 6.2 h-3.1 c-2.9 0 -5.3 -1.9 -6.2 -4.6 L8.4 16.2 A1.55 1.55 0 0 1 10.9 14.5 H13.2" />
-      </g>
-      <path
-        d="M14.5 8.2 V6.4"
-        stroke="#ECFEFF"
         strokeWidth="1"
         strokeLinecap="round"
-        opacity="0.5"
-      />
+        strokeLinejoin="round"
+      >
+        <path d="M8.2 11.2 V3.4 a1.25 1.25 0 0 1 2.5 0 V11.2" />
+        <path d="M10.7 11.6 V8.2 a1.1 1.1 0 0 1 2.2 0 V12" />
+        <path d="M12.9 12 V9.4 a1 1 0 0 1 2 0 V13.2 c0 2.4 -1.55 4.4 -3.85 4.4 H9.2 c-2 0 -3.7 -1.3 -4.35 -3.2 L4.1 12.2 A1.15 1.15 0 0 1 6 10.9 H8.2" />
+      </g>
     </svg>
   );
 }
 
 function HandOpen() {
   return (
-    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+    <svg viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
       <defs>
-        <linearGradient id="phxHandOpen" x1="8" y1="6" x2="24" y2="28" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#A5F3FC" />
-          <stop offset="0.45" stopColor="#22D3EE" />
+        <linearGradient id="phxHandOpen" x1="6" y1="4" x2="18" y2="20" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#67E8F9" />
           <stop offset="1" stopColor="#0284C7" />
         </linearGradient>
-        <filter id="phxHandSoft" x="-35%" y="-35%" width="170%" height="170%">
-          <feDropShadow dx="0" dy="1" stdDeviation="1" floodColor="#022c3a" floodOpacity="0.4" />
-        </filter>
       </defs>
       <g
         fill="url(#phxHandOpen)"
         stroke="#0E7490"
-        strokeWidth="1.2"
+        strokeWidth="1"
         strokeLinecap="round"
         strokeLinejoin="round"
-        filter="url(#phxHandSoft)"
       >
-        <path d="M11.2 14.2 V8.8 a1.55 1.55 0 0 1 3.1 0 V14.2" />
-        <path d="M14.3 14.2 V7.4 a1.55 1.55 0 0 1 3.1 0 V14.2" />
-        <path d="M17.4 14.2 V8 a1.55 1.55 0 0 1 3.1 0 V14.2" />
-        <path d="M20.5 14.2 V10.2 a1.55 1.55 0 0 1 3.1 0 V16.4 c0 3.7 -2.35 6.7 -5.7 6.7 H15.2 c-3.1 0 -5.7 -2.1 -6.7 -5 L7.1 14.6 A1.65 1.65 0 0 1 9.7 13 H11.2" />
+        <path d="M7.4 10.2 V6.6 a1.15 1.15 0 0 1 2.3 0 V10.2" />
+        <path d="M9.7 10.2 V5.6 a1.15 1.15 0 0 1 2.3 0 V10.2" />
+        <path d="M12 10.2 V6.2 a1.15 1.15 0 0 1 2.3 0 V10.2" />
+        <path d="M14.3 10.2 V7.6 a1.15 1.15 0 0 1 2.3 0 V12 c0 2.6 -1.65 4.7 -4.05 4.7 H9.9 c-2.2 0 -4 -1.45 -4.7 -3.5 L4.4 10.6 A1.2 1.2 0 0 1 6.3 9.3 H7.4" />
       </g>
-      <path
-        d="M12.4 11.2 V9.4 M15.5 10.6 V8.2 M18.6 11 V9"
-        stroke="#ECFEFF"
-        strokeWidth="0.9"
-        strokeLinecap="round"
-        opacity="0.4"
-      />
     </svg>
   );
 }
 
 function HandClosed() {
   return (
-    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+    <svg viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
       <defs>
-        <linearGradient id="phxHandClosed" x1="8" y1="10" x2="24" y2="28" gradientUnits="userSpaceOnUse">
+        <linearGradient id="phxHandClosed" x1="6" y1="6" x2="18" y2="20" gradientUnits="userSpaceOnUse">
           <stop stopColor="#67E8F9" />
-          <stop offset="0.5" stopColor="#06B6D4" />
           <stop offset="1" stopColor="#0369A1" />
         </linearGradient>
-        <filter id="phxHandClosedSoft" x="-35%" y="-35%" width="170%" height="170%">
-          <feDropShadow dx="0" dy="1" stdDeviation="1" floodColor="#022c3a" floodOpacity="0.4" />
-        </filter>
       </defs>
       <g
         fill="url(#phxHandClosed)"
         stroke="#0E7490"
-        strokeWidth="1.2"
+        strokeWidth="1"
         strokeLinecap="round"
         strokeLinejoin="round"
-        filter="url(#phxHandClosedSoft)"
       >
-        <path d="M10.6 16 V13.2 a1.45 1.45 0 0 1 2.9 0 V16" />
-        <path d="M13.5 16 V12.2 a1.45 1.45 0 0 1 2.9 0 V16" />
-        <path d="M16.4 16 V12.4 a1.45 1.45 0 0 1 2.9 0 V16" />
-        <path d="M19.3 16 v-1.6 a1.45 1.45 0 0 1 2.9 0 v4 c0 3.1 -2 5.6 -4.9 5.6 h-2.9 c-2.7 0 -4.9 -1.85 -5.7 -4.3 L8.4 16.2 A1.5 1.5 0 0 1 10.7 14.6 H10.6" />
+        <path d="M7.2 11.2 V9.2 a1.05 1.05 0 0 1 2.1 0 V11.2" />
+        <path d="M9.3 11.2 V8.5 a1.05 1.05 0 0 1 2.1 0 V11.2" />
+        <path d="M11.4 11.2 V8.7 a1.05 1.05 0 0 1 2.1 0 V11.2" />
+        <path d="M13.5 11.2 V10 a1.05 1.05 0 0 1 2.1 0 v2.8 c0 2.2 -1.4 4 -3.5 4 H10 c-1.9 0 -3.5 -1.3 -4.05 -3.05 L5.4 11.4 A1.1 1.1 0 0 1 7.1 10.2 H7.2" />
       </g>
     </svg>
   );
 }
 
 /**
- * Sophisticated cyan pointer + bubble trail for the marketing homepage.
- * Chaos Desk swaps to open / closed hand modes. Disabled on touch / reduced-motion.
+ * Compact cyan pointer tip + mode API for Chaos Desk.
+ * Tube trails come from TubesCursor (threejs-components).
+ * Disabled on touch / reduced-motion.
  */
 export default function PhoenixCursorTrail({ children }: { children: ReactNode }) {
   const reducedMotion = usePrefersReducedMotion();
@@ -264,12 +220,7 @@ export default function PhoenixCursorTrail({ children }: { children: ReactNode }
     }
   }, []);
 
-  const layerRef = useRef<HTMLDivElement>(null);
   const tipRef = useRef<HTMLSpanElement>(null);
-  const bubbleRefs = useRef<(HTMLSpanElement | null)[]>([]);
-  const pointsRef = useRef<Point[]>(
-    Array.from({ length: TRAIL_COUNT }, () => ({ x: -100, y: -100 })),
-  );
   const targetRef = useRef<Point>({ x: -100, y: -100 });
   const activeRef = useRef(false);
   const rafRef = useRef<number>(0);
@@ -288,13 +239,11 @@ export default function PhoenixCursorTrail({ children }: { children: ReactNode }
     const onMove = (e: PointerEvent) => {
       targetRef.current = { x: e.clientX, y: e.clientY };
       activeRef.current = true;
-      if (layerRef.current) layerRef.current.dataset.active = '1';
       applyAutoMode(e.target);
     };
 
     const onLeave = () => {
       activeRef.current = false;
-      if (layerRef.current) layerRef.current.dataset.active = '0';
     };
 
     window.addEventListener('pointermove', onMove, { passive: true });
@@ -302,49 +251,15 @@ export default function PhoenixCursorTrail({ children }: { children: ReactNode }
     document.documentElement.addEventListener('mouseleave', onLeave);
 
     const tick = () => {
-      const lift = intensityRef.current === 'lift' || modeRef.current === 'click';
       const hand = modeRef.current !== 'pointer';
-      const points = pointsRef.current;
       const target = targetRef.current;
-
-      const headLerp = lift ? 0.42 : 0.28;
-      const tailLerp = lift ? 0.22 : 0.14;
-
-      points[0]!.x += (target.x - points[0]!.x) * headLerp;
-      points[0]!.y += (target.y - points[0]!.y) * headLerp;
-
-      for (let i = 1; i < TRAIL_COUNT; i++) {
-        const prev = points[i - 1]!;
-        const cur = points[i]!;
-        const t = tailLerp * (1 - i * 0.03);
-        cur.x += (prev.x - cur.x) * t;
-        cur.y += (prev.y - cur.y) * t;
-      }
-
       const tip = tipRef.current;
       if (tip) {
-        const ox = hand ? -10 : -4;
-        const oy = hand ? -8 : -3;
+        const ox = hand ? -7 : -1.2;
+        const oy = hand ? -4 : -1.1;
         tip.style.transform = `translate3d(${target.x + ox}px, ${target.y + oy}px, 0)`;
         tip.style.opacity = activeRef.current ? '1' : '0';
       }
-
-      const baseSize = lift ? 24 : 15;
-      const opacityBoost = lift ? 1.3 : 1;
-
-      for (let i = 0; i < TRAIL_COUNT; i++) {
-        const el = bubbleRefs.current[i];
-        if (!el) continue;
-        const p = points[i]!;
-        const t = i / (TRAIL_COUNT - 1);
-        const size = baseSize * (1 - t * 0.55);
-        const opacity = activeRef.current ? (0.5 - t * 0.4) * opacityBoost : 0;
-        el.style.transform = `translate3d(${p.x - size / 2}px, ${p.y - size / 2}px, 0) scale(${1 - t * 0.35})`;
-        el.style.width = `${size}px`;
-        el.style.height = `${size}px`;
-        el.style.opacity = String(Math.max(0, Math.min(1, opacity)));
-      }
-
       rafRef.current = requestAnimationFrame(tick);
     };
 
@@ -373,42 +288,15 @@ export default function PhoenixCursorTrail({ children }: { children: ReactNode }
     <CursorTrailContext.Provider value={api}>
       {children}
       {enabled && (
-        <>
-          <span
-            ref={tipRef}
-            className="phx-cursor-tip"
-            data-mode={mode}
-            data-intensity={intensity}
-            aria-hidden
-          >
-            {tipGlyph}
-          </span>
-          <div
-            ref={layerRef}
-            className="phx-cursor-trail"
-            data-active="0"
-            data-intensity={intensity}
-            data-mode={mode}
-            aria-hidden
-          >
-            {Array.from({ length: TRAIL_COUNT }, (_, i) => {
-              const color = COLORS[i % COLORS.length]!;
-              return (
-                <span
-                  key={i}
-                  ref={(node) => {
-                    bubbleRefs.current[i] = node;
-                  }}
-                  className="phx-cursor-bubble"
-                  style={{
-                    background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
-                    boxShadow: `0 0 18px ${color}55`,
-                  }}
-                />
-              );
-            })}
-          </div>
-        </>
+        <span
+          ref={tipRef}
+          className="phx-cursor-tip"
+          data-mode={mode}
+          data-intensity={intensity}
+          aria-hidden
+        >
+          {tipGlyph}
+        </span>
       )}
     </CursorTrailContext.Provider>
   );
