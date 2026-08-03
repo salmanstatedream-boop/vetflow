@@ -36,7 +36,12 @@ import {
 } from 'react';
 import { usePrefersReducedMotion } from '@/lib/hooks/usePrefersReducedMotion';
 import { cn } from '@/lib/utils';
-import { playResetLayoutFanfare } from '@/components/home/problem-chaos-desk/resetLayoutSound';
+import {
+  isResetLayoutFanfarePlaying,
+  playResetLayoutFanfare,
+  RESET_FANFARE,
+  RESET_SETTLE_STAGGER,
+} from '@/components/home/problem-chaos-desk/resetLayoutSound';
 
 const STORAGE_KEY = 'phx-chaos-desk-positions';
 
@@ -49,7 +54,10 @@ type DeskDragContextValue = {
   updatePosition: (id: string, next: Pos) => void;
   bringToFront: (id: string) => void;
   frontId: string | null;
+  draggingId: string | null;
+  setDraggingId: (id: string | null) => void;
   resetKey: number;
+  useScoredReset: boolean;
 };
 
 const DeskDragContext = createContext<DeskDragContextValue | null>(null);
@@ -80,19 +88,65 @@ function persistPositions(map: PosMap) {
   }
 }
 
-const containerVariants: Variants = {
+/** First-load entrance (viewport). Keep light — not scored to the fanfare. */
+const enterContainerVariants: Variants = {
   hidden: {},
   show: { transition: { staggerChildren: 0.045, delayChildren: 0.08 } },
 };
 
-// No `y` in variants — drag owns x/y. Rotate stays via `custom`.
-const itemVariants: Variants = {
+const enterItemVariants: Variants = {
   hidden: (rotate: number) => ({ opacity: 0, scale: 0.85, rotate }),
   show: (rotate: number) => ({
     opacity: 1,
     scale: 1,
     rotate,
     transition: { type: 'spring', stiffness: 300, damping: 22, mass: 0.7 },
+  }),
+};
+
+/**
+ * Reset shuffle — scored to RESET_FANFARE:
+ * chaos (dissonance) → settle waves (chord grid → sparkle).
+ * No `x`/`y` in variants — drag owns translation. Rotate stays via `custom`.
+ */
+const resetContainerVariants: Variants = {
+  hidden: {},
+  chaos: {
+    // Parallel burst — must finish with RESET_FANFARE.chaosEnd so settle hits chord 1
+    transition: { staggerChildren: 0, delayChildren: 0 },
+  },
+  settle: {
+    transition: {
+      staggerChildren: RESET_SETTLE_STAGGER,
+      delayChildren: 0.02,
+    },
+  },
+};
+
+const resetItemVariants: Variants = {
+  hidden: (rotate: number) => ({
+    opacity: 0,
+    scale: 0.42,
+    rotate: rotate * 3.2,
+  }),
+  chaos: (rotate: number) => ({
+    opacity: 0.72,
+    scale: 1.12,
+    rotate: rotate * 2.4,
+    transition: {
+      duration: RESET_FANFARE.chaosEnd,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  }),
+  settle: (rotate: number) => ({
+    opacity: 1,
+    scale: 1,
+    rotate,
+    transition: {
+      opacity: { duration: 0.18 },
+      scale: { type: 'spring', stiffness: 220, damping: 16, mass: 0.85 },
+      rotate: { type: 'spring', stiffness: 160, damping: 14, mass: 0.95 },
+    },
   }),
 };
 
@@ -113,33 +167,49 @@ function DraggableShell({
   baseZ?: number;
   'aria-hidden'?: boolean;
 }) {
-  const { deskRef, positions, updatePosition, bringToFront, frontId } = useDeskDrag();
+  const {
+    deskRef,
+    positions,
+    updatePosition,
+    bringToFront,
+    frontId,
+    draggingId,
+    setDraggingId,
+    useScoredReset,
+  } = useDeskDrag();
   const pos = positions[id] ?? { x: 0, y: 0 };
-  const zIndex = frontId === id ? 60 : baseZ;
+  const isDragging = draggingId === id;
+  const zIndex = isDragging || frontId === id ? 60 : baseZ;
 
   const handleDragEnd = useCallback(
     (_: unknown, info: PanInfo) => {
+      setDraggingId(null);
       updatePosition(id, {
         x: pos.x + info.offset.x,
         y: pos.y + info.offset.y,
       });
     },
-    [id, pos.x, pos.y, updatePosition],
+    [id, pos.x, pos.y, setDraggingId, updatePosition],
   );
 
   return (
     <motion.div
-      variants={itemVariants}
+      variants={useScoredReset ? resetItemVariants : enterItemVariants}
       custom={rotate}
       drag
       dragConstraints={deskRef}
       dragMomentum={false}
       dragElastic={0.06}
-      onDragStart={() => bringToFront(id)}
+      whileDrag={{ scale: 1.03 }}
+      onDragStart={() => {
+        bringToFront(id);
+        setDraggingId(id);
+      }}
       onDragEnd={handleDragEnd}
       style={{ x: pos.x, y: pos.y, zIndex, ...style }}
       className={cn(
-        'absolute cursor-grab active:cursor-grabbing touch-none select-none',
+        'absolute touch-none select-none phx-chaos-cursor-grab',
+        isDragging && 'phx-chaos-cursor-grabbing phx-chaos-card-lift',
         className,
       )}
       aria-hidden={ariaHidden}
@@ -225,6 +295,7 @@ export default function ProblemChaosDesk() {
   const [positions, setPositions] = useState<PosMap>({});
   const [hydrated, setHydrated] = useState(false);
   const [frontId, setFrontId] = useState<string | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
   const [resetKey, setResetKey] = useState(0);
 
   useEffect(() => {
@@ -245,6 +316,7 @@ export default function ProblemChaosDesk() {
   }, []);
 
   const resetLayout = useCallback(() => {
+    if (isResetLayoutFanfarePlaying()) return;
     if (!reducedMotion) {
       playResetLayoutFanfare();
     }
@@ -255,6 +327,7 @@ export default function ProblemChaosDesk() {
       // ignore
     }
     setFrontId(null);
+    setDraggingId(null);
     setResetKey((k) => k + 1);
   }, [reducedMotion]);
 
@@ -265,18 +338,29 @@ export default function ProblemChaosDesk() {
       updatePosition,
       bringToFront,
       frontId,
+      draggingId,
+      setDraggingId,
       resetKey,
+      useScoredReset: resetKey > 0 && !reducedMotion,
     }),
-    [positions, updatePosition, bringToFront, frontId, resetKey],
+    [positions, updatePosition, bringToFront, frontId, draggingId, resetKey, reducedMotion],
   );
+
+  const useScoredReset = resetKey > 0 && !reducedMotion;
 
   const containerMotionProps = reducedMotion
     ? { initial: 'show' as const, animate: 'show' as const }
-    : {
-        initial: 'hidden' as const,
-        whileInView: 'show' as const,
-        viewport: { once: true, amount: 0.15 },
-      };
+    : useScoredReset
+      ? {
+          // Scored chaos → settle sequence (see RESET_FANFARE)
+          initial: 'hidden' as const,
+          animate: ['chaos', 'settle'] as const,
+        }
+      : {
+          initial: 'hidden' as const,
+          whileInView: 'show' as const,
+          viewport: { once: true, amount: 0.15 },
+        };
 
   return (
     <div
@@ -361,7 +445,7 @@ export default function ProblemChaosDesk() {
           <motion.div
             key={resetKey}
             className="absolute inset-0"
-            variants={containerVariants}
+            variants={useScoredReset ? resetContainerVariants : enterContainerVariants}
             {...containerMotionProps}
           >
             <GlassCard id="whatsapp" className="left-[4%] top-[5%] w-[178px]" rotate={-4} baseZ={20}>
