@@ -10,6 +10,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { SmoothCursor } from '@/components/ui/smooth-cursor';
 import { usePrefersReducedMotion } from '@/lib/hooks/usePrefersReducedMotion';
 
 type Intensity = 'normal' | 'lift';
@@ -22,7 +23,7 @@ type CursorTrailApi = {
 
 const CursorTrailContext = createContext<CursorTrailApi | null>(null);
 
-/** Control homepage cursor trail / mode. No-ops outside the provider. */
+/** Control homepage cursor mode. No-ops outside the provider. */
 export function usePhoenixCursorTrail(): CursorTrailApi {
   return (
     useContext(CursorTrailContext) ?? {
@@ -46,7 +47,9 @@ const CLICKABLE_SEL = [
   '[data-phx-clickable]',
 ].join(',');
 
-type Point = { x: number; y: number };
+const LAVA_HI = '#FF6B2C';
+const LAVA_LO = '#EA580C';
+const LAVA_STROKE = '#9A3412';
 
 function useFinePointerDesktop(): boolean {
   const [ok, setOk] = useState(false);
@@ -67,46 +70,83 @@ function useFinePointerDesktop(): boolean {
   return ok;
 }
 
-function PointerArrow() {
+function LavaPointer() {
   return (
-    <svg viewBox="0 0 18 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={50}
+      height={54}
+      viewBox="0 0 50 54"
+      fill="none"
+      aria-hidden
+      style={{ scale: 0.5 }}
+    >
+      <g filter="url(#phxLavaPtrShadow)">
+        <path
+          d="M42.6817 41.1495L27.5103 6.79925C26.7269 5.02557 24.2082 5.02558 23.3927 6.79925L7.59814 41.1495C6.75833 42.9759 8.52712 44.8902 10.4125 44.1954L24.3757 39.0496C24.8829 38.8627 25.4385 38.8627 25.9422 39.0496L39.8121 44.1954C41.6849 44.8902 43.4884 42.9759 42.6817 41.1495Z"
+          fill="url(#phxLavaPtrFill)"
+        />
+        <path
+          d="M43.7146 40.6933L28.5431 6.34306C27.3556 3.65428 23.5772 3.69516 22.3668 6.32755L6.57226 40.6778C5.3134 43.4156 7.97238 46.298 10.803 45.2549L24.7662 40.109C25.0221 40.0147 25.2999 40.0156 25.5494 40.1082L39.4193 45.254C42.2261 46.2953 44.9254 43.4347 43.7146 40.6933Z"
+          stroke={LAVA_STROKE}
+          strokeWidth={2.25825}
+        />
+      </g>
       <defs>
-        <linearGradient id="phxPtrBody" x1="1" y1="1" x2="12" y2="18" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#67E8F9" />
-          <stop offset="1" stopColor="#0284C7" />
+        <linearGradient
+          id="phxLavaPtrFill"
+          x1="12"
+          y1="6"
+          x2="38"
+          y2="46"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor={LAVA_HI} />
+          <stop offset="1" stopColor={LAVA_LO} />
         </linearGradient>
+        <filter
+          id="phxLavaPtrShadow"
+          x={0.602397}
+          y={0.952444}
+          width={49.0584}
+          height={52.428}
+          filterUnits="userSpaceOnUse"
+          colorInterpolationFilters="sRGB"
+        >
+          <feFlood floodOpacity={0} result="BackgroundImageFix" />
+          <feColorMatrix
+            in="SourceAlpha"
+            type="matrix"
+            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+            result="hardAlpha"
+          />
+          <feOffset dy={2.25825} />
+          <feGaussianBlur stdDeviation={2.25825} />
+          <feComposite in2="hardAlpha" operator="out" />
+          <feColorMatrix
+            type="matrix"
+            values="0 0 0 0 0.98 0 0 0 0 0.35 0 0 0 0 0.08 0 0 0 0.28 0"
+          />
+          <feBlend mode="normal" in2="BackgroundImageFix" result="drop" />
+          <feBlend mode="normal" in="SourceGraphic" in2="drop" result="shape" />
+        </filter>
       </defs>
-      <path
-        d="M1.2 1.1 L1.2 15.4 L5 11.8 L8.2 18.6 L11 17.2 L7.7 10.3 L13.2 10.3 Z"
-        fill="url(#phxPtrBody)"
-        stroke="#0E7490"
-        strokeWidth="1"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M2.4 3 L2.55 12.2 L5.1 9.7"
-        stroke="#ECFEFF"
-        strokeWidth="0.9"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        opacity="0.55"
-      />
     </svg>
   );
 }
 
 function HandClick() {
   return (
-    <svg viewBox="0 0 20 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+    <svg viewBox="0 0 20 24" width={20} height={24} fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
       <defs>
-        <linearGradient id="phxHandClick" x1="6" y1="2" x2="16" y2="20" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#67E8F9" />
-          <stop offset="1" stopColor="#0284C7" />
+        <linearGradient id="phxHandClickLava" x1="6" y1="2" x2="16" y2="20" gradientUnits="userSpaceOnUse">
+          <stop stopColor={LAVA_HI} />
+          <stop offset="1" stopColor={LAVA_LO} />
         </linearGradient>
       </defs>
       <g
-        fill="url(#phxHandClick)"
-        stroke="#0E7490"
+        fill="url(#phxHandClickLava)"
+        stroke={LAVA_STROKE}
         strokeWidth="1"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -121,16 +161,16 @@ function HandClick() {
 
 function HandOpen() {
   return (
-    <svg viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+    <svg viewBox="0 0 22 22" width={22} height={22} fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
       <defs>
-        <linearGradient id="phxHandOpen" x1="6" y1="4" x2="18" y2="20" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#67E8F9" />
-          <stop offset="1" stopColor="#0284C7" />
+        <linearGradient id="phxHandOpenLava" x1="6" y1="4" x2="18" y2="20" gradientUnits="userSpaceOnUse">
+          <stop stopColor={LAVA_HI} />
+          <stop offset="1" stopColor={LAVA_LO} />
         </linearGradient>
       </defs>
       <g
-        fill="url(#phxHandOpen)"
-        stroke="#0E7490"
+        fill="url(#phxHandOpenLava)"
+        stroke={LAVA_STROKE}
         strokeWidth="1"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -146,16 +186,16 @@ function HandOpen() {
 
 function HandClosed() {
   return (
-    <svg viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+    <svg viewBox="0 0 22 22" width={22} height={22} fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
       <defs>
-        <linearGradient id="phxHandClosed" x1="6" y1="6" x2="18" y2="20" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#67E8F9" />
-          <stop offset="1" stopColor="#0369A1" />
+        <linearGradient id="phxHandClosedLava" x1="6" y1="6" x2="18" y2="20" gradientUnits="userSpaceOnUse">
+          <stop stopColor={LAVA_HI} />
+          <stop offset="1" stopColor="#C2410C" />
         </linearGradient>
       </defs>
       <g
-        fill="url(#phxHandClosed)"
-        stroke="#0E7490"
+        fill="url(#phxHandClosedLava)"
+        stroke={LAVA_STROKE}
         strokeWidth="1"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -170,8 +210,7 @@ function HandClosed() {
 }
 
 /**
- * Compact cyan pointer tip + mode API for Chaos Desk.
- * Tube trails come from TubesCursor (threejs-components).
+ * Magic UI SmoothCursor + lava orange mode glyphs for Chaos Desk.
  * Disabled on touch / reduced-motion.
  */
 export default function PhoenixCursorTrail({ children }: { children: ReactNode }) {
@@ -220,11 +259,6 @@ export default function PhoenixCursorTrail({ children }: { children: ReactNode }
     }
   }, []);
 
-  const tipRef = useRef<HTMLSpanElement>(null);
-  const targetRef = useRef<Point>({ x: -100, y: -100 });
-  const activeRef = useRef(false);
-  const rafRef = useRef<number>(0);
-
   useEffect(() => {
     if (!enabled) return;
     document.querySelector('.phx-page')?.classList.add('phx-cursor-active');
@@ -237,39 +271,15 @@ export default function PhoenixCursorTrail({ children }: { children: ReactNode }
     if (!enabled) return;
 
     const onMove = (e: PointerEvent) => {
-      targetRef.current = { x: e.clientX, y: e.clientY };
-      activeRef.current = true;
       applyAutoMode(e.target);
-    };
-
-    const onLeave = () => {
-      activeRef.current = false;
     };
 
     window.addEventListener('pointermove', onMove, { passive: true });
     window.addEventListener('pointerdown', onMove, { passive: true });
-    document.documentElement.addEventListener('mouseleave', onLeave);
-
-    const tick = () => {
-      const hand = modeRef.current !== 'pointer';
-      const target = targetRef.current;
-      const tip = tipRef.current;
-      if (tip) {
-        const ox = hand ? -7 : -1.2;
-        const oy = hand ? -4 : -1.1;
-        tip.style.transform = `translate3d(${target.x + ox}px, ${target.y + oy}px, 0)`;
-        tip.style.opacity = activeRef.current ? '1' : '0';
-      }
-      rafRef.current = requestAnimationFrame(tick);
-    };
-
-    rafRef.current = requestAnimationFrame(tick);
 
     return () => {
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerdown', onMove);
-      document.documentElement.removeEventListener('mouseleave', onLeave);
-      cancelAnimationFrame(rafRef.current);
     };
   }, [applyAutoMode, enabled]);
 
@@ -281,22 +291,26 @@ export default function PhoenixCursorTrail({ children }: { children: ReactNode }
     ) : mode === 'click' ? (
       <HandClick />
     ) : (
-      <PointerArrow />
+      <LavaPointer />
     );
 
   return (
     <CursorTrailContext.Provider value={api}>
       {children}
       {enabled && (
-        <span
-          ref={tipRef}
-          className="phx-cursor-tip"
-          data-mode={mode}
-          data-intensity={intensity}
-          aria-hidden
-        >
-          {tipGlyph}
-        </span>
+        <SmoothCursor
+          enableRotation={mode === 'pointer'}
+          cursor={
+            <span
+              className="phx-cursor-tip"
+              data-mode={mode}
+              data-intensity={intensity}
+              aria-hidden
+            >
+              {tipGlyph}
+            </span>
+          }
+        />
       )}
     </CursorTrailContext.Provider>
   );
