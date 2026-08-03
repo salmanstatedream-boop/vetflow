@@ -27,6 +27,7 @@ import {
   parseWorkflowPayload,
   validateWorkflowComplete,
   WorkflowConsultDraftSchema,
+  type CompleteWorkflowConsultationInput,
 } from '@/lib/consultations/workflow-validation';
 import { enrichWorkflowPayload } from '@/lib/consultations/workflow-chart';
 import { workflowToSoap } from '@/lib/consultations/workflow-to-soap';
@@ -703,14 +704,21 @@ async function scheduleWorkflowReminders(
   payload: WorkflowPayload
 ) {
   if (payload.workflowType === 'vaccination') {
-    const vaccine = payload.sections.process.vaccines?.[0];
-    if (vaccine?.nextDueDate) {
+    const vaccines = payload.sections.process.vaccines ?? [];
+    const withDue = vaccines.filter((v) => v.nextDueDate?.trim());
+    const primary = withDue[0];
+    const farthest = withDue.reduce<(typeof withDue)[number] | null>((best, v) => {
+      if (!best) return v;
+      return (v.nextDueDate || '') > (best.nextDueDate || '') ? v : best;
+    }, null);
+    const target = farthest || primary;
+    if (target?.nextDueDate) {
       await createWorkflowDueAppointment(
         supabase,
         ctx,
         visit,
-        vaccine.nextDueDate.slice(0, 10),
-        `Vaccination booster â€” ${vaccine.name}`,
+        target.nextDueDate.slice(0, 10),
+        `Vaccination booster — ${target.name || 'vaccine'}`,
         'vaccination'
       );
     }
@@ -723,7 +731,7 @@ async function scheduleWorkflowReminders(
         ctx,
         visit,
         next.slice(0, 10),
-        `Deworming follow-up â€” ${payload.sections.administration.dewormerName || 'dewormer'}`,
+        `Deworming follow-up — ${payload.sections.administration.dewormerName || 'dewormer'}`,
         'deworming'
       );
     }
@@ -762,7 +770,11 @@ export async function completeWorkflowConsultationAction(payload: unknown) {
     }
 
     const workflowPayload = enrichWorkflowPayload(rawPayload, ctx.userId);
-    const validationError = validateWorkflowComplete(workflowPayload);
+    const validationError = validateWorkflowComplete(
+      workflowPayload,
+      parsed.noPrescriptionNeeded,
+      parsed.prescriptionItems
+    );
     if (validationError) {
       throw new Error(validationError);
     }
@@ -849,16 +861,74 @@ export async function completeWorkflowConsultationAction(payload: unknown) {
       }
     }
 
-    if (parsed.noPrescriptionNeeded) {
+    const administeredProductLines: CompleteWorkflowConsultationInput['prescriptionItems'] = [];
+    if (workflowPayload.workflowType === 'vaccination') {
+      for (const vaccine of workflowPayload.sections.process.vaccines ?? []) {
+        if (!vaccine.productId || !vaccine.name?.trim()) continue;
+        administeredProductLines.push({
+          productId: vaccine.productId,
+          medicineName: vaccine.name,
+          dosage: vaccine.dose || '1 dose',
+          frequency: 'once',
+          duration: 'once',
+          quantityRequested: 1,
+          instructions: vaccine.nextDueDate
+            ? `Valid until ${vaccine.nextDueDate}`
+            : undefined,
+        });
+      }
+    }
+    if (workflowPayload.workflowType === 'deworming') {
+      const admin = workflowPayload.sections.administration;
+      if (admin.productId && admin.dewormerName?.trim()) {
+        administeredProductLines.push({
+          productId: admin.productId,
+          medicineName: admin.dewormerName,
+          dosage: admin.doseGiven || '1 dose',
+          frequency: 'once',
+          duration: 'once',
+          quantityRequested: 1,
+          instructions: admin.nextDoseDate
+            ? `Valid until ${admin.nextDoseDate}`
+            : undefined,
+        });
+      }
+    }
+
+    const rxItems = parsed.noPrescriptionNeeded
+      ? administeredProductLines
+      : [...administeredProductLines, ...parsed.prescriptionItems];
+
+    const ownerNotes =
+      workflowPayload.workflowType === 'grooming'
+        ? workflowPayload.sections.complete.groomingNotes
+        : workflowPayload.workflowType === 'vaccination' ||
+            workflowPayload.workflowType === 'deworming'
+          ? workflowPayload.sections.communication.careInstructions
+          : undefined;
+
+    const treatmentWithNotes = [soapPartial.treatmentPlan, ownerNotes]
+      .filter(Boolean)
+      .join('\n');
+
+    if (rxItems.length > 0 || parsed.noPrescriptionNeeded) {
       await persistVisitPrescription({
         organizationId: ctx.organizationId!,
         branchId: visit.branch_id,
         visitId: visit.id,
         patientId: visit.patient_id,
         doctorId: ctx.userId,
-        prescriptionItems: [],
-        treatmentPlan: soapPartial.treatmentPlan,
-        noPrescriptionNeeded: true,
+        prescriptionItems: rxItems.map((item) => ({
+          productId: item.productId ?? null,
+          medicineName: item.medicineName,
+          dosage: item.dosage,
+          frequency: item.frequency,
+          duration: item.duration,
+          quantityRequested: item.quantityRequested,
+          instructions: item.instructions,
+        })),
+        treatmentPlan: treatmentWithNotes || soapPartial.treatmentPlan,
+        noPrescriptionNeeded: parsed.noPrescriptionNeeded && administeredProductLines.length === 0,
         activityBase,
         actorRole: ctx.role || 'doctor',
       });

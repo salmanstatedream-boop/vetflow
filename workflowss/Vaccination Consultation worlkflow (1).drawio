@@ -1,0 +1,138 @@
+<mxfile host="Electron">
+  <diagram name="Page-1" id="xkvkC7Gy15ktYtawLUFO">
+    <mxGraphModel dx="1414" dy="841" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="tW72k00l3qIYWvkyE0vV-1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=23;" value="Patietn brief" vertex="1">
+          <mxGeometry height="80" width="160" x="140" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=29;" value="Previous visits" vertex="1">
+          <mxGeometry height="70" width="160" x="140" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=26;" value="Consultation/histrory" vertex="1">
+          <mxGeometry height="80" width="160" x="140" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=23;" value="Diagnostics" vertex="1">
+          <mxGeometry height="70" width="160" x="140" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=32;" value="Vitals&lt;div&gt;Temp&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;Heart rate&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;Resp. rate&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;Weight&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;Body Condition&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="400" x="350" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=9;" value="" vertex="1">
+          <mxGeometry height="210" width="400" x="350" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Physical Examiniation (Text Box)" vertex="1">
+          <mxGeometry height="30" width="365" x="365" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Medical History (Text Box)" vertex="1">
+          <mxGeometry height="30" width="365" x="365" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Fitness Outcome (Drop Down Menu like in the current version)" vertex="1">
+          <mxGeometry height="30" width="365" x="367.5" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Vaccination Type (Drop down menu with options like First/Booster/Annual booster)" vertex="1">
+          <mxGeometry height="40" width="365" x="367.5" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-11" edge="1" parent="1" source="tW72k00l3qIYWvkyE0vV-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="tW72k00l3qIYWvkyE0vV-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-12" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="2nd page" vertex="1">
+          <mxGeometry height="30" width="60" x="520" y="490" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-13" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="1st page" vertex="1">
+          <mxGeometry height="30" width="60" x="517.5" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-26" edge="1" parent="1" source="tW72k00l3qIYWvkyE0vV-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.75;exitDx=0;exitDy=0;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="210" y="773" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-14" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=9;" value="" vertex="1">
+          <mxGeometry height="310" width="400" x="347.5" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-15" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="vaccine (Heading)" vertex="1">
+          <mxGeometry height="30" width="110" x="366" y="550" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-16" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Type of vaccination (Drop down menu with contents like names of vacines like Biofel PCh ideally from the inventory not full inventory just vaccines)" vertex="1">
+          <mxGeometry height="50" width="365" x="366" y="590" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-18" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Administered on (Date input)" vertex="1">
+          <mxGeometry height="60" width="170" x="366" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-32" edge="1" parent="1" source="tW72k00l3qIYWvkyE0vV-19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="820" y="695" />
+              <mxPoint x="820" y="880" />
+            </Array>
+            <mxPoint x="600" y="880" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-19" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Valid upto (Date input)" vertex="1">
+          <mxGeometry height="60" width="170" x="561" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-21" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Type of vaccination (Drop down menu with contents like names of vacines like Biofel PCh ideally from the inventory not full inventory just vaccines)" vertex="1">
+          <mxGeometry height="50" width="365" x="366" y="720" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-22" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Administered on (Date input)" vertex="1">
+          <mxGeometry height="60" width="170" x="366" y="780" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-31" edge="1" parent="1" source="tW72k00l3qIYWvkyE0vV-23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="180" y="920" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-23" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Valid upto (Date input)" vertex="1">
+          <mxGeometry height="60" width="170" x="561" y="780" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-24" edge="1" parent="1" source="tW72k00l3qIYWvkyE0vV-14" style="endArrow=classic;html=1;rounded=0;exitX=0;exitY=0.25;exitDx=0;exitDy=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="330" y="630" as="sourcePoint" />
+            <mxPoint x="220" y="650" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-25" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="One becomes stared like important to filled&amp;nbsp;" vertex="1">
+          <mxGeometry height="30" width="60" x="90" y="630" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-27" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="second becomes optional" vertex="1">
+          <mxGeometry height="30" width="60" x="100" y="760" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-28" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=9;" value="" vertex="1">
+          <mxGeometry height="310" width="400" x="350" y="950" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-29" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="3rd page" vertex="1">
+          <mxGeometry height="30" width="60" x="517.5" y="890" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-30" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Prescription Rx" vertex="1">
+          <mxGeometry height="30" width="122.5" x="367.5" y="970" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-34" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="valid upto creates a new appointment &amp;amp; a reminder (updated on reception desk as vaccine schedule) for the pet vaccine on the date&amp;nbsp;&amp;nbsp;" vertex="1">
+          <mxGeometry height="30" width="220" x="70" y="940" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-37" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Consultation Summary" vertex="1">
+          <mxGeometry height="60" width="350" x="367.5" y="1010" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-38" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="No prescription needed for this visit (checker box as our standard visit type)" vertex="1">
+          <mxGeometry height="60" width="350" x="367.5" y="1080" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-39" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Items Dispensed - add medicine option as out standard visit type" vertex="1">
+          <mxGeometry height="60" width="350" x="367.5" y="1150" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-40" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Pause Consultation button as other consultations" vertex="1">
+          <mxGeometry height="30" width="60" x="50" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-42" edge="1" parent="1" source="tW72k00l3qIYWvkyE0vV-14" style="edgeStyle=none;orthogonalLoop=1;jettySize=auto;html=1;rounded=0;exitX=0.011;exitY=0.029;exitDx=0;exitDy=0;exitPerimeter=0;" value="">
+          <mxGeometry relative="1" width="100" as="geometry">
+            <Array as="points" />
+            <mxPoint x="240" y="550" as="sourcePoint" />
+            <mxPoint x="220" y="550" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tW72k00l3qIYWvkyE0vV-43" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="also add a text box for Notes (Which are shown as recommendatiuons in the owners copy of perscriptoin)" vertex="1">
+          <mxGeometry height="30" width="170" x="35" y="535" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

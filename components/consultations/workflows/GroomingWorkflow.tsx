@@ -1,14 +1,21 @@
 'use client';
 
-import type { GroomingWorkflowSections } from '@/lib/consultations/workflow-types';
+import { useState } from 'react';
+import type {
+  FitnessOutcome,
+  GroomingConditionFlag,
+  GroomingWorkflowSections,
+  WorkflowPrescriptionItem,
+} from '@/lib/consultations/workflow-types';
+import { GROOMING_TYPE_OPTIONS } from '@/lib/consultations/workflow-config';
 import WorkflowSectionCard, {
   fieldClass,
   labelClass,
   textareaClass,
 } from '@/components/consultations/workflows/WorkflowSectionCard';
-import ChecklistFields from '@/components/consultations/workflows/ChecklistFields';
-import ProcessStepTracker from '@/components/consultations/workflows/ProcessStepTracker';
-import WorkflowDocumentUpload from '@/components/consultations/workflows/WorkflowDocumentUpload';
+import WorkflowRxPanel, {
+  type CatalogProduct,
+} from '@/components/consultations/workflows/WorkflowRxPanel';
 
 export type StaffMember = { id: string; name: string };
 
@@ -19,305 +26,255 @@ type GroomingWorkflowProps = {
   staffMembers: StaffMember[];
   visitId: string;
   patientId: string;
+  visitReason?: string;
+  medicineProducts: CatalogProduct[];
+  noPrescriptionNeeded: boolean;
+  onNoPrescriptionNeededChange: (value: boolean) => void;
+  prescriptionItems: WorkflowPrescriptionItem[];
+  onPrescriptionItemsChange: (items: WorkflowPrescriptionItem[]) => void;
 };
 
-const NOTIFICATION_CHANNELS = ['SMS', 'Email', 'App', 'WhatsApp'];
+function numOrEmpty(v: number | null | undefined): string {
+  return v == null || Number.isNaN(v) ? '' : String(v);
+}
 
 export default function GroomingWorkflow({
   stepId,
   sections,
   onChange,
-  staffMembers,
-  visitId,
-  patientId,
+  visitReason,
+  medicineProducts,
+  noPrescriptionNeeded,
+  onNoPrescriptionNeededChange,
+  prescriptionItems,
+  onPrescriptionItemsChange,
 }: GroomingWorkflowProps) {
+  const [customCondition, setCustomCondition] = useState('');
   const patch = <K extends keyof GroomingWorkflowSections>(
     key: K,
     value: GroomingWorkflowSections[K]
   ) => onChange({ ...sections, [key]: value });
 
-  if (stepId === 'arrival') {
-    const s = sections.arrival;
-    return (
-      <WorkflowSectionCard title="Arrival / Check-in" description="Confirm patient details and pre-groom checks">
-        <ChecklistFields
-          items={[
-            { key: 'confirmOwnerPet', label: 'Confirm owner and pet' },
-            { key: 'verifyAppointment', label: 'Verify appointment' },
-            { key: 'vaccinationsVerified', label: 'Vaccinations verified' },
-            { key: 'fleasTicksCheck', label: 'Fleas/ticks check' },
-            { key: 'emergencyContact', label: 'Emergency contact', type: 'text' },
-            { key: 'groomingHistoryNotes', label: 'Grooming history', type: 'textarea' },
-            { key: 'medicalAlerts', label: 'Medical alerts', type: 'textarea' },
-            { key: 'behaviorCheck', label: 'Behavior check', type: 'text' },
-            { key: 'specialNeeds', label: 'Senior/pregnant/special needs', type: 'text' },
-          ]}
-          values={s}
-          onChange={(key, value) => patch('arrival', { ...s, [key]: value })}
-        />
-        <WorkflowDocumentUpload
-          visitId={visitId}
-          patientId={patientId}
-          category="grooming_before"
-          label="Upload before photos"
-          documentIds={s.beforePhotoIds ?? []}
-          onDocumentIdsChange={(ids) => patch('arrival', { ...s, beforePhotoIds: ids })}
-        />
-      </WorkflowSectionCard>
+  if (stepId === 'assessment') {
+    const assessment = sections.assessment;
+    const flags: GroomingConditionFlag[] = assessment.conditionFlags ?? [];
+    const typeOptions = Array.from(
+      new Set([
+        ...GROOMING_TYPE_OPTIONS,
+        ...(visitReason?.trim() ? [visitReason.trim()] : []),
+        ...(assessment.groomingType ? [assessment.groomingType] : []),
+      ])
     );
-  }
 
-  if (stepId === 'assignment') {
-    const s = sections.assignment;
     return (
-      <WorkflowSectionCard title="Groomer Assignment">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="space-y-4">
+        <WorkflowSectionCard title="Vitals">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {(
+              [
+                ['temperatureC', 'Temp (°C)'],
+                ['heartRateBpm', 'Heart rate'],
+                ['respiratoryRate', 'Resp. rate'],
+                ['weightKg', 'Weight (kg)'],
+                ['bodyConditionScore', 'Body condition'],
+              ] as const
+            ).map(([key, label]) => (
+              <div key={key}>
+                <label className={labelClass}>{label}</label>
+                <input
+                  type="number"
+                  step="any"
+                  value={numOrEmpty(assessment[key])}
+                  onChange={(e) =>
+                    patch('assessment', {
+                      ...assessment,
+                      [key]: e.target.value === '' ? null : Number(e.target.value),
+                    })
+                  }
+                  className={fieldClass}
+                />
+              </div>
+            ))}
+          </div>
+        </WorkflowSectionCard>
+
+        <WorkflowSectionCard title="Exam & Grooming">
           <div>
-            <label className={labelClass}>Groomer</label>
+            <label className={labelClass}>Medical history</label>
+            <textarea
+              value={assessment.medicalHistory ?? ''}
+              onChange={(e) => patch('assessment', { ...assessment, medicalHistory: e.target.value })}
+              className={textareaClass}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Physical examination</label>
+            <textarea
+              value={assessment.physicalExam ?? ''}
+              onChange={(e) => patch('assessment', { ...assessment, physicalExam: e.target.value })}
+              className={textareaClass}
+              placeholder="Full body scan notes / recommendations"
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Condition checks</label>
+            <div className="flex flex-wrap gap-2">
+              {flags.map((flag) => (
+                <label
+                  key={flag.key}
+                  className="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-md border border-outline-variant/40 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={flag.checked}
+                    onChange={(e) =>
+                      patch('assessment', {
+                        ...assessment,
+                        conditionFlags: flags.map((f) =>
+                          f.key === flag.key ? { ...f, checked: e.target.checked } : f
+                        ),
+                      })
+                    }
+                  />
+                  {flag.label}
+                </label>
+              ))}
+            </div>
+            <div className="flex gap-2 mt-2">
+              <input
+                value={customCondition}
+                onChange={(e) => setCustomCondition(e.target.value)}
+                placeholder="Add custom condition"
+                className={fieldClass}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const label = customCondition.trim();
+                  if (!label) return;
+                  const key = label.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+                  if (flags.some((f) => f.key === key)) return;
+                  patch('assessment', {
+                    ...assessment,
+                    conditionFlags: [...flags, { key, label, checked: true }],
+                  });
+                  setCustomCondition('');
+                }}
+                className="text-[10px] font-bold text-primary px-3 rounded-lg border border-primary/30 shrink-0"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+          <div>
+            <label className={labelClass}>Grooming type *</label>
             <select
-              value={s.groomerId ?? ''}
-              onChange={(e) => {
-                const member = staffMembers.find((m) => m.id === e.target.value);
-                patch('assignment', {
-                  ...s,
-                  groomerId: e.target.value,
-                  groomerName: member?.name ?? '',
-                });
-              }}
+              value={assessment.groomingType ?? ''}
+              onChange={(e) =>
+                patch('assessment', { ...assessment, groomingType: e.target.value })
+              }
               className={fieldClass}
             >
-              <option value="">Select groomer</option>
-              {staffMembers.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name}
+              <option value="">Select type</option>
+              {typeOptions.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
                 </option>
               ))}
             </select>
           </div>
-          <div>
-            <label className={labelClass}>Grooming station</label>
+        </WorkflowSectionCard>
+      </div>
+    );
+  }
+
+  if (stepId === 'wrapup') {
+    const assessment = sections.assessment;
+    const complete = sections.complete;
+    const checked = (assessment.conditionFlags ?? [])
+      .filter((f) => f.checked)
+      .map((f) => f.label)
+      .join(', ');
+    const summary = [
+      `Grooming type: ${assessment.groomingType || '—'}`,
+      checked ? `Conditions: ${checked}` : null,
+      `Fitness: ${assessment.fitnessOutcome || '—'}`,
+      assessment.vetConsultEnabled ? 'Vet consult: yes' : 'Vet consult: no',
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    return (
+      <div className="space-y-4">
+        <WorkflowSectionCard title="Services">
+          <label className="flex items-center gap-2 text-xs text-on-surface cursor-pointer">
             <input
-              value={s.station ?? ''}
-              onChange={(e) => patch('assignment', { ...s, station: e.target.value })}
-              className={fieldClass}
+              type="checkbox"
+              checked={Boolean(assessment.vetConsultEnabled)}
+              onChange={(e) =>
+                patch('assessment', { ...assessment, vetConsultEnabled: e.target.checked })
+              }
             />
-          </div>
+            Vet consult
+          </label>
+          {assessment.vetConsultEnabled ? (
+            <div className="space-y-3 pt-2 border-t border-outline-variant/30">
+              <div>
+                <label className={labelClass}>Vet consultation / treatment plan *</label>
+                <textarea
+                  value={assessment.treatmentPlan ?? ''}
+                  onChange={(e) =>
+                    patch('assessment', { ...assessment, treatmentPlan: e.target.value })
+                  }
+                  className={textareaClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Administered medication</label>
+                <textarea
+                  value={assessment.administeredMedication ?? ''}
+                  onChange={(e) =>
+                    patch('assessment', {
+                      ...assessment,
+                      administeredMedication: e.target.value,
+                    })
+                  }
+                  className={textareaClass}
+                />
+              </div>
+            </div>
+          ) : null}
           <div>
-            <label className={labelClass}>Est. start</label>
-            <input
-              type="datetime-local"
-              value={s.estimatedStart ?? ''}
-              onChange={(e) => patch('assignment', { ...s, estimatedStart: e.target.value })}
+            <label className={labelClass}>Fitness outcome *</label>
+            <select
+              value={assessment.fitnessOutcome ?? ''}
+              onChange={(e) =>
+                patch('assessment', {
+                  ...assessment,
+                  fitnessOutcome: e.target.value as FitnessOutcome,
+                })
+              }
               className={fieldClass}
-            />
+            >
+              <option value="">Select outcome</option>
+              <option value="fit">Fit</option>
+              <option value="not_fit">Not fit</option>
+            </select>
           </div>
-          <div>
-            <label className={labelClass}>Est. completion</label>
-            <input
-              type="datetime-local"
-              value={s.estimatedCompletion ?? ''}
-              onChange={(e) => patch('assignment', { ...s, estimatedCompletion: e.target.value })}
-              className={fieldClass}
-            />
-          </div>
-        </div>
-      </WorkflowSectionCard>
-    );
-  }
+        </WorkflowSectionCard>
 
-  if (stepId === 'assessment') {
-    const s = sections.assessment;
-    return (
-      <WorkflowSectionCard title="Grooming Assessment">
-        <ChecklistFields
-          items={[
-            { key: 'coatCondition', label: 'Coat condition *', type: 'text' },
-            { key: 'matsTangles', label: 'Mats/tangles', type: 'text' },
-            { key: 'skinCondition', label: 'Skin condition', type: 'text' },
-            { key: 'earCondition', label: 'Ear condition', type: 'text' },
-            { key: 'nailLength', label: 'Nail length', type: 'text' },
-            { key: 'analGlands', label: 'Anal glands', type: 'text' },
-            { key: 'fleasTicks', label: 'Fleas/ticks', type: 'text' },
-            { key: 'weightKg', label: 'Weight (kg)', type: 'number' },
-            { key: 'behaviorToday', label: 'Behavior today', type: 'text' },
-            { key: 'abnormalFindings', label: 'Abnormal findings' },
-            { key: 'vetConsultRecommended', label: 'Vet consultation recommended' },
-            { key: 'assessmentNotes', label: 'Assessment notes', type: 'textarea' },
-          ]}
-          values={s}
-          onChange={(key, value) => patch('assessment', { ...s, [key]: value })}
+        <WorkflowRxPanel
+          summary={summary}
+          notes={complete.groomingNotes ?? ''}
+          onNotesChange={(value) => patch('complete', { ...complete, groomingNotes: value })}
+          notesLabel="Notes / recommendations (shown on owner prescription copy) *"
+          noPrescriptionNeeded={noPrescriptionNeeded}
+          onNoPrescriptionNeededChange={onNoPrescriptionNeededChange}
+          prescriptionItems={prescriptionItems}
+          onPrescriptionItemsChange={onPrescriptionItemsChange}
+          medicineProducts={medicineProducts}
         />
-      </WorkflowSectionCard>
-    );
-  }
-
-  if (stepId === 'process') {
-    return (
-      <WorkflowSectionCard title="Grooming Process" description="Track each grooming step">
-        <ProcessStepTracker
-          steps={sections.process}
-          onChange={(steps) => patch('process', steps)}
-        />
-      </WorkflowSectionCard>
-    );
-  }
-
-  if (stepId === 'upsells') {
-    const s = sections.upsells;
-    return (
-      <WorkflowSectionCard title="Upsell Opportunities">
-        <ChecklistFields
-          items={[
-            { key: 'severeMatting', label: 'Severe matting' },
-            { key: 'fleaTickTreatment', label: 'Flea/tick treatment' },
-            { key: 'medicatedShampoo', label: 'Medicated shampoo' },
-            { key: 'deSheddingTreatment', label: 'De-shedding treatment' },
-            { key: 'teethBrushing', label: 'Teeth brushing' },
-            { key: 'nailGrinding', label: 'Nail grinding' },
-            { key: 'extraTimeRequired', label: 'Extra time required' },
-            { key: 'ownerApprovalRequired', label: 'Owner approval required' },
-            { key: 'additionalFee', label: 'Additional fee', type: 'number' },
-            { key: 'upsellNotes', label: 'Notes', type: 'textarea' },
-          ]}
-          values={s}
-          onChange={(key, value) => patch('upsells', { ...s, [key]: value })}
-        />
-      </WorkflowSectionCard>
-    );
-  }
-
-  if (stepId === 'complete') {
-    const s = sections.complete;
-    return (
-      <WorkflowSectionCard title="Grooming Complete">
-        <ChecklistFields
-          items={[
-            { key: 'coatEven', label: 'Coat even/neat' },
-            { key: 'nailsTrimmed', label: 'Nails trimmed' },
-            { key: 'earsCleaned', label: 'Ears cleaned' },
-            { key: 'eyesCleaned', label: 'Eyes cleaned' },
-            { key: 'pawsTrimmed', label: 'Paws trimmed' },
-            { key: 'sanitaryClean', label: 'Sanitary area clean' },
-            { key: 'requestsCompleted', label: 'Requests completed' },
-            { key: 'behaviorGood', label: 'Behavior good' },
-            { key: 'groomingNotes', label: 'Grooming notes *', type: 'textarea' },
-          ]}
-          values={s}
-          onChange={(key, value) => patch('complete', { ...s, [key]: value })}
-        />
-        <WorkflowDocumentUpload
-          visitId={visitId}
-          patientId={patientId}
-          category="grooming_after"
-          label="Upload after photos"
-          documentIds={s.afterPhotoIds ?? []}
-          onDocumentIdsChange={(ids) => patch('complete', { ...s, afterPhotoIds: ids })}
-        />
-      </WorkflowSectionCard>
-    );
-  }
-
-  if (stepId === 'quality') {
-    const s = sections.quality;
-    return (
-      <WorkflowSectionCard title="Quality Review">
-        <ChecklistFields
-          items={[
-            { key: 'overallQuality', label: 'Overall quality', type: 'text' },
-            { key: 'allServicesDone', label: 'All services done' },
-            { key: 'missedAreas', label: 'Missed areas', type: 'textarea' },
-            { key: 'upsellReviewed', label: 'Upsell services reviewed' },
-            { key: 'petComfort', label: 'Pet comfort', type: 'text' },
-          ]}
-          values={s}
-          onChange={(key, value) => patch('quality', { ...s, [key]: value })}
-        />
-      </WorkflowSectionCard>
-    );
-  }
-
-  if (stepId === 'notification') {
-    const s = sections.notification;
-    return (
-      <WorkflowSectionCard title="Customer Notification">
-        <ChecklistFields
-          items={[
-            { key: 'readyForPickup', label: 'Pet ready for pickup' },
-            { key: 'summarySent', label: 'Summary prepared' },
-            { key: 'invoiceEstimateNotes', label: 'Invoice estimate notes', type: 'textarea' },
-          ]}
-          values={s}
-          onChange={(key, value) => patch('notification', { ...s, [key]: value })}
-        />
-        <div>
-          <p className={labelClass}>Notification channels (recorded only)</p>
-          <div className="flex flex-wrap gap-2">
-            {NOTIFICATION_CHANNELS.map((ch) => {
-              const selected = s.channels?.includes(ch);
-              return (
-                <button
-                  key={ch}
-                  type="button"
-                  onClick={() => {
-                    const channels = s.channels ?? [];
-                    patch('notification', {
-                      ...s,
-                      channels: selected
-                        ? channels.filter((c) => c !== ch)
-                        : [...channels, ch],
-                    });
-                  }}
-                  className={`text-[10px] font-semibold px-2 py-1 rounded-md border ${
-                    selected
-                      ? 'bg-primary/20 border-primary text-primary'
-                      : 'border-outline-variant/50 text-on-surface-variant'
-                  }`}
-                >
-                  {ch}
-                </button>
-              );
-            })}
-          </div>
-          <p className="text-[10px] text-on-surface-variant/60 mt-2">
-            Delivery not configured — preferences are saved to the record.
-          </p>
-        </div>
-      </WorkflowSectionCard>
-    );
-  }
-
-  if (stepId === 'checkout') {
-    const s = sections.checkout;
-    return (
-      <WorkflowSectionCard title="Checkout Summary" description="Finalize workflow to proceed to billing">
-        <ChecklistFields
-          items={[
-            { key: 'servicesConfirmed', label: 'Services confirmed' },
-            { key: 'productsNotes', label: 'Products', type: 'textarea' },
-            { key: 'discountNotes', label: 'Discounts', type: 'textarea' },
-            { key: 'tips', label: 'Tips', type: 'number' },
-            { key: 'paymentMethodNotes', label: 'Payment method notes', type: 'text' },
-          ]}
-          values={s}
-          onChange={(key, value) => patch('checkout', { ...s, [key]: value })}
-        />
-      </WorkflowSectionCard>
-    );
-  }
-
-  if (stepId === 'report') {
-    return (
-      <WorkflowSectionCard title="Grooming Report" description="Review and complete the grooming workflow">
-        <p className="text-xs text-on-surface-variant">
-          Completing this workflow saves the grooming record to the pet&apos;s medical file and Grooming
-          Chart tab, then moves the visit to checkout.
-        </p>
-        <div className="text-[10px] text-on-surface-variant space-y-1 mt-2">
-          <p>Groomer: {sections.assignment.groomerName || '—'}</p>
-          <p>Coat: {sections.assessment.coatCondition || '—'}</p>
-          <p>Notes: {sections.complete.groomingNotes || '—'}</p>
-        </div>
-      </WorkflowSectionCard>
+      </div>
     );
   }
 

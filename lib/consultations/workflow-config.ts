@@ -50,6 +50,23 @@ export const DEWORMING_PROCESS_STEPS: { key: string; label: string }[] = [
   { key: 'observe', label: 'Observe 10–15 min' },
 ];
 
+export const GROOMING_CONDITION_PRESETS = [
+  { key: 'dehydration', label: 'Dehydration' },
+  { key: 'ticks', label: 'Ticks' },
+  { key: 'fungus', label: 'Fungus' },
+  { key: 'fleas', label: 'Fleas' },
+] as const;
+
+export const GROOMING_TYPE_OPTIONS = [
+  'Bath',
+  'Nail cutting',
+  'Full groom',
+  'Haircut / Trim',
+  'Ear cleaning',
+  'De-shedding',
+  'Other',
+] as const;
+
 export function createProcessSteps(keys: { key: string; label: string }[]): ProcessStep[] {
   return keys.map((k) => ({ key: k.key, label: k.label, status: 'not_started', notes: '' }));
 }
@@ -59,16 +76,16 @@ export const groomingWorkflowConfig: WorkflowConfig = {
   label: 'Grooming',
   badgeClass: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30',
   steps: [
-    { id: 'arrival', label: 'Arrival / Check-in' },
-    { id: 'assignment', label: 'Groomer Assignment' },
-    { id: 'assessment', label: 'Grooming Assessment' },
-    { id: 'process', label: 'Grooming Process' },
-    { id: 'upsells', label: 'Upsell Opportunities' },
-    { id: 'complete', label: 'Grooming Complete' },
-    { id: 'quality', label: 'Quality Review' },
-    { id: 'notification', label: 'Customer Notification' },
-    { id: 'checkout', label: 'Checkout Summary' },
-    { id: 'report', label: 'Grooming Report' },
+    {
+      id: 'assessment',
+      label: 'Exam & Grooming',
+      description: 'Vitals, history, condition checks & grooming type',
+    },
+    {
+      id: 'wrapup',
+      label: 'Services & Rx',
+      description: 'Notes, optional vet consult, prescription & summary',
+    },
   ],
   processStepKeys: GROOMING_PROCESS_STEPS,
 };
@@ -78,8 +95,16 @@ export const vaccinationWorkflowConfig: WorkflowConfig = {
   label: 'Vaccination',
   badgeClass: 'bg-green-500/15 text-green-300 border-green-500/30',
   steps: [
-    { id: 'clinical', label: 'Clinical', description: 'Screening, exam, vaccine plan & administration' },
-    { id: 'wrapup', label: 'Wrap-up', description: 'Documentation, owner comms & checkout' },
+    {
+      id: 'clinical',
+      label: 'Exam & Fitness',
+      description: 'Vitals, exam, fitness & vaccination type',
+    },
+    {
+      id: 'wrapup',
+      label: 'Vaccines & Rx',
+      description: 'Vaccine products, dates, notes & prescription',
+    },
   ],
   processStepKeys: VACCINATION_PROCESS_STEPS,
 };
@@ -89,16 +114,16 @@ export const dewormingWorkflowConfig: WorkflowConfig = {
   label: 'Deworming',
   badgeClass: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
   steps: [
-    { id: 'arrival', label: 'Arrival / Check-in' },
-    { id: 'triage', label: 'History & Triage' },
-    { id: 'exam', label: 'Veterinary Exam' },
-    { id: 'plan', label: 'Deworming Plan' },
-    { id: 'administration', label: 'Administration Process' },
-    { id: 'documentation', label: 'Documentation & Records' },
-    { id: 'communication', label: 'Owner Communication' },
-    { id: 'checkout', label: 'Checkout & Billing' },
-    { id: 'followUp', label: 'Follow-up & Aftercare' },
-    { id: 'report', label: 'Deworming Report' },
+    {
+      id: 'exam',
+      label: 'Exam & Fitness',
+      description: 'Vitals, exam, fitness & deworming type',
+    },
+    {
+      id: 'treatment',
+      label: 'Deworming & Rx',
+      description: 'Dewormer product, dates, notes & prescription',
+    },
   ],
   processStepKeys: DEWORMING_PROCESS_STEPS,
 };
@@ -112,4 +137,51 @@ export function getWorkflowConfig(workflowType: 'grooming' | 'vaccination' | 'de
     case 'deworming':
       return dewormingWorkflowConfig;
   }
+}
+
+export function normalizeWorkflowStepId(
+  workflowType: 'grooming' | 'vaccination' | 'deworming',
+  stepId: string
+): string {
+  const config = getWorkflowConfig(workflowType);
+  if (config.steps.some((s) => s.id === stepId)) return stepId;
+
+  if (workflowType === 'vaccination') {
+    const clinical = ['arrival', 'screening', 'exam', 'plan', 'process', 'clinical'];
+    const wrapup = ['documentation', 'communication', 'checkout', 'followUp', 'report', 'wrapup'];
+    if (clinical.includes(stepId)) return 'clinical';
+    if (wrapup.includes(stepId)) return 'wrapup';
+  }
+
+  if (workflowType === 'deworming') {
+    const exam = ['arrival', 'triage', 'exam', 'plan'];
+    const treatment = [
+      'administration',
+      'documentation',
+      'communication',
+      'checkout',
+      'followUp',
+      'report',
+      'treatment',
+      'wrapup',
+    ];
+    if (exam.includes(stepId)) return 'exam';
+    if (treatment.includes(stepId)) return 'treatment';
+  }
+
+  if (workflowType === 'grooming') {
+    const assessment = ['arrival', 'assignment', 'assessment', 'process', 'upsells'];
+    const wrapup = [
+      'complete',
+      'quality',
+      'notification',
+      'checkout',
+      'report',
+      'wrapup',
+    ];
+    if (assessment.includes(stepId)) return 'assessment';
+    if (wrapup.includes(stepId)) return 'wrapup';
+  }
+
+  return config.steps[0]?.id ?? stepId;
 }

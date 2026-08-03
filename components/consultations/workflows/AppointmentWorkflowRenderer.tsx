@@ -2,9 +2,12 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Lock } from 'lucide-react';
 import type { WorkflowVisitPurpose } from '@/lib/appointments/visit-purpose';
-import { getWorkflowConfig } from '@/lib/consultations/workflow-config';
+import {
+  getWorkflowConfig,
+  normalizeWorkflowStepId,
+} from '@/lib/consultations/workflow-config';
 import {
   createEmptyDewormingSections,
   createEmptyGroomingSections,
@@ -18,15 +21,23 @@ import type {
   VaccinationWorkflowPayload,
   VaccinationWorkflowSections,
   WorkflowConsultDraft,
+  WorkflowPrescriptionItem,
 } from '@/lib/consultations/workflow-types';
+import { validateWorkflowStep } from '@/lib/consultations/workflow-validation';
 import {
   completeWorkflowConsultationAction,
   saveWorkflowDraftAction,
 } from '@/lib/services/clinical-actions';
+import {
+  isDewormerProductType,
+  isVaccineProductType,
+  normalizeProductTypeSlug,
+} from '@/lib/inventory/product-types';
 import GroomingWorkflow, { type StaffMember } from '@/components/consultations/workflows/GroomingWorkflow';
 import VaccinationWorkflow from '@/components/consultations/workflows/VaccinationWorkflow';
 import DewormingWorkflow from '@/components/consultations/workflows/DewormingWorkflow';
 import ConsultationStepProgressBar from '@/components/consultation/ConsultationStepProgressBar';
+import type { CatalogProduct } from '@/components/consultations/workflows/WorkflowRxPanel';
 
 type CatalogService = {
   id: string;
@@ -46,6 +57,8 @@ type AppointmentWorkflowRendererProps = {
   initialDraft: WorkflowConsultDraft | null;
   staffMembers: StaffMember[];
   catalogServices: CatalogService[];
+  products: CatalogProduct[];
+  visitReason?: string;
 };
 
 function initialSections(workflowType: WorkflowVisitPurpose): WorkflowSectionsState {
@@ -65,22 +78,49 @@ function mergeSections(
 ): WorkflowSectionsState {
   const base = initialSections(workflowType);
   if (!partial) return base;
-  return { ...base, ...partial } as WorkflowSectionsState;
+  const merged = { ...base, ...partial } as WorkflowSectionsState;
+  if (workflowType === 'grooming') {
+    const groomingBase = base as GroomingWorkflowSections;
+    const groomingMerged = merged as GroomingWorkflowSections;
+    groomingMerged.assessment = {
+      ...groomingBase.assessment,
+      ...groomingMerged.assessment,
+      conditionFlags:
+        groomingMerged.assessment.conditionFlags?.length
+          ? groomingMerged.assessment.conditionFlags
+          : groomingBase.assessment.conditionFlags,
+    };
+  }
+  if (workflowType === 'vaccination') {
+    const vaxBase = base as VaccinationWorkflowSections;
+    const vaxMerged = merged as VaccinationWorkflowSections;
+    vaxMerged.exam = { ...vaxBase.exam, ...vaxMerged.exam };
+    vaxMerged.process = {
+      ...vaxBase.process,
+      ...vaxMerged.process,
+      vaccines:
+        vaxMerged.process.vaccines?.length > 0
+          ? vaxMerged.process.vaccines
+          : vaxBase.process.vaccines,
+    };
+  }
+  if (workflowType === 'deworming') {
+    const dewBase = base as DewormingWorkflowSections;
+    const dewMerged = merged as DewormingWorkflowSections;
+    dewMerged.exam = { ...dewBase.exam, ...dewMerged.exam };
+  }
+  return merged;
 }
 
-function normalizeWorkflowStepId(
+function computeInitialUnlock(
   workflowType: WorkflowVisitPurpose,
-  stepId: string,
-  steps: { id: string }[]
-): string {
-  if (workflowType === 'vaccination') {
-    const clinical = ['arrival', 'screening', 'exam', 'plan', 'process', 'clinical'];
-    const wrapup = ['documentation', 'communication', 'checkout', 'followUp', 'report', 'wrapup'];
-    if (clinical.includes(stepId)) return 'clinical';
-    if (wrapup.includes(stepId)) return 'wrapup';
-  }
-  if (steps.some((s) => s.id === stepId)) return stepId;
-  return steps[0]?.id ?? stepId;
+  sections: WorkflowSectionsState,
+  draftUnlock?: number
+): number {
+  if (typeof draftUnlock === 'number' && draftUnlock >= 1) return 1;
+  const firstStep = getWorkflowConfig(workflowType).steps[0]?.id ?? '';
+  const err = validateWorkflowStep(workflowType, firstStep, sections);
+  return err ? 0 : 1;
 }
 
 export default function AppointmentWorkflowRenderer({
@@ -90,20 +130,28 @@ export default function AppointmentWorkflowRenderer({
   initialDraft,
   staffMembers,
   catalogServices,
+  products,
+  visitReason,
 }: AppointmentWorkflowRendererProps) {
   const router = useRouter();
   const config = getWorkflowConfig(workflowType);
-  const [currentStepId, setCurrentStepId] = useState(() =>
-    normalizeWorkflowStepId(
-      workflowType,
-      initialDraft?.currentStepId ?? config.steps[0]?.id ?? 'arrival',
-      config.steps
-    )
-  );
   const [sections, setSections] = useState<WorkflowSectionsState>(() =>
     mergeSections(workflowType, initialDraft?.payload as Partial<WorkflowSectionsState>)
   );
-  const [serviceItems, setServiceItems] = useState(
+  const [currentStepId, setCurrentStepId] = useState(() =>
+    normalizeWorkflowStepId(
+      workflowType,
+      initialDraft?.currentStepId ?? config.steps[0]?.id ?? 'clinical'
+    )
+  );
+  const [maxUnlockedIndex, setMaxUnlockedIndex] = useState(() =>
+    computeInitialUnlock(
+      workflowType,
+      mergeSections(workflowType, initialDraft?.payload as Partial<WorkflowSectionsState>),
+      initialDraft?.maxUnlockedIndex
+    )
+  );
+  const [serviceItems] = useState(
     initialDraft?.serviceItems ??
       catalogServices
         .filter((s) => s.name.toLowerCase().includes(workflowType.replace('_', '')))
@@ -115,17 +163,43 @@ export default function AppointmentWorkflowRenderer({
           quantity: 1,
         }))
   );
+  const [noPrescriptionNeeded, setNoPrescriptionNeeded] = useState(
+    initialDraft?.noPrescriptionNeeded ?? false
+  );
+  const [prescriptionItems, setPrescriptionItems] = useState<WorkflowPrescriptionItem[]>(
+    initialDraft?.prescriptionItems ?? []
+  );
   const [saving, setSaving] = useState(false);
   const [completing, setCompleting] = useState(false);
   const [draftSaved, setDraftSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const vaccineProducts = useMemo(
+    () => products.filter((p) => isVaccineProductType(p.type)),
+    [products]
+  );
+  const dewormerProducts = useMemo(
+    () => products.filter((p) => isDewormerProductType(p.type)),
+    [products]
+  );
+  const medicineProducts = useMemo(
+    () =>
+      products.filter((p) => {
+        const slug = normalizeProductTypeSlug(p.type);
+        return slug === 'medicine' || isVaccineProductType(p.type) || isDewormerProductType(p.type);
+      }),
+    [products]
+  );
+
   const currentStepIndex = useMemo(
-    () => config.steps.findIndex((s) => s.id === currentStepId),
+    () => Math.max(0, config.steps.findIndex((s) => s.id === currentStepId)),
     [config.steps, currentStepId]
   );
 
-  const buildPayload = useCallback((): GroomingWorkflowPayload | VaccinationWorkflowPayload | DewormingWorkflowPayload => {
+  const buildPayload = useCallback(():
+    | GroomingWorkflowPayload
+    | VaccinationWorkflowPayload
+    | DewormingWorkflowPayload => {
     const groomingSections = sections as GroomingWorkflowSections;
     const vaccinationSections = sections as VaccinationWorkflowSections;
     const base = {
@@ -147,36 +221,74 @@ export default function AppointmentWorkflowRenderer({
     return base as GroomingWorkflowPayload | VaccinationWorkflowPayload | DewormingWorkflowPayload;
   }, [workflowType, sections]);
 
-  const saveDraft = useCallback(async () => {
-    setSaving(true);
-    setError(null);
-    const draft: WorkflowConsultDraft = {
-      kind: 'workflow',
+  const saveDraft = useCallback(
+    async (stepId = currentStepId, unlock = maxUnlockedIndex) => {
+      setSaving(true);
+      setError(null);
+      const draft: WorkflowConsultDraft = {
+        kind: 'workflow',
+        workflowType,
+        currentStepId: stepId,
+        payload: sections,
+        serviceItems,
+        noPrescriptionNeeded,
+        prescriptionItems,
+        maxUnlockedIndex: unlock,
+      };
+      const res = await saveWorkflowDraftAction(visitId, draft);
+      setSaving(false);
+      if (res.success) {
+        setDraftSaved(true);
+        setTimeout(() => setDraftSaved(false), 2000);
+        return true;
+      }
+      setError(res.error ?? 'Failed to save draft');
+      return false;
+    },
+    [
+      visitId,
       workflowType,
       currentStepId,
-      payload: sections,
+      sections,
       serviceItems,
-      noPrescriptionNeeded: true,
-    };
-    const res = await saveWorkflowDraftAction(visitId, draft);
-    setSaving(false);
-    if (res.success) {
-      setDraftSaved(true);
-      setTimeout(() => setDraftSaved(false), 2000);
-    } else {
-      setError(res.error ?? 'Failed to save draft');
+      noPrescriptionNeeded,
+      prescriptionItems,
+      maxUnlockedIndex,
+    ]
+  );
+
+  const trySelectStep = (stepId: string, index: number) => {
+    if (index > maxUnlockedIndex) {
+      setError('Complete previous sections first.');
+      return;
     }
-  }, [visitId, workflowType, currentStepId, sections, serviceItems]);
+    setError(null);
+    setCurrentStepId(stepId);
+  };
 
   const goNext = async () => {
-    await saveDraft();
-    const next = config.steps[currentStepIndex + 1];
-    if (next) setCurrentStepId(next.id);
+    const validationError = validateWorkflowStep(workflowType, currentStepId, sections);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    const nextIndex = currentStepIndex + 1;
+    const next = config.steps[nextIndex];
+    if (!next) return;
+    const nextUnlock = Math.max(maxUnlockedIndex, nextIndex);
+    setMaxUnlockedIndex(nextUnlock);
+    const saved = await saveDraft(next.id, nextUnlock);
+    if (!saved) return;
+    setError(null);
+    setCurrentStepId(next.id);
   };
 
   const goPrev = () => {
     const prev = config.steps[currentStepIndex - 1];
-    if (prev) setCurrentStepId(prev.id);
+    if (prev) {
+      setError(null);
+      setCurrentStepId(prev.id);
+    }
   };
 
   const handleComplete = async () => {
@@ -188,7 +300,8 @@ export default function AppointmentWorkflowRenderer({
       workflowType,
       workflowPayload: payload,
       serviceItems,
-      noPrescriptionNeeded: true,
+      noPrescriptionNeeded,
+      prescriptionItems: noPrescriptionNeeded ? [] : prescriptionItems,
     });
     setCompleting(false);
     if (res.success) {
@@ -208,19 +321,29 @@ export default function AppointmentWorkflowRenderer({
         {config.steps.map((step, index) => {
           const active = step.id === currentStepId;
           const done = index < currentStepIndex;
+          const locked = index > maxUnlockedIndex;
           return (
             <button
               key={step.id}
               type="button"
-              onClick={() => setCurrentStepId(step.id)}
-              className={`shrink-0 px-2.5 py-2 rounded-lg text-[10px] font-bold transition-all ${
+              onClick={() => trySelectStep(step.id, index)}
+              disabled={locked}
+              title={
+                locked
+                  ? `${step.label} — complete previous sections first`
+                  : step.description || step.label
+              }
+              className={`shrink-0 px-2.5 py-2 rounded-lg text-[10px] font-bold transition-all inline-flex items-center gap-1 ${
                 active
                   ? 'bg-primary text-white'
-                  : done
-                    ? 'text-primary bg-primary/10'
-                    : 'text-on-surface-variant/60 hover:bg-surface-container/40'
+                  : locked
+                    ? 'text-on-surface-variant/30 cursor-not-allowed'
+                    : done
+                      ? 'text-primary bg-primary/10'
+                      : 'text-on-surface-variant/60 hover:bg-surface-container/40'
               }`}
             >
+              {locked ? <Lock className="w-3 h-3" /> : null}
               {index + 1}. {step.label}
             </button>
           );
@@ -244,6 +367,12 @@ export default function AppointmentWorkflowRenderer({
           staffMembers={staffMembers}
           visitId={visitId}
           patientId={patientId}
+          visitReason={visitReason}
+          medicineProducts={medicineProducts}
+          noPrescriptionNeeded={noPrescriptionNeeded}
+          onNoPrescriptionNeededChange={setNoPrescriptionNeeded}
+          prescriptionItems={prescriptionItems}
+          onPrescriptionItemsChange={setPrescriptionItems}
         />
       ) : null}
       {workflowType === 'vaccination' ? (
@@ -254,6 +383,12 @@ export default function AppointmentWorkflowRenderer({
           staffMembers={staffMembers}
           visitId={visitId}
           patientId={patientId}
+          vaccineProducts={vaccineProducts}
+          medicineProducts={medicineProducts}
+          noPrescriptionNeeded={noPrescriptionNeeded}
+          onNoPrescriptionNeededChange={setNoPrescriptionNeeded}
+          prescriptionItems={prescriptionItems}
+          onPrescriptionItemsChange={setPrescriptionItems}
         />
       ) : null}
       {workflowType === 'deworming' ? (
@@ -264,6 +399,12 @@ export default function AppointmentWorkflowRenderer({
           staffMembers={staffMembers}
           visitId={visitId}
           patientId={patientId}
+          dewormerProducts={dewormerProducts}
+          medicineProducts={medicineProducts}
+          noPrescriptionNeeded={noPrescriptionNeeded}
+          onNoPrescriptionNeededChange={setNoPrescriptionNeeded}
+          prescriptionItems={prescriptionItems}
+          onPrescriptionItemsChange={setPrescriptionItems}
         />
       ) : null}
 

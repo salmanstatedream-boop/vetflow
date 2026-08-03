@@ -1217,6 +1217,13 @@ export default function ConsultationWorkspaceClient({
             initialDraft={workflowInitialDraft}
             staffMembers={staffMembers}
             catalogServices={catalogServices}
+            products={localProducts.map((p) => ({
+              id: p.id,
+              name: p.name,
+              type: p.type,
+              sellingPrice: p.sellingPrice,
+            }))}
+            visitReason={visitReason}
           />
         </div>
       ) : (

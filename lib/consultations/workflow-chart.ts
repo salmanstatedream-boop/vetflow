@@ -11,6 +11,7 @@ import type {
 import {
   createProcessSteps,
   DEWORMING_PROCESS_STEPS,
+  GROOMING_CONDITION_PRESETS,
   GROOMING_PROCESS_STEPS,
   VACCINATION_PROCESS_STEPS,
 } from '@/lib/consultations/workflow-config';
@@ -43,15 +44,27 @@ function upsellLabels(upsells: GroomingWorkflowPayload['sections']['upsells']): 
 
 export function buildGroomingChartSummary(payload: GroomingWorkflowPayload): GroomingWorkflowPayload['chartSummary'] {
   const { assignment, assessment, complete, quality, process } = payload.sections;
-  const services = process
-    .filter((s) => s.status === 'completed')
-    .map((s) => s.label)
+  const services = [
+    assessment.groomingType,
+    ...process.filter((s) => s.status === 'completed').map((s) => s.label),
+  ]
+    .filter(Boolean)
+    .join(', ');
+  const conditions = (assessment.conditionFlags ?? [])
+    .filter((f) => f.checked)
+    .map((f) => f.label)
     .join(', ');
   return {
     groomerName: assignment.groomerName,
     servicesPerformed: services,
     coatCondition: assessment.coatCondition,
-    skinEarNailFindings: [assessment.skinCondition, assessment.earCondition, assessment.nailLength]
+    skinEarNailFindings: [
+      assessment.physicalExam,
+      assessment.skinCondition,
+      assessment.earCondition,
+      assessment.nailLength,
+      conditions,
+    ]
       .filter(Boolean)
       .join('; '),
     behaviorNotes: assessment.behaviorToday || complete.groomingNotes,
@@ -221,7 +234,14 @@ export function createEmptyGroomingSections(): GroomingWorkflowPayload['sections
   return {
     arrival: {},
     assignment: {},
-    assessment: {},
+    assessment: {
+      fitnessOutcome: '',
+      conditionFlags: GROOMING_CONDITION_PRESETS.map((p) => ({
+        key: p.key,
+        label: p.label,
+        checked: false,
+      })),
+    },
     process: createProcessSteps(GROOMING_PROCESS_STEPS),
     upsells: {},
     complete: {},
@@ -235,9 +255,21 @@ export function createEmptyVaccinationSections(): VaccinationWorkflowPayload['se
   return {
     arrival: {},
     screening: {},
-    exam: { fitnessOutcome: '' },
+    exam: { fitnessOutcome: '', vaccinationScheduleType: '' },
     plan: {},
-    process: { steps: createProcessSteps(VACCINATION_PROCESS_STEPS), vaccines: [] },
+    process: {
+      steps: createProcessSteps(VACCINATION_PROCESS_STEPS),
+      vaccines: [
+        {
+          id: 'primary',
+          name: '',
+          productId: '',
+          type: '',
+          administeredAt: '',
+          nextDueDate: '',
+        },
+      ],
+    },
     documentation: {},
     communication: {},
     checkout: {},
@@ -249,7 +281,7 @@ export function createEmptyDewormingSections(): DewormingWorkflowPayload['sectio
   return {
     arrival: {},
     triage: {},
-    exam: { fitnessOutcome: '' },
+    exam: { fitnessOutcome: '', dewormingFormType: '' },
     plan: {},
     administration: { steps: createProcessSteps(DEWORMING_PROCESS_STEPS) },
     documentation: {},

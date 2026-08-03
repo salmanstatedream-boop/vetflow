@@ -38,6 +38,12 @@ export type GroomingAssignmentSection = {
   estimatedCompletion?: string;
 };
 
+export type GroomingConditionFlag = {
+  key: string;
+  label: string;
+  checked: boolean;
+};
+
 export type GroomingAssessmentSection = {
   coatCondition?: string;
   matsTangles?: string;
@@ -47,10 +53,22 @@ export type GroomingAssessmentSection = {
   analGlands?: string;
   fleasTicks?: string;
   weightKg?: number | null;
+  temperatureC?: number | null;
+  heartRateBpm?: number | null;
+  respiratoryRate?: number | null;
+  bodyConditionScore?: number | null;
   behaviorToday?: string;
   abnormalFindings?: boolean;
   vetConsultRecommended?: boolean;
   assessmentNotes?: string;
+  groomingType?: string;
+  conditionFlags?: GroomingConditionFlag[];
+  physicalExam?: string;
+  medicalHistory?: string;
+  fitnessOutcome?: FitnessOutcome;
+  vetConsultEnabled?: boolean;
+  treatmentPlan?: string;
+  administeredMedication?: string;
 };
 
 export type GroomingUpsellSection = {
@@ -117,6 +135,7 @@ export type GroomingWorkflowSections = {
 export type VaccineRecord = {
   id: string;
   name: string;
+  productId?: string;
   type: 'core' | 'non_core' | 'booster' | 'titer' | '';
   manufacturer?: string;
   lotNumber?: string;
@@ -130,6 +149,9 @@ export type VaccineRecord = {
   nextDueDate?: string;
   reactionNotes?: string;
 };
+
+export type VaccinationScheduleType = 'first' | 'booster' | 'annual_booster' | '';
+export type DewormingFormType = 'liquid' | 'tab' | '';
 
 export type VaccinationArrivalSection = {
   verifyAppointment?: boolean;
@@ -146,6 +168,7 @@ export type VaccinationScreeningSection = {
   temperatureC?: number | null;
   weightKg?: number | null;
   heartRateBpm?: number | null;
+  respiratoryRate?: number | null;
   bodyConditionScore?: number | null;
   appetite?: string;
   energyLevel?: string;
@@ -160,6 +183,7 @@ export type VaccinationExamSection = {
   physicalExam?: string;
   medicalHistoryReview?: string;
   fitnessOutcome: FitnessOutcome;
+  vaccinationScheduleType?: VaccinationScheduleType;
   vaccinePlanDiscussion?: string;
   ownerQuestions?: string;
   consentObtained?: boolean;
@@ -260,6 +284,12 @@ export type DewormingExamSection = {
   previousHistoryReview?: string;
   fecalTestRequired?: boolean;
   fitnessOutcome: FitnessOutcome;
+  dewormingFormType?: DewormingFormType;
+  temperatureC?: number | null;
+  heartRateBpm?: number | null;
+  respiratoryRate?: number | null;
+  weightKg?: number | null;
+  bodyConditionScore?: number | null;
   notFitReason?: string;
   treatmentAdvice?: string;
   followUpDate?: string;
@@ -281,6 +311,7 @@ export type DewormingPlanSection = {
 export type DewormingAdministrationSection = {
   steps: ProcessStep[];
   dewormerName?: string;
+  productId?: string;
   batchNumber?: string;
   doseGiven?: string;
   route?: string;
@@ -400,6 +431,16 @@ export type WorkflowPayload =
   | VaccinationWorkflowPayload
   | DewormingWorkflowPayload;
 
+export type WorkflowPrescriptionItem = {
+  productId?: string | null;
+  medicineName: string;
+  dosage: string;
+  frequency: string;
+  duration: string;
+  quantityRequested: number;
+  instructions?: string;
+};
+
 export type WorkflowConsultDraft = {
   kind: 'workflow';
   workflowType: WorkflowVisitPurpose;
@@ -412,6 +453,8 @@ export type WorkflowConsultDraft = {
     quantity: number;
   }>;
   noPrescriptionNeeded?: boolean;
+  prescriptionItems?: WorkflowPrescriptionItem[];
+  maxUnlockedIndex?: number;
 };
 
 export type WorkflowChartRowBase = {

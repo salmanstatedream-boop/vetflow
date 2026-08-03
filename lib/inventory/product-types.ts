@@ -1,16 +1,43 @@
-export const PRODUCT_TYPES = ['service', 'medicine', 'food', 'treats', 'accessory'] as const;
+export const PRODUCT_TYPES = [
+  'service',
+  'medicine',
+  'vaccine',
+  'deworming',
+  'food',
+  'treats',
+  'accessory',
+] as const;
 export type ProductType = (typeof PRODUCT_TYPES)[number];
 
-export const STOCK_PRODUCT_TYPES = ['medicine', 'food', 'treats', 'accessory'] as const;
+export const STOCK_PRODUCT_TYPES = [
+  'medicine',
+  'vaccine',
+  'deworming',
+  'food',
+  'treats',
+  'accessory',
+] as const;
 export type StockProductType = (typeof STOCK_PRODUCT_TYPES)[number];
 
 const TYPE_LABELS: Record<ProductType, string> = {
   service: 'Service',
   medicine: 'Medicine',
+  vaccine: 'Vaccine',
+  deworming: 'Deworming',
   food: 'Food',
   treats: 'Treats',
   accessory: 'Accessory',
 };
+
+export function isVaccineProductType(type: string): boolean {
+  const slug = normalizeProductTypeSlug(type);
+  return slug === 'vaccine' || slug === 'vaccination';
+}
+
+export function isDewormerProductType(type: string): boolean {
+  const slug = normalizeProductTypeSlug(type);
+  return slug === 'deworming' || slug === 'dewormer';
+}
 
 export const PRODUCT_TYPE_OPTIONS = PRODUCT_TYPES.map((value) => ({
   value,
@@ -48,14 +75,23 @@ const DISPLAY_TYPE_ALIASES: Record<string, string> = {
   vaccine: 'Vaccine',
   vaccination: 'Vaccine',
   grooming: 'Grooming',
-  deworming: 'Medicine',
+  deworming: 'Deworming',
+  dewormer: 'Deworming',
 };
 
 /** Map catalog DB type slug to checkout invoice line enum. */
 export function mapCatalogTypeToCheckoutLineType(slug: string): CheckoutLineType {
   const normalized = normalizeProductTypeSlug(slug);
   if (normalized === 'service') return 'service';
-  if (normalized === 'medicine' || normalized === 'deworming') return 'medicine';
+  if (
+    normalized === 'medicine' ||
+    normalized === 'deworming' ||
+    normalized === 'dewormer' ||
+    normalized === 'vaccine' ||
+    normalized === 'vaccination'
+  ) {
+    return 'medicine';
+  }
   return 'product';
 }
 
