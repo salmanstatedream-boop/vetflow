@@ -354,7 +354,7 @@ export default function ProblemChaosDesk() {
       ? {
           // Scored chaos → settle sequence (see RESET_FANFARE)
           initial: 'hidden' as const,
-          animate: ['chaos', 'settle'] as const,
+          animate: ['chaos', 'settle'] as string[],
         }
       : {
           initial: 'hidden' as const,
