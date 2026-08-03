@@ -50,6 +50,8 @@ export default function GroomingWorkflow({
   onPrescriptionItemsChange,
 }: GroomingWorkflowProps) {
   const [customCondition, setCustomCondition] = useState('');
+  const [customGroomingType, setCustomGroomingType] = useState('');
+  const [extraGroomingTypes, setExtraGroomingTypes] = useState<string[]>([]);
   const patch = <K extends keyof GroomingWorkflowSections>(
     key: K,
     value: GroomingWorkflowSections[K]
@@ -61,6 +63,7 @@ export default function GroomingWorkflow({
     const typeOptions = Array.from(
       new Set([
         ...GROOMING_TYPE_OPTIONS,
+        ...extraGroomingTypes,
         ...(visitReason?.trim() ? [visitReason.trim()] : []),
         ...(assessment.groomingType ? [assessment.groomingType] : []),
       ])
@@ -182,6 +185,29 @@ export default function GroomingWorkflow({
                 </option>
               ))}
             </select>
+            <div className="flex gap-2 mt-2">
+              <input
+                value={customGroomingType}
+                onChange={(e) => setCustomGroomingType(e.target.value)}
+                placeholder="Add custom grooming type"
+                className={fieldClass}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const label = customGroomingType.trim();
+                  if (!label) return;
+                  if (!typeOptions.some((t) => t.toLowerCase() === label.toLowerCase())) {
+                    setExtraGroomingTypes((prev) => [...prev, label]);
+                  }
+                  patch('assessment', { ...assessment, groomingType: label });
+                  setCustomGroomingType('');
+                }}
+                className="text-[10px] font-bold text-primary px-3 rounded-lg border border-primary/30 shrink-0"
+              >
+                Add
+              </button>
+            </div>
           </div>
         </WorkflowSectionCard>
       </div>

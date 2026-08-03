@@ -144,7 +144,7 @@ function DocumentRow({
               type="button"
               onClick={saveEdit}
               disabled={saving}
-              className="inline-flex items-center gap-1 text-[10px] font-bold text-white bg-primary px-2 py-1 rounded-lg disabled:opacity-60"
+              className="inline-flex items-center gap-1 text-[10px] font-bold text-on-primary bg-primary px-2 py-1 rounded-lg disabled:opacity-60"
             >
               {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
               Save
@@ -469,7 +469,7 @@ export default function ConsultationLabsDocsPanel({
               type="button"
               onClick={submitLabOrder}
               disabled={orderingLab}
-              className="w-full inline-flex items-center justify-center gap-1.5 text-[10px] font-bold text-white bg-primary px-3 py-2 rounded-lg hover:opacity-90 transition-all disabled:opacity-60"
+              className="w-full inline-flex items-center justify-center gap-1.5 text-[10px] font-bold text-on-primary bg-primary px-3 py-2 rounded-lg hover:opacity-90 transition-all disabled:opacity-60"
             >
               {orderingLab ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -556,7 +556,7 @@ export default function ConsultationLabsDocsPanel({
                       type="button"
                       onClick={() => saveLabResult(o)}
                       disabled={savingLabId === o.id}
-                      className="text-[9px] font-bold bg-primary text-white px-2.5 py-1 rounded-md inline-flex items-center gap-1 disabled:opacity-60"
+                      className="text-[9px] font-bold bg-primary text-on-primary px-2.5 py-1 rounded-md inline-flex items-center gap-1 disabled:opacity-60"
                     >
                       {savingLabId === o.id ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
                       Save
@@ -626,7 +626,7 @@ export default function ConsultationLabsDocsPanel({
               type="button"
               onClick={submitUpload}
               disabled={uploading}
-              className="w-full inline-flex items-center justify-center gap-1.5 text-[10px] font-bold text-white bg-primary px-3 py-2 rounded-lg hover:opacity-90 transition-all disabled:opacity-60"
+              className="w-full inline-flex items-center justify-center gap-1.5 text-[10px] font-bold text-on-primary bg-primary px-3 py-2 rounded-lg hover:opacity-90 transition-all disabled:opacity-60"
             >
               {uploading ? (
                 <>
@@ -739,7 +739,7 @@ export default function ConsultationLabsDocsPanel({
               type="button"
               onClick={submitLabOrder}
               disabled={orderingLab}
-              className="w-full inline-flex items-center justify-center gap-1 text-[10px] font-bold text-white bg-primary px-2 py-2 rounded-lg hover:opacity-90 transition-all disabled:opacity-60"
+              className="w-full inline-flex items-center justify-center gap-1 text-[10px] font-bold text-on-primary bg-primary px-2 py-2 rounded-lg hover:opacity-90 transition-all disabled:opacity-60"
             >
               {orderingLab ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
             </button>
@@ -789,7 +789,7 @@ export default function ConsultationLabsDocsPanel({
                     type="button"
                     onClick={() => saveLabResult(o)}
                     disabled={savingLabId === o.id}
-                    className="text-[10px] font-bold bg-primary text-white px-3 py-1.5 rounded-lg inline-flex items-center gap-1 disabled:opacity-60"
+                    className="text-[10px] font-bold bg-primary text-on-primary px-3 py-1.5 rounded-lg inline-flex items-center gap-1 disabled:opacity-60"
                   >
                     {savingLabId === o.id ? (
                       <Loader2 className="w-3 h-3 animate-spin" />
@@ -867,7 +867,7 @@ export default function ConsultationLabsDocsPanel({
               type="button"
               onClick={submitUpload}
               disabled={uploading}
-              className="w-full inline-flex items-center justify-center gap-1 text-[10px] font-bold text-white bg-primary px-2 py-2 rounded-lg hover:opacity-90 transition-all disabled:opacity-60"
+              className="w-full inline-flex items-center justify-center gap-1 text-[10px] font-bold text-on-primary bg-primary px-2 py-2 rounded-lg hover:opacity-90 transition-all disabled:opacity-60"
             >
               {uploading ? (
                 <>

@@ -113,7 +113,7 @@ export default function PatientHealthGraph({ profile }: PatientHealthGraphProps)
             onClick={() => setActiveMetric(m.id)}
             className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-colors ${
               activeMetric === m.id
-                ? 'bg-primary text-white shadow-sm'
+                ? 'bg-primary text-on-primary shadow-sm'
                 : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/60'
             }`}
           >
@@ -126,7 +126,7 @@ export default function PatientHealthGraph({ profile }: PatientHealthGraphProps)
             onClick={() => setActiveMetric('ageWeight')}
             className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-colors ${
               activeMetric === 'ageWeight'
-                ? 'bg-primary text-white shadow-sm'
+                ? 'bg-primary text-on-primary shadow-sm'
                 : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/60'
             }`}
           >

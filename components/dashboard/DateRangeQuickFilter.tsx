@@ -70,7 +70,7 @@ export default function DateRangeQuickFilter({
   const pillClass = (active: boolean) =>
     `px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
       active
-        ? 'bg-primary text-white border-primary'
+        ? 'bg-primary text-on-primary border-primary'
         : 'border-outline-variant/50 text-on-surface-variant hover:border-primary/40'
     }`;
 

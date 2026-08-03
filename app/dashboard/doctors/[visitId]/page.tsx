@@ -96,6 +96,52 @@ export default async function ConsultationRoomPage({
     visit.status = 'consulting';
   }
 
+  // Consultation already finalized — lock the room and point to checkout / queue
+  if (visit.status === 'ready_for_checkout' || visit.status === 'completed') {
+    const petName =
+      (visit.pets as { name?: string } | null)?.name ?? 'Patient';
+    const isReady = visit.status === 'ready_for_checkout';
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="shrink-0 space-y-4">
+          <PageBackNav items={[{ label: 'Back to consultations', href: '/dashboard/doctors' }]} />
+          <PageHeader
+            title="Consultation complete"
+            description={
+              isReady
+                ? `${petName} is ready for checkout and discharge.`
+                : `${petName} has already been checked out.`
+            }
+            icon={Stethoscope}
+          />
+        </div>
+        <div className="glass-panel rounded-2xl border border-emerald-500/30 p-6 sm:p-8 space-y-4 shadow-premium max-w-lg">
+          <p className="text-sm text-on-surface-variant">
+            {isReady
+              ? 'This consultation is finalized. Proceed to billing or return to your queue for the next patient.'
+              : 'This visit is complete. Return to the consultation queue for who is next.'}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2">
+            {isReady ? (
+              <Link
+                href={`/dashboard/invoices/create/${visitId}`}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold app-btn-primary"
+              >
+                Start checkout
+              </Link>
+            ) : null}
+            <Link
+              href="/dashboard/doctors"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold border border-outline-variant hover:bg-surface-container/40"
+            >
+              Back to consultation queue
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // 3. Fetch pet visit history
   const { data: historyData } = await supabase
     .from('visits')

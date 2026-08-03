@@ -305,7 +305,7 @@ export default function AppointmentWorkflowRenderer({
     });
     setCompleting(false);
     if (res.success) {
-      router.refresh();
+      router.replace(`/dashboard/invoices/create/${visitId}`);
     } else {
       setError(res.error ?? 'Failed to complete workflow');
     }
@@ -335,7 +335,7 @@ export default function AppointmentWorkflowRenderer({
               }
               className={`shrink-0 px-2.5 py-2 rounded-lg text-[10px] font-bold transition-all inline-flex items-center gap-1 ${
                 active
-                  ? 'bg-primary text-white'
+                  ? 'app-btn-primary shadow-sm'
                   : locked
                     ? 'text-on-surface-variant/30 cursor-not-allowed'
                     : done
@@ -431,7 +431,7 @@ export default function AppointmentWorkflowRenderer({
               type="button"
               onClick={() => void handleComplete()}
               disabled={completing}
-              className="text-xs font-bold text-white bg-primary px-5 py-2 rounded-lg disabled:opacity-50 inline-flex items-center gap-2"
+              className="text-xs font-bold app-btn-primary px-5 py-2 rounded-lg disabled:opacity-50 inline-flex items-center gap-2"
             >
               {completing ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
               Complete workflow
@@ -441,7 +441,7 @@ export default function AppointmentWorkflowRenderer({
               type="button"
               onClick={() => void goNext()}
               disabled={saving || completing}
-              className="text-xs font-bold text-white bg-primary px-5 py-2 rounded-lg disabled:opacity-50"
+              className="text-xs font-bold app-btn-primary px-5 py-2 rounded-lg disabled:opacity-50"
             >
               Next section
             </button>

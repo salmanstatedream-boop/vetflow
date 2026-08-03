@@ -11,6 +11,7 @@ import { useCurrency } from '@/lib/context/CurrencyContext';
 import { ShieldAlert, Trash2, Loader2, Settings, Search, X } from 'lucide-react';
 import type { UserSessionDetails } from '@/lib/services/auth';
 import { formatProductTypeLabel } from '@/lib/inventory/product-types';
+import AnimalDeleteConfirmModal from '@/components/ui/premium/AnimalDeleteConfirmModal';
 
 interface ProductRow {
   id: string;
@@ -78,6 +79,7 @@ export default function InventoryCatalogClient({
   const [searchQuery, setSearchQuery] = useState('');
   const [lowStockOnly, setLowStockOnly] = useState(initialLowStockOnly);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [markupApplying, setMarkupApplying] = useState(false);
   const router = useRouter();
@@ -188,13 +190,21 @@ export default function InventoryCatalogClient({
     }
   };
 
-  const handleDelete = async (productId: string, name: string) => {
-    if (!confirm(`Remove "${name}" from the catalog?`)) return;
-    setDeletingId(productId);
+  const handleDeleteRequest = (productId: string, name: string) => {
+    setDeleteTarget({ id: productId, name });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    setDeletingId(deleteTarget.id);
     try {
-      const res = await deleteProductAction(productId);
-      if (res.success) router.refresh();
-      else alert(res.error || 'Delete failed');
+      const res = await deleteProductAction(deleteTarget.id);
+      if (res.success) {
+        setDeleteTarget(null);
+        router.refresh();
+      } else {
+        alert(res.error || 'Delete failed');
+      }
     } finally {
       setDeletingId(null);
     }
@@ -439,7 +449,7 @@ export default function InventoryCatalogClient({
                             <button
                               type="button"
                               disabled={deletingId !== null}
-                              onClick={() => handleDelete(prod.id, prod.name)}
+                              onClick={() => handleDeleteRequest(prod.id, prod.name)}
                               className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold border border-destructive/30 text-destructive hover:bg-destructive/5 transition-colors disabled:opacity-50"
                             >
                               {deletingId === prod.id ? (
@@ -472,6 +482,17 @@ export default function InventoryCatalogClient({
           </tbody>
         </table>
       </div>
+
+      <AnimalDeleteConfirmModal
+        open={Boolean(deleteTarget)}
+        itemName={deleteTarget?.name ?? ''}
+        onCancel={() => {
+          if (deletingId) return;
+          setDeleteTarget(null);
+        }}
+        onConfirm={() => void handleDeleteConfirm()}
+        confirming={deletingId !== null}
+      />
     </div>
   );
 }

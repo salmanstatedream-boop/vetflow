@@ -43,7 +43,7 @@ export function SoapTabBar({
               title={locked ? `${tab.title} — complete previous sections first` : tab.title}
               className={`relative min-w-[2.75rem] px-3 py-2.5 rounded-lg text-xs font-black transition-all ${
                 isActive
-                  ? 'bg-primary text-white shadow-sm'
+                  ? 'bg-primary text-on-primary shadow-sm'
                   : locked
                     ? 'text-on-surface-variant/30 cursor-not-allowed'
                     : 'text-on-surface-variant/60 hover:text-on-surface hover:bg-surface-container/50'

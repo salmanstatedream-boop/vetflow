@@ -218,7 +218,7 @@ export default function InvoicesListClient({
             onClick={() => setStatusFilter(s)}
             className={`px-3 py-1.5 rounded-lg text-[10px] font-bold capitalize transition-colors ${
               statusFilter === s
-                ? 'bg-primary text-white'
+                ? 'bg-primary text-on-primary'
                 : 'bg-surface-container border border-outline-variant text-on-surface-variant'
             }`}
           >

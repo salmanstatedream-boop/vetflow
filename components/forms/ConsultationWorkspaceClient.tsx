@@ -638,7 +638,7 @@ export default function ConsultationWorkspaceClient({
       const res = await completeConsultationAction(payload);
       if (res.success) {
         setCompletedPrescriptionId(res.prescriptionId ?? null);
-        setShowCompleteSuccess(true);
+        router.replace(`/dashboard/invoices/create/${visitId}`);
       } else {
         setError(res.error || 'Failed to complete consultation');
       }
@@ -871,7 +871,7 @@ export default function ConsultationWorkspaceClient({
                 type="button"
                 onClick={() => void confirmFollowUpAndComplete()}
                 disabled={isSubmitting}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-primary text-white disabled:opacity-50 flex items-center gap-2"
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-primary text-on-primary disabled:opacity-50 flex items-center gap-2"
               >
                 {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 Confirm &amp; Finalize
@@ -926,7 +926,7 @@ export default function ConsultationWorkspaceClient({
               <button
                 type="button"
                 onClick={() => router.replace('/dashboard/doctors')}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold bg-primary text-white"
+                className="px-4 py-2.5 rounded-xl text-xs font-bold bg-primary text-on-primary"
               >
                 Back to queue
               </button>
@@ -1110,7 +1110,7 @@ export default function ConsultationWorkspaceClient({
             onClick={() => setShowHistory(false)}
             className={`flex-1 py-2.5 text-[11px] font-bold rounded-lg transition-all ${
               !showHistory
-                ? 'bg-primary text-white shadow-sm'
+                ? 'bg-primary text-on-primary shadow-sm'
                 : 'text-on-surface-variant/60 hover:text-on-surface'
             }`}
           >
@@ -1121,7 +1121,7 @@ export default function ConsultationWorkspaceClient({
             onClick={() => setShowHistory(true)}
             className={`flex-1 py-2.5 text-[11px] font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${
               showHistory
-                ? 'bg-primary text-white shadow-sm'
+                ? 'bg-primary text-on-primary shadow-sm'
                 : 'text-on-surface-variant/60 hover:text-on-surface'
             }`}
           >
@@ -1258,7 +1258,7 @@ export default function ConsultationWorkspaceClient({
                   onClick={() => handleVisitTypeChange(t)}
                   className={`px-4 py-2 rounded-xl text-xs font-bold capitalize transition-colors ${
                     visitType === t
-                      ? 'bg-primary text-white'
+                      ? 'bg-primary text-on-primary'
                       : 'bg-surface-container border border-outline-variant text-on-surface-variant'
                   }`}
                 >
@@ -1501,7 +1501,7 @@ export default function ConsultationWorkspaceClient({
                     onClick={() => setFollowUpMode(mode)}
                     className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all capitalize ${
                       followUpMode === mode
-                        ? 'bg-primary text-white border-primary'
+                        ? 'bg-primary text-on-primary border-primary'
                         : 'border-outline-variant text-on-surface-variant hover:border-primary/40'
                     }`}
                   >
@@ -1521,7 +1521,7 @@ export default function ConsultationWorkspaceClient({
                         onClick={() => toggleFollowUpDay(day)}
                         className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
                           followUpOffsetDays.includes(day)
-                            ? 'bg-primary text-white border-primary'
+                            ? 'bg-primary text-on-primary border-primary'
                             : 'border-outline-variant text-on-surface-variant hover:border-primary/40'
                         }`}
                       >

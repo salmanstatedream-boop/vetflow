@@ -215,7 +215,7 @@ export default function ReceptionistHomeClient({
               onClick={() => setRecordTypeFilter(t)}
               className={`px-2.5 py-1 rounded-lg text-[10px] font-bold capitalize transition-colors ${
                 recordTypeFilter === t
-                  ? 'bg-primary text-white'
+                  ? 'bg-primary text-on-primary'
                   : 'bg-surface-container border border-outline-variant text-on-surface-variant'
               }`}
             >

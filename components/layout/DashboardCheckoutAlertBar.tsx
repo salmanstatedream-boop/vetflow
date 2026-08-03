@@ -1,13 +1,19 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
 import { checkoutNotifications } from '@/lib/dashboard/notifications';
 import { useDashboardShell } from '@/lib/context/DashboardShellContext';
 
 export default function DashboardCheckoutAlertBar() {
   const shell = useDashboardShell();
-  const checkouts = checkoutNotifications(shell?.notifications ?? []);
+  const pathname = usePathname();
+  const checkouts = checkoutNotifications(shell?.notifications ?? []).filter((n) => {
+    // Hide banner CTA when already on that visit's checkout page
+    if (pathname && n.href && pathname.startsWith(n.href.split('?')[0]!)) return false;
+    return true;
+  });
 
   if (checkouts.length === 0) return null;
 

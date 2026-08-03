@@ -17,7 +17,7 @@ export default function InventoryTabsClient({ initialTab }: InventoryTabsClientP
         href="/dashboard/inventory"
         className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-colors ${
           initialTab === 'catalog'
-            ? 'bg-primary text-white'
+            ? 'bg-primary text-on-primary'
             : 'bg-surface-container border border-outline-variant text-on-surface-variant'
         }`}
       >
@@ -28,7 +28,7 @@ export default function InventoryTabsClient({ initialTab }: InventoryTabsClientP
         href={`${pathname}?tab=intake`}
         className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-colors ${
           initialTab === 'intake'
-            ? 'bg-primary text-white'
+            ? 'bg-primary text-on-primary'
             : 'bg-surface-container border border-outline-variant text-on-surface-variant'
         }`}
       >

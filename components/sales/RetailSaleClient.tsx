@@ -278,7 +278,7 @@ export default function RetailSaleClient({
             href={`/api/invoices/${completed.invoiceId}/pdf`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-on-primary text-xs font-bold"
           >
             <Printer className="w-4 h-4" />
             Print receipt
@@ -383,7 +383,7 @@ export default function RetailSaleClient({
                   setSelectedCatalogId('');
                 }}
                 className={`flex-1 py-2 rounded-lg text-xs font-bold capitalize ${
-                  addType === t ? 'bg-primary text-white' : 'border border-outline-variant'
+                  addType === t ? 'bg-primary text-on-primary' : 'border border-outline-variant'
                 }`}
               >
                 {t}
@@ -408,7 +408,7 @@ export default function RetailSaleClient({
             type="button"
             onClick={addToCart}
             disabled={!selectedCatalogId}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-white text-xs font-bold disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-on-primary text-xs font-bold disabled:opacity-50"
           >
             <Plus className="w-4 h-4" />
             Add item
@@ -494,7 +494,7 @@ export default function RetailSaleClient({
                   if (!paymentMethodRequiresProof(m)) setPaymentProof(null);
                 }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold capitalize ${
-                  paymentMethod === m ? 'bg-primary text-white' : 'border border-outline-variant'
+                  paymentMethod === m ? 'bg-primary text-on-primary' : 'border border-outline-variant'
                 }`}
               >
                 {m.replace('_', ' ')}
@@ -534,7 +534,7 @@ export default function RetailSaleClient({
           type="button"
           onClick={() => void handleSubmit()}
           disabled={isSubmitting || cart.length === 0}
-          className="w-full py-3 rounded-2xl bg-primary text-white font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60"
+          className="w-full py-3 rounded-2xl bg-primary text-on-primary font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60"
         >
           {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
           {isSubmitting ? 'Processing…' : 'Complete sale & print receipt'}

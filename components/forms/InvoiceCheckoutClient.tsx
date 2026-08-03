@@ -203,15 +203,16 @@ export default function InvoiceCheckoutClient({
         formData.set('proof', paymentProof);
       }
       const res = await createInvoiceFromVisitFormAction(formData);
-      if (res.success && res.invoiceId) {
+      if (res.success && 'invoiceId' in res && res.invoiceId) {
         setCompleted({
           invoiceId: res.invoiceId,
           prescriptionId: res.prescriptionId || prescriptionId || null,
         });
-        router.replace(`/dashboard/invoices/${res.invoiceId}?checkout=success`);
         router.refresh();
       } else {
-        setError(res.error || 'Failed to complete billing transaction.');
+        setError(
+          ('error' in res && res.error) || 'Failed to complete billing transaction.'
+        );
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
@@ -233,7 +234,7 @@ export default function InvoiceCheckoutClient({
           </div>
         </div>
 
-        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
           <a
             href={`/api/invoices/${completed.invoiceId}/pdf`}
             target="_blank"
@@ -263,12 +264,18 @@ export default function InvoiceCheckoutClient({
             <FileText className="w-4 h-4 text-primary" />
             Treatment summary
           </a>
+          <a
+            href={`/dashboard/invoices/${completed.invoiceId}`}
+            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-outline-variant bg-surface-container text-xs font-bold text-on-surface hover:border-primary"
+          >
+            View receipt
+          </a>
           <button
             type="button"
-            onClick={() => router.push('/dashboard/invoices')}
-            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary text-white text-xs font-bold"
+            onClick={() => router.replace('/dashboard/doctors')}
+            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl app-btn-primary text-xs font-bold sm:col-span-2 md:col-span-2"
           >
-            View all invoices
+            Back to consultation queue
           </button>
         </div>
       </div>
@@ -427,7 +434,7 @@ export default function InvoiceCheckoutClient({
                 <label
                   className={`flex items-center justify-center gap-1 px-3 py-2 rounded-xl text-xs font-bold cursor-pointer border ${
                     paymentStatusWatch === 'paid'
-                      ? 'bg-primary text-white border-primary'
+                      ? 'bg-primary text-on-primary border-primary'
                       : 'border-outline-variant text-on-surface-variant'
                   }`}
                 >
