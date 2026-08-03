@@ -886,17 +886,10 @@ html.light .app-btn-primary {
   color: #ffffff;
 }
 
-/* Chaos desk — modern open / closed hand cursors (monochrome, dark-desk friendly) */
-.phx-chaos-cursor-grab {
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg fill='none' stroke='%230f172a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath fill='%23f8fafc' d='M11 14V9.5a1.5 1.5 0 0 1 3 0V14'/%3E%3Cpath fill='%23f8fafc' d='M14 14V8a1.5 1.5 0 0 1 3 0v6'/%3E%3Cpath fill='%23f8fafc' d='M17 14V8.5a1.5 1.5 0 0 1 3 0V14'/%3E%3Cpath fill='%23f8fafc' d='M20 14v-3a1.5 1.5 0 0 1 3 0v5.5c0 3.5-2.2 6.5-5.5 6.5H15c-3 0-5.5-2-6.5-4.8L7 14.5A1.6 1.6 0 0 1 9.5 13H11'/%3E%3C/g%3E%3C/svg%3E")
-      10 6,
-    grab;
-}
-
+/* Chaos desk cards — native cursor hidden; custom hand via PhoenixCursorTrail */
+.phx-chaos-cursor-grab,
 .phx-chaos-cursor-grabbing {
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg fill='none' stroke='%230f172a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath fill='%23f8fafc' d='M10.5 15.5V13a1.4 1.4 0 0 1 2.8 0v2.5'/%3E%3Cpath fill='%23f8fafc' d='M13.3 15.5V12a1.4 1.4 0 0 1 2.8 0v3.5'/%3E%3Cpath fill='%23f8fafc' d='M16.1 15.5V12.2a1.4 1.4 0 0 1 2.8 0v3.3'/%3E%3Cpath fill='%23f8fafc' d='M18.9 15.5v-1.8a1.4 1.4 0 0 1 2.8 0v3.8c0 3-1.9 5.5-4.8 5.5h-2.8c-2.6 0-4.8-1.8-5.6-4.2L8.2 15.8A1.5 1.5 0 0 1 10.5 14.2h0'/%3E%3C/g%3E%3C/svg%3E")
-      10 8,
-    grabbing;
+  cursor: none;
 }
 
 .phx-chaos-card-lift {
@@ -904,6 +897,73 @@ html.light .app-btn-primary {
     0 12px 40px rgba(0, 0, 0, 0.45),
     0 0 0 1px rgba(255, 255, 255, 0.12);
   filter: brightness(1.05);
+}
+
+/* Homepage custom cursor + bubble trail */
+.phx-page.phx-cursor-active,
+.phx-page.phx-cursor-active * {
+  cursor: none !important;
+}
+
+.phx-cursor-trail {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  overflow: hidden;
+  mix-blend-mode: screen;
+}
+
+.phx-cursor-bubble {
+  position: fixed;
+  top: 0;
+  left: 0;
+  border-radius: 9999px;
+  pointer-events: none;
+  will-change: transform, opacity, width, height;
+  opacity: 0;
+  filter: blur(1.5px);
+  transition: opacity 0.15s ease;
+}
+
+.phx-cursor-tip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+  will-change: transform, opacity, filter;
+  opacity: 0;
+  filter: drop-shadow(0 0 5px rgba(34, 211, 238, 0.55))
+    drop-shadow(0 0 12px rgba(56, 189, 248, 0.28));
+  transition: filter 0.15s ease, width 0.15s ease, height 0.15s ease;
+}
+
+.phx-cursor-tip[data-mode='grab'],
+.phx-cursor-tip[data-mode='grabbing'],
+.phx-cursor-tip[data-mode='click'] {
+  width: 34px;
+  height: 34px;
+}
+
+.phx-cursor-tip[data-intensity='lift'] {
+  filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.85))
+    drop-shadow(0 0 18px rgba(56, 189, 248, 0.42));
+}
+
+.phx-cursor-tip svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.phx-cursor-trail[data-intensity='lift'] .phx-cursor-bubble {
+  filter: blur(2px);
 }
 
 .phx-section {

@@ -42,6 +42,7 @@ import {
   RESET_FANFARE,
   RESET_SETTLE_STAGGER,
 } from '@/components/home/problem-chaos-desk/resetLayoutSound';
+import { usePhoenixCursorTrail } from '@/components/home/PhoenixCursorTrail';
 
 const STORAGE_KEY = 'phx-chaos-desk-positions';
 
@@ -58,6 +59,8 @@ type DeskDragContextValue = {
   setDraggingId: (id: string | null) => void;
   resetKey: number;
   useScoredReset: boolean;
+  onCardPointerEnter: () => void;
+  onCardPointerLeave: () => void;
 };
 
 const DeskDragContext = createContext<DeskDragContextValue | null>(null);
@@ -176,6 +179,8 @@ function DraggableShell({
     draggingId,
     setDraggingId,
     useScoredReset,
+    onCardPointerEnter,
+    onCardPointerLeave,
   } = useDeskDrag();
   const pos = positions[id] ?? { x: 0, y: 0 };
   const isDragging = draggingId === id;
@@ -201,6 +206,8 @@ function DraggableShell({
       dragMomentum={false}
       dragElastic={0.06}
       whileDrag={{ scale: 1.03 }}
+      onPointerEnter={onCardPointerEnter}
+      onPointerLeave={onCardPointerLeave}
       onDragStart={() => {
         bringToFront(id);
         setDraggingId(id);
@@ -291,7 +298,9 @@ function StickyNote({
 
 export default function ProblemChaosDesk() {
   const reducedMotion = usePrefersReducedMotion();
+  const { setIntensity, setMode } = usePhoenixCursorTrail();
   const deskRef = useRef<HTMLDivElement>(null);
+  const hoverDepthRef = useRef(0);
   const [positions, setPositions] = useState<PosMap>({});
   const [hydrated, setHydrated] = useState(false);
   const [frontId, setFrontId] = useState<string | null>(null);
@@ -302,6 +311,40 @@ export default function ProblemChaosDesk() {
     setPositions(loadPositions());
     setHydrated(true);
   }, []);
+
+  const syncCursor = useCallback(
+    (dragging: string | null, hoverDepth: number) => {
+      if (dragging) {
+        setMode('grabbing');
+        setIntensity('lift');
+      } else if (hoverDepth > 0) {
+        setMode('grab');
+        setIntensity('lift');
+      } else {
+        setMode('pointer');
+        setIntensity('normal');
+      }
+    },
+    [setIntensity, setMode],
+  );
+
+  useEffect(() => {
+    syncCursor(draggingId, hoverDepthRef.current);
+    return () => {
+      setMode('pointer');
+      setIntensity('normal');
+    };
+  }, [draggingId, setIntensity, setMode, syncCursor]);
+
+  const onCardPointerEnter = useCallback(() => {
+    hoverDepthRef.current += 1;
+    syncCursor(draggingId, hoverDepthRef.current);
+  }, [draggingId, syncCursor]);
+
+  const onCardPointerLeave = useCallback(() => {
+    hoverDepthRef.current = Math.max(0, hoverDepthRef.current - 1);
+    syncCursor(draggingId, hoverDepthRef.current);
+  }, [draggingId, syncCursor]);
 
   const updatePosition = useCallback((id: string, next: Pos) => {
     setPositions((prev) => {
@@ -328,8 +371,11 @@ export default function ProblemChaosDesk() {
     }
     setFrontId(null);
     setDraggingId(null);
+    hoverDepthRef.current = 0;
+    setMode('pointer');
+    setIntensity('normal');
     setResetKey((k) => k + 1);
-  }, [reducedMotion]);
+  }, [reducedMotion, setIntensity, setMode]);
 
   const dragCtx = useMemo(
     () => ({
@@ -342,8 +388,20 @@ export default function ProblemChaosDesk() {
       setDraggingId,
       resetKey,
       useScoredReset: resetKey > 0 && !reducedMotion,
+      onCardPointerEnter,
+      onCardPointerLeave,
     }),
-    [positions, updatePosition, bringToFront, frontId, draggingId, resetKey, reducedMotion],
+    [
+      positions,
+      updatePosition,
+      bringToFront,
+      frontId,
+      draggingId,
+      resetKey,
+      reducedMotion,
+      onCardPointerEnter,
+      onCardPointerLeave,
+    ],
   );
 
   const useScoredReset = resetKey > 0 && !reducedMotion;
