@@ -1,10 +1,10 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
 import { Check, Sparkles } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { GlowBorderCard } from '@/components/ui/glow-border-card';
+import { useRequestAccess } from '@/components/home/RequestAccessProvider';
 import { PRICING_TIERS } from '@/lib/home-data';
 import { useScrollReveal } from '@/lib/hooks/useScrollReveal';
 import { cn } from '@/lib/utils';
@@ -14,7 +14,7 @@ const PHOENIX_GRADIENT = ['#0B2535', '#123B52', '#22D3EE', '#123B52', '#0B2535',
 
 export default function PricingPreview() {
   const sectionRef = useRef<HTMLElement>(null);
-  const router = useRouter();
+  const { open: openRequestAccess } = useRequestAccess();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   const reducedMotion = useScrollReveal(sectionRef, {
@@ -137,7 +137,7 @@ export default function PricingPreview() {
 
                     <button
                       type="button"
-                      onClick={() => router.push('/request-access')}
+                      onClick={openRequestAccess}
                       className={cn(
                         'w-full mt-auto transition-colors duration-200 phx-focus-ring cursor-pointer',
                         isFeatured || isHovered ? 'phx-btn-primary' : 'phx-btn-ghost',

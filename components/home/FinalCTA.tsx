@@ -1,10 +1,10 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useRef } from 'react';
 import { AnimatedRays } from '@/components/ui/animated-rays';
 import { RadialGlowButton } from '@/components/ui/radial-glow-button';
 import { SharedTooltipAvatars } from '@/components/ui/shared-tooltip-avatars';
+import { useRequestAccess } from '@/components/home/RequestAccessProvider';
 import { CTA_AVATARS } from '@/lib/home-data';
 import { useScrollReveal } from '@/lib/hooks/useScrollReveal';
 
@@ -19,7 +19,7 @@ function avatarImage(initials: string, color: string) {
 
 export default function FinalCTA() {
   const sectionRef = useRef<HTMLElement>(null);
-  const router = useRouter();
+  const { open: openRequestAccess } = useRequestAccess();
 
   useScrollReveal(sectionRef, {
     selector: '[data-cta-fade]',
@@ -72,7 +72,7 @@ export default function FinalCTA() {
         <div data-cta-fade>
           <RadialGlowButton
             type="button"
-            onClick={() => router.push('/request-access')}
+            onClick={openRequestAccess}
             className="text-base px-8 py-3 phx-focus-ring cursor-pointer transition-colors duration-200"
           >
             Request Access

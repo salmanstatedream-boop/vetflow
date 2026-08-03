@@ -11,6 +11,7 @@ import PlatformExpansionSection from './PlatformExpansionSection';
 import FaqSection from './FaqSection';
 import FinalCTA from './FinalCTA';
 import PhoenixFooter from './PhoenixFooter';
+import RequestAccessProvider from './RequestAccessProvider';
 import SmoothScrollProvider from './SmoothScrollProvider';
 
 const BOOT_GATE_SCRIPT = `
@@ -26,22 +27,24 @@ export default function PhoenixHomePage() {
     <SmoothScrollProvider>
       <script dangerouslySetInnerHTML={{ __html: BOOT_GATE_SCRIPT }} />
       <PhoenixBootPreloader />
-      <div className="phx-page min-h-screen">
-        <PhoenixNavbar />
-        <main>
-          <PhoenixHero />
-          <ProblemSection />
-          <SolutionJourneySection />
-          <FeatureEcosystemSection />
-          <SecuritySection />
-          <Testimonials />
-          <PricingPreview />
-          <PlatformExpansionSection />
-          <FaqSection />
-          <FinalCTA />
-        </main>
-        <PhoenixFooter />
-      </div>
+      <RequestAccessProvider>
+        <div className="phx-page min-h-screen">
+          <PhoenixNavbar />
+          <main>
+            <PhoenixHero />
+            <ProblemSection />
+            <SolutionJourneySection />
+            <FeatureEcosystemSection />
+            <SecuritySection />
+            <Testimonials />
+            <PricingPreview />
+            <PlatformExpansionSection />
+            <FaqSection />
+            <FinalCTA />
+          </main>
+          <PhoenixFooter />
+        </div>
+      </RequestAccessProvider>
     </SmoothScrollProvider>
   );
 }

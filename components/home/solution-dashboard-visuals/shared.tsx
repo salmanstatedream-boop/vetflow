@@ -606,8 +606,8 @@ export function ToolbarButton({ children, primary }: { children: ReactNode; prim
       className={cn(
         'inline-flex items-center px-2.5 py-1 rounded-md text-[8px] font-medium border whitespace-nowrap transition-colors',
         primary
-          ? 'bg-[#8B5CF6] text-white border-[#8B5CF6] shadow-[0_0_14px_rgba(139,92,246,0.35)]'
-          : 'border-[#8B5CF6]/20 bg-[#8B5CF6]/[0.06] text-[#C4B5FD]',
+          ? 'bg-[#3B82F6] text-white border-[#3B82F6] shadow-[0_0_14px_rgba(59,130,246,0.4)]'
+          : 'border-[#3B82F6]/20 bg-[#3B82F6]/[0.06] text-[#93C5FD]',
       )}
     >
       {children}

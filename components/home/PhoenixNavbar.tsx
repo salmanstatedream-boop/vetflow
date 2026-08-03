@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
 import { useEffect, useId, useState } from 'react';
 import { LineHoverLink } from '@/components/ui/line-hover-link';
+import { useRequestAccess } from '@/components/home/RequestAccessProvider';
 import { NAV_LINKS } from '@/lib/home-data';
 import { usePrefersReducedMotion } from '@/lib/hooks/usePrefersReducedMotion';
 import { cn } from '@/lib/utils';
@@ -16,6 +17,7 @@ export default function PhoenixNavbar() {
   const reducedMotion = usePrefersReducedMotion();
   const lenis = useLenis();
   const menuId = useId();
+  const { open: openRequestAccess } = useRequestAccess();
 
   useEffect(() => {
     if (!open) return;
@@ -150,13 +152,16 @@ export default function PhoenixNavbar() {
               >
                 Sign In
               </Link>
-              <Link
-                href="/request-access"
-                className="phx-btn-primary text-sm w-full justify-center phx-focus-ring transition-colors duration-200"
-                onClick={() => setOpen(false)}
+              <button
+                type="button"
+                className="phx-btn-primary text-sm w-full justify-center phx-focus-ring transition-colors duration-200 cursor-pointer"
+                onClick={() => {
+                  setOpen(false);
+                  openRequestAccess();
+                }}
               >
                 Request Access
-              </Link>
+              </button>
             </div>
           </aside>
         </div>

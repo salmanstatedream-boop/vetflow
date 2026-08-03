@@ -8,6 +8,7 @@ import ScaledOverviewDashboard from '@/components/home/overview-dashboard-visual
 import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
 import { LightLines } from '@/components/ui/light-lines';
 import MorphText from '@/components/ui/morph-text';
+import { useRequestAccess } from '@/components/home/RequestAccessProvider';
 import { CLINIC_TYPE_WORDS, HERO } from '@/lib/home-data';
 import { usePrefersReducedMotion } from '@/lib/hooks/usePrefersReducedMotion';
 import { cn } from '@/lib/utils';
@@ -15,6 +16,7 @@ import { cn } from '@/lib/utils';
 export default function PhoenixHero() {
   const rootRef = useRef<HTMLElement>(null);
   const router = useRouter();
+  const { open: openRequestAccess } = useRequestAccess();
   const reducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
@@ -155,7 +157,7 @@ export default function PhoenixHero() {
               style={{ opacity: reducedMotion ? 1 : 0 }}
             >
               <InteractiveHoverButton
-                onClick={() => router.push('/request-access')}
+                onClick={openRequestAccess}
                 className="border-[#22D3EE]/30 text-[#F8FAFC] phx-focus-ring transition-colors duration-200"
                 style={
                   {

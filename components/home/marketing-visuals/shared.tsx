@@ -10,34 +10,45 @@ import { cn } from '@/lib/utils';
 
 export function GradientPillButton({
   href,
+  onClick,
   children,
   className,
 }: {
-  href: string;
+  href?: string;
+  onClick?: () => void;
   children: ReactNode;
   className?: string;
 }) {
+  const classes = cn(
+    'inline-flex items-center justify-center gap-1.5 rounded-full px-6 py-3 text-sm font-semibold text-white',
+    'bg-gradient-to-r from-[#22D3EE] to-[#8B5CF6] hover:opacity-90 transition-opacity phx-focus-ring shrink-0',
+    className,
+  );
+
+  if (href) {
+    return (
+      <Link href={href} className={classes}>
+        {children}
+      </Link>
+    );
+  }
+
   return (
-    <Link
-      href={href}
-      className={cn(
-        'inline-flex items-center justify-center gap-1.5 rounded-full px-6 py-3 text-sm font-semibold text-white',
-        'bg-gradient-to-r from-[#22D3EE] to-[#8B5CF6] hover:opacity-90 transition-opacity phx-focus-ring shrink-0',
-        className,
-      )}
-    >
+    <button type="button" onClick={onClick} className={cn(classes, 'cursor-pointer')}>
       {children}
-    </Link>
+    </button>
   );
 }
 
 export function OutlinedPillButton({
   href,
+  onClick,
   children,
   tone = 'cyan',
   className,
 }: {
-  href: string;
+  href?: string;
+  onClick?: () => void;
   children: ReactNode;
   tone?: 'cyan' | 'purple' | 'blue' | 'orange';
   className?: string;
@@ -49,17 +60,24 @@ export function OutlinedPillButton({
     orange: 'border-[#F97316]/40 text-[#FDBA74] hover:bg-[#F97316]/10',
   };
 
+  const classes = cn(
+    'inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[11px] font-medium transition-colors phx-focus-ring',
+    tones[tone],
+    className,
+  );
+
+  if (href) {
+    return (
+      <Link href={href} className={classes}>
+        {children}
+      </Link>
+    );
+  }
+
   return (
-    <Link
-      href={href}
-      className={cn(
-        'inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[11px] font-medium transition-colors phx-focus-ring',
-        tones[tone],
-        className,
-      )}
-    >
+    <button type="button" onClick={onClick} className={cn(classes, 'cursor-pointer')}>
       {children}
-    </Link>
+    </button>
   );
 }
 
@@ -174,7 +192,6 @@ export function HubConnectorOverlay({
 }: HubConnectorOverlayProps) {
   const [lines, setLines] = useState<HubConnectorLine[]>([]);
   const pathRefs = useRef<(SVGPathElement | null)[]>([]);
-  const nodeRefs = useRef<(SVGCircleElement | null)[]>([]);
   const reducedMotion = usePrefersReducedMotion();
   const hasDrawnRef = useRef(false);
   const filterId = useId().replace(/:/g, '');
@@ -288,9 +305,6 @@ export function HubConnectorOverlay({
           path.style.strokeDashoffset = '0';
           path.style.opacity = revealed ? '1' : '0.35';
         });
-        nodeRefs.current.forEach((node) => {
-          if (node) node.style.opacity = revealed ? '1' : '0.5';
-        });
       }
       return;
     }
@@ -309,11 +323,6 @@ export function HubConnectorOverlay({
       path.style.strokeDasharray = `${length}`;
       path.style.strokeDashoffset = `${length}`;
 
-      const hubNode = nodeRefs.current[lineIndex * 2];
-      const cardNode = nodeRefs.current[lineIndex * 2 + 1];
-      if (hubNode) hubNode.style.opacity = '0';
-      if (cardNode) cardNode.style.opacity = '0';
-
       animate(path, {
         strokeDashoffset: [length, 0],
         duration: 700,
@@ -322,12 +331,6 @@ export function HubConnectorOverlay({
         onComplete: () => {
           path.style.strokeDasharray = '4 6';
           path.style.strokeDashoffset = '0';
-          if (hubNode) {
-            animate(hubNode, { opacity: [0, 0.9], duration: 300, ease: 'outExpo' });
-          }
-          if (cardNode) {
-            animate(cardNode, { opacity: [0, 0.85], duration: 300, delay: 80, ease: 'outExpo' });
-          }
           completed += 1;
           if (completed === drawOrder.length) hasDrawnRef.current = true;
         },
@@ -363,28 +366,8 @@ export function HubConnectorOverlay({
             strokeOpacity={revealed ? 0.55 : 0.35}
             strokeWidth="1.5"
             strokeDasharray="4 6"
-          />
-          <circle
-            ref={(el) => {
-              nodeRefs.current[i * 2] = el;
-            }}
-            cx={line.x1}
-            cy={line.y1}
-            r="4"
-            fill={line.color}
+            strokeLinecap="round"
             filter={`url(#${filterId})`}
-            opacity={revealed ? 0.9 : 0.5}
-          />
-          <circle
-            ref={(el) => {
-              nodeRefs.current[i * 2 + 1] = el;
-            }}
-            cx={line.x2}
-            cy={line.y2}
-            r="3.5"
-            fill={line.color}
-            filter={`url(#${filterId})`}
-            opacity={revealed ? 0.85 : 0.45}
           />
         </g>
       ))}

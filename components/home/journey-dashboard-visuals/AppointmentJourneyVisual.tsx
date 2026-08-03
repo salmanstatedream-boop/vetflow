@@ -126,7 +126,7 @@ export default function AppointmentJourneyVisual({
                 </span>
               </div>
               <div className="flex gap-2 flex-wrap items-center">
-                <div className="flex items-center gap-0.5 rounded-lg border border-[#8B5CF6]/25 bg-[#8B5CF6]/[0.04] p-0.5">
+                <div className="flex items-center gap-0.5 rounded-lg border border-[#3B82F6]/25 bg-[#3B82F6]/[0.04] p-0.5">
                   <ToolbarButton>Today</ToolbarButton>
                   <ToolbarButton>Day</ToolbarButton>
                   <ToolbarButton primary>Week</ToolbarButton>

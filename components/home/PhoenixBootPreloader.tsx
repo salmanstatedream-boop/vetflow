@@ -85,11 +85,11 @@ export default function PhoenixBootPreloader() {
           transition={{ duration: reducedMotion ? 0.25 : 0.65, ease: [0.22, 1, 0.36, 1] }}
         >
           <div className="relative flex flex-col items-center text-center px-6">
-            <div className="relative w-[200px] h-[200px] sm:w-[248px] sm:h-[248px] lg:w-[280px] lg:h-[280px] -mb-2 sm:-mb-3">
-              {/* Glow centered on visual mark (hex + wing), slightly below box center */}
+            <div className="relative w-[200px] h-[200px] sm:w-[248px] sm:h-[248px] lg:w-[280px] lg:h-[280px] -mb-12 sm:-mb-14 lg:-mb-16">
+              {/* Glow centered on visual mark (hex + wing), which sits high in the PNG box */}
               <motion.div
                 aria-hidden
-                className="pointer-events-none absolute left-1/2 top-[52%] w-[85%] h-[85%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(77,166,255,0.4)_0%,transparent_68%)]"
+                className="pointer-events-none absolute left-1/2 top-[42%] w-[85%] h-[85%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(77,166,255,0.4)_0%,transparent_68%)]"
                 initial={reducedMotion ? false : { opacity: 0.3, scale: 0.85 }}
                 animate={
                   phase === 'playing' && !reducedMotion

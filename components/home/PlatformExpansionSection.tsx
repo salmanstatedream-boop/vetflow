@@ -13,11 +13,27 @@ import {
   Stethoscope,
   Users,
 } from 'lucide-react';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { GradientPillButton, OutlinedPillButton } from '@/components/home/marketing-visuals/shared';
+import { useRequestAccess } from '@/components/home/RequestAccessProvider';
+import Modal from '@/components/ui/premium/Modal';
 import { CLINIC_TYPES, PLATFORM_EXPANSION } from '@/lib/home-data';
 import { useScrollReveal } from '@/lib/hooks/useScrollReveal';
 import { cn } from '@/lib/utils';
+
+type ClinicType = (typeof CLINIC_TYPES)[number];
+
+const PILL_TONES = {
+  cyan: 'border-[#22D3EE]/40 text-[#22D3EE] hover:bg-[#22D3EE]/10',
+  purple: 'border-[#8B5CF6]/40 text-[#C4B5FD] hover:bg-[#8B5CF6]/10',
+  blue: 'border-[#3B82F6]/40 text-[#93C5FD] hover:bg-[#3B82F6]/10',
+  orange: 'border-[#F97316]/40 text-[#FDBA74] hover:bg-[#F97316]/10',
+} as const;
+
+const FIELD_CLS =
+  'w-full px-4 py-3 bg-surface-container border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary rounded-2xl outline-none text-sm text-on-surface';
+const FIELD_LABEL_CLS =
+  'block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2';
 
 const ICONS = {
   vet: Stethoscope,
@@ -44,6 +60,20 @@ const OTHER_CLINIC_ICONS = [
 export default function PlatformExpansionSection() {
   const sectionRef = useRef<HTMLElement>(null);
   useScrollReveal(sectionRef, { selector: '[data-platform-fade]', staggerMs: 80, y: 18 });
+
+  const { open: openRequestAccess } = useRequestAccess();
+  const [dentalOpen, setDentalOpen] = useState(false);
+  const [waitlistClinic, setWaitlistClinic] = useState<ClinicType | null>(null);
+
+  const handleClinicAction = (clinic: ClinicType) => {
+    if (clinic.id === 'dental') {
+      setDentalOpen(true);
+    } else {
+      setWaitlistClinic(clinic);
+    }
+  };
+
+  const dentalClinic = CLINIC_TYPES.find((c) => c.id === 'dental');
 
   return (
     <section ref={sectionRef} id="roadmap" className="phx-section relative overflow-hidden">
@@ -141,12 +171,26 @@ export default function PlatformExpansionSection() {
                 )}
 
                 <div className="mt-4">
-                  <OutlinedPillButton href="/request-access" tone={styles.ctaTone}>
-                    {isLive && '→ '}
-                    {isComing && '🔔 '}
-                    {clinic.cta}
-                    {!isComing && ' →'}
-                  </OutlinedPillButton>
+                  {clinic.id === 'vet' ? (
+                    <OutlinedPillButton onClick={openRequestAccess} tone={styles.ctaTone}>
+                      {isLive && '→ '}
+                      {clinic.cta}
+                      {!isComing && ' →'}
+                    </OutlinedPillButton>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleClinicAction(clinic)}
+                      className={cn(
+                        'inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[11px] font-medium transition-colors phx-focus-ring',
+                        PILL_TONES[styles.ctaTone],
+                      )}
+                    >
+                      {isComing && '🔔 '}
+                      {clinic.cta}
+                      {!isComing && ' →'}
+                    </button>
+                  )}
                 </div>
               </article>
             );
@@ -224,11 +268,188 @@ export default function PlatformExpansionSection() {
               );
             })}
           </div>
-          <GradientPillButton href="/request-access">
+          <GradientPillButton onClick={openRequestAccess}>
             {PLATFORM_EXPANSION.cta} →
           </GradientPillButton>
         </div>
       </div>
+
+      {dentalClinic && (
+        <DentalInfoModal
+          open={dentalOpen}
+          clinic={dentalClinic}
+          onClose={() => setDentalOpen(false)}
+        />
+      )}
+      <WaitlistModal clinic={waitlistClinic} onClose={() => setWaitlistClinic(null)} />
     </section>
+  );
+}
+
+function DentalInfoModal({
+  open,
+  clinic,
+  onClose,
+}: {
+  open: boolean;
+  clinic: ClinicType;
+  onClose: () => void;
+}) {
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Dental Clinics — In Development"
+      description="Modern dental workflows are being built into the Phoenix OS platform."
+      size="md"
+    >
+      <div className="space-y-4">
+        <span className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wide px-2.5 py-1 rounded-full border border-[#8B5CF6]/30 bg-[#8B5CF6]/10 text-[#C4B5FD]">
+          ● In Development
+        </span>
+        <p className="text-sm text-on-surface-variant/80 leading-relaxed">
+          {clinic.description} Here&apos;s what the dental build will include:
+        </p>
+        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+          {clinic.details.map((detail) => (
+            <li key={detail} className="flex items-start gap-2 text-sm text-on-surface-variant/70">
+              <span className="text-[#8B5CF6] mt-0.5 shrink-0">✓</span>
+              <span className="leading-snug">{detail}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="flex justify-end pt-1">
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex items-center rounded-full border border-[#8B5CF6]/40 text-[#C4B5FD] hover:bg-[#8B5CF6]/10 px-4 py-2 text-[11px] font-medium transition-colors phx-focus-ring"
+          >
+            Got it
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+function WaitlistModal({
+  clinic,
+  onClose,
+}: {
+  clinic: ClinicType | null;
+  onClose: () => void;
+}) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [clinicType, setClinicType] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  // Reset form whenever a different clinic opens the modal.
+  const activeId = clinic?.id ?? '';
+  const [lastId, setLastId] = useState('');
+  if (clinic && activeId !== lastId) {
+    setLastId(activeId);
+    setName('');
+    setEmail('');
+    setClinicType(clinic.title);
+    setSubmitted(false);
+  }
+
+  if (!clinic) {
+    // Reset tracker on close so reopening the same clinic re-initializes the form.
+    if (lastId !== '') setLastId('');
+    return null;
+  }
+
+  return (
+    <Modal
+      open={Boolean(clinic)}
+      onClose={onClose}
+      title={submitted ? "You're on the list" : `Join the ${clinic.title} waitlist`}
+      description={
+        submitted
+          ? undefined
+          : "Be the first to know when it launches — we'll email you the moment it's ready."
+      }
+      size="sm"
+    >
+      {submitted ? (
+        <div className="text-center py-4">
+          <div className="mx-auto mb-3 w-12 h-12 rounded-full bg-[#22C55E]/15 border border-[#22C55E]/30 flex items-center justify-center text-2xl">
+            ✓
+          </div>
+          <p className="text-sm text-on-surface-variant/80 leading-relaxed">
+            Thanks, {name || 'there'}! We&apos;ve added you to the {clinicType} waitlist and will
+            reach out at <span className="text-on-surface">{email}</span>.
+          </p>
+          <button
+            type="button"
+            onClick={onClose}
+            className="mt-5 inline-flex items-center rounded-full border border-[#3B82F6]/40 text-[#93C5FD] hover:bg-[#3B82F6]/10 px-4 py-2 text-[11px] font-medium transition-colors phx-focus-ring"
+          >
+            Close
+          </button>
+        </div>
+      ) : (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            setSubmitted(true);
+          }}
+          className="space-y-4"
+        >
+          <div>
+            <label htmlFor="waitlist-name" className={FIELD_LABEL_CLS}>
+              Full name
+            </label>
+            <input
+              id="waitlist-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className={FIELD_CLS}
+              placeholder="Jane Doe"
+            />
+          </div>
+          <div>
+            <label htmlFor="waitlist-email" className={FIELD_LABEL_CLS}>
+              Email
+            </label>
+            <input
+              id="waitlist-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className={FIELD_CLS}
+              placeholder="you@clinic.com"
+            />
+          </div>
+          <div>
+            <label htmlFor="waitlist-type" className={FIELD_LABEL_CLS}>
+              Clinic type
+            </label>
+            <select
+              id="waitlist-type"
+              value={clinicType}
+              onChange={(e) => setClinicType(e.target.value)}
+              className={FIELD_CLS}
+            >
+              {CLINIC_TYPES.filter((c) => c.id !== 'vet').map((c) => (
+                <option key={c.id} value={c.title}>
+                  {c.title}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            type="submit"
+            className="w-full inline-flex items-center justify-center rounded-full bg-[#3B82F6] text-white px-4 py-2.5 text-sm font-semibold hover:bg-[#2563EB] transition-colors phx-focus-ring"
+          >
+            Notify me
+          </button>
+        </form>
+      )}
+    </Modal>
   );
 }
