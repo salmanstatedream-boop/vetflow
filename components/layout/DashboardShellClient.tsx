@@ -84,9 +84,11 @@ function SidebarBrand({
   interactive?: boolean;
   onLogoClick?: () => void;
 }) {
-  const logoMark = <PhoenixLogo size={50} priority className="shrink-0" />;
+  const logoMark = (
+    <PhoenixLogo size={56} priority className="shrink-0 block" />
+  );
 
-  const rowClass = `h-16 flex items-center border-b border-outline-variant/50 shrink-0 ${collapsed ? 'justify-center px-2' : 'px-5 gap-2.5'}`;
+  const rowClass = `h-16 flex items-center border-b border-outline-variant/50 shrink-0 ${collapsed ? 'justify-center px-2' : 'px-4 gap-1.5'}`;
 
   if (interactive && onLogoClick) {
     return (
@@ -94,7 +96,7 @@ function SidebarBrand({
         <button
           type="button"
           onClick={onLogoClick}
-          className="rounded-xl p-1.5 cursor-pointer hover:bg-surface-container-high focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 transition-colors"
+          className="rounded-lg p-0.5 cursor-pointer hover:bg-surface-container-high focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 transition-colors"
           aria-label="Expand sidebar"
           title="Expand sidebar"
         >
@@ -108,11 +110,9 @@ function SidebarBrand({
     <div className={rowClass}>
       {logoMark}
       {!collapsed && (
-        <div className="min-w-0">
-          <span className="font-bold text-sm text-on-surface block font-[family-name:var(--font-display)] truncate">
-            {PRODUCT_NAME}
-          </span>
-        </div>
+        <span className="min-w-0 font-bold text-[15px] leading-none tracking-tight text-on-surface font-[family-name:var(--font-display)] truncate">
+          {PRODUCT_NAME}
+        </span>
       )}
     </div>
   );
