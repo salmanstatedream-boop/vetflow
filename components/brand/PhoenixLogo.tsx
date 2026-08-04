@@ -12,16 +12,21 @@ export default function PhoenixLogo({
   size = 32,
   priority = false,
 }: PhoenixLogoProps) {
+  // Render at 2× intrinsic pixels so downscale stays sharp on retina displays.
+  const intrinsic = Math.round(size * 2);
+
   return (
     // eslint-disable-next-line @next/next/no-img-element -- static brand mark; plain img avoids optimizer issues in small chrome slots
     <img
       src={LOGO_SRC}
       alt={LOGO_ALT}
-      width={size}
-      height={size}
+      width={intrinsic}
+      height={intrinsic}
       loading={priority ? 'eager' : 'lazy'}
       decoding="async"
-      className={cn('shrink-0 object-contain', className)}
+      draggable={false}
+      style={{ width: size, height: size }}
+      className={cn('shrink-0 object-contain select-none', className)}
     />
   );
 }
