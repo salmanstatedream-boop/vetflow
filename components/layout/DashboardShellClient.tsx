@@ -25,7 +25,7 @@ import { AttendanceProvider, useAttendance } from '@/lib/context/AttendanceConte
 import type { MyAttendance } from '@/components/dashboard/AttendanceWidgetClient';
 import { hasCapability } from '@/lib/auth/capabilities';
 import { EMPTY_ATTENDANCE } from '@/lib/dashboard/load-my-attendance';
-import ClinicOrPlatformLogo from '@/components/brand/ClinicOrPlatformLogo';
+import PhoenixLogo from '@/components/brand/PhoenixLogo';
 import { PRODUCT_NAME } from '@/lib/brand';
 import { Search, Menu, X, PanelLeftClose } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -84,15 +84,7 @@ function SidebarBrand({
   interactive?: boolean;
   onLogoClick?: () => void;
 }) {
-  const logoMark = (
-    <ClinicOrPlatformLogo
-      clinicLogoUrl={null}
-      size={36}
-      fallback="phoenix"
-      imgClassName="rounded-xl"
-      platformWrapperClassName="rounded-xl neon-accent-line"
-    />
-  );
+  const logoMark = <PhoenixLogo size={50} priority className="shrink-0" />;
 
   const rowClass = `h-16 flex items-center border-b border-outline-variant/50 shrink-0 ${collapsed ? 'justify-center px-2' : 'px-5 gap-2.5'}`;
 
@@ -102,7 +94,7 @@ function SidebarBrand({
         <button
           type="button"
           onClick={onLogoClick}
-          className="rounded-xl p-1 cursor-pointer hover:bg-surface-container-high focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 transition-colors"
+          className="rounded-xl p-1.5 cursor-pointer hover:bg-surface-container-high focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 transition-colors"
           aria-label="Expand sidebar"
           title="Expand sidebar"
         >

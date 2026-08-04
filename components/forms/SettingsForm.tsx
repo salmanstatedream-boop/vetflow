@@ -428,6 +428,41 @@ export default function SettingsForm({ defaultValues, brandedPdfsAllowed = false
         </label>
       </div>
 
+      <div className="glass-panel rounded-2xl border border-outline-variant/40 p-6 shadow-premium space-y-5">
+        <div>
+          <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider">
+            Dashboard notifications
+          </h3>
+          <p className="text-[11px] text-on-surface-variant mt-1">
+            Control which alerts appear in the notification bell and top status bars.
+          </p>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-3">
+          {(
+            [
+              ['notifyCheckout', 'Ready for checkout (green bar)'],
+              ['notifyAssignedToMe', 'Patient assigned / waiting for you (blue bar)'],
+              ['notifyAssignedInClinic', 'Assigned consultations in clinic'],
+              ['notifyUnpaidInvoice', 'Unpaid invoices'],
+              ['notifyLowStock', 'Low stock alerts'],
+              ['notifyEmergencyQueue', 'Emergency queue'],
+            ] as const
+          ).map(([name, label]) => (
+            <label
+              key={name}
+              className="flex items-start gap-2.5 text-xs text-on-surface p-3 rounded-xl bg-surface-container/30 border border-outline-variant/40"
+            >
+              <input
+                type="checkbox"
+                {...register(name)}
+                className="mt-0.5 rounded border-outline-variant/60"
+              />
+              <span>{label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
       <button
         type="submit"
         disabled={isLoading}

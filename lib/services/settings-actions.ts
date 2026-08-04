@@ -40,6 +40,14 @@ export async function updateSettingsAction(payload: unknown) {
           pdf_accent_color: parsed.pdfAccentColor || null,
           pdf_footer_text: parsed.pdfFooterText || null,
           product_markup_percent: parsed.productMarkupPercent ?? 20,
+          notification_prefs: {
+            checkout: parsed.notifyCheckout,
+            assigned_to_me: parsed.notifyAssignedToMe,
+            assigned_in_clinic: parsed.notifyAssignedInClinic,
+            unpaid_invoice: parsed.notifyUnpaidInvoice,
+            low_stock: parsed.notifyLowStock,
+            emergency_queue: parsed.notifyEmergencyQueue,
+          },
         },
         { onConflict: 'organization_id' }
       );

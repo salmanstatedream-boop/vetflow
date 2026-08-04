@@ -14,6 +14,7 @@ import PageHeader from '@/components/ui/premium/PageHeader';
 import { isBrandedPdfsEnabled, isCameraFeedEnabled } from '@/lib/auth/features';
 import { Settings } from 'lucide-react';
 import { normalizeClinicTimezone } from '@/lib/utils/timezones';
+import { normalizeNotificationPrefs } from '@/lib/dashboard/notification-prefs';
 
 export const metadata = {
   title: 'Clinic Settings',
@@ -51,7 +52,7 @@ export default async function SettingsPage() {
     supabase
       .from('app_settings')
       .select(
-        'timezone, currency, clinic_logo_url, clinic_address, clinic_phone, clinic_email, pdf_branding_enabled, pdf_accent_color, pdf_footer_text, product_markup_percent'
+        'timezone, currency, clinic_logo_url, clinic_address, clinic_phone, clinic_email, pdf_branding_enabled, pdf_accent_color, pdf_footer_text, product_markup_percent, notification_prefs'
       )
       .eq('organization_id', session.organizationId)
       .maybeSingle(),
@@ -83,6 +84,8 @@ export default async function SettingsPage() {
     is_active: boolean;
   }>;
 
+  const notifyPrefs = normalizeNotificationPrefs(appSettings?.notification_prefs);
+
   const defaultValues = {
     timezone: normalizeClinicTimezone(appSettings?.timezone),
     currency: appSettings?.currency || 'USD',
@@ -99,6 +102,12 @@ export default async function SettingsPage() {
     pdfAccentColor: appSettings?.pdf_accent_color || '#0b132b',
     pdfFooterText: appSettings?.pdf_footer_text || '',
     productMarkupPercent: Number(appSettings?.product_markup_percent ?? 20),
+    notifyCheckout: notifyPrefs.checkout,
+    notifyAssignedToMe: notifyPrefs.assigned_to_me,
+    notifyAssignedInClinic: notifyPrefs.assigned_in_clinic,
+    notifyUnpaidInvoice: notifyPrefs.unpaid_invoice,
+    notifyLowStock: notifyPrefs.low_stock,
+    notifyEmergencyQueue: notifyPrefs.emergency_queue,
   };
 
   return (

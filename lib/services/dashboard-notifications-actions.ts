@@ -12,6 +12,7 @@ import {
   sortDashboardNotifications,
   type DashboardNotification,
 } from '@/lib/dashboard/notifications';
+import { isNotificationKindEnabled, type NotificationPrefs } from '@/lib/dashboard/notification-prefs';
 import { filterLowStockProducts } from '@/lib/inventory/low-stock';
 import { normalizeOneToOne } from '@/lib/supabase/embed';
 
@@ -38,6 +39,13 @@ export async function getDashboardNotificationsAction(): Promise<{
     const branchId = ctx.activeBranchId;
     const supabase = await createClient();
     const notifications: DashboardNotification[] = [];
+
+    const { data: appSettings } = await supabase
+      .from('app_settings')
+      .select('notification_prefs')
+      .eq('organization_id', ctx.organizationId!)
+      .maybeSingle();
+    const prefs = (appSettings?.notification_prefs ?? {}) as NotificationPrefs;
 
     if (hasCapability(role, 'billing_checkout')) {
       const { data: checkoutVisits } = await supabase
@@ -246,11 +254,12 @@ export async function getDashboardNotificationsAction(): Promise<{
       }
     }
 
-    const sorted = sortDashboardNotifications(notifications).slice(0, MAX_NOTIFICATIONS);
+    const filtered = notifications.filter((n) => isNotificationKindEnabled(prefs, n.kind));
+    const sorted = sortDashboardNotifications(filtered).slice(0, MAX_NOTIFICATIONS);
     return {
       success: true,
       notifications: sorted,
-      count: notificationBadgeCount(notifications),
+      count: notificationBadgeCount(filtered),
     };
   } catch {
     return { success: false, notifications: [], count: 0 };

@@ -179,6 +179,12 @@ export const SettingsSchema = z.object({
     .or(z.literal('')),
   pdfFooterText: z.string().max(300).optional().or(z.literal('')),
   productMarkupPercent: z.number().min(0).max(500),
+  notifyCheckout: z.boolean(),
+  notifyAssignedToMe: z.boolean(),
+  notifyAssignedInClinic: z.boolean(),
+  notifyUnpaidInvoice: z.boolean(),
+  notifyLowStock: z.boolean(),
+  notifyEmergencyQueue: z.boolean(),
 });
 
 // --- BRANCHES ---
