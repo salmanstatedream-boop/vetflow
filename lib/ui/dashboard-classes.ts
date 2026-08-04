@@ -28,3 +28,7 @@ export const badgeActiveClass =
   'inline-flex items-center gap-1 bg-primary/15 text-primary px-2.5 py-0.5 rounded-full text-[10px] font-bold';
 export const badgeDangerClass =
   'inline-flex items-center gap-1 bg-destructive/15 text-destructive px-2.5 py-0.5 rounded-full text-[10px] font-bold';
+/** Idle filter / segment chip */
+export const chipClass = 'app-chip app-focus-ring';
+/** Selected filter / segment chip (soft cyan, not solid white/primary fill) */
+export const chipActiveClass = 'app-chip app-chip-active app-focus-ring';

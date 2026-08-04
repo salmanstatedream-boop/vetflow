@@ -73,8 +73,9 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+  /* Phoenix cyan — avoid shadcn grayscale primary clashing with app tokens */
+  --primary: var(--phx-cyan);
+  --primary-foreground: #ffffff;
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
@@ -908,6 +909,46 @@ html.light .app-btn-primary {
   color: #ffffff;
 }
 
+/* Segment / filter chips — soft selected state (not solid filled primary) */
+.app-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid transparent;
+  font-weight: 700;
+  font-size: 0.625rem;
+  line-height: 1.25;
+  color: var(--color-on-surface-variant);
+  background: transparent;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app-chip:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-surface-container) 60%, transparent);
+  color: var(--color-on-surface);
+}
+
+.app-chip.app-chip-active,
+.app-chip-active {
+  background: color-mix(in srgb, var(--phx-cyan) 15%, transparent);
+  color: var(--phx-cyan);
+  border-color: color-mix(in srgb, var(--phx-cyan) 30%, transparent);
+}
+
+.app-chip.app-chip-active:hover:not(:disabled),
+.app-chip-active:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--phx-cyan) 20%, transparent);
+  color: var(--phx-cyan);
+}
+
 .app-btn-secondary {
   display: inline-flex;
   align-items: center;
@@ -1696,6 +1737,20 @@ html.light .app-btn-primary {
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/*
+ * shadcn @theme inline maps --color-primary → var(--primary), overwriting the
+ * Phoenix --color-primary above. Restore cyan so utilities stay on-brand.
+ */
+@theme {
+  --color-primary: var(--phx-cyan);
+  --color-on-primary: #03040a;
+  --color-accent: var(--phx-cyan);
+}
+
+html.light {
+  --color-on-primary: #ffffff;
+}
+
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
@@ -1703,8 +1758,9 @@ html.light .app-btn-primary {
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
+  /* Phoenix cyan (not near-white) so bg-primary matches the product palette */
+  --primary: var(--phx-cyan);
+  --primary-foreground: #03040a;
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);

@@ -28,6 +28,7 @@ import {
   type PaymentFilter,
   type PaymentMethod,
 } from '@/lib/billing/payment-method';
+import { chipActiveClass, chipClass } from '@/lib/ui/dashboard-classes';
 
 export type InvoiceRow = {
   id: string;
@@ -199,10 +200,8 @@ export default function InvoicesListClient({
             key={s}
             type="button"
             onClick={() => setSaleTypeFilter(s)}
-            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold capitalize transition-colors ${
-              saleTypeFilter === s
-                ? 'bg-secondary text-white'
-                : 'bg-surface-container border border-outline-variant text-on-surface-variant'
+            className={`px-3 py-1.5 capitalize ${
+              saleTypeFilter === s ? chipActiveClass : `${chipClass} bg-surface-container border-outline-variant`
             }`}
           >
             {s} ({saleTypeCounts[s]})
@@ -216,10 +215,8 @@ export default function InvoicesListClient({
             key={s}
             type="button"
             onClick={() => setStatusFilter(s)}
-            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold capitalize transition-colors ${
-              statusFilter === s
-                ? 'bg-primary text-on-primary'
-                : 'bg-surface-container border border-outline-variant text-on-surface-variant'
+            className={`px-3 py-1.5 capitalize ${
+              statusFilter === s ? chipActiveClass : `${chipClass} bg-surface-container border-outline-variant`
             }`}
           >
             {s === 'partially_paid' ? 'partial' : s} ({counts[s]})
@@ -233,10 +230,10 @@ export default function InvoicesListClient({
             key={method}
             type="button"
             onClick={() => setPaymentFilter(method)}
-            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold capitalize transition-colors ${
+            className={`px-3 py-1.5 capitalize ${
               paymentFilter === method
-                ? 'app-btn-primary'
-                : 'bg-surface-container border border-outline-variant text-on-surface-variant'
+                ? chipActiveClass
+                : `${chipClass} bg-surface-container border-outline-variant`
             }`}
           >
             {method === 'all' ? 'All payments' : PAYMENT_METHOD_LABELS[method]}

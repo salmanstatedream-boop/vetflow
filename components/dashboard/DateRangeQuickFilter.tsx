@@ -12,6 +12,7 @@ import {
   type DateFilterPreset,
 } from '@/lib/utils/date-filters';
 import { addDaysToYmd, getTodayYmdInTimezone } from '@/lib/utils/timezones';
+import { chipActiveClass, chipClass } from '@/lib/ui/dashboard-classes';
 
 interface DateRangeQuickFilterProps {
   paramKey?: string;
@@ -68,11 +69,7 @@ export default function DateRangeQuickFilter({
   );
 
   const pillClass = (active: boolean) =>
-    `px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
-      active
-        ? 'bg-primary text-on-primary border-primary'
-        : 'border-outline-variant/50 text-on-surface-variant hover:border-primary/40'
-    }`;
+    `px-3 py-1.5 ${active ? chipActiveClass : `${chipClass} border-outline-variant/50`}`;
 
   return (
     <div className={`flex flex-wrap items-center gap-2 ${className}`}>

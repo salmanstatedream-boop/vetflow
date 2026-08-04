@@ -15,6 +15,7 @@ import DateRangeQuickFilter from '@/components/dashboard/DateRangeQuickFilter';
 import VisitStatusBadge from '@/components/dashboard/VisitStatusBadge';
 import { isConsultPaused } from '@/lib/utils/visit-status';
 import { resolveDashboardFilterDate } from '@/lib/utils/date-filters';
+import { chipActiveClass, chipClass } from '@/lib/ui/dashboard-classes';
 
 export type ReceptionistAppointmentRow = {
   id: string;
@@ -213,10 +214,10 @@ export default function ReceptionistHomeClient({
               key={t}
               type="button"
               onClick={() => setRecordTypeFilter(t)}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold capitalize transition-colors ${
+              className={`px-2.5 py-1 capitalize ${
                 recordTypeFilter === t
-                  ? 'bg-primary text-on-primary'
-                  : 'bg-surface-container border border-outline-variant text-on-surface-variant'
+                  ? chipActiveClass
+                  : `${chipClass} bg-surface-container border-outline-variant`
               }`}
             >
               {t}

@@ -28,6 +28,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useVisibilityPolling } from '@/lib/hooks/useVisibilityPolling';
 import DateRangeQuickFilter from '@/components/dashboard/DateRangeQuickFilter';
 import Select from '@/components/ui/premium/Select';
+import { chipActiveClass, chipClass } from '@/lib/ui/dashboard-classes';
 import { resolveDateFromParam } from '@/lib/utils/date-filters';
 import {
   isEmergencyAppointmentActive,
@@ -639,15 +640,13 @@ export default function AppointmentsListClient({
             key={tab.key}
             type="button"
             onClick={() => setActiveTab(tab.key)}
-            className={`flex-1 px-3 sm:px-4 py-2.5 rounded-lg text-xs font-bold transition-[background-color,color,box-shadow] duration-150 app-focus-ring ${
-              activeTab === tab.key
-                ? 'bg-primary text-white shadow-sm'
-                : 'text-on-surface-variant hover:bg-surface-container/60 hover:text-on-surface'
+            className={`flex-1 px-3 sm:px-4 py-2.5 text-xs ${
+              activeTab === tab.key ? chipActiveClass : chipClass
             }`}
           >
             {tab.label}
             <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${
-              activeTab === tab.key ? 'bg-white/20' : 'bg-surface-container'
+              activeTab === tab.key ? 'bg-primary/20' : 'bg-surface-container'
             }`}>
               {tab.count}
             </span>
