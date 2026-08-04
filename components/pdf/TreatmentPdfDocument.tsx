@@ -1,6 +1,7 @@
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import PdfClinicHeader from '@/components/pdf/PdfClinicHeader';
 import { formatPrescriptionDosage } from '@/lib/prescriptions/format-dosage';
+import { formatTemperatureFFromC } from '@/lib/utils/temperature';
 
 const styles = StyleSheet.create({
   page: {
@@ -87,7 +88,7 @@ export interface TreatmentPdfProps {
 
 export default function TreatmentPdfDocument(props: TreatmentPdfProps) {
   const vitals = [
-    props.temperatureC != null ? `Temp: ${props.temperatureC}°C` : null,
+    props.temperatureC != null ? `Temp: ${formatTemperatureFFromC(props.temperatureC)}` : null,
     props.heartRateBpm != null ? `HR: ${props.heartRateBpm} bpm` : null,
     props.respiratoryRate != null ? `RR: ${props.respiratoryRate}/min` : null,
     props.weightKg != null ? `Weight: ${props.weightKg} kg` : null,

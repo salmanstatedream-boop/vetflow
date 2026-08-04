@@ -26,6 +26,11 @@ import {
 } from '@/lib/utils/pet-species-avatar';
 import { useCurrency } from '@/lib/context/CurrencyContext';
 import {
+  celsiusToFahrenheitInput,
+  fahrenheitToCelsiusStored,
+  formatTemperatureFFromC,
+} from '@/lib/utils/temperature';
+import {
   AlertTriangle,
   Camera,
   ChevronRight,
@@ -92,7 +97,10 @@ function emptyNoteForm(visit: PatientVisitRow) {
     internalNotes: n?.internal_notes || '',
     followUpRecommendation: n?.follow_up_recommendation || '',
     followUpDays: (n?.follow_up_days ?? []).join(', '),
-    temperatureC: n?.temperature_c?.toString() ?? '',
+    temperatureC:
+      n?.temperature_c != null
+        ? String(celsiusToFahrenheitInput(n.temperature_c) ?? '')
+        : '',
     heartRateBpm: n?.heart_rate_bpm?.toString() ?? '',
     respiratoryRate: n?.respiratory_rate?.toString() ?? '',
     weightKg: n?.weight_kg?.toString() ?? '',
@@ -273,7 +281,11 @@ export default function PetMedicalProfileClient({
       internalNotes: editForm.internalNotes.trim(),
       followUpRecommendation: editForm.followUpRecommendation.trim(),
       followUpDays,
-      temperatureC: parseNum(editForm.temperatureC),
+      temperatureC: (() => {
+        const f = parseNum(editForm.temperatureC);
+        const c = fahrenheitToCelsiusStored(f ?? undefined);
+        return c == null || Number.isNaN(c as number) ? null : (c as number);
+      })(),
       heartRateBpm: parseNum(editForm.heartRateBpm),
       respiratoryRate: parseNum(editForm.respiratoryRate),
       weightKg: parseNum(editForm.weightKg),
@@ -717,7 +729,7 @@ export default function PetMedicalProfileClient({
                           />
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             <Textarea
-                              label="Temp (°C)"
+                              label="Temp (°F)"
                               value={editForm.temperatureC}
                               onChange={(e) =>
                                 setEditForm((f) => ({ ...f, temperatureC: e.target.value }))
@@ -781,7 +793,8 @@ export default function PetMedicalProfileClient({
                                 <div className="flex flex-wrap gap-3 p-3 rounded-xl bg-surface-container/30 border border-outline-variant/30 text-[10px]">
                                   {notes.temperature_c != null && (
                                     <span>
-                                      <strong>Temp:</strong> {notes.temperature_c}°C
+                                      <strong>Temp:</strong>{' '}
+                                      {formatTemperatureFFromC(notes.temperature_c)}
                                     </span>
                                   )}
                                   {notes.heart_rate_bpm != null && (

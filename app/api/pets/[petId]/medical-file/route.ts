@@ -7,6 +7,7 @@ import { getPdfBranding } from '@/lib/services/branding';
 import { getPatientMedicalProfileAction } from '@/lib/services/patient-medical-actions';
 import { buildHealthTimeline } from '@/lib/patients/health-timeline';
 import { PRODUCT_NAME } from '@/lib/brand';
+import { formatTemperatureFFromC } from '@/lib/utils/temperature';
 
 export async function GET(
   _request: Request,
@@ -45,7 +46,7 @@ export async function GET(
       return {
         date: new Date(p.date).toLocaleDateString(),
         weightKg: p.weightKg != null ? `${p.weightKg} kg` : '—',
-        temp: p.temperatureC != null ? `${p.temperatureC}°C` : '—',
+        temp: p.temperatureC != null ? formatTemperatureFFromC(p.temperatureC) : '—',
         diagnosis: visit?.notes?.diagnosis || '—',
       };
     });

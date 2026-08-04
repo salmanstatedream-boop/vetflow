@@ -1,5 +1,8 @@
 ﻿'use server';
 
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+import { isRedirectError } from 'next/dist/client/components/redirect-error';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import {
   assertCapability,
@@ -33,6 +36,12 @@ import { enrichWorkflowPayload } from '@/lib/consultations/workflow-chart';
 import { workflowToSoap } from '@/lib/consultations/workflow-to-soap';
 import type { WorkflowPayload } from '@/lib/consultations/workflow-types';
 import type { VisitPurpose } from '@/lib/appointments/visit-purpose';
+
+function revalidateConsultationPaths(visitId: string) {
+  revalidatePath(`/dashboard/doctors/${visitId}`);
+  revalidatePath(`/dashboard/doctors/${visitId}/preview`);
+  revalidatePath('/dashboard/doctors');
+}
 
 const ConsultationDraftSchema = z.record(z.string(), z.unknown());
 
@@ -527,6 +536,7 @@ export async function completeConsultationAction(payload: unknown) {
         consult_draft: null,
       })
       .eq('id', visit.id)
+      .eq('status', 'consulting')
       .select('id, status')
       .single();
 
@@ -545,8 +555,10 @@ export async function completeConsultationAction(payload: unknown) {
       afterData: { ...activityBase, status: 'ready_for_checkout', diagnosis: parsed.diagnosis },
     });
 
-    return { success: true, visitId: visit.id, prescriptionId };
+    revalidateConsultationPaths(visit.id);
+    redirect(`/dashboard/doctors/${visit.id}/preview`);
   } catch (err: unknown) {
+    if (isRedirectError(err)) throw err;
     const message = err instanceof Error ? err.message : 'An unexpected error occurred.';
     return { success: false, error: message };
   }
@@ -945,6 +957,7 @@ export async function completeWorkflowConsultationAction(payload: unknown) {
         workflow_payload: workflowPayload as unknown as Record<string, unknown>,
       })
       .eq('id', visit.id)
+      .eq('status', 'consulting')
       .select('id, status')
       .single();
 
@@ -967,8 +980,10 @@ export async function completeWorkflowConsultationAction(payload: unknown) {
       },
     });
 
-    return { success: true, visitId: visit.id, workflowType: parsed.workflowType };
+    revalidateConsultationPaths(visit.id);
+    redirect(`/dashboard/doctors/${visit.id}/preview`);
   } catch (err: unknown) {
+    if (isRedirectError(err)) throw err;
     const message = err instanceof Error ? err.message : 'An unexpected error occurred.';
     return { success: false, error: message };
   }

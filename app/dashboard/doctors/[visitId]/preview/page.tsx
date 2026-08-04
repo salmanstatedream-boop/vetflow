@@ -63,11 +63,25 @@ export default async function ConsultationFinalDraftPage({
     redirect('/dashboard/doctors');
   }
 
+  // Stale consulting/waiting after finalize must not yank the doctor back into SOAP.
+  // If finalize artifacts exist, stay on preview; otherwise resume the consultation room.
   if (visit.status === 'consulting' || visit.status === 'waiting') {
-    redirect(`/dashboard/doctors/${visitId}`);
-  }
-
-  if (visit.status !== 'ready_for_checkout') {
+    const [{ data: existingNotes }, { data: existingRx }] = await Promise.all([
+      supabase.from('clinical_notes').select('id').eq('visit_id', visitId).maybeSingle(),
+      supabase
+        .from('prescriptions')
+        .select('id, is_finalized')
+        .eq('visit_id', visitId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+    const hasFinalizeArtifacts =
+      Boolean(existingNotes) || Boolean(existingRx?.is_finalized) || Boolean(existingRx);
+    if (!hasFinalizeArtifacts) {
+      redirect(`/dashboard/doctors/${visitId}`);
+    }
+  } else if (visit.status !== 'ready_for_checkout') {
     redirect('/dashboard/doctors');
   }
 

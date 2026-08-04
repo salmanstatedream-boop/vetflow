@@ -23,6 +23,7 @@ import {
   type HealthEventType,
   type HealthMetricPoint,
 } from '@/lib/patients/health-timeline';
+import { celsiusToFahrenheit, formatTemperatureFFromC, roundTemp } from '@/lib/utils/temperature';
 
 interface PatientHealthGraphProps {
   profile: PatientMedicalProfileData;
@@ -55,11 +56,13 @@ function buildTimeSeries(
         ? `${formatDateLabel(p.date)} ${new Date(p.date).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`
         : formatDateLabel(p.date);
       seen.add(dateKey);
+      const raw = p[field] as number;
       return {
         id: p.visitId || `${dateKey}-${index}`,
         date: dateKey,
         label,
-        value: p[field] as number,
+        value:
+          field === 'temperatureC' ? roundTemp(celsiusToFahrenheit(raw), 1) : raw,
       };
     });
 }
@@ -268,7 +271,9 @@ export default function PatientHealthGraph({ profile }: PatientHealthGraphProps)
                   <td className="px-3 py-2 text-on-surface-variant">{formatDateLabel(row.date)}</td>
                   <td className="px-3 py-2">{row.weightKg != null ? `${row.weightKg} kg` : '—'}</td>
                   <td className="px-3 py-2">{row.bodyConditionScore ?? '—'}</td>
-                  <td className="px-3 py-2">{row.temperatureC != null ? `${row.temperatureC}°C` : '—'}</td>
+                  <td className="px-3 py-2">
+                    {row.temperatureC != null ? formatTemperatureFFromC(row.temperatureC) : '—'}
+                  </td>
                   <td className="px-3 py-2">{row.heartRateBpm ?? '—'}</td>
                   <td className="px-3 py-2">{row.respiratoryRate ?? '—'}</td>
                   <td className="px-3 py-2">{row.ageYears != null ? `${row.ageYears} yr` : '—'}</td>

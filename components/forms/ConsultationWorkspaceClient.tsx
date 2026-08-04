@@ -33,6 +33,10 @@ import { isWorkflowVisitPurpose, visitPurposeLabel } from '@/lib/appointments/vi
 import type { WorkflowConsultDraft } from '@/lib/consultations/workflow-types';
 import { getWorkflowConfig } from '@/lib/consultations/workflow-config';
 import AppointmentWorkflowRenderer from '@/components/consultations/workflows/AppointmentWorkflowRenderer';
+import {
+  celsiusToFahrenheitInput,
+  fahrenheitToCelsiusStored,
+} from '@/lib/utils/temperature';
 import type { StaffMember } from '@/components/consultations/workflows/GroomingWorkflow';
 import ConsultVoiceRecorder from '@/components/consultation/ConsultVoiceRecorder';
 import type { ConsultVoiceExtract } from '@/lib/ai/consult-voice';
@@ -270,7 +274,7 @@ export default function ConsultationWorkspaceClient({
       noPrescriptionNeeded: initialDraft?.noPrescriptionNeeded ?? false,
       procedureNotes: initialDraft?.procedureNotes ?? '',
       postOpMedication: initialDraft?.postOpMedication ?? '',
-      temperatureC: initialDraft?.temperatureC ?? undefined,
+      temperatureC: celsiusToFahrenheitInput(initialDraft?.temperatureC),
       heartRateBpm: initialDraft?.heartRateBpm ?? undefined,
       respiratoryRate: initialDraft?.respiratoryRate ?? undefined,
       weightKg: initialDraft?.weightKg ?? pet.weightKg ?? undefined,
@@ -587,8 +591,11 @@ export default function ConsultationWorkspaceClient({
       isPrescriptionLineComplete(line)
     );
     const noRxNeeded = hasCompleteRx ? false : Boolean(data.noPrescriptionNeeded);
+    const storedTemp = fahrenheitToCelsiusStored(data.temperatureC);
     const base: CompleteConsultationInput = {
       ...data,
+      temperatureC:
+        storedTemp == null || Number.isNaN(storedTemp as number) ? undefined : storedTemp,
       noPrescriptionNeeded: noRxNeeded,
       prescriptionItems: noRxNeeded ? [] : (data.prescriptionItems ?? []),
     };
@@ -637,13 +644,17 @@ export default function ConsultationWorkspaceClient({
     try {
       const payload = buildSubmitPayload(data);
       const res = await completeConsultationAction(payload);
-      if (res.success) {
-        setCompletedPrescriptionId(res.prescriptionId ?? null);
-        router.replace(`/dashboard/doctors/${visitId}/preview`);
-      } else {
+      // On success the server action redirects to the final-draft preview.
+      if (res && !res.success) {
         setError(res.error || 'Failed to complete consultation');
       }
     } catch (err: unknown) {
+      // redirect() from the server action surfaces as NEXT_REDIRECT — not a real failure
+      const digest =
+        err && typeof err === 'object' && 'digest' in err
+          ? String((err as { digest: unknown }).digest)
+          : '';
+      if (digest.startsWith('NEXT_REDIRECT')) return;
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
       setIsSubmitting(false);
@@ -1425,7 +1436,7 @@ export default function ConsultationWorkspaceClient({
                 Vitals <span className="text-on-surface-variant/50 font-normal normal-case">(at least one required if no exam notes)</span>
               </p>
               <div>
-                <label className="block text-[10px] font-semibold text-on-surface-variant uppercase mb-1">Temp (°C)</label>
+                <label className="block text-[10px] font-semibold text-on-surface-variant uppercase mb-1">Temp (°F)</label>
                 <input type="number" step="0.1" data-soap-tab="O" data-soap-field="temperatureC" {...register('temperatureC', { valueAsNumber: true })} className="w-full h-9 px-2 py-1.5 bg-surface border border-outline-variant rounded-lg text-xs text-on-surface" />
               </div>
               <div>

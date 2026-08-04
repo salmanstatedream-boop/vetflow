@@ -95,7 +95,7 @@ export async function extractConsultFieldsFromTranscript(
   const system = `You are a veterinary clinical scribe. Extract structured consultation fields from a doctor's spoken notes.
 Return ONLY a JSON object with any of these keys when present:
 chiefComplaint, history, examinationFindings, diagnosis, treatmentPlan, followUpRecommendation (strings),
-temperatureC, heartRateBpm, respiratoryRate, weightKg, bodyConditionScore, dehydrationPercent (numbers),
+temperatureC (body temperature in °F / Fahrenheit), heartRateBpm, respiratoryRate, weightKg, bodyConditionScore, dehydrationPercent (numbers),
 signVomiting, signAnorexia, signDiarrhoea, signConstipation, signVaccination, signDeworming (booleans),
 prescriptionItems (array of { medicineName, dosage, frequency, duration, instructions }).
 Do not invent facts. Omit unknown keys. No markdown.`;

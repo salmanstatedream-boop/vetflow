@@ -14,6 +14,10 @@ import WorkflowRxPanel, {
   type CatalogProduct,
 } from '@/components/consultations/workflows/WorkflowRxPanel';
 import type { StaffMember } from '@/components/consultations/workflows/GroomingWorkflow';
+import {
+  celsiusToFahrenheitInput,
+  fahrenheitToCelsiusStored,
+} from '@/lib/utils/temperature';
 
 type DewormingWorkflowProps = {
   stepId: string;
@@ -32,6 +36,17 @@ type DewormingWorkflowProps = {
 
 function numOrEmpty(v: number | null | undefined): string {
   return v == null || Number.isNaN(v) ? '' : String(v);
+}
+
+function tempFDisplay(celsius: number | null | undefined): string {
+  if (celsius == null || Number.isNaN(celsius)) return '';
+  return String(celsiusToFahrenheitInput(celsius));
+}
+
+function tempFToStoredC(raw: string): number | null {
+  if (raw === '') return null;
+  const stored = fahrenheitToCelsiusStored(Number(raw));
+  return stored == null || Number.isNaN(stored as number) ? null : (stored as number);
 }
 
 export default function DewormingWorkflow({
@@ -57,9 +72,23 @@ export default function DewormingWorkflow({
       <div className="space-y-4">
         <WorkflowSectionCard title="Vitals">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div>
+              <label className={labelClass}>Temp (°F)</label>
+              <input
+                type="number"
+                step="any"
+                value={tempFDisplay(exam.temperatureC)}
+                onChange={(e) =>
+                  patch('exam', {
+                    ...exam,
+                    temperatureC: tempFToStoredC(e.target.value),
+                  })
+                }
+                className={fieldClass}
+              />
+            </div>
             {(
               [
-                ['temperatureC', 'Temp (°C)'],
                 ['heartRateBpm', 'Heart rate'],
                 ['respiratoryRate', 'Resp. rate'],
                 ['weightKg', 'Weight (kg)'],

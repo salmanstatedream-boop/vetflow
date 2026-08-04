@@ -287,7 +287,7 @@ export const HEALTH_CHART_METRICS: {
 }[] = [
   { id: 'weight', label: 'Weight', unit: 'kg', color: '#74f5ff', field: 'weightKg' },
   { id: 'bodyCondition', label: 'Body condition', unit: '/9', color: '#a78bfa', field: 'bodyConditionScore' },
-  { id: 'temperature', label: 'Temperature', unit: '°C', color: '#f97316', field: 'temperatureC' },
+  { id: 'temperature', label: 'Temperature', unit: '°F', color: '#f97316', field: 'temperatureC' },
   { id: 'heartRate', label: 'Heart rate', unit: 'bpm', color: '#ef4444', field: 'heartRateBpm' },
   { id: 'respiration', label: 'Respiration', unit: 'rpm', color: '#22c55e', field: 'respiratoryRate' },
 ];

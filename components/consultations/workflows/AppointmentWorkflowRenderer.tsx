@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Loader2, Lock, Trash2 } from 'lucide-react';
 import type { WorkflowVisitPurpose } from '@/lib/appointments/visit-purpose';
 import {
@@ -146,7 +145,6 @@ export default function AppointmentWorkflowRenderer({
   visitReason,
   petSpecies,
 }: AppointmentWorkflowRendererProps) {
-  const router = useRouter();
   const config = getWorkflowConfig(workflowType);
   const [sections, setSections] = useState<WorkflowSectionsState>(() =>
     mergeSections(workflowType, initialDraft?.payload as Partial<WorkflowSectionsState>)
@@ -309,19 +307,28 @@ export default function AppointmentWorkflowRenderer({
     setCompleting(true);
     setError(null);
     const payload = buildPayload();
-    const res = await completeWorkflowConsultationAction({
-      visitId,
-      workflowType,
-      workflowPayload: payload,
-      serviceItems,
-      noPrescriptionNeeded,
-      prescriptionItems: noPrescriptionNeeded ? [] : prescriptionItems,
-    });
-    setCompleting(false);
-    if (res.success) {
-      router.replace(`/dashboard/doctors/${visitId}/preview`);
-    } else {
-      setError(res.error ?? 'Failed to complete workflow');
+    try {
+      const res = await completeWorkflowConsultationAction({
+        visitId,
+        workflowType,
+        workflowPayload: payload,
+        serviceItems,
+        noPrescriptionNeeded,
+        prescriptionItems: noPrescriptionNeeded ? [] : prescriptionItems,
+      });
+      // On success the server action redirects to the final-draft preview.
+      if (res && !res.success) {
+        setError(res.error ?? 'Failed to complete workflow');
+      }
+    } catch (err: unknown) {
+      const digest =
+        err && typeof err === 'object' && 'digest' in err
+          ? String((err as { digest: unknown }).digest)
+          : '';
+      if (digest.startsWith('NEXT_REDIRECT')) return;
+      setError(err instanceof Error ? err.message : 'Failed to complete workflow');
+    } finally {
+      setCompleting(false);
     }
   };
 

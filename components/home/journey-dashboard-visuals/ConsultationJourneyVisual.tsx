@@ -246,7 +246,7 @@ export default function ConsultationJourneyVisual({
                     <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2">
                       <p className="text-[8px] font-semibold text-[#F8FAFC] mb-1.5">Patient Summary</p>
                       <div className="grid grid-cols-2 gap-1 text-[7px] text-[#94A3B8]">
-                        <span>Temp 38.6°C</span>
+                        <span>Temp 101.5°F</span>
                         <span>HR 96</span>
                         <span>RR 24</span>
                         <span>Wt 32kg</span>

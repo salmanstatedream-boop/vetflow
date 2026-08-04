@@ -109,11 +109,12 @@ export async function startConsultationAction(visitId: string) {
       .update({ status: 'consulting' })
       .eq('id', visitId)
       .eq('organization_id', ctx.organizationId!)
+      .eq('status', 'waiting')
       .select()
       .single();
 
     if (error || !visit) {
-      throw new Error(error?.message || 'Failed to start consultation.');
+      throw new Error(error?.message || 'Failed to start consultation. Visit must be waiting.');
     }
 
     return { success: true };

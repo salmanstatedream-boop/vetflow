@@ -86,14 +86,19 @@ export default async function ConsultationRoomPage({
 
   // 2. Auto-advance visit from waiting to consulting on load
   if (visit.status === 'waiting') {
-    await supabase
+    const { data: advanced } = await supabase
       .from('visits')
       .update({
         status: 'consulting',
         consult_started_at: new Date().toISOString(),
       })
-      .eq('id', visitId);
-    visit.status = 'consulting';
+      .eq('id', visitId)
+      .eq('status', 'waiting')
+      .select('status')
+      .maybeSingle();
+    if (advanced?.status === 'consulting') {
+      visit.status = 'consulting';
+    }
   }
 
   // Consultation already finalized — lock the room and point to checkout / queue

@@ -9,6 +9,7 @@ import { formatPrescriptionDosage } from '@/lib/prescriptions/format-dosage';
 import Button from '@/components/ui/premium/Button';
 import { btnPrimaryClass } from '@/lib/ui/dashboard-classes';
 import { cn } from '@/lib/utils';
+import { celsiusToFahrenheit, roundTemp } from '@/lib/utils/temperature';
 
 export type FinalDraftRxItem = {
   medicineName: string;
@@ -204,7 +205,14 @@ export default function FinalDraftPreviewClient({
             <Field label="Treatment plan" value={notes?.treatmentPlan} />
             <Field label="Follow-up" value={notes?.followUpRecommendation} />
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-1">
-              <Field label="Temp °C" value={notes?.temperatureC} />
+              <Field
+                label="Temp °F"
+                value={
+                  notes?.temperatureC != null
+                    ? roundTemp(celsiusToFahrenheit(notes.temperatureC), 1)
+                    : null
+                }
+              />
               <Field label="HR bpm" value={notes?.heartRateBpm} />
               <Field label="RR" value={notes?.respiratoryRate} />
               <Field label="Weight kg" value={notes?.weightKg} />
