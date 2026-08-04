@@ -34,6 +34,12 @@ import type { WorkflowConsultDraft } from '@/lib/consultations/workflow-types';
 import { getWorkflowConfig } from '@/lib/consultations/workflow-config';
 import AppointmentWorkflowRenderer from '@/components/consultations/workflows/AppointmentWorkflowRenderer';
 import type { StaffMember } from '@/components/consultations/workflows/GroomingWorkflow';
+import ConsultVoiceRecorder from '@/components/consultation/ConsultVoiceRecorder';
+import type { ConsultVoiceExtract } from '@/lib/ai/consult-voice';
+import {
+  matchCatalogService,
+  serviceItemFromCatalog,
+} from '@/lib/billing/match-catalog-service';
 import {
   Heart, 
   User, 
@@ -282,14 +288,9 @@ export default function ConsultationWorkspaceClient({
       prescriptionItems: initialDraft?.prescriptionItems ?? [],
       serviceItems: initialDraft?.serviceItems?.length
         ? initialDraft.serviceItems
-        : catalogServices.length > 0
-        ? [{
-            serviceId: catalogServices.find((s) => s.name.toLowerCase().includes('consult'))?.id || catalogServices[0].id,
-            name: catalogServices.find((s) => s.name.toLowerCase().includes('consult'))?.name || catalogServices[0].name,
-            unitPrice: catalogServices.find((s) => s.name.toLowerCase().includes('consult'))?.price || catalogServices[0].price,
-            quantity: 1,
-          }]
-        : [],
+        : serviceItemFromCatalog(
+            matchCatalogService(catalogServices, 'consult', pet.species)
+          ),
     },
   });
 
@@ -638,7 +639,7 @@ export default function ConsultationWorkspaceClient({
       const res = await completeConsultationAction(payload);
       if (res.success) {
         setCompletedPrescriptionId(res.prescriptionId ?? null);
-        router.replace(`/dashboard/invoices/create/${visitId}`);
+        router.replace(`/dashboard/doctors/${visitId}/preview`);
       } else {
         setError(res.error || 'Failed to complete consultation');
       }
@@ -730,11 +731,70 @@ export default function ConsultationWorkspaceClient({
     setVisitType(type);
     setValue('visitType', type);
     if (type === 'surgery') {
-      const surgerySvc = catalogServices.find((s) => s.name.toLowerCase().includes('surgery'));
+      const surgerySvc = matchCatalogService(catalogServices, 'surgery', pet.species);
       if (surgerySvc && serviceFields.length > 0) {
         setValue('serviceItems.0.serviceId', surgerySvc.id);
         setValue('serviceItems.0.name', surgerySvc.name);
         setValue('serviceItems.0.unitPrice', surgerySvc.price);
+      }
+    }
+  };
+
+  const applyVoiceExtract = (fields: ConsultVoiceExtract) => {
+    const strKeys = [
+      'chiefComplaint',
+      'history',
+      'examinationFindings',
+      'diagnosis',
+      'treatmentPlan',
+      'followUpRecommendation',
+    ] as const;
+    for (const key of strKeys) {
+      const val = fields[key];
+      if (typeof val === 'string' && val.trim()) {
+        setValue(key, val.trim(), { shouldDirty: true, shouldValidate: true });
+      }
+    }
+    const numKeys = [
+      'temperatureC',
+      'heartRateBpm',
+      'respiratoryRate',
+      'weightKg',
+      'bodyConditionScore',
+      'dehydrationPercent',
+    ] as const;
+    for (const key of numKeys) {
+      const val = fields[key];
+      if (typeof val === 'number' && !Number.isNaN(val)) {
+        setValue(key, val, { shouldDirty: true, shouldValidate: true });
+      }
+    }
+    const boolKeys = [
+      'signVomiting',
+      'signAnorexia',
+      'signDiarrhoea',
+      'signConstipation',
+      'signVaccination',
+      'signDeworming',
+    ] as const;
+    for (const key of boolKeys) {
+      if (typeof fields[key] === 'boolean') {
+        setValue(key, fields[key] as boolean, { shouldDirty: true });
+      }
+    }
+    if (fields.prescriptionItems?.length) {
+      setValue('noPrescriptionNeeded', false);
+      for (const item of fields.prescriptionItems) {
+        if (!item.medicineName?.trim()) continue;
+        append({
+          productId: null,
+          medicineName: item.medicineName.trim(),
+          dosage: item.dosage?.trim() || 'as directed',
+          frequency: item.frequency?.trim() || 'as directed',
+          duration: item.duration?.trim() || 'as directed',
+          instructions: item.instructions?.trim() || '',
+          quantityRequested: 1,
+        });
       }
     }
   };
@@ -1224,6 +1284,7 @@ export default function ConsultationWorkspaceClient({
               sellingPrice: p.sellingPrice,
             }))}
             visitReason={visitReason}
+            petSpecies={pet.species}
           />
         </div>
       ) : (
@@ -1269,13 +1330,20 @@ export default function ConsultationWorkspaceClient({
           </div>
 
           {/* SOAP → Rx TAB BAR */}
-          <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <SoapTabBar
               active={activeSoapTab}
               onChange={handleSoapTabChange}
               completed={soapCompleted}
               maxUnlockedIndex={maxUnlockedIndex}
               draftSaved={draftSaved}
+            />
+            <ConsultVoiceRecorder
+              petName={pet.name}
+              species={pet.species}
+              visitReason={visitReason}
+              disabled={isSubmitting || Boolean(consultPausedAt)}
+              onExtracted={(fields) => applyVoiceExtract(fields)}
             />
           </div>
 

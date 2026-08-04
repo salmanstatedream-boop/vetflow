@@ -30,3 +30,40 @@ export function isEmergencyAppointmentActive(
 ): boolean {
   return Boolean(isEmergency) && !isTerminalAppointment(status);
 }
+
+export function isFollowUpAppointment(
+  followUpOfVisitId: string | null | undefined
+): boolean {
+  return Boolean(followUpOfVisitId);
+}
+
+/** Local calendar date YYYY-MM-DD */
+export function clinicLocalDateString(d = new Date()): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/**
+ * Future follow-ups stay in the Follow-up tab only.
+ * On their preferred_date (today), they also appear under Upcoming.
+ */
+export function isFollowUpVisibleInUpcoming(
+  appt: { follow_up_of_visit_id?: string | null; preferred_date: string; status: string },
+  today = clinicLocalDateString()
+): boolean {
+  if (!isUpcomingAppointment(appt.status)) return false;
+  if (!isFollowUpAppointment(appt.follow_up_of_visit_id)) return true;
+  return appt.preferred_date <= today;
+}
+
+export function isOpenFollowUpAppointment(
+  appt: { follow_up_of_visit_id?: string | null; status: string }
+): boolean {
+  return (
+    isFollowUpAppointment(appt.follow_up_of_visit_id) &&
+    !isTerminalAppointment(appt.status)
+  );
+}
+

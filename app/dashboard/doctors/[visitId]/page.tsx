@@ -123,16 +123,24 @@ export default async function ConsultationRoomPage({
           </p>
           <div className="flex flex-col sm:flex-row gap-2">
             {isReady ? (
-              <Link
-                href={`/dashboard/invoices/create/${visitId}`}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold app-btn-primary"
-              >
-                Start checkout
-              </Link>
+              <>
+                <Link
+                  href={`/dashboard/doctors/${visitId}/preview`}
+                  className="app-btn-primary app-focus-ring"
+                >
+                  Review final draft
+                </Link>
+                <Link
+                  href={`/dashboard/invoices/create/${visitId}`}
+                  className="app-btn-secondary app-focus-ring"
+                >
+                  Start checkout
+                </Link>
+              </>
             ) : null}
             <Link
               href="/dashboard/doctors"
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold border border-outline-variant hover:bg-surface-container/40"
+              className="app-btn-ghost app-focus-ring"
             >
               Back to consultation queue
             </Link>

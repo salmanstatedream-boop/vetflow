@@ -15,9 +15,15 @@ export const tableRowClass =
 export const inputClass =
   'w-full px-4 py-3 bg-surface-container border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary rounded-2xl outline-none text-sm text-on-surface app-focus-ring';
 export const btnPrimaryClass =
-  'app-btn-primary app-focus-ring disabled:opacity-50 disabled:cursor-not-allowed';
+  'app-btn-primary app-focus-ring';
 export const btnSecondaryClass =
-  'border border-outline-variant text-on-surface-variant py-2.5 px-4 rounded-xl text-xs font-semibold hover:bg-surface-container-high hover:border-primary/25 transition-colors app-focus-ring';
+  'app-btn-secondary app-focus-ring';
+export const btnGhostClass = 'app-btn-ghost app-focus-ring';
+export const btnDangerClass = 'app-btn-danger app-focus-ring';
+export const btnSoftClass = 'app-btn-soft app-focus-ring';
+export const btnSmClass = 'app-btn-sm';
+export const btnLgClass = 'app-btn-lg';
+export const btnBlockClass = 'app-btn-block';
 export const badgeActiveClass =
   'inline-flex items-center gap-1 bg-primary/15 text-primary px-2.5 py-0.5 rounded-full text-[10px] font-bold';
 export const badgeDangerClass =

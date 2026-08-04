@@ -2,6 +2,7 @@
 
 import { Loader2, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 import type { SoapFlowTab } from '@/components/consultation/SoapTabBar';
+import Button from '@/components/ui/premium/Button';
 
 interface ConsultationStepActionsProps {
   activeTab: SoapFlowTab;
@@ -36,15 +37,15 @@ export default function ConsultationStepActions({
     <div className="flex items-center justify-between gap-3 pt-4 mt-4 border-t border-outline-variant/30">
       <div className="min-w-0">
         {!isFirst && (
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={onPrevious}
             disabled={busy}
-            className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold border border-outline-variant text-on-surface hover:bg-surface-container-high disabled:opacity-40 transition-colors"
+            icon={<ChevronLeft className="size-3.5" />}
           >
-            <ChevronLeft className="w-3.5 h-3.5" />
             Previous
-          </button>
+          </Button>
         )}
       </div>
       <span className="text-[10px] text-on-surface-variant font-semibold hidden sm:inline truncate">
@@ -52,44 +53,34 @@ export default function ConsultationStepActions({
       </span>
       <div className="flex items-center gap-2 shrink-0">
         {!isLast && (
-          <button
+          <Button
             type="button"
+            variant="soft"
             onClick={onNext}
             disabled={busy || consultPaused}
-            className="inline-flex items-center gap-1 px-4 py-2 rounded-xl text-xs font-bold bg-primary/15 text-primary border border-primary/30 hover:bg-primary/20 disabled:opacity-40 transition-colors"
+            loading={busy}
           >
-            {busy ? (
-              <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                Loading…
-              </>
-            ) : (
+            {!busy ? (
               <>
                 Next
-                <ChevronRight className="w-3.5 h-3.5" />
-              </>
-            )}
-          </button>
-        )}
-        {showFinalize && isLast && onFinalize && (
-          <button
-            type="button"
-            onClick={onFinalize}
-            disabled={busy || consultPaused}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-primary text-on-primary hover:opacity-90 disabled:opacity-60 transition-colors"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                Finalizing…
+                <ChevronRight className="size-3.5" />
               </>
             ) : (
-              <>
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                Finalize Consultation
-              </>
+              'Loading…'
             )}
-          </button>
+          </Button>
+        )}
+        {showFinalize && isLast && onFinalize && (
+          <Button
+            type="button"
+            variant="primary"
+            onClick={onFinalize}
+            disabled={busy || consultPaused}
+            loading={isSubmitting}
+            icon={!isSubmitting ? <CheckCircle2 className="size-3.5" /> : undefined}
+          >
+            {isSubmitting ? 'Finalizing…' : 'Finalize Consultation'}
+          </Button>
         )}
       </div>
     </div>

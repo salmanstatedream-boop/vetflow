@@ -31,8 +31,9 @@ import Select from '@/components/ui/premium/Select';
 import { resolveDateFromParam } from '@/lib/utils/date-filters';
 import {
   isEmergencyAppointmentActive,
+  isOpenFollowUpAppointment,
+  isFollowUpVisibleInUpcoming,
   isTerminalAppointment,
-  isUpcomingAppointment,
 } from '@/lib/appointments/status';
 
 interface Doctor {
@@ -61,7 +62,7 @@ interface Appointment {
   follow_up_of_visit_id?: string | null;
 }
 
-type TabKey = 'upcoming' | 'emergency' | 'closed';
+type TabKey = 'upcoming' | 'followup' | 'emergency' | 'closed';
 
 const STATUS_OPTIONS = [
   'all',
@@ -312,10 +313,10 @@ function AppointmentRow({
                     })
                   )
                 }
-                className={`text-[10px] font-bold px-2 py-1 rounded-lg border ${
+                className={`app-btn-sm app-focus-ring ${
                   appt.is_emergency
-                    ? 'border-destructive/40 text-destructive bg-destructive/10'
-                    : 'border-outline-variant text-on-surface-variant'
+                    ? 'app-btn-danger'
+                    : 'app-btn-secondary'
                 }`}
               >
                 {appt.is_emergency ? 'Clear emergency' : 'Mark emergency'}
@@ -327,9 +328,9 @@ function AppointmentRow({
                 <button
                   disabled={updatingId !== null}
                   onClick={() => runAction(appt.id, () => confirmAppointmentAction(appt.id))}
-                  className="bg-primary text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold"
+                  className="app-btn-primary app-btn-sm app-focus-ring"
                 >
-                  {updatingId === appt.id ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Approve'}
+                  {updatingId === appt.id ? <Loader2 className="size-3 animate-spin" /> : 'Approve'}
                 </button>
                 {isAdmin && (
                   <button
@@ -340,7 +341,7 @@ function AppointmentRow({
                       setEditDate(appt.preferred_date);
                       setEditTime(appt.preferred_time);
                     }}
-                    className="text-[10px] text-primary font-bold hover:underline"
+                    className="app-btn-ghost app-btn-sm app-focus-ring"
                   >
                     Edit details
                   </button>
@@ -377,12 +378,12 @@ function AppointmentRow({
                         onCheckIn
                       )
                     }
-                    className="bg-primary text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1 disabled:opacity-60"
+                    className="app-btn-primary app-btn-sm app-focus-ring"
                   >
                     {updatingId === appt.id ? (
-                      <Loader2 className="w-3 h-3 animate-spin" />
+                      <Loader2 className="size-3 animate-spin" />
                     ) : (
-                      <UserCheck className="w-3 h-3" />
+                      <UserCheck className="size-3" />
                     )}
                     {updatingId === appt.id ? 'Checking in…' : 'Check-in'}
                   </button>
@@ -395,7 +396,7 @@ function AppointmentRow({
                       setRescheduleDate(appt.preferred_date);
                       setRescheduleTime(appt.preferred_time);
                     }}
-                    className="text-[10px] text-primary font-bold hover:underline"
+                    className="app-btn-ghost app-btn-sm app-focus-ring"
                   >
                     Reschedule
                   </button>
@@ -408,7 +409,7 @@ function AppointmentRow({
                         setEditDate(appt.preferred_date);
                         setEditTime(appt.preferred_time);
                       }}
-                      className="text-[10px] text-primary font-bold hover:underline"
+                      className="app-btn-ghost app-btn-sm app-focus-ring"
                     >
                       Edit details
                     </button>
@@ -420,7 +421,7 @@ function AppointmentRow({
                         runAction(appt.id, () => markNoShowAppointmentAction(appt.id));
                       }
                     }}
-                    className="text-[10px] text-on-surface-variant font-bold hover:underline"
+                    className="app-btn-ghost app-btn-sm app-focus-ring"
                   >
                     No-show
                   </button>
@@ -431,7 +432,7 @@ function AppointmentRow({
                         runAction(appt.id, () => cancelAppointmentAction(appt.id));
                       }
                     }}
-                    className="text-[10px] text-destructive font-bold hover:underline"
+                    className="app-btn-danger app-btn-sm app-focus-ring"
                   >
                     Cancel
                   </button>
@@ -530,7 +531,8 @@ export default function AppointmentsListClient({
   }, [urlDate]);
 
   const tabCounts = useMemo(() => ({
-    upcoming: initialAppointments.filter((a) => isUpcomingAppointment(a.status)).length,
+    upcoming: initialAppointments.filter((a) => isFollowUpVisibleInUpcoming(a)).length,
+    followup: initialAppointments.filter((a) => isOpenFollowUpAppointment(a)).length,
     emergency: initialAppointments.filter((a) =>
       isEmergencyAppointmentActive(a.is_emergency, a.status)
     ).length,
@@ -539,7 +541,8 @@ export default function AppointmentsListClient({
 
   const filtered = useMemo(() => {
     const list = initialAppointments.filter((appt) => {
-      if (activeTab === 'upcoming' && !isUpcomingAppointment(appt.status)) return false;
+      if (activeTab === 'upcoming' && !isFollowUpVisibleInUpcoming(appt)) return false;
+      if (activeTab === 'followup' && !isOpenFollowUpAppointment(appt)) return false;
       if (activeTab === 'emergency' && !isEmergencyAppointmentActive(appt.is_emergency, appt.status))
         return false;
       if (activeTab === 'closed' && !isTerminalAppointment(appt.status)) return false;
@@ -609,6 +612,7 @@ export default function AppointmentsListClient({
 
   const tabs: { key: TabKey; label: string; count: number }[] = [
     { key: 'upcoming', label: 'Upcoming', count: tabCounts.upcoming },
+    { key: 'followup', label: 'Follow-up', count: tabCounts.followup },
     { key: 'emergency', label: 'Emergency', count: tabCounts.emergency },
     { key: 'closed', label: 'Closed', count: tabCounts.closed },
   ];
@@ -635,10 +639,10 @@ export default function AppointmentsListClient({
             key={tab.key}
             type="button"
             onClick={() => setActiveTab(tab.key)}
-            className={`flex-1 px-4 py-2.5 rounded-lg text-xs font-bold transition-all ${
+            className={`flex-1 px-3 sm:px-4 py-2.5 rounded-lg text-xs font-bold transition-[background-color,color,box-shadow] duration-150 app-focus-ring ${
               activeTab === tab.key
                 ? 'bg-primary text-white shadow-sm'
-                : 'text-on-surface-variant hover:bg-surface-container/60'
+                : 'text-on-surface-variant hover:bg-surface-container/60 hover:text-on-surface'
             }`}
           >
             {tab.label}

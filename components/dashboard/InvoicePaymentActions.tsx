@@ -136,16 +136,16 @@ export default function InvoicePaymentActions({
         type="button"
         onClick={handlePay}
         disabled={isPending}
-        className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl text-xs font-bold disabled:opacity-60"
+        className="app-btn-primary app-focus-ring"
       >
         {isPending ? (
           <>
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="size-3.5 animate-spin" />
             Processing…
           </>
         ) : (
           <>
-            <CheckCircle2 className="w-4 h-4" />
+            <CheckCircle2 className="size-3.5" />
             {amount ? 'Record partial payment' : 'Pay remaining balance'}
           </>
         )}

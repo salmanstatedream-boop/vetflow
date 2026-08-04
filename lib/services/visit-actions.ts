@@ -122,6 +122,77 @@ export async function startConsultationAction(visitId: string) {
   }
 }
 
+/**
+ * Soft-unlock a visit that is ready_for_checkout so the doctor can edit
+ * consultation notes again (before an invoice is created).
+ */
+export async function reopenConsultationForEditAction(visitId: string) {
+  try {
+    const ctx = await resolveServerAuthContext();
+    if (!ctx) {
+      throw new Error('Unauthorized: Session is invalid.');
+    }
+    assertCapability(ctx, 'clinical_queue');
+
+    const supabase = await createClient();
+
+    const { data: visit, error: visitErr } = await supabase
+      .from('visits')
+      .select('id, status, branch_id')
+      .eq('id', visitId)
+      .eq('organization_id', ctx.organizationId!)
+      .maybeSingle();
+
+    if (visitErr || !visit) {
+      throw new Error(visitErr?.message || 'Visit not found.');
+    }
+    if (visit.status !== 'ready_for_checkout') {
+      throw new Error('Only visits ready for checkout can be reopened for editing.');
+    }
+
+    const { data: invoice } = await supabase
+      .from('invoices')
+      .select('id')
+      .eq('visit_id', visitId)
+      .maybeSingle();
+
+    if (invoice) {
+      throw new Error('Invoice already created — consultation cannot be reopened.');
+    }
+
+    const { error } = await supabase
+      .from('visits')
+      .update({
+        status: 'consulting',
+        completed_at: null,
+      })
+      .eq('id', visitId)
+      .eq('organization_id', ctx.organizationId!);
+
+    if (error) {
+      throw new Error(error.message || 'Failed to reopen consultation.');
+    }
+
+    await writeAuditLog({
+      organizationId: ctx.organizationId,
+      branchId: visit.branch_id,
+      actorUserId: ctx.userId,
+      actorRole: ctx.role || 'doctor',
+      action: 'VISIT_REOPENED_FOR_EDIT',
+      resourceType: 'VISIT',
+      resourceId: visitId,
+      afterData: { status: 'consulting' },
+    });
+
+    return { success: true };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'An unexpected error occurred.',
+    };
+  }
+}
+
 async function assertAssignedDoctorVisit(
   supabase: Awaited<ReturnType<typeof createClient>>,
   visitId: string,

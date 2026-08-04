@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { ArrowRight, ShoppingBag, UserPlus } from 'lucide-react';
 import AppLink from '@/components/layout/AppLink';
 import QuickWalkInModal from '@/components/reception/QuickWalkInModal';
+import { btnLgClass, btnPrimaryClass } from '@/lib/ui/dashboard-classes';
+import { cn } from '@/lib/utils';
 
 interface ReceptionistPrimaryActionsProps {
   activeBranchId: string;
@@ -24,19 +26,19 @@ export default function ReceptionistPrimaryActions({
         <button
           type="button"
           onClick={() => setWalkInOpen(true)}
-          className="flex items-center justify-center gap-3 w-full py-4 px-6 rounded-2xl bg-primary text-on-primary font-bold text-sm shadow-premium hover:opacity-90 transition-all"
+          className={cn(btnPrimaryClass, btnLgClass, 'w-full shadow-premium')}
         >
-          <UserPlus className="w-5 h-5" />
+          <UserPlus className="size-5" />
           Quick walk-in — patient just arrived
-          <ArrowRight className="w-4 h-4 opacity-80" />
+          <ArrowRight className="size-4 opacity-80" />
         </button>
         <AppLink
           href="/dashboard/sales/new"
-          className="flex items-center justify-center gap-3 w-full py-4 px-6 rounded-2xl app-btn-primary font-bold text-sm shadow-premium transition-all"
+          className={cn(btnPrimaryClass, btnLgClass, 'w-full shadow-premium')}
         >
-          <ShoppingBag className="w-5 h-5" />
+          <ShoppingBag className="size-5" />
           Retail sale — products & services
-          <ArrowRight className="w-4 h-4 opacity-80" />
+          <ArrowRight className="size-4 opacity-80" />
         </AppLink>
       </div>
 

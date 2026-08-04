@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2, Lock } from 'lucide-react';
+import { Loader2, Lock, Trash2 } from 'lucide-react';
 import type { WorkflowVisitPurpose } from '@/lib/appointments/visit-purpose';
 import {
   getWorkflowConfig,
@@ -38,11 +38,22 @@ import VaccinationWorkflow from '@/components/consultations/workflows/Vaccinatio
 import DewormingWorkflow from '@/components/consultations/workflows/DewormingWorkflow';
 import ConsultationStepProgressBar from '@/components/consultation/ConsultationStepProgressBar';
 import type { CatalogProduct } from '@/components/consultations/workflows/WorkflowRxPanel';
+import {
+  matchCatalogService,
+  serviceItemFromCatalog,
+} from '@/lib/billing/match-catalog-service';
 
 type CatalogService = {
   id: string;
   name: string;
   price: number;
+};
+
+type ServiceLine = {
+  serviceId: string;
+  name: string;
+  unitPrice: number;
+  quantity: number;
 };
 
 type WorkflowSectionsState =
@@ -59,6 +70,7 @@ type AppointmentWorkflowRendererProps = {
   catalogServices: CatalogService[];
   products: CatalogProduct[];
   visitReason?: string;
+  petSpecies?: string | null;
 };
 
 function initialSections(workflowType: WorkflowVisitPurpose): WorkflowSectionsState {
@@ -132,6 +144,7 @@ export default function AppointmentWorkflowRenderer({
   catalogServices,
   products,
   visitReason,
+  petSpecies,
 }: AppointmentWorkflowRendererProps) {
   const router = useRouter();
   const config = getWorkflowConfig(workflowType);
@@ -151,18 +164,19 @@ export default function AppointmentWorkflowRenderer({
       initialDraft?.maxUnlockedIndex
     )
   );
-  const [serviceItems] = useState(
-    initialDraft?.serviceItems ??
-      catalogServices
-        .filter((s) => s.name.toLowerCase().includes(workflowType.replace('_', '')))
-        .slice(0, 1)
-        .map((s) => ({
-          serviceId: s.id,
-          name: s.name,
-          unitPrice: s.price,
-          quantity: 1,
-        }))
-  );
+  const [serviceItems, setServiceItems] = useState<ServiceLine[]>(() => {
+    if (initialDraft?.serviceItems?.length) {
+      return initialDraft.serviceItems.map((item) => ({
+        serviceId: item.serviceId || '',
+        name: item.name,
+        unitPrice: item.unitPrice,
+        quantity: item.quantity,
+      }));
+    }
+    return serviceItemFromCatalog(
+      matchCatalogService(catalogServices, workflowType, petSpecies)
+    );
+  });
   const [noPrescriptionNeeded, setNoPrescriptionNeeded] = useState(
     initialDraft?.noPrescriptionNeeded ?? false
   );
@@ -305,7 +319,7 @@ export default function AppointmentWorkflowRenderer({
     });
     setCompleting(false);
     if (res.success) {
-      router.replace(`/dashboard/invoices/create/${visitId}`);
+      router.replace(`/dashboard/doctors/${visitId}/preview`);
     } else {
       setError(res.error ?? 'Failed to complete workflow');
     }
@@ -358,6 +372,71 @@ export default function AppointmentWorkflowRenderer({
           {error}
         </p>
       ) : null}
+
+      <div className="glass-panel rounded-xl border border-outline-variant/40 p-3 space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
+            Billing service
+          </p>
+          <select
+            className="text-[11px] bg-surface-container border border-outline-variant/50 rounded-lg px-2 py-1 text-on-surface max-w-[220px]"
+            value=""
+            onChange={(e) => {
+              const id = e.target.value;
+              const svc = catalogServices.find((s) => s.id === id);
+              if (!svc) return;
+              setServiceItems((prev) => {
+                if (prev.some((p) => p.serviceId === svc.id)) return prev;
+                return [
+                  ...prev,
+                  {
+                    serviceId: svc.id,
+                    name: svc.name,
+                    unitPrice: svc.price,
+                    quantity: 1,
+                  },
+                ];
+              });
+            }}
+          >
+            <option value="">Add from catalog…</option>
+            {catalogServices.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name} — {s.price}
+              </option>
+            ))}
+          </select>
+        </div>
+        {serviceItems.length === 0 ? (
+          <p className="text-[11px] text-on-surface-variant">
+            No service auto-selected. Add one before completing if this visit should be billed.
+          </p>
+        ) : (
+          <ul className="space-y-1.5">
+            {serviceItems.map((item, idx) => (
+              <li
+                key={`${item.serviceId}-${idx}`}
+                className="flex items-center gap-2 text-xs text-on-surface bg-surface-container/50 rounded-lg px-2.5 py-2"
+              >
+                <span className="flex-1 font-medium truncate">{item.name}</span>
+                <span className="text-on-surface-variant shrink-0">
+                  ×{item.quantity} @ {item.unitPrice}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setServiceItems((prev) => prev.filter((_, i) => i !== idx))
+                  }
+                  className="text-destructive/80 hover:text-destructive p-1"
+                  aria-label={`Remove ${item.name}`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       {workflowType === 'grooming' ? (
         <GroomingWorkflow
@@ -413,7 +492,7 @@ export default function AppointmentWorkflowRenderer({
           type="button"
           onClick={goPrev}
           disabled={currentStepIndex <= 0 || saving || completing}
-          className="text-xs font-semibold text-on-surface-variant px-4 py-2 rounded-lg border border-outline-variant/50 disabled:opacity-40"
+          className="app-btn-secondary app-focus-ring"
         >
           Previous
         </button>
@@ -422,18 +501,18 @@ export default function AppointmentWorkflowRenderer({
             type="button"
             onClick={() => void saveDraft()}
             disabled={saving || completing}
-            className="text-xs font-semibold text-primary px-4 py-2 rounded-lg border border-primary/30 disabled:opacity-50"
+            className="app-btn-soft app-focus-ring"
           >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save draft'}
+            {saving ? <Loader2 className="size-3.5 animate-spin" /> : 'Save draft'}
           </button>
           {isLastStep ? (
             <button
               type="button"
               onClick={() => void handleComplete()}
               disabled={completing}
-              className="text-xs font-bold app-btn-primary px-5 py-2 rounded-lg disabled:opacity-50 inline-flex items-center gap-2"
+              className="app-btn-primary app-focus-ring"
             >
-              {completing ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+              {completing ? <Loader2 className="size-3.5 animate-spin" /> : null}
               Complete workflow
             </button>
           ) : (
@@ -441,7 +520,7 @@ export default function AppointmentWorkflowRenderer({
               type="button"
               onClick={() => void goNext()}
               disabled={saving || completing}
-              className="text-xs font-bold app-btn-primary px-5 py-2 rounded-lg disabled:opacity-50"
+              className="app-btn-primary app-focus-ring"
             >
               Next section
             </button>

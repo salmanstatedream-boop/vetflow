@@ -17,9 +17,6 @@ import {
   Loader2,
   FileSpreadsheet,
   CheckCircle,
-  Printer,
-  Pill,
-  FileText,
   Mail,
   Phone,
   Trash2,
@@ -73,10 +70,6 @@ export default function InvoiceCheckoutClient({
   const [error, setError] = useState<string | null>(null);
   const [paymentProof, setPaymentProof] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [completed, setCompleted] = useState<{
-    invoiceId: string;
-    prescriptionId: string | null;
-  } | null>(null);
   const [lineItems, setLineItems] = useState<BillingItem[]>(() =>
     items.map((item) => ({
       ...item,
@@ -204,11 +197,7 @@ export default function InvoiceCheckoutClient({
       }
       const res = await createInvoiceFromVisitFormAction(formData);
       if (res.success && 'invoiceId' in res && res.invoiceId) {
-        setCompleted({
-          invoiceId: res.invoiceId,
-          prescriptionId: res.prescriptionId || prescriptionId || null,
-        });
-        router.refresh();
+        router.replace(`/dashboard/invoices/${res.invoiceId}`);
       } else {
         setError(
           ('error' in res && res.error) || 'Failed to complete billing transaction.'
@@ -220,67 +209,6 @@ export default function InvoiceCheckoutClient({
       setIsSubmitting(false);
     }
   };
-
-  if (completed) {
-    return (
-      <div className="glass-panel rounded-2xl border border-emerald-500/30 p-8 space-y-6 shadow-premium">
-        <div className="flex items-center gap-3">
-          <CheckCircle className="w-8 h-8 text-emerald-500" />
-          <div>
-            <h3 className="text-lg font-bold text-on-surface">Checkout complete</h3>
-            <p className="text-xs text-on-surface-variant">
-              Invoice created for {pet.name}. Print documents or return to the queue.
-            </p>
-          </div>
-        </div>
-
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
-          <a
-            href={`/api/invoices/${completed.invoiceId}/pdf`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-outline-variant bg-surface-container text-xs font-bold text-on-surface hover:border-primary"
-          >
-            <Printer className="w-4 h-4 text-primary" />
-            Print invoice
-          </a>
-          {completed.prescriptionId && (
-            <a
-              href={`/api/prescriptions/${completed.prescriptionId}/pdf`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-outline-variant bg-surface-container text-xs font-bold text-on-surface hover:border-primary"
-            >
-              <Pill className="w-4 h-4 text-primary" />
-              Print prescription
-            </a>
-          )}
-          <a
-            href={`/api/visits/${visitId}/treatment-pdf`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-outline-variant bg-surface-container text-xs font-bold text-on-surface hover:border-primary"
-          >
-            <FileText className="w-4 h-4 text-primary" />
-            Treatment summary
-          </a>
-          <a
-            href={`/dashboard/invoices/${completed.invoiceId}`}
-            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-outline-variant bg-surface-container text-xs font-bold text-on-surface hover:border-primary"
-          >
-            View receipt
-          </a>
-          <button
-            type="button"
-            onClick={() => router.replace('/dashboard/doctors')}
-            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl app-btn-primary text-xs font-bold sm:col-span-2 md:col-span-2"
-          >
-            Back to consultation queue
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="grid md:grid-cols-12 gap-8 items-start">
@@ -582,16 +510,16 @@ export default function InvoiceCheckoutClient({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-primary hover:opacity-90 text-white py-3 rounded-xl text-xs font-bold shadow-premium transition-all flex items-center justify-center gap-1.5 disabled:opacity-75"
+              className="app-btn-primary app-btn-block app-focus-ring"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <Loader2 className="size-3.5 animate-spin" />
                   Processing…
                 </>
               ) : (
                 <>
-                  <CheckCircle className="w-4 h-4" />
+                  <CheckCircle className="size-4" />
                   {paymentStatusWatch === 'paid'
                     ? 'Record payment & close visit'
                     : paymentStatusWatch === 'partial'

@@ -89,9 +89,9 @@ export default async function InvoiceDetailPage({
               href={`/api/invoices/${invoice.id}/pdf`}
               target="_blank"
               rel="noopener noreferrer"
-              className="app-btn-primary px-4 py-2.5 rounded-xl text-xs font-semibold shadow-sm flex items-center gap-2 transition-all"
+              className="app-btn-primary app-focus-ring"
             >
-              <Printer className="w-4 h-4" />
+              <Printer className="size-4" />
               Print Receipt PDF
             </a>
 
@@ -100,9 +100,9 @@ export default async function InvoiceDetailPage({
                 href={`/api/prescriptions/${prescription.id}/pdf`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="border border-primary/30 hover:bg-primary/5 text-primary px-4 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2"
+                className="app-btn-soft app-focus-ring"
               >
-                <FileCheck2 className="w-4 h-4" />
+                <FileCheck2 className="size-4" />
                 Print Prescription PDF
               </a>
             )}
