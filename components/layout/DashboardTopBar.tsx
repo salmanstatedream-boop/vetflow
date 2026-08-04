@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Bell } from 'lucide-react';
 import ClinicOrPlatformLogo from '@/components/brand/ClinicOrPlatformLogo';
-import { PRODUCT_NAME } from '@/lib/brand';
 import { resolvePageTitle } from '@/lib/navigation/dashboard-nav';
 import { cn } from '@/lib/utils';
 import type { DashboardNotification } from '@/lib/dashboard/notifications';
@@ -52,14 +51,12 @@ function ClinicBrandCluster({
       <ClinicOrPlatformLogo
         clinicLogoUrl={clinicLogoUrl}
         size={32}
+        fallback="paw"
         imgClassName="rounded-lg"
         platformWrapperClassName="rounded-lg"
       />
       <div className="min-w-0">
-        <span className="text-[11px] font-bold text-on-surface block font-[family-name:var(--font-display)] leading-tight">
-          {PRODUCT_NAME}
-        </span>
-        <span className="text-[9px] text-on-surface-variant block truncate max-w-[120px]">
+        <span className="text-[11px] font-bold text-on-surface block font-[family-name:var(--font-display)] leading-tight truncate max-w-[160px]">
           {organizationName || 'Clinic'}
         </span>
       </div>

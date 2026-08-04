@@ -8,10 +8,12 @@ import ProductEditModal from '@/components/inventory/ProductEditModal';
 import Select from '@/components/ui/premium/Select';
 import { deleteProductAction, applyProductMarkupAction } from '@/lib/services/inventory-actions';
 import { useCurrency } from '@/lib/context/CurrencyContext';
-import { ShieldAlert, Trash2, Loader2, Settings, Search, X } from 'lucide-react';
+import { ShieldAlert, Trash2, Loader2, Settings, Search, X, CalendarClock } from 'lucide-react';
 import type { UserSessionDetails } from '@/lib/services/auth';
 import { formatProductTypeLabel } from '@/lib/inventory/product-types';
 import AnimalDeleteConfirmModal from '@/components/ui/premium/AnimalDeleteConfirmModal';
+
+const EXPIRING_WITHIN_DAYS = 60;
 
 interface ProductRow {
   id: string;
@@ -50,12 +52,24 @@ interface InventoryCatalogClientProps {
   categories: { id: string; name: string }[];
   branches: { id: string; name: string }[];
   initialLowStockOnly?: boolean;
+  initialExpiringOnly?: boolean;
   lowStockCount?: number;
   existingProductTypes?: string[];
 }
 
 function isLowStockProduct(product: ProductRow): boolean {
   return product.type !== 'service' && product.stock_quantity <= product.reorder_level;
+}
+
+function isExpiringSoonProduct(product: ProductRow, withinDays = EXPIRING_WITHIN_DAYS): boolean {
+  if (!product.track_expiry || !product.expiry_date) return false;
+  const day = product.expiry_date.slice(0, 10);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const exp = new Date(`${day}T12:00:00`);
+  const end = new Date(today);
+  end.setDate(end.getDate() + withinDays);
+  return exp >= today && exp <= end;
 }
 
 function canManageRow(role: UserSessionDetails['role']): boolean {
@@ -71,6 +85,7 @@ export default function InventoryCatalogClient({
   categories,
   branches,
   initialLowStockOnly = false,
+  initialExpiringOnly = false,
   lowStockCount = 0,
   existingProductTypes = [],
 }: InventoryCatalogClientProps) {
@@ -78,6 +93,7 @@ export default function InventoryCatalogClient({
   const [typeFilter, setTypeFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [lowStockOnly, setLowStockOnly] = useState(initialLowStockOnly);
+  const [expiringOnly, setExpiringOnly] = useState(initialExpiringOnly);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -88,11 +104,22 @@ export default function InventoryCatalogClient({
   useEffect(() => {
     if (initialLowStockOnly) {
       setLowStockOnly(true);
+      setExpiringOnly(false);
       requestAnimationFrame(() => {
         tableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     }
   }, [initialLowStockOnly]);
+
+  useEffect(() => {
+    if (initialExpiringOnly) {
+      setExpiringOnly(true);
+      setLowStockOnly(false);
+      requestAnimationFrame(() => {
+        tableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+  }, [initialExpiringOnly]);
 
   const typeFilterOptions = useMemo(() => {
     const slugs = new Set<string>();
@@ -132,6 +159,10 @@ export default function InventoryCatalogClient({
       rows = rows.filter((r) => r.source === 'product' && isLowStockProduct(r.product));
     }
 
+    if (expiringOnly) {
+      rows = rows.filter((r) => r.source === 'product' && isExpiringSoonProduct(r.product));
+    }
+
     const q = searchQuery.trim().toLowerCase();
     if (q) {
       rows = rows.filter((r) => {
@@ -151,10 +182,19 @@ export default function InventoryCatalogClient({
     }
 
     return rows;
-  }, [catalogRows, typeFilter, lowStockOnly, searchQuery]);
+  }, [catalogRows, typeFilter, lowStockOnly, expiringOnly, searchQuery]);
 
   const showLowStock = () => {
     setLowStockOnly(true);
+    setExpiringOnly(false);
+    requestAnimationFrame(() => {
+      tableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
+
+  const showExpiring = () => {
+    setExpiringOnly(true);
+    setLowStockOnly(false);
     requestAnimationFrame(() => {
       tableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
@@ -277,10 +317,25 @@ export default function InventoryCatalogClient({
               </span>
             )}
           </button>
-          {lowStockOnly && (
+          <button
+            type="button"
+            onClick={showExpiring}
+            className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold border transition-colors ${
+              expiringOnly
+                ? 'bg-amber-500/10 border-amber-500/40 text-amber-500'
+                : 'border-amber-500/30 text-amber-500 hover:bg-amber-500/5'
+            }`}
+          >
+            <CalendarClock className="w-3.5 h-3.5" />
+            Expiring
+          </button>
+          {(lowStockOnly || expiringOnly) && (
             <button
               type="button"
-              onClick={() => setLowStockOnly(false)}
+              onClick={() => {
+                setLowStockOnly(false);
+                setExpiringOnly(false);
+              }}
               className="text-[10px] font-bold text-on-surface-variant hover:text-on-surface underline"
             >
               Show all
@@ -289,10 +344,11 @@ export default function InventoryCatalogClient({
         </div>
       </div>
 
-      {(searchQuery || lowStockOnly) && (
+      {(searchQuery || lowStockOnly || expiringOnly) && (
         <p className="text-[11px] text-on-surface-variant">
           Showing {filtered.length} of {catalogRows.length} catalog items
           {lowStockOnly ? ' (low stock only)' : ''}
+          {expiringOnly ? ' (expiring within 60 days)' : ''}
           {searchQuery ? ` matching “${searchQuery.trim()}”` : ''}
         </p>
       )}
@@ -318,9 +374,11 @@ export default function InventoryCatalogClient({
                 <td colSpan={role === 'clinic_admin' ? 6 : 5} className="px-6 py-8 text-center text-on-surface-variant/60 italic">
                   {lowStockOnly
                     ? 'No low-stock items match your filters.'
-                    : searchQuery
-                      ? 'No products match your search.'
-                      : 'No items in this category.'}
+                    : expiringOnly
+                      ? 'No items expiring within 60 days match your filters.'
+                      : searchQuery
+                        ? 'No products match your search.'
+                        : 'No items in this category.'}
                 </td>
               </tr>
             ) : (

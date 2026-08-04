@@ -40,11 +40,39 @@ import {
 const TAB_KEYS = ['upcoming', 'followup', 'emergency', 'closed'] as const;
 type TabKey = (typeof TAB_KEYS)[number];
 
+const STATUS_OPTIONS = [
+  'all',
+  'requested',
+  'confirmed',
+  'checked_in',
+  'rescheduled',
+  'completed',
+  'cancelled',
+  'no_show',
+] as const;
+
 function parseTabKey(value: string | null): TabKey {
   if (value && (TAB_KEYS as readonly string[]).includes(value)) {
     return value as TabKey;
   }
   return 'upcoming';
+}
+
+function parseStatusFilter(value: string | null): string {
+  if (!value || value === 'all') return 'all';
+  if ((STATUS_OPTIONS as readonly string[]).includes(value)) return value;
+  return 'all';
+}
+
+function matchesPurposeFilter(
+  appt: { visit_purpose?: string | null; reason?: string | null },
+  purpose: string | null
+): boolean {
+  if (!purpose) return true;
+  const needle = purpose.toLowerCase();
+  if (appt.visit_purpose && appt.visit_purpose.toLowerCase() === needle) return true;
+  if (appt.reason && appt.reason.toLowerCase().includes(needle)) return true;
+  return false;
 }
 
 interface Doctor {
@@ -71,18 +99,8 @@ interface Appointment {
   created_by_role?: string | null;
   creatorName?: string | null;
   follow_up_of_visit_id?: string | null;
+  visit_purpose?: string | null;
 }
-
-const STATUS_OPTIONS = [
-  'all',
-  'requested',
-  'confirmed',
-  'checked_in',
-  'rescheduled',
-  'completed',
-  'cancelled',
-  'no_show',
-] as const;
 
 interface AppointmentsListClientProps {
   initialAppointments: Appointment[];
@@ -516,10 +534,15 @@ export default function AppointmentsListClient({
   const searchParams = useSearchParams();
   useVisibilityPolling(20000, true);
   const urlTab = searchParams.get('tab');
+  const urlStatus = searchParams.get('status');
+  const urlPurpose = searchParams.get('purpose');
   const [activeTab, setActiveTab] = useState<TabKey>(() => parseTabKey(urlTab));
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [selectedDoctorMap, setSelectedDoctorMap] = useState<Record<string, string>>({});
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>(() => parseStatusFilter(urlStatus));
+  const [purposeFilter, setPurposeFilter] = useState<string | null>(() =>
+    urlPurpose?.trim() ? urlPurpose.trim().toLowerCase() : null
+  );
   const urlDate = searchParams.get('date');
   const [dateFilter, setDateFilter] = useState(() =>
     urlDate ? resolveDateFromParam(urlDate) : ''
@@ -545,16 +568,35 @@ export default function AppointmentsListClient({
     setActiveTab(parseTabKey(urlTab));
   }, [urlTab]);
 
-  const selectTab = (tab: TabKey) => {
-    setActiveTab(tab);
+  useEffect(() => {
+    setStatusFilter(parseStatusFilter(urlStatus));
+  }, [urlStatus]);
+
+  useEffect(() => {
+    setPurposeFilter(urlPurpose?.trim() ? urlPurpose.trim().toLowerCase() : null);
+  }, [urlPurpose]);
+
+  const replaceQuery = (mutate: (params: URLSearchParams) => void) => {
     const params = new URLSearchParams(searchParams.toString());
-    if (tab === 'upcoming') {
-      params.delete('tab');
-    } else {
-      params.set('tab', tab);
-    }
+    mutate(params);
     const qs = params.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
+
+  const selectTab = (tab: TabKey) => {
+    setActiveTab(tab);
+    replaceQuery((params) => {
+      if (tab === 'upcoming') params.delete('tab');
+      else params.set('tab', tab);
+    });
+  };
+
+  const selectStatus = (status: string) => {
+    setStatusFilter(status);
+    replaceQuery((params) => {
+      if (status === 'all') params.delete('status');
+      else params.set('status', status);
+    });
   };
 
   const tabCounts = useMemo(() => ({
@@ -568,12 +610,21 @@ export default function AppointmentsListClient({
 
   const filtered = useMemo(() => {
     const list = initialAppointments.filter((appt) => {
-      if (activeTab === 'upcoming' && !isFollowUpVisibleInUpcoming(appt)) return false;
-      if (activeTab === 'followup' && !isOpenFollowUpAppointment(appt)) return false;
-      if (activeTab === 'emergency' && !isEmergencyAppointmentActive(appt.is_emergency, appt.status))
-        return false;
-      if (activeTab === 'closed' && !isTerminalAppointment(appt.status)) return false;
+      // Purpose deep-links (e.g. vaccinations) span tabs — skip tab bucket when set
+      if (!purposeFilter) {
+        if (activeTab === 'upcoming' && !isFollowUpVisibleInUpcoming(appt)) return false;
+        if (activeTab === 'followup' && !isOpenFollowUpAppointment(appt)) return false;
+        if (activeTab === 'emergency' && !isEmergencyAppointmentActive(appt.is_emergency, appt.status))
+          return false;
+        if (activeTab === 'closed' && !isTerminalAppointment(appt.status)) return false;
+      } else if (isTerminalAppointment(appt.status) && appt.status !== 'checked_in') {
+        // Still hide cancelled/completed/no_show unless status filter asks for them
+        if (statusFilter === 'all' && ['cancelled', 'completed', 'no_show'].includes(appt.status)) {
+          return false;
+        }
+      }
       if (statusFilter !== 'all' && appt.status !== statusFilter) return false;
+      if (!matchesPurposeFilter(appt, purposeFilter)) return false;
       if (dateFilter && appt.preferred_date !== dateFilter) return false;
       if (search.trim()) {
         const q = search.toLowerCase();
@@ -590,7 +641,7 @@ export default function AppointmentsListClient({
         `${b.preferred_date} ${b.preferred_time}`
       );
     });
-  }, [initialAppointments, activeTab, statusFilter, dateFilter, search]);
+  }, [initialAppointments, activeTab, statusFilter, purposeFilter, dateFilter, search]);
 
   const grouped = useMemo(() => {
     const groups = new Map<string, Appointment[]>();
@@ -694,7 +745,7 @@ export default function AppointmentsListClient({
         <div className="flex gap-2">
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => selectStatus(e.target.value)}
             className="px-3 py-2 bg-surface-container/40 border border-outline-variant/60 rounded-xl text-xs font-semibold"
           >
             {STATUS_OPTIONS.map((s) => (
@@ -704,6 +755,18 @@ export default function AppointmentsListClient({
             ))}
           </select>
           <DateRangeQuickFilter showWeek={false} className="flex-1" />
+          {purposeFilter && (
+            <button
+              type="button"
+              onClick={() => {
+                setPurposeFilter(null);
+                replaceQuery((params) => params.delete('purpose'));
+              }}
+              className="text-[10px] font-bold text-primary underline capitalize"
+            >
+              Clear {purposeFilter}
+            </button>
+          )}
           {dateFilter && (
             <button
               type="button"

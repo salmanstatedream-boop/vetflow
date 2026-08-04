@@ -76,22 +76,19 @@ const SIDEBAR_WIDTH_EXPANDED = '17rem';
 const SIDEBAR_WIDTH_COLLAPSED = '4rem';
 
 function SidebarBrand({
-  organizationName,
-  clinicLogoUrl,
   collapsed = false,
   interactive = false,
   onLogoClick,
 }: {
-  organizationName?: string | null;
-  clinicLogoUrl?: string | null;
   collapsed?: boolean;
   interactive?: boolean;
   onLogoClick?: () => void;
 }) {
   const logoMark = (
     <ClinicOrPlatformLogo
-      clinicLogoUrl={clinicLogoUrl}
+      clinicLogoUrl={null}
       size={36}
+      fallback="phoenix"
       imgClassName="rounded-xl"
       platformWrapperClassName="rounded-xl neon-accent-line"
     />
@@ -122,9 +119,6 @@ function SidebarBrand({
         <div className="min-w-0">
           <span className="font-bold text-sm text-on-surface block font-[family-name:var(--font-display)] truncate">
             {PRODUCT_NAME}
-          </span>
-          <span className="text-[9px] text-on-surface-variant uppercase tracking-wider block truncate">
-            {organizationName || 'Clinic'}
           </span>
         </div>
       )}
@@ -441,8 +435,6 @@ function DashboardShellBody({
         >
           <div className="relative">
             <SidebarBrand
-              organizationName={session.organizationName}
-              clinicLogoUrl={session.clinicLogoUrl}
               collapsed={sidebarCollapsed}
               interactive={sidebarCollapsed}
               onLogoClick={sidebarCollapsed ? toggleSidebarCollapsed : undefined}
@@ -494,7 +486,7 @@ function DashboardShellBody({
             <div className="fixed inset-0 bg-black/50" onClick={() => setIsMobileMenuOpen(false)} />
             <aside className="relative w-[17rem] bg-surface-container h-full z-10 border-r border-outline-variant flex flex-col">
               <div className="flex items-center justify-between pr-4">
-                <SidebarBrand organizationName={session.organizationName} clinicLogoUrl={session.clinicLogoUrl} />
+                <SidebarBrand />
                 <button type="button" onClick={() => setIsMobileMenuOpen(false)} className="absolute right-4 top-5">
                   <X className="w-5 h-5 text-on-surface-variant" />
                 </button>

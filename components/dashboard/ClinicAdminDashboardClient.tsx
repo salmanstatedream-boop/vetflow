@@ -138,7 +138,7 @@ export default function ClinicAdminDashboardClient({
           sparkline={sparklines.appointments}
           deltaPercent={kpiTrends.todayAppointments}
           deltaLabel="vs yesterday"
-          href="/dashboard/appointments"
+          href={`/dashboard/appointments?date=${today}`}
         />
         <DashboardKpiStatCard
           density="compact"
@@ -201,7 +201,7 @@ export default function ClinicAdminDashboardClient({
           iconTextClass={KPI_ACCENTS.vaccinations.text}
           deltaPercent={kpiTrends.vaccinationsToday}
           deltaLabel="vs yesterday"
-          href="/dashboard/appointments"
+          href={`/dashboard/appointments?date=${today}&purpose=vaccination`}
         />
       </div>
 
@@ -221,7 +221,7 @@ export default function ClinicAdminDashboardClient({
                 View calendar
               </Link>
               <Link
-                href="/dashboard/appointments"
+                href="/dashboard/appointments?new=1"
                 className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-primary/15 text-primary border border-primary/25 hover:bg-primary/20"
               >
                 <Plus className="w-3 h-3" />
@@ -335,7 +335,7 @@ export default function ClinicAdminDashboardClient({
           />
         </DashboardSectionCard>
 
-        <DashboardSectionCard density="compact" title="Expiring Soon" subtitle="60 days">
+        <DashboardSectionCard density="compact" title="Expiring Soon" subtitle="60 days" href="/dashboard/inventory?expiring=1">
           <DashboardMiniTable
             density="compact"
             rows={expiringSoon}
@@ -357,12 +357,12 @@ export default function ClinicAdminDashboardClient({
           density="compact"
           title="Vaccinations"
           subtitle="Upcoming in the next 14 days"
-          href="/dashboard/appointments"
+          href="/dashboard/appointments?purpose=vaccination"
         >
           <ListColumn items={vaccinationsDue} empty="None due soon." />
         </DashboardSectionCard>
 
-        <DashboardSectionCard density="compact" title="Missed" href="/dashboard/appointments">
+        <DashboardSectionCard density="compact" title="Missed" href="/dashboard/appointments?tab=closed&status=no_show">
           <ListColumn items={missedAppointments} empty="No recent no-shows." status="no_show" />
         </DashboardSectionCard>
       </div>

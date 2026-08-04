@@ -21,9 +21,9 @@ export const metadata = {
 export default async function InventoryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; lowStock?: string }>;
+  searchParams: Promise<{ tab?: string; lowStock?: string; expiring?: string }>;
 }) {
-  const { tab, lowStock } = await searchParams;
+  const { tab, lowStock, expiring } = await searchParams;
   const ctx = await resolveServerAuthContext();
   if (!ctx) {
     redirect('/login');
@@ -193,6 +193,7 @@ export default async function InventoryPage({
           categories={categories || []}
           branches={session.branches}
           initialLowStockOnly={lowStock === '1'}
+          initialExpiringOnly={expiring === '1'}
           lowStockCount={lowStockItems.length}
           existingProductTypes={existingProductTypes}
         />

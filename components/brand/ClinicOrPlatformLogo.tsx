@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { PawPrint } from 'lucide-react';
 import { resolveClinicLogoSrc } from '@/lib/branding/clinic-logo';
 import PhoenixLogo from '@/components/brand/PhoenixLogo';
 import { cn } from '@/lib/utils';
@@ -11,6 +12,8 @@ type ClinicOrPlatformLogoProps = {
   className?: string;
   imgClassName?: string;
   platformWrapperClassName?: string;
+  /** When no clinic logo: Phoenix mark (platform) or paw (clinic). */
+  fallback?: 'phoenix' | 'paw';
 };
 
 export default function ClinicOrPlatformLogo({
@@ -19,6 +22,7 @@ export default function ClinicOrPlatformLogo({
   className,
   imgClassName,
   platformWrapperClassName,
+  fallback = 'phoenix',
 }: ClinicOrPlatformLogoProps) {
   const [failed, setFailed] = useState(false);
   const logoSrc = resolveClinicLogoSrc(clinicLogoUrl);
@@ -33,7 +37,15 @@ export default function ClinicOrPlatformLogo({
         )}
         style={{ width: size, height: size }}
       >
-        <PhoenixLogo size={Math.round(size * 0.78)} />
+        {fallback === 'paw' ? (
+          <PawPrint
+            className="text-primary"
+            style={{ width: Math.round(size * 0.55), height: Math.round(size * 0.55) }}
+            aria-hidden
+          />
+        ) : (
+          <PhoenixLogo size={Math.round(size * 0.78)} />
+        )}
       </div>
     );
   }

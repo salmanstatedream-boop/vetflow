@@ -447,7 +447,7 @@ export async function loadAdminOverviewBundle(params: {
     todaySchedule: schedule.slice(0, 12),
     assignedConsultations,
     actionCenter: [
-      { id: 'unpaid', label: 'Unpaid invoices', count: unpaidCount, href: '/dashboard/invoices', variant: 'warning' as const },
+      { id: 'unpaid', label: 'Unpaid invoices', count: unpaidCount, href: '/dashboard/invoices?status=unpaid', variant: 'warning' as const },
       { id: 'stock', label: 'Low stock items', count: lowStockTotal, href: '/dashboard/inventory?lowStock=1', variant: 'danger' as const },
       { id: 'checkout', label: 'Ready for checkout', count: checkoutCount, href: '/dashboard/walk-ins', variant: 'info' as const },
       { id: 'followups', label: 'Follow-ups due', count: followUpsTotal, href: '/dashboard/appointments?tab=followup', variant: 'purple' as const },
