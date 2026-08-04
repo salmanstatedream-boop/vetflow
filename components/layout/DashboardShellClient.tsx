@@ -84,11 +84,16 @@ function SidebarBrand({
   interactive?: boolean;
   onLogoClick?: () => void;
 }) {
+  // Mark sits high-right in the PNG; nudge so the hexagon/cross optically centers in the box.
   const logoMark = (
-    <PhoenixLogo size={56} priority className="shrink-0 block" />
+    <PhoenixLogo
+      size={34}
+      priority
+      className="shrink-0 block translate-y-[2px] -translate-x-px"
+    />
   );
 
-  const rowClass = `h-16 flex items-center border-b border-outline-variant/50 shrink-0 ${collapsed ? 'justify-center px-2' : 'px-4 gap-1.5'}`;
+  const rowClass = `h-16 flex items-center border-b border-outline-variant/50 shrink-0 ${collapsed ? 'justify-center px-2' : 'px-4 gap-2'}`;
 
   if (interactive && onLogoClick) {
     return (
@@ -96,11 +101,13 @@ function SidebarBrand({
         <button
           type="button"
           onClick={onLogoClick}
-          className="rounded-lg p-0.5 cursor-pointer hover:bg-surface-container-high focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 transition-colors"
+          className="group relative flex h-11 w-11 items-center justify-center rounded-xl border border-outline-variant/50 bg-surface-container/40 cursor-pointer transition-[box-shadow,border-color,background-color,transform] duration-200 hover:border-cyan-400/50 hover:bg-surface-container-high hover:shadow-[0_0_18px_-2px_rgba(34,211,238,0.55),0_0_28px_-6px_rgba(249,115,22,0.4)] hover:scale-[1.03] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           aria-label="Expand sidebar"
           title="Expand sidebar"
         >
-          {logoMark}
+          <span className="flex h-8 w-8 items-center justify-center transition-[filter] duration-200 group-hover:[filter:drop-shadow(0_0_10px_rgba(34,211,238,0.85))_drop-shadow(0_0_14px_rgba(249,115,22,0.45))]">
+            {logoMark}
+          </span>
         </button>
       </div>
     );
@@ -110,7 +117,7 @@ function SidebarBrand({
     <div className={rowClass}>
       {logoMark}
       {!collapsed && (
-        <span className="min-w-0 font-bold text-[15px] leading-none tracking-tight text-on-surface font-[family-name:var(--font-display)] truncate">
+        <span className="min-w-0 -translate-y-px font-black text-base leading-none tracking-tight text-on-surface font-[family-name:var(--font-display)] truncate">
           {PRODUCT_NAME}
         </span>
       )}
