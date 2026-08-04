@@ -321,7 +321,7 @@ export default function ClinicAdminDashboardClient({
 
       {/* Row D — Five equal bottom widgets */}
       <div className={cn('grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5', DASHBOARD_DENSITY.gridGap)}>
-        <DashboardSectionCard density="compact" title="Low Stock" href="/dashboard/inventory">
+        <DashboardSectionCard density="compact" title="Low Stock" href="/dashboard/inventory?lowStock=1">
           <DashboardMiniTable
             density="compact"
             rows={lowStockItems}
@@ -349,7 +349,7 @@ export default function ClinicAdminDashboardClient({
           />
         </DashboardSectionCard>
 
-        <DashboardSectionCard density="compact" title="Follow-ups" href="/dashboard/appointments">
+        <DashboardSectionCard density="compact" title="Follow-ups" href="/dashboard/appointments?tab=followup">
           <ListColumn items={followUpsDue} empty="No follow-ups due." />
         </DashboardSectionCard>
 

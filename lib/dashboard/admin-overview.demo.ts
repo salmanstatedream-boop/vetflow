@@ -68,9 +68,9 @@ export function getDemoAdminOverviewData(currency = 'USD'): AdminOverviewData {
     assignedConsultations: [],
     actionCenter: [
       { id: 'a1', label: 'Unpaid invoices', count: 7, href: '/dashboard/invoices', variant: 'warning' },
-      { id: 'a2', label: 'Low stock items', count: 6, href: '/dashboard/inventory', variant: 'danger' },
+      { id: 'a2', label: 'Low stock items', count: 6, href: '/dashboard/inventory?lowStock=1', variant: 'danger' },
       { id: 'a3', label: 'Ready for checkout', count: 3, href: '/dashboard/walk-ins', variant: 'info' },
-      { id: 'a4', label: 'Follow-ups due', count: 4, href: '/dashboard/appointments', variant: 'purple' },
+      { id: 'a4', label: 'Follow-ups due', count: 4, href: '/dashboard/appointments?tab=followup', variant: 'purple' },
     ],
     revenueTrend7d: [
       { name: 'Mon', value: 3200 },

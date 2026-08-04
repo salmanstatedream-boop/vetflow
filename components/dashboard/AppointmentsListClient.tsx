@@ -24,7 +24,7 @@ import {
   User,
   RotateCcw,
 } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useVisibilityPolling } from '@/lib/hooks/useVisibilityPolling';
 import DateRangeQuickFilter from '@/components/dashboard/DateRangeQuickFilter';
 import Select from '@/components/ui/premium/Select';
@@ -36,6 +36,16 @@ import {
   isFollowUpVisibleInUpcoming,
   isTerminalAppointment,
 } from '@/lib/appointments/status';
+
+const TAB_KEYS = ['upcoming', 'followup', 'emergency', 'closed'] as const;
+type TabKey = (typeof TAB_KEYS)[number];
+
+function parseTabKey(value: string | null): TabKey {
+  if (value && (TAB_KEYS as readonly string[]).includes(value)) {
+    return value as TabKey;
+  }
+  return 'upcoming';
+}
 
 interface Doctor {
   id: string;
@@ -62,8 +72,6 @@ interface Appointment {
   creatorName?: string | null;
   follow_up_of_visit_id?: string | null;
 }
-
-type TabKey = 'upcoming' | 'followup' | 'emergency' | 'closed';
 
 const STATUS_OPTIONS = [
   'all',
@@ -504,9 +512,11 @@ export default function AppointmentsListClient({
   readOnly = false,
 }: AppointmentsListClientProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   useVisibilityPolling(20000, true);
-  const [activeTab, setActiveTab] = useState<TabKey>('upcoming');
+  const urlTab = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState<TabKey>(() => parseTabKey(urlTab));
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [selectedDoctorMap, setSelectedDoctorMap] = useState<Record<string, string>>({});
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -530,6 +540,22 @@ export default function AppointmentsListClient({
       setDateFilter(resolveDateFromParam(urlDate));
     }
   }, [urlDate]);
+
+  useEffect(() => {
+    setActiveTab(parseTabKey(urlTab));
+  }, [urlTab]);
+
+  const selectTab = (tab: TabKey) => {
+    setActiveTab(tab);
+    const params = new URLSearchParams(searchParams.toString());
+    if (tab === 'upcoming') {
+      params.delete('tab');
+    } else {
+      params.set('tab', tab);
+    }
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
 
   const tabCounts = useMemo(() => ({
     upcoming: initialAppointments.filter((a) => isFollowUpVisibleInUpcoming(a)).length,
@@ -639,7 +665,7 @@ export default function AppointmentsListClient({
           <button
             key={tab.key}
             type="button"
-            onClick={() => setActiveTab(tab.key)}
+            onClick={() => selectTab(tab.key)}
             className={`flex-1 px-3 sm:px-4 py-2.5 text-xs ${
               activeTab === tab.key ? chipActiveClass : chipClass
             }`}
@@ -734,7 +760,7 @@ export default function AppointmentsListClient({
                       runAction={runAction}
                       onCheckIn={() => {
                         setCheckInNotice(true);
-                        setActiveTab('upcoming');
+                        selectTab('upcoming');
                       }}
                       userRole={userRole}
                       readOnly={readOnly}
