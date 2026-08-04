@@ -84,15 +84,6 @@ function SidebarBrand({
   interactive?: boolean;
   onLogoClick?: () => void;
 }) {
-  // Mark sits high-right in the PNG; slight nudge for optical center in tight boxes.
-  const logoMark = (size: number) => (
-    <PhoenixLogo
-      size={size}
-      priority
-      className="shrink-0 block translate-y-[2px] -translate-x-px"
-    />
-  );
-
   const rowClass = `h-[4.5rem] flex items-center border-b border-outline-variant/50 shrink-0 ${collapsed ? 'justify-center px-2' : 'px-3 gap-2.5'}`;
 
   if (interactive && onLogoClick) {
@@ -101,32 +92,28 @@ function SidebarBrand({
         <button
           type="button"
           onClick={onLogoClick}
-          className="group relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl border border-outline-variant/50 bg-surface-container/40 cursor-pointer transition-[box-shadow,border-color,background-color,transform] duration-200 hover:border-cyan-400/50 hover:bg-surface-container-high hover:shadow-[0_0_20px_-2px_rgba(34,211,238,0.6),0_0_32px_-6px_rgba(249,115,22,0.45)] hover:scale-[1.05] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          className="group relative flex h-14 w-14 items-center justify-center rounded-xl border border-outline-variant/50 bg-surface-container/40 p-1 cursor-pointer transition-[box-shadow,border-color,background-color,transform] duration-200 hover:border-primary/45 hover:bg-surface-container-high hover:shadow-[0_0_16px_-4px_rgba(34,211,238,0.45)] hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           aria-label="Expand sidebar"
           title="Expand sidebar"
         >
-          <span className="flex h-full w-full items-center justify-center overflow-hidden transition-[filter,transform] duration-200 group-hover:scale-105 group-hover:[filter:drop-shadow(0_0_10px_rgba(34,211,238,0.85))_drop-shadow(0_0_14px_rgba(249,115,22,0.45))]">
-            {/* Oversized mark fills the fixed box; PNG padding is clipped */}
-            {logoMark(68)}
-          </span>
+          <PhoenixLogo
+            variant="mark"
+            size={50}
+            priority
+            className="transition-[filter,transform] duration-200 group-hover:scale-[1.03] group-hover:[filter:drop-shadow(0_0_8px_rgba(34,211,238,0.55))]"
+          />
         </button>
       </div>
     );
   }
 
   return (
-    <div
-      className={cn(
-        rowClass,
-        'group/brand transition-[filter] duration-200',
-        'hover:[filter:drop-shadow(0_0_12px_rgba(34,211,238,0.35))]'
-      )}
-    >
-      <span className="flex items-center justify-center transition-transform duration-200 group-hover/brand:scale-105 group-hover/brand:[filter:drop-shadow(0_0_10px_rgba(34,211,238,0.75))_drop-shadow(0_0_14px_rgba(249,115,22,0.4))]">
-        {logoMark(56)}
+    <div className={cn(rowClass, 'group/brand')}>
+      <span className="flex items-center justify-center transition-[filter,transform] duration-200 group-hover/brand:scale-[1.02] group-hover/brand:[filter:drop-shadow(0_0_8px_rgba(34,211,238,0.45))]">
+        <PhoenixLogo variant="mark" size={54} priority />
       </span>
       {!collapsed && (
-        <span className="min-w-0 -translate-y-px font-black text-lg leading-none tracking-tight text-on-surface font-[family-name:var(--font-display)] truncate transition-[text-shadow,color] duration-200 group-hover/brand:text-white group-hover/brand:[text-shadow:0_0_18px_rgba(34,211,238,0.45)]">
+        <span className="min-w-0 -translate-y-px font-black text-lg leading-none tracking-tight text-on-surface font-[family-name:var(--font-display)] truncate transition-colors duration-200 group-hover/brand:text-white">
           {PRODUCT_NAME}
         </span>
       )}
