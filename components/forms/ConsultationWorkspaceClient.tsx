@@ -40,6 +40,7 @@ import {
 import type { StaffMember } from '@/components/consultations/workflows/GroomingWorkflow';
 import ConsultVoiceRecorder from '@/components/consultation/ConsultVoiceRecorder';
 import TreatmentPlanAiTemplateButton from '@/components/consultation/TreatmentPlanAiTemplateButton';
+import SurgeryAiTemplateButton from '@/components/consultation/SurgeryAiTemplateButton';
 import type { ConsultVoiceExtract } from '@/lib/ai/consult-voice';
 import {
   matchCatalogService,
@@ -1350,13 +1351,57 @@ export default function ConsultationWorkspaceClient({
               maxUnlockedIndex={maxUnlockedIndex}
               draftSaved={draftSaved}
             />
-            <ConsultVoiceRecorder
-              petName={pet.name}
-              species={pet.species}
-              visitReason={visitReason}
-              disabled={isSubmitting || Boolean(consultPausedAt)}
-              onExtracted={(fields) => applyVoiceExtract(fields)}
-            />
+            <div className="flex flex-wrap items-start gap-3">
+              {visitType === 'surgery' && (
+                <SurgeryAiTemplateButton
+                  visitId={visitId}
+                  diagnosis={diagnosisWatch || ''}
+                  existing={{
+                    treatmentPlan: treatmentPlanWatch || '',
+                    procedureNotes: watch('procedureNotes') || '',
+                    postOpMedication: watch('postOpMedication') || '',
+                  }}
+                  objective={{
+                    temperatureF: watch('temperatureC') ?? null,
+                    heartRateBpm: watch('heartRateBpm') ?? null,
+                    respiratoryRate: watch('respiratoryRate') ?? null,
+                    weightKg: watch('weightKg') ?? null,
+                    bodyConditionScore: watch('bodyConditionScore') ?? null,
+                    dehydrationPercent: watch('dehydrationPercent') ?? null,
+                    examinationFindings: examinationWatch || null,
+                  }}
+                  disabled={isSubmitting || Boolean(consultPausedAt)}
+                  onRequireDiagnosis={() => {
+                    setTabError(
+                      'Enter the surgery type / diagnosis in Assessment (A) before generating a surgery template.'
+                    );
+                    navigateToSoapTab('A');
+                  }}
+                  onApply={(fields, mode) => {
+                    const applyField = (
+                      name: 'treatmentPlan' | 'procedureNotes' | 'postOpMedication',
+                      next: string
+                    ) => {
+                      const current = (getValues(name) || '').trim();
+                      if (mode === 'empty_only' && current) return;
+                      if (!next.trim() && mode === 'empty_only') return;
+                      setValue(name, next.trim(), { shouldDirty: true, shouldValidate: true });
+                    };
+                    applyField('treatmentPlan', fields.treatmentPlan);
+                    applyField('procedureNotes', fields.procedureNotes);
+                    applyField('postOpMedication', fields.postOpMedication);
+                    setTabError(null);
+                  }}
+                />
+              )}
+              <ConsultVoiceRecorder
+                petName={pet.name}
+                species={pet.species}
+                visitReason={visitReason}
+                disabled={isSubmitting || Boolean(consultPausedAt)}
+                onExtracted={(fields) => applyVoiceExtract(fields)}
+              />
+            </div>
           </div>
 
           {tabError && (
@@ -1524,6 +1569,7 @@ export default function ConsultationWorkspaceClient({
               <h3 className="text-sm font-bold text-primary uppercase tracking-wider">SOAP Plan</h3>
               <p className="text-[10px] text-on-surface-variant/60 mt-1">Treatment plan, follow-up, and services performed.</p>
             </div>
+            {visitType !== 'surgery' && (
             <TreatmentPlanAiTemplateButton
               visitId={visitId}
               diagnosis={diagnosisWatch || ''}
@@ -1560,6 +1606,7 @@ export default function ConsultationWorkspaceClient({
                 setTabError(null);
               }}
             />
+            )}
             <div>
               <label className="block text-[10px] font-semibold text-on-surface/80 uppercase tracking-wider mb-1.5">
                 <RequiredLabel>Treatment Plan & Recommendations</RequiredLabel>
