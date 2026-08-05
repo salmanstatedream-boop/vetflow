@@ -1540,17 +1540,27 @@ export default function ConsultationWorkspaceClient({
           <div className="glass-panel rounded-2xl border border-outline-variant/40 p-6 shadow-premium space-y-5">
             <div>
               <h3 className="text-sm font-bold text-primary uppercase tracking-wider">SOAP Assessment</h3>
-              <p className="text-[10px] text-on-surface-variant/60 mt-1">Clinical diagnosis and assessment.</p>
+              <p className="text-[10px] text-on-surface-variant/60 mt-1">
+                {visitType === 'surgery'
+                  ? 'Surgery type and clinical assessment.'
+                  : 'Clinical diagnosis and assessment.'}
+              </p>
             </div>
             <div>
               <label className="block text-[10px] font-semibold text-on-surface/80 uppercase tracking-wider mb-1.5">
-                <RequiredLabel>Diagnosis / Assessment</RequiredLabel>
+                <RequiredLabel>
+                  {visitType === 'surgery' ? 'Surgery Type' : 'Diagnosis / Assessment'}
+                </RequiredLabel>
               </label>
               <textarea
                 data-soap-tab="A"
                 data-soap-field="diagnosis"
                 {...register('diagnosis')}
-                placeholder="e.g. Feline Infectious Enteritis, Otitis Externa"
+                placeholder={
+                  visitType === 'surgery'
+                    ? 'e.g. Ovariohysterectomy, Cruciate repair, Dental extraction'
+                    : 'e.g. Feline Infectious Enteritis, Otitis Externa'
+                }
                 rows={4}
                 className="w-full px-3 py-2.5 bg-surface-container/20 border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary rounded-xl text-sm text-on-surface outline-none font-semibold"
               />
