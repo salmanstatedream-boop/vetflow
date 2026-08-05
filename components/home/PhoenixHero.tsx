@@ -8,10 +8,55 @@ import ScaledOverviewDashboard from '@/components/home/overview-dashboard-visual
 import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
 import { LightLines } from '@/components/ui/light-lines';
 import MorphText from '@/components/ui/morph-text';
+import { CardBody, CardContainer, CardItem } from '@/components/ui/3d-card';
 import { useRequestAccess } from '@/components/home/RequestAccessProvider';
 import { CLINIC_TYPE_WORDS, HERO } from '@/lib/home-data';
 import { usePrefersReducedMotion } from '@/lib/hooks/usePrefersReducedMotion';
 import { cn } from '@/lib/utils';
+
+const previewChromeClass =
+  'relative w-full h-auto rounded-2xl border border-white/10 ring-1 ring-white/[0.06] bg-[#0B1020] overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.45)]';
+
+function HeroProductPreview({ reducedMotion }: { reducedMotion: boolean }) {
+  const glow = (
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#22D3EE]/8 via-transparent to-[#8B5CF6]/8 blur-2xl"
+    />
+  );
+
+  if (reducedMotion) {
+    return (
+      <div className={cn(previewChromeClass, 'transition-shadow')}>
+        {glow}
+        <div className="relative w-full">
+          <ScaledOverviewDashboard />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <CardContainer containerClassName="w-full py-0" className="w-full">
+      <CardBody
+        className={cn(
+          previewChromeClass,
+          'transition-shadow hover:shadow-[0_28px_90px_rgba(34,211,238,0.08)]'
+        )}
+      >
+        <CardItem
+          translateZ={20}
+          className="pointer-events-none absolute inset-0 w-full"
+        >
+          {glow}
+        </CardItem>
+        <CardItem translateZ={50} className="relative w-full">
+          <ScaledOverviewDashboard />
+        </CardItem>
+      </CardBody>
+    </CardContainer>
+  );
+}
 
 export default function PhoenixHero() {
   const rootRef = useRef<HTMLElement>(null);
@@ -199,17 +244,7 @@ export default function PhoenixHero() {
             data-phx-fade
             style={{ opacity: reducedMotion ? 1 : 0 }}
           >
-            <div
-              className="relative w-full rounded-2xl border border-white/10 ring-1 ring-white/[0.06] bg-[#0B1020] overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.45)] transition-shadow hover:shadow-[0_28px_90px_rgba(34,211,238,0.08)]"
-            >
-              <div
-                aria-hidden
-                className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#22D3EE]/8 via-transparent to-[#8B5CF6]/8 blur-2xl"
-              />
-              <div className="relative w-full">
-                <ScaledOverviewDashboard />
-              </div>
-            </div>
+            <HeroProductPreview reducedMotion={reducedMotion} />
           </div>
         </div>
 
