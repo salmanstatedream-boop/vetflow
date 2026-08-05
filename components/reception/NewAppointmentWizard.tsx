@@ -12,6 +12,7 @@ import { normalizePhoneInput, looksLikePhone } from '@/lib/reception/phone';
 import Select from '@/components/ui/premium/Select';
 import CreatableSelect from '@/components/ui/premium/CreatableSelect';
 import { SPECIES_OPTIONS } from '@/lib/pets/species-options';
+import { DEFAULT_PET_GENDER, PET_GENDER_OPTIONS } from '@/lib/pets/gender-options';
 import { computePetAgeLabel } from '@/lib/utils/pet-species-avatar';
 import { formatAgeInputLabel } from '@/lib/pets/age';
 import { formatAppointmentTime, normalizePreferredTimeForDb } from '@/lib/utils/time-parse';
@@ -81,6 +82,7 @@ export default function NewAppointmentWizard({
   const [petName, setPetName] = useState('');
   const [petSpecies, setPetSpecies] = useState('Dog');
   const [petBreed, setPetBreed] = useState('');
+  const [petGender, setPetGender] = useState<string>(DEFAULT_PET_GENDER);
   const [petAgeYears, setPetAgeYears] = useState('');
   const [petAgeMonths, setPetAgeMonths] = useState('');
 
@@ -259,6 +261,7 @@ export default function NewAppointmentWizard({
     setPetName('');
     setPetSpecies('Dog');
     setPetBreed('');
+    setPetGender(DEFAULT_PET_GENDER);
     setPetAgeYears('');
     setPetAgeMonths('');
     setPreferredDate('');
@@ -333,7 +336,7 @@ export default function NewAppointmentWizard({
                 name: petName.trim(),
                 species: petSpecies,
                 breed: petBreed.trim() || '',
-                gender: 'Male',
+                gender: petGender,
                 ageYears: !Number.isNaN(parsedAgeYears) && parsedAgeYears > 0 ? parsedAgeYears : undefined,
                 ageMonths:
                   !Number.isNaN(parsedAgeMonths) && parsedAgeMonths > 0 ? parsedAgeMonths : undefined,
@@ -570,6 +573,22 @@ export default function NewAppointmentWizard({
                       onChange={(e) => setPetBreed(e.target.value)}
                       className="px-3 py-2 bg-surface-container border border-outline-variant rounded-xl text-xs"
                     />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-on-surface-variant uppercase block mb-1">
+                      Gender
+                    </label>
+                    <select
+                      value={petGender}
+                      onChange={(e) => setPetGender(e.target.value)}
+                      className="w-full px-3 py-2 bg-surface-container border border-outline-variant rounded-xl text-xs font-semibold"
+                    >
+                      {PET_GENDER_OPTIONS.map((g) => (
+                        <option key={g} value={g}>
+                          {g}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-on-surface-variant uppercase block mb-1">

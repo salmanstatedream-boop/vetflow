@@ -13,6 +13,7 @@ import { looksLikePhone } from '@/lib/reception/phone';
 import CreatableSelect from '@/components/ui/premium/CreatableSelect';
 import CustomerForm, { type CreatedCustomerPayload } from '@/components/forms/CustomerForm';
 import { SPECIES_OPTIONS } from '@/lib/pets/species-options';
+import { DEFAULT_PET_GENDER, PET_GENDER_OPTIONS } from '@/lib/pets/gender-options';
 import { useCreatableOptions } from '@/lib/hooks/useCreatableOptions';
 import { Loader2, Phone, Heart, UserPlus, Plus } from 'lucide-react';
 
@@ -44,6 +45,7 @@ export default function PatientLookupPanel({
   const [newPetName, setNewPetName] = useState('');
   const [newPetSpecies, setNewPetSpecies] = useState('Dog');
   const [newPetBreed, setNewPetBreed] = useState('');
+  const [newPetGender, setNewPetGender] = useState<string>(DEFAULT_PET_GENDER);
   const [isAddingPet, setIsAddingPet] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [customerFormOpen, setCustomerFormOpen] = useState(false);
@@ -142,7 +144,7 @@ export default function PatientLookupPanel({
         name: newPetName.trim(),
         species: newPetSpecies,
         breed: newPetBreed.trim() || undefined,
-        gender: 'Male',
+        gender: newPetGender,
       });
       if (res.success && res.pet) {
         const pet = {
@@ -161,6 +163,7 @@ export default function PatientLookupPanel({
         });
         setShowAddPet(false);
         setNewPetName('');
+        setNewPetGender(DEFAULT_PET_GENDER);
         setOwner(null);
         setQuery('');
       } else {
@@ -277,6 +280,22 @@ export default function PatientLookupPanel({
                   onChange={(e) => setNewPetBreed(e.target.value)}
                   className="px-2 py-1.5 text-xs border border-outline-variant rounded-lg bg-surface-container"
                 />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-on-surface-variant uppercase block mb-1">
+                  Gender
+                </label>
+                <select
+                  value={newPetGender}
+                  onChange={(e) => setNewPetGender(e.target.value)}
+                  className="w-full px-2 py-1.5 text-xs border border-outline-variant rounded-lg bg-surface-container font-semibold"
+                >
+                  {PET_GENDER_OPTIONS.map((g) => (
+                    <option key={g} value={g}>
+                      {g}
+                    </option>
+                  ))}
+                </select>
               </div>
               <button
                 type="button"

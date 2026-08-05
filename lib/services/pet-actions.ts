@@ -8,6 +8,7 @@ import {
   assertOrganization,
   resolveServerAuthContext,
 } from '@/lib/auth/context';
+import { hasCapability } from '@/lib/auth/capabilities';
 import { writeAuditLog } from '@/lib/services/audit';
 import { PetSchema, type PetInput } from '@/lib/validations/schemas';
 
@@ -140,6 +141,69 @@ export async function updatePetAction(petId: string, payload: unknown) {
     });
 
     return { success: true, pet };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'An unexpected error occurred.' };
+  }
+}
+
+/**
+ * Updates only pet gender — allowed for clinical_queue (doctors) or manage_pets.
+ */
+export async function updatePetGenderAction(petId: string, gender: string) {
+  try {
+    const ctx = await resolveServerAuthContext();
+    if (!ctx) {
+      throw new Error('Unauthorized: Session is invalid.');
+    }
+    assertOrganization(ctx);
+    if (!hasCapability(ctx.role, 'manage_pets') && !hasCapability(ctx.role, 'clinical_queue')) {
+      throw new Error('Unauthorized: Missing required capability.');
+    }
+
+    const trimmed = gender.trim();
+    if (!trimmed) {
+      throw new Error('Gender is required.');
+    }
+
+    const supabase = await createClient();
+
+    const { data: existing, error: fetchErr } = await supabase
+      .from('patients')
+      .select('id, gender')
+      .eq('id', petId)
+      .eq('organization_id', ctx.organizationId)
+      .is('deleted_at', null)
+      .single();
+
+    if (fetchErr || !existing) {
+      throw new Error('Pet not found or access denied.');
+    }
+
+    const { data: pet, error } = await supabase
+      .from('patients')
+      .update({ gender: trimmed })
+      .eq('id', petId)
+      .eq('organization_id', ctx.organizationId)
+      .select('id, gender')
+      .single();
+
+    if (error || !pet) {
+      throw new Error(error?.message || 'Failed to update gender.');
+    }
+
+    await writeAuditLog({
+      organizationId: ctx.organizationId,
+      branchId: null,
+      actorUserId: ctx.userId,
+      actorRole: ctx.role || 'receptionist',
+      action: 'PET_GENDER_UPDATED',
+      resourceType: 'PET',
+      resourceId: pet.id,
+      beforeData: { gender: existing.gender },
+      afterData: { gender: pet.gender },
+    });
+
+    return { success: true, gender: pet.gender as string };
   } catch (err: any) {
     return { success: false, error: err.message || 'An unexpected error occurred.' };
   }

@@ -20,6 +20,7 @@ import {
   deleteDocumentAction,
   updateDocumentAction,
 } from '@/lib/services/document-actions';
+import CollapsiblePanel from '@/components/ui/CollapsiblePanel';
 
 interface LabCatalogItem {
   id: string;
@@ -51,6 +52,8 @@ interface Props {
   documents: DocumentItem[];
   previousDocuments?: DocumentItem[];
   variant?: 'default' | 'sidebar';
+  /** Increment to force Lab tests + Medical documents sections open (e.g. validation focus). */
+  expandKey?: number;
 }
 
 const DOC_CATEGORIES = [
@@ -219,15 +222,25 @@ export default function ConsultationLabsDocsPanel({
   documents: initialDocuments,
   previousDocuments = [],
   variant = 'default',
+  expandKey = 0,
 }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [localDocuments, setLocalDocuments] = useState(initialDocuments);
+  const [labsOpen, setLabsOpen] = useState(true);
+  const [docsOpen, setDocsOpen] = useState(true);
 
   useEffect(() => {
     setLocalDocuments(initialDocuments);
   }, [initialDocuments]);
+
+  useEffect(() => {
+    if (expandKey > 0) {
+      setLabsOpen(true);
+      setDocsOpen(true);
+    }
+  }, [expandKey]);
 
   const [testName, setTestName] = useState('');
   const [labTestId, setLabTestId] = useState('');
@@ -426,11 +439,18 @@ export default function ConsultationLabsDocsPanel({
           </div>
         )}
 
-        <section className="space-y-2.5">
-          <h4 className="text-[10px] font-bold uppercase tracking-wider text-on-surface flex items-center gap-1.5">
-            <FlaskConical className="w-3.5 h-3.5 text-primary shrink-0" />
-            Lab tests
-          </h4>
+        <section className="rounded-xl border border-outline-variant/35 bg-surface/20 p-2.5">
+          <CollapsiblePanel
+            open={labsOpen}
+            onToggle={() => setLabsOpen((o) => !o)}
+            title={
+              <h4 className="text-[10px] font-bold uppercase tracking-wider text-on-surface flex items-center gap-1.5">
+                <FlaskConical className="w-3.5 h-3.5 text-primary shrink-0" />
+                Lab tests
+              </h4>
+            }
+            bodyClassName="mt-2.5 space-y-2.5"
+          >
           <div className="space-y-2 rounded-xl border border-outline-variant/35 bg-surface/40 p-2.5">
             <div>
               <label className={labelClass}>From catalog</label>
@@ -580,15 +600,23 @@ export default function ConsultationLabsDocsPanel({
               No lab tests ordered yet.
             </p>
           )}
+          </CollapsiblePanel>
         </section>
 
         <div className="border-t border-outline-variant/25" />
 
-        <section className="space-y-2.5">
-          <h4 className="text-[10px] font-bold uppercase tracking-wider text-on-surface flex items-center gap-1.5">
-            <Paperclip className="w-3.5 h-3.5 text-primary shrink-0" />
-            Medical documents
-          </h4>
+        <section className="rounded-xl border border-outline-variant/35 bg-surface/20 p-2.5">
+          <CollapsiblePanel
+            open={docsOpen}
+            onToggle={() => setDocsOpen((o) => !o)}
+            title={
+              <h4 className="text-[10px] font-bold uppercase tracking-wider text-on-surface flex items-center gap-1.5">
+                <Paperclip className="w-3.5 h-3.5 text-primary shrink-0" />
+                Medical documents
+              </h4>
+            }
+            bodyClassName="mt-2.5 space-y-2.5"
+          >
           <div className="space-y-2 rounded-xl border border-outline-variant/35 bg-surface/40 p-2.5">
             <div>
               <label className={labelClass}>File (PDF/image, max 15MB)</label>
@@ -667,6 +695,7 @@ export default function ConsultationLabsDocsPanel({
               ))}
             </div>
           )}
+          </CollapsiblePanel>
         </section>
       </div>
     );

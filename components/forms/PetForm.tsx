@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { createPetAction, deletePetAction, updatePetAction } from '@/lib/services/pet-actions';
 import { PetSchema, type PetInput } from '@/lib/validations/schemas';
 import CreatableSelect from '@/components/ui/premium/CreatableSelect';
+import { DEFAULT_PET_GENDER, PET_GENDER_OPTIONS } from '@/lib/pets/gender-options';
 import { SPECIES_OPTIONS } from '@/lib/pets/species-options';
 import { useCreatableOptions } from '@/lib/hooks/useCreatableOptions';
 import FormModal from '@/components/ui/premium/FormModal';
@@ -37,7 +38,7 @@ export default function PetForm({
 
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<PetInput>({
     resolver: zodResolver(PetSchema),
-    defaultValues: initialValues || { customerId, weightKg: 0, name: '', species: '', gender: 'Male' },
+    defaultValues: initialValues || { customerId, weightKg: 0, name: '', species: '', gender: DEFAULT_PET_GENDER },
   });
 
   const speciesWatch = watch('species');
@@ -53,7 +54,7 @@ export default function PetForm({
 
   const openForm = () => {
     setError(null);
-    reset(initialValues || { customerId, weightKg: 0, name: '', species: '', gender: 'Male' });
+    reset(initialValues || { customerId, weightKg: 0, name: '', species: '', gender: DEFAULT_PET_GENDER });
     setIsOpen(true);
   };
 
@@ -139,10 +140,11 @@ export default function PetForm({
                 <div>
                   <label className="block text-[10px] font-semibold uppercase mb-1.5">Gender</label>
                   <select {...register('gender')} className="w-full px-3 py-2 bg-surface-container/30 border border-outline-variant rounded-xl text-xs font-semibold">
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Neutered Male">Neutered Male</option>
-                    <option value="Spayed Female">Spayed Female</option>
+                    {PET_GENDER_OPTIONS.map((g) => (
+                      <option key={g} value={g}>
+                        {g}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
