@@ -39,6 +39,7 @@ import {
 } from '@/lib/utils/temperature';
 import type { StaffMember } from '@/components/consultations/workflows/GroomingWorkflow';
 import ConsultVoiceRecorder from '@/components/consultation/ConsultVoiceRecorder';
+import TreatmentPlanAiTemplateButton from '@/components/consultation/TreatmentPlanAiTemplateButton';
 import type { ConsultVoiceExtract } from '@/lib/ai/consult-voice';
 import {
   matchCatalogService,
@@ -1523,6 +1524,42 @@ export default function ConsultationWorkspaceClient({
               <h3 className="text-sm font-bold text-primary uppercase tracking-wider">SOAP Plan</h3>
               <p className="text-[10px] text-on-surface-variant/60 mt-1">Treatment plan, follow-up, and services performed.</p>
             </div>
+            <TreatmentPlanAiTemplateButton
+              visitId={visitId}
+              diagnosis={diagnosisWatch || ''}
+              existingPlan={treatmentPlanWatch || ''}
+              disabled={isSubmitting || Boolean(consultPausedAt)}
+              objective={{
+                temperatureF: watch('temperatureC') ?? null,
+                heartRateBpm: watch('heartRateBpm') ?? null,
+                respiratoryRate: watch('respiratoryRate') ?? null,
+                weightKg: watch('weightKg') ?? null,
+                bodyConditionScore: watch('bodyConditionScore') ?? null,
+                dehydrationPercent: watch('dehydrationPercent') ?? null,
+                examinationFindings: examinationWatch || null,
+                signs: [
+                  watch('signVomiting') ? 'vomiting' : null,
+                  watch('signAnorexia') ? 'anorexia' : null,
+                  watch('signDiarrhoea') ? 'diarrhoea' : null,
+                  watch('signConstipation') ? 'constipation' : null,
+                  watch('signVaccination') ? 'vaccination due/given' : null,
+                  watch('signDeworming') ? 'deworming due/given' : null,
+                ].filter(Boolean) as string[],
+              }}
+              onRequireDiagnosis={() => {
+                setTabError('Enter a diagnosis in Assessment (A) before generating an AI treatment plan template.');
+                navigateToSoapTab('A');
+              }}
+              onApply={(planText, mode) => {
+                const current = (getValues('treatmentPlan') || '').trim();
+                const next =
+                  mode === 'append' && current
+                    ? `${current}\n\n${planText.trim()}`
+                    : planText.trim();
+                setValue('treatmentPlan', next, { shouldDirty: true, shouldValidate: true });
+                setTabError(null);
+              }}
+            />
             <div>
               <label className="block text-[10px] font-semibold text-on-surface/80 uppercase tracking-wider mb-1.5">
                 <RequiredLabel>Treatment Plan & Recommendations</RequiredLabel>
