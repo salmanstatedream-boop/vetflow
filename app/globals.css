@@ -1538,6 +1538,35 @@ html.light .app-btn-primary {
   to { transform: rotate(360deg); }
 }
 
+@keyframes phx-expansion-orbit {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes phx-expansion-orbit-counter {
+  to { transform: rotate(-360deg); }
+}
+
+.phx-expansion-orbit-spin {
+  animation: phx-expansion-orbit 24s linear infinite;
+}
+
+.phx-expansion-orbit-counter {
+  animation: phx-expansion-orbit-counter 24s linear infinite;
+}
+
+/* Only pause when a specialty ball is hovered/focused — not the whole stage */
+.phx-expansion-orbit-stage[data-orbit-paused='true'] .phx-expansion-orbit-spin,
+.phx-expansion-orbit-stage[data-orbit-paused='true'] .phx-expansion-orbit-counter {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phx-expansion-orbit-spin,
+  .phx-expansion-orbit-counter {
+    animation: none !important;
+  }
+}
+
 /* Vengeance UI utilities (homepage) */
 @keyframes border-beam {
   100% { offset-distance: 100%; }

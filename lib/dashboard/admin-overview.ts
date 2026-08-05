@@ -133,7 +133,6 @@ export async function loadAdminOverviewBundle(params: {
     customersMtdRes,
     customersPrevMtdRes,
     apptsWeekRes,
-    invoicesWeekRes,
     todayApptsRes,
     todayVisitsRes,
     visitsReasonsRes,
@@ -162,7 +161,6 @@ export async function loadAdminOverviewBundle(params: {
     supabase.from('customers').select('id', { count: 'exact', head: true }).eq('branch_id', branchId).gte('created_at', `${monthStart}T00:00:00Z`),
     supabase.from('customers').select('id', { count: 'exact', head: true }).eq('branch_id', branchId).gte('created_at', `${prevMonthStart}T00:00:00Z`).lt('created_at', `${monthStart}T00:00:00Z`),
     supabase.from('appointments').select('preferred_date').eq('branch_id', branchId).in('preferred_date', days7),
-    supabase.from('invoices').select('total, paid_at').eq('branch_id', branchId).eq('payment_status', 'paid').gte('paid_at', `${days7[0]}T00:00:00Z`),
     supabase.from('appointments').select('id, patient_name, customer_name, preferred_time, status, reason, doctor_id').eq('branch_id', branchId).eq('preferred_date', today).order('preferred_time'),
     supabase.from('visits').select(`id, reason, status, checked_in_at, pets:patients(name, species), customers(first_name, last_name), visit_assignments(user_profiles(first_name, last_name))`).eq('branch_id', branchId).in('status', ['waiting', 'consulting', 'ready_for_checkout']).order('checked_in_at'),
     supabase.from('visits').select('reason').eq('branch_id', branchId).gte('checked_in_at', `${days7[0]}T00:00:00Z`).limit(200),
@@ -197,15 +195,23 @@ export async function loadAdminOverviewBundle(params: {
   const showConsultTimer = isConsultTrackingEnabled(featuresJson);
 
   const invoices = invoicesRes.data || [];
-  const todayStart = `${today}T00:00:00`;
-  const todayEnd = `${today}T23:59:59`;
 
   const todayRevenue = invoices
-    .filter((i) => i.payment_status === 'paid' && i.paid_at && i.paid_at >= todayStart && i.paid_at <= todayEnd)
+    .filter(
+      (i) =>
+        i.payment_status === 'paid' &&
+        i.paid_at &&
+        toLocalDateKey(i.paid_at as string, deviceTimezone) === today
+    )
     .reduce((s, i) => s + Number(i.total || 0), 0);
 
   const yesterdayRevenue = invoices
-    .filter((i) => i.payment_status === 'paid' && i.paid_at && i.paid_at >= `${yesterday}T00:00:00` && i.paid_at <= `${yesterday}T23:59:59`)
+    .filter(
+      (i) =>
+        i.payment_status === 'paid' &&
+        i.paid_at &&
+        toLocalDateKey(i.paid_at as string, deviceTimezone) === yesterday
+    )
     .reduce((s, i) => s + Number(i.total || 0), 0);
 
   const outstandingReceivables = invoices
@@ -232,10 +238,12 @@ export async function loadAdminOverviewBundle(params: {
 
   const revByDay = new Map<string, number>();
   for (const d of days7) revByDay.set(d, 0);
-  for (const inv of invoicesWeekRes.data || []) {
-    if (!inv.paid_at) continue;
-    const d = (inv.paid_at as string).slice(0, 10);
-    if (revByDay.has(d)) revByDay.set(d, (revByDay.get(d) || 0) + Number(inv.total || 0));
+  for (const inv of invoices) {
+    if (inv.payment_status !== 'paid' || !inv.paid_at) continue;
+    const d = toLocalDateKey(inv.paid_at as string, deviceTimezone);
+    if (revByDay.has(d)) {
+      revByDay.set(d, (revByDay.get(d) || 0) + Number(inv.total || 0));
+    }
   }
 
   const clinicianMap = new Map(clinicians.map((c) => [c.id, `Dr. ${c.firstName} ${c.lastName}`]));
