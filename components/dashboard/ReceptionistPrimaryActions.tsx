@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowRight, ShoppingBag, UserPlus } from 'lucide-react';
+import { ArrowRight, CalendarPlus, ShoppingBag, UserPlus } from 'lucide-react';
 import AppLink from '@/components/layout/AppLink';
 import QuickWalkInModal from '@/components/reception/QuickWalkInModal';
 import { btnLgClass, btnPrimaryClass } from '@/lib/ui/dashboard-classes';
@@ -22,7 +22,7 @@ export default function ReceptionistPrimaryActions({
 
   return (
     <>
-      <div className="grid sm:grid-cols-2 gap-3">
+      <div className="grid sm:grid-cols-3 gap-3">
         <button
           type="button"
           onClick={() => setWalkInOpen(true)}
@@ -32,6 +32,14 @@ export default function ReceptionistPrimaryActions({
           Quick walk-in — patient just arrived
           <ArrowRight className="size-4 opacity-80" />
         </button>
+        <AppLink
+          href="/dashboard/schedule"
+          className={cn(btnPrimaryClass, btnLgClass, 'w-full shadow-premium')}
+        >
+          <CalendarPlus className="size-5" />
+          Create an appointment
+          <ArrowRight className="size-4 opacity-80" />
+        </AppLink>
         <AppLink
           href="/dashboard/sales/new"
           className={cn(btnPrimaryClass, btnLgClass, 'w-full shadow-premium')}
