@@ -1,17 +1,19 @@
 'use client';
 
-import { useEffect, useMemo, useState, useTransition } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   addStaffTaskReplyAction,
   createStaffTaskAction,
   getStaffTaskAction,
+  listStaffTasksAction,
   updateStaffTaskStatusAction,
   type StaffOption,
   type StaffTaskReplyRow,
   type StaffTaskRow,
   type StaffTaskStatus,
 } from '@/lib/services/staff-task-actions';
+import { createClient } from '@/lib/supabase/client';
 import {
   btnPrimaryClass,
   btnSmClass,
@@ -82,6 +84,10 @@ function relativeTime(iso: string) {
   });
 }
 
+function repliesSignature(replies: StaffTaskReplyRow[]) {
+  return replies.map((r) => `${r.id}:${r.created_at}`).join('|');
+}
+
 type Props = {
   initialTasks: StaffTaskRow[];
   staff: StaffOption[];
@@ -111,6 +117,13 @@ export default function StaffTasksClient({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
+  const selectedIdRef = useRef<string | null>(selectedId);
+  const repliesSigRef = useRef('');
+
+  useEffect(() => {
+    selectedIdRef.current = selectedId;
+  }, [selectedId]);
+
   const visible = useMemo(() => {
     if (!filterMine) return tasks;
     return tasks.filter((t) => t.assignee_id === currentUserId);
@@ -126,28 +139,88 @@ export default function StaffTasksClient({
 
   const selected = visible.find((t) => t.id === selectedId) ?? null;
 
-  const loadDetail = async (taskId: string) => {
-    setSelectedId(taskId);
-    setDetailLoading(true);
-    setError(null);
-    try {
-      const res = await getStaffTaskAction(taskId);
-      if (!res.success || !res.task) {
-        setError(res.error || 'Failed to load task');
-        setReplies([]);
-        return;
+  const applyDetail = useCallback(
+    (task: StaffTaskRow, nextReplies: StaffTaskReplyRow[], quiet: boolean) => {
+      setTasks((prev) => {
+        const idx = prev.findIndex((t) => t.id === task.id);
+        if (idx < 0) return [task, ...prev];
+        const cur = prev[idx]!;
+        if (
+          cur.status === task.status &&
+          cur.title === task.title &&
+          cur.body === task.body &&
+          cur.updated_at === task.updated_at &&
+          cur.assignee_name === task.assignee_name
+        ) {
+          return prev;
+        }
+        const copy = [...prev];
+        copy[idx] = { ...cur, ...task };
+        return copy;
+      });
+
+      const sig = repliesSignature(nextReplies);
+      if (!quiet || sig !== repliesSigRef.current) {
+        repliesSigRef.current = sig;
+        setReplies(nextReplies);
       }
-      setTasks((prev) =>
-        prev.map((t) => (t.id === res.task!.id ? { ...t, ...res.task! } : t))
-      );
-      setReplies(res.replies);
-    } finally {
-      setDetailLoading(false);
-    }
-  };
+    },
+    []
+  );
+
+  const loadDetail = useCallback(
+    async (taskId: string, opts?: { quiet?: boolean; select?: boolean }) => {
+      const quiet = opts?.quiet ?? false;
+      const select = opts?.select ?? true;
+      if (select) setSelectedId(taskId);
+      if (!quiet) {
+        setDetailLoading(true);
+        setError(null);
+      }
+      try {
+        const res = await getStaffTaskAction(taskId);
+        if (selectedIdRef.current !== taskId && quiet) return;
+        if (!res.success || !res.task) {
+          if (!quiet) {
+            setError(res.error || 'Failed to load task');
+            setReplies([]);
+          }
+          return;
+        }
+        applyDetail(res.task, res.replies, quiet);
+      } finally {
+        if (!quiet && selectedIdRef.current === taskId) {
+          setDetailLoading(false);
+        }
+      }
+    },
+    [applyDetail]
+  );
+
+  const refreshList = useCallback(async () => {
+    const res = await listStaffTasksAction();
+    if (!res.success) return;
+    setTasks((prev) => {
+      const byId = new Map(res.tasks.map((t) => [t.id, t]));
+      const merged = prev.map((t) => {
+        const next = byId.get(t.id);
+        return next ? { ...t, ...next } : t;
+      });
+      for (const t of res.tasks) {
+        if (!merged.some((m) => m.id === t.id)) merged.push(t);
+      }
+      const ids = new Set(res.tasks.map((t) => t.id));
+      return merged
+        .filter((t) => ids.has(t.id))
+        .sort(
+          (a, b) =>
+            new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+        );
+    });
+  }, []);
 
   useEffect(() => {
-    if (selectedId) void loadDetail(selectedId);
+    if (selectedId) void loadDetail(selectedId, { select: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -160,6 +233,56 @@ export default function StaffTasksClient({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterMine, visible.length]);
+
+  useEffect(() => {
+    if (!selectedId) return;
+    const taskId = selectedId;
+
+    const poll = setInterval(() => {
+      if (selectedIdRef.current !== taskId) return;
+      void loadDetail(taskId, { quiet: true, select: false });
+      void refreshList();
+    }, 4500);
+
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`staff-task-${taskId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'staff_tasks',
+          filter: `id=eq.${taskId}`,
+        },
+        () => {
+          if (selectedIdRef.current === taskId) {
+            void loadDetail(taskId, { quiet: true, select: false });
+            void refreshList();
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'staff_task_replies',
+          filter: `task_id=eq.${taskId}`,
+        },
+        () => {
+          if (selectedIdRef.current === taskId) {
+            void loadDetail(taskId, { quiet: true, select: false });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      clearInterval(poll);
+      void supabase.removeChannel(channel);
+    };
+  }, [selectedId, loadDetail, refreshList]);
 
   const handleCreate = () => {
     setError(null);
@@ -211,7 +334,11 @@ export default function StaffTasksClient({
         setError(res.error || 'Failed to reply');
         return;
       }
-      setReplies((prev) => [...prev, { ...res.reply!, author_name: 'You' }]);
+      setReplies((prev) => {
+        const next = [...prev, { ...res.reply!, author_name: 'You' }];
+        repliesSigRef.current = repliesSignature(next);
+        return next;
+      });
       setReplyBody('');
       router.refresh();
     });
@@ -341,7 +468,7 @@ export default function StaffTasksClient({
                 <li key={task.id} className="border-b border-outline-variant/15 last:border-0">
                   <button
                     type="button"
-                    onClick={() => loadDetail(task.id)}
+                    onClick={() => void loadDetail(task.id)}
                     className={cn(
                       'w-full text-left px-4 py-3.5 transition-colors active:scale-[0.995]',
                       active
@@ -350,13 +477,7 @@ export default function StaffTasksClient({
                     )}
                   >
                     <div className="flex items-start gap-3">
-                      <span
-                        className={cn(
-                          'mt-1.5 h-2 w-2 rounded-full shrink-0 shadow-[0_0_8px_currentColor]',
-                          meta.dot
-                        )}
-                        style={{ color: undefined }}
-                      />
+                      <span className={cn('mt-1.5 h-2 w-2 rounded-full shrink-0', meta.dot)} />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
                           <p className="text-sm font-semibold text-on-surface line-clamp-2 leading-snug">
@@ -408,30 +529,26 @@ export default function StaffTasksClient({
               Choose a ticket from the list to view details, update status, and reply.
             </p>
           </div>
-        ) : detailLoading ? (
+        ) : detailLoading && replies.length === 0 && !selected.body ? (
           <div className="flex-1 flex items-center justify-center text-on-surface-variant">
             <Loader2 className="w-5 h-5 animate-spin" />
           </div>
         ) : (
           <>
             <header className="px-5 py-4 border-b border-outline-variant/30 shrink-0 space-y-3">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <h2 className="text-lg font-bold text-on-surface leading-snug">
-                    {selected.title}
-                  </h2>
-                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] text-on-surface-variant">
-                    <span className="inline-flex items-center gap-1.5">
-                      <span className="w-6 h-6 rounded-full bg-primary/15 text-primary text-[9px] font-bold flex items-center justify-center">
-                        {initials(selected.assignee_name)}
-                      </span>
-                      Assigned to {selected.assignee_name}
+              <div className="min-w-0">
+                <h2 className="text-lg font-bold text-on-surface leading-snug">{selected.title}</h2>
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] text-on-surface-variant">
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="w-6 h-6 rounded-full bg-primary/15 text-primary text-[9px] font-bold flex items-center justify-center">
+                      {initials(selected.assignee_name)}
                     </span>
-                    <span className="opacity-40">·</span>
-                    <span>Created by {selected.creator_name}</span>
-                    <span className="opacity-40">·</span>
-                    <span className="tabular-nums">{relativeTime(selected.updated_at)}</span>
-                  </div>
+                    Assigned to {selected.assignee_name}
+                  </span>
+                  <span className="opacity-40">·</span>
+                  <span>Created by {selected.creator_name}</span>
+                  <span className="opacity-40">·</span>
+                  <span className="tabular-nums">{relativeTime(selected.updated_at)}</span>
                 </div>
               </div>
 

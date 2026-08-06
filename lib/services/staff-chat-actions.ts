@@ -3,6 +3,7 @@
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import {
+  assertCapability,
   assertFeature,
   assertOrganization,
   resolveServerAuthContext,
@@ -17,15 +18,19 @@ export type StaffChatCoworker = {
 };
 
 export type StaffMessageType = 'text' | 'voice' | 'system';
+export type StaffConversationType = 'dm' | 'group';
 
 export type StaffConversationRow = {
   id: string;
   organization_id: string;
-  participant_a: string;
-  participant_b: string;
+  type: StaffConversationType;
+  title: string | null;
+  participant_a: string | null;
+  participant_b: string | null;
   updated_at: string;
-  other_user_id: string;
+  other_user_id: string | null;
   other_user_name: string;
+  member_count: number;
   last_message?: string | null;
 };
 
@@ -97,19 +102,47 @@ async function assertStaffChat(
 
 async function assertConversationAccess(
   conversationId: string,
-  organizationId: string
+  organizationId: string,
+  userId: string
 ) {
   const supabase = await createClient();
+  const { data: membership, error: memberError } = await supabase
+    .from('staff_conversation_members')
+    .select('conversation_id, hidden')
+    .eq('conversation_id', conversationId)
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (memberError) throw new Error(memberError.message);
+  if (!membership) throw new Error('Conversation not found');
+
   const { data: convo, error } = await supabase
     .from('staff_conversations')
-    .select('id, organization_id, participant_a, participant_b, hidden_for_a, hidden_for_b')
+    .select(
+      'id, organization_id, type, title, participant_a, participant_b, created_by'
+    )
     .eq('id', conversationId)
     .eq('organization_id', organizationId)
     .maybeSingle();
 
   if (error) throw new Error(error.message);
   if (!convo) throw new Error('Conversation not found');
-  return convo;
+  return { ...convo, hidden: membership.hidden };
+}
+
+async function ensureDmMembers(
+  conversationId: string,
+  participantA: string,
+  participantB: string
+) {
+  const supabase = await createClient();
+  await supabase.from('staff_conversation_members').upsert(
+    [
+      { conversation_id: conversationId, user_id: participantA, hidden: false },
+      { conversation_id: conversationId, user_id: participantB, hidden: false },
+    ],
+    { onConflict: 'conversation_id,user_id', ignoreDuplicates: true }
+  );
 }
 
 async function signedAudioUrl(audioPath: string | null): Promise<string | null> {
@@ -179,49 +212,75 @@ export async function listStaffConversationsAction(): Promise<{
     await assertStaffChat(ctx);
 
     const supabase = await createClient();
+    const { data: memberships, error: memError } = await supabase
+      .from('staff_conversation_members')
+      .select('conversation_id, hidden')
+      .eq('user_id', ctx.userId)
+      .eq('hidden', false);
+
+    if (memError) throw new Error(memError.message);
+
+    const convoIds = (memberships || []).map((m) => m.conversation_id);
+    if (convoIds.length === 0) return { success: true, conversations: [] };
+
     const { data, error } = await supabase
       .from('staff_conversations')
       .select(
-        'id, organization_id, participant_a, participant_b, updated_at, hidden_for_a, hidden_for_b'
+        'id, organization_id, type, title, participant_a, participant_b, updated_at'
       )
       .eq('organization_id', ctx.organizationId!)
+      .in('id', convoIds)
       .order('updated_at', { ascending: false });
 
     if (error) throw new Error(error.message);
 
-    const rows = (data || []).filter((r) => {
-      const iAmA = r.participant_a === ctx.userId;
-      return iAmA ? !r.hidden_for_a : !r.hidden_for_b;
-    });
+    const rows = data || [];
+    const allMemberIds = rows.map((r) => r.id);
 
-    const otherIds = rows.map((r) =>
-      r.participant_a === ctx.userId ? r.participant_b : r.participant_a
-    );
+    const { data: allMembers } = await supabase
+      .from('staff_conversation_members')
+      .select('conversation_id, user_id')
+      .in('conversation_id', allMemberIds);
+
+    const membersByConvo = new Map<string, string[]>();
+    for (const m of allMembers || []) {
+      const list = membersByConvo.get(m.conversation_id) || [];
+      list.push(m.user_id);
+      membersByConvo.set(m.conversation_id, list);
+    }
+
+    const peerIds = new Set<string>();
+    for (const r of rows) {
+      if (r.type === 'dm') {
+        const other =
+          r.participant_a === ctx.userId ? r.participant_b : r.participant_a;
+        if (other) peerIds.add(other);
+      }
+    }
 
     const nameById = new Map<string, string>();
-    if (otherIds.length > 0) {
+    if (peerIds.size > 0) {
       const { data: profiles } = await supabase
         .from('user_profiles')
         .select('id, first_name, last_name')
-        .in('id', otherIds);
+        .in('id', [...peerIds]);
       for (const p of profiles || []) {
         nameById.set(p.id, displayName(p));
       }
     }
 
-    const convoIds = rows.map((r) => r.id);
     const lastByConvo = new Map<
       string,
       { body: string | null; message_type: string | null; deleted_at: string | null }
     >();
 
-    if (convoIds.length > 0) {
+    if (allMemberIds.length > 0) {
       const { data: recentMessages } = await supabase
         .from('staff_messages')
         .select('conversation_id, body, message_type, deleted_at, created_at')
-        .in('conversation_id', convoIds)
+        .in('conversation_id', allMemberIds)
         .order('created_at', { ascending: false })
-        .limit(Math.min(convoIds.length * 3, 150));
+        .limit(Math.min(allMemberIds.length * 3, 150));
 
       for (const msg of recentMessages || []) {
         if (!lastByConvo.has(msg.conversation_id)) {
@@ -235,17 +294,39 @@ export async function listStaffConversationsAction(): Promise<{
     }
 
     const conversations: StaffConversationRow[] = rows.map((r) => {
+      const type = (r.type as StaffConversationType) || 'dm';
+      const memberIds = membersByConvo.get(r.id) || [];
+      const last = lastByConvo.get(r.id) ?? null;
+
+      if (type === 'group') {
+        return {
+          id: r.id,
+          organization_id: r.organization_id,
+          type,
+          title: r.title,
+          participant_a: r.participant_a,
+          participant_b: r.participant_b,
+          updated_at: r.updated_at,
+          other_user_id: null,
+          other_user_name: r.title?.trim() || 'Group',
+          member_count: memberIds.length,
+          last_message: last ? previewForMessage(last) : null,
+        };
+      }
+
       const otherId =
         r.participant_a === ctx.userId ? r.participant_b : r.participant_a;
-      const last = lastByConvo.get(r.id) ?? null;
       return {
         id: r.id,
         organization_id: r.organization_id,
+        type,
+        title: null,
         participant_a: r.participant_a,
         participant_b: r.participant_b,
         updated_at: r.updated_at,
         other_user_id: otherId,
-        other_user_name: nameById.get(otherId) || 'Staff',
+        other_user_name: otherId ? nameById.get(otherId) || 'Staff' : 'Staff',
+        member_count: memberIds.length || 2,
         last_message: last ? previewForMessage(last) : null,
       };
     });
@@ -287,21 +368,20 @@ export async function getOrCreateConversationAction(otherUserId: string): Promis
 
     const { data: existing } = await supabase
       .from('staff_conversations')
-      .select('id, participant_a, participant_b, hidden_for_a, hidden_for_b')
+      .select('id, participant_a, participant_b')
       .eq('organization_id', ctx.organizationId!)
+      .eq('type', 'dm')
       .eq('participant_a', participant_a)
       .eq('participant_b', participant_b)
       .maybeSingle();
 
     if (existing) {
-      const iAmA = existing.participant_a === ctx.userId;
-      const hidden = iAmA ? existing.hidden_for_a : existing.hidden_for_b;
-      if (hidden) {
-        await supabase
-          .from('staff_conversations')
-          .update(iAmA ? { hidden_for_a: false } : { hidden_for_b: false })
-          .eq('id', existing.id);
-      }
+      await ensureDmMembers(existing.id, participant_a, participant_b);
+      await supabase
+        .from('staff_conversation_members')
+        .update({ hidden: false })
+        .eq('conversation_id', existing.id)
+        .eq('user_id', ctx.userId);
       return { success: true, conversationId: existing.id };
     }
 
@@ -309,14 +389,159 @@ export async function getOrCreateConversationAction(otherUserId: string): Promis
       .from('staff_conversations')
       .insert({
         organization_id: ctx.organizationId,
+        type: 'dm',
         participant_a,
         participant_b,
+        created_by: ctx.userId,
       })
       .select('id')
       .single();
 
     if (error) throw new Error(error.message);
+
+    const { error: memberInsertError } = await supabase
+      .from('staff_conversation_members')
+      .insert([
+        { conversation_id: created.id, user_id: participant_a, hidden: false },
+        { conversation_id: created.id, user_id: participant_b, hidden: false },
+      ]);
+
+    if (memberInsertError) throw new Error(memberInsertError.message);
+
     return { success: true, conversationId: created.id };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Failed',
+    };
+  }
+}
+
+const CreateGroupSchema = z.object({
+  title: z.string().trim().min(1).max(80),
+  memberIds: z.array(z.string().uuid()).min(1).max(50),
+});
+
+export async function createStaffGroupAction(payload: unknown): Promise<{
+  success: boolean;
+  error?: string;
+  conversationId?: string;
+}> {
+  try {
+    const ctx = await resolveServerAuthContext();
+    if (!ctx) throw new Error('Unauthorized');
+    await assertStaffChat(ctx);
+    assertCapability(ctx, 'manage_staff');
+
+    const parsed = CreateGroupSchema.parse(payload);
+    const uniqueMemberIds = [...new Set(parsed.memberIds)].filter(
+      (id) => id !== ctx.userId
+    );
+    if (uniqueMemberIds.length < 1) {
+      throw new Error('Add at least one coworker to the group');
+    }
+
+    const supabase = await createClient();
+    const { data: orgMembers, error: orgError } = await supabase
+      .from('organization_members')
+      .select('user_id')
+      .eq('organization_id', ctx.organizationId!)
+      .eq('is_active', true)
+      .in('user_id', uniqueMemberIds);
+
+    if (orgError) throw new Error(orgError.message);
+    if ((orgMembers || []).length !== uniqueMemberIds.length) {
+      throw new Error('All members must be active staff in your organization');
+    }
+
+    const { data: created, error } = await supabase
+      .from('staff_conversations')
+      .insert({
+        organization_id: ctx.organizationId,
+        type: 'group',
+        title: parsed.title.trim(),
+        created_by: ctx.userId,
+        participant_a: null,
+        participant_b: null,
+      })
+      .select('id')
+      .single();
+
+    if (error) throw new Error(error.message);
+
+    const memberRows = [ctx.userId, ...uniqueMemberIds].map((user_id) => ({
+      conversation_id: created.id,
+      user_id,
+      hidden: false,
+    }));
+
+    const { error: memberError } = await supabase
+      .from('staff_conversation_members')
+      .insert(memberRows);
+
+    if (memberError) throw new Error(memberError.message);
+
+    return { success: true, conversationId: created.id };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Failed',
+    };
+  }
+}
+
+const AddMembersSchema = z.object({
+  conversationId: z.string().uuid(),
+  memberIds: z.array(z.string().uuid()).min(1).max(50),
+});
+
+export async function addStaffGroupMembersAction(payload: unknown): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  try {
+    const ctx = await resolveServerAuthContext();
+    if (!ctx) throw new Error('Unauthorized');
+    await assertStaffChat(ctx);
+    assertCapability(ctx, 'manage_staff');
+
+    const parsed = AddMembersSchema.parse(payload);
+    const convo = await assertConversationAccess(
+      parsed.conversationId,
+      ctx.organizationId!,
+      ctx.userId
+    );
+    if (convo.type !== 'group') throw new Error('Not a group conversation');
+
+    const uniqueIds = [...new Set(parsed.memberIds)].filter(
+      (id) => id !== ctx.userId
+    );
+    if (uniqueIds.length === 0) return { success: true };
+
+    const supabase = await createClient();
+    const { data: orgMembers, error: orgError } = await supabase
+      .from('organization_members')
+      .select('user_id')
+      .eq('organization_id', ctx.organizationId!)
+      .eq('is_active', true)
+      .in('user_id', uniqueIds);
+
+    if (orgError) throw new Error(orgError.message);
+    if ((orgMembers || []).length !== uniqueIds.length) {
+      throw new Error('All members must be active staff in your organization');
+    }
+
+    const { error } = await supabase.from('staff_conversation_members').upsert(
+      uniqueIds.map((user_id) => ({
+        conversation_id: parsed.conversationId,
+        user_id,
+        hidden: false,
+      })),
+      { onConflict: 'conversation_id,user_id', ignoreDuplicates: true }
+    );
+
+    if (error) throw new Error(error.message);
+    return { success: true };
   } catch (err: unknown) {
     return {
       success: false,
@@ -333,18 +558,14 @@ export async function hideStaffConversationAction(conversationId: string): Promi
     const ctx = await resolveServerAuthContext();
     if (!ctx) throw new Error('Unauthorized');
     await assertStaffChat(ctx);
-
-    const convo = await assertConversationAccess(conversationId, ctx.organizationId!);
-    const iAmA = convo.participant_a === ctx.userId;
-    if (!iAmA && convo.participant_b !== ctx.userId) {
-      throw new Error('Forbidden');
-    }
+    await assertConversationAccess(conversationId, ctx.organizationId!, ctx.userId);
 
     const supabase = await createClient();
     const { error } = await supabase
-      .from('staff_conversations')
-      .update(iAmA ? { hidden_for_a: true } : { hidden_for_b: true })
-      .eq('id', conversationId);
+      .from('staff_conversation_members')
+      .update({ hidden: true })
+      .eq('conversation_id', conversationId)
+      .eq('user_id', ctx.userId);
 
     if (error) throw new Error(error.message);
     return { success: true };
@@ -365,7 +586,7 @@ export async function listStaffMessagesAction(conversationId: string): Promise<{
     const ctx = await resolveServerAuthContext();
     if (!ctx) throw new Error('Unauthorized');
     await assertStaffChat(ctx);
-    await assertConversationAccess(conversationId, ctx.organizationId!);
+    await assertConversationAccess(conversationId, ctx.organizationId!, ctx.userId);
 
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -403,7 +624,11 @@ export async function sendStaffMessageAction(payload: unknown) {
     await assertStaffChat(ctx);
 
     const parsed = SendSchema.parse(payload);
-    await assertConversationAccess(parsed.conversationId, ctx.organizationId!);
+    await assertConversationAccess(
+      parsed.conversationId,
+      ctx.organizationId!,
+      ctx.userId
+    );
 
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -423,6 +648,13 @@ export async function sendStaffMessageAction(payload: unknown) {
       .from('staff_conversations')
       .update({ updated_at: new Date().toISOString() })
       .eq('id', parsed.conversationId);
+
+    // Unhide for sender if previously hidden
+    await supabase
+      .from('staff_conversation_members')
+      .update({ hidden: false })
+      .eq('conversation_id', parsed.conversationId)
+      .eq('user_id', ctx.userId);
 
     return { success: true, message: mapMessage(data as Record<string, unknown>) };
   } catch (err: unknown) {
@@ -459,7 +691,11 @@ export async function editStaffMessageAction(payload: unknown) {
     if (existing.deleted_at) throw new Error('Cannot edit a deleted message');
     if (existing.message_type !== 'text') throw new Error('Only text messages can be edited');
 
-    await assertConversationAccess(existing.conversation_id, ctx.organizationId!);
+    await assertConversationAccess(
+      existing.conversation_id,
+      ctx.organizationId!,
+      ctx.userId
+    );
 
     const { data, error } = await supabase
       .from('staff_messages')
@@ -502,7 +738,11 @@ export async function deleteStaffMessageAction(messageId: string) {
       return { success: true, message: mapMessage(existing as Record<string, unknown>) };
     }
 
-    await assertConversationAccess(existing.conversation_id, ctx.organizationId!);
+    await assertConversationAccess(
+      existing.conversation_id,
+      ctx.organizationId!,
+      ctx.userId
+    );
 
     if (existing.audio_path) {
       await supabase.storage
@@ -561,7 +801,11 @@ export async function sendStaffVoiceMessageAction(formData: FormData) {
     if (!(file instanceof File)) throw new Error('Audio file required');
     if (file.size > 5 * 1024 * 1024) throw new Error('Voice note must be under 5MB');
 
-    await assertConversationAccess(meta.conversationId, ctx.organizationId!);
+    await assertConversationAccess(
+      meta.conversationId,
+      ctx.organizationId!,
+      ctx.userId
+    );
 
     const supabase = await createClient();
     const messageId = crypto.randomUUID();
@@ -639,7 +883,11 @@ export async function getStaffVoiceSignedUrlAction(messageId: string) {
       throw new Error('Voice note not found');
     }
 
-    await assertConversationAccess(existing.conversation_id, ctx.organizationId!);
+    await assertConversationAccess(
+      existing.conversation_id,
+      ctx.organizationId!,
+      ctx.userId
+    );
     const url = await signedAudioUrl(existing.audio_path);
     if (!url) throw new Error('Failed to sign audio URL');
     return { success: true, url };

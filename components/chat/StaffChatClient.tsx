@@ -8,6 +8,7 @@ import {
   useState,
 } from 'react';
 import {
+  createStaffGroupAction,
   deleteStaffMessageAction,
   editStaffMessageAction,
   getOrCreateConversationAction,
@@ -24,6 +25,7 @@ import { createClient } from '@/lib/supabase/client';
 import {
   btnPrimaryClass,
   btnSmClass,
+  chipActiveClass,
   chipClass,
   inputClass,
 } from '@/lib/ui/dashboard-classes';
@@ -38,6 +40,7 @@ import {
   Search,
   Send,
   Trash2,
+  Users,
   X,
 } from 'lucide-react';
 
@@ -114,12 +117,14 @@ type Props = {
   initialConversations: StaffConversationRow[];
   coworkers: StaffChatCoworker[];
   currentUserId: string;
+  canCreateGroup?: boolean;
 };
 
 export default function StaffChatClient({
   initialConversations,
   coworkers,
   currentUserId,
+  canCreateGroup = false,
 }: Props) {
   const [conversations, setConversations] = useState(initialConversations);
   const conversationsRef = useRef(initialConversations);
@@ -132,8 +137,12 @@ export default function StaffChatClient({
   /** Cold open with unknown content (has preview, no cache) */
   const [showSkeleton, setShowSkeleton] = useState(false);
   const [showNew, setShowNew] = useState(false);
+  const [newTab, setNewTab] = useState<'direct' | 'group'>('direct');
   const [coworkerQuery, setCoworkerQuery] = useState('');
   const [startingWith, setStartingWith] = useState<string | null>(null);
+  const [groupTitle, setGroupTitle] = useState('');
+  const [groupMemberIds, setGroupMemberIds] = useState<string[]>([]);
+  const [creatingGroup, setCreatingGroup] = useState(false);
   const [headerMenuOpen, setHeaderMenuOpen] = useState(false);
   const [confirmHide, setConfirmHide] = useState(false);
   const [voiceUploading, setVoiceUploading] = useState(false);
@@ -376,7 +385,9 @@ export default function StaffChatClient({
 
   const startDm = async (userId: string) => {
     setError(null);
-    const existing = conversations.find((c) => c.other_user_id === userId);
+    const existing = conversations.find(
+      (c) => c.type !== 'group' && c.other_user_id === userId
+    );
     if (existing) {
       selectConversation(existing.id);
       setShowNew(false);
@@ -399,6 +410,38 @@ export default function StaffChatClient({
       requestAnimationFrame(() => composerRef.current?.focus());
     } finally {
       setStartingWith(null);
+    }
+  };
+
+  const toggleGroupMember = (userId: string) => {
+    setGroupMemberIds((prev) =>
+      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
+    );
+  };
+
+  const createGroup = async () => {
+    if (!canCreateGroup || creatingGroup) return;
+    setError(null);
+    setCreatingGroup(true);
+    try {
+      const res = await createStaffGroupAction({
+        title: groupTitle,
+        memberIds: groupMemberIds,
+      });
+      if (!res.success || !res.conversationId) {
+        setError(res.error || 'Failed to create group');
+        return;
+      }
+      await refreshConversations();
+      selectConversation(res.conversationId);
+      setShowNew(false);
+      setNewTab('direct');
+      setGroupTitle('');
+      setGroupMemberIds([]);
+      setCoworkerQuery('');
+      requestAnimationFrame(() => composerRef.current?.focus());
+    } finally {
+      setCreatingGroup(false);
     }
   };
 
@@ -548,57 +591,183 @@ export default function StaffChatClient({
         </div>
 
         {showNew && (
-          <div className="p-3 border-b border-outline-variant/30 bg-surface-container/20 shrink-0 space-y-2 animate-in fade-in duration-150">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-on-surface-variant/60" />
-              <input
-                value={coworkerQuery}
-                onChange={(e) => setCoworkerQuery(e.target.value)}
-                placeholder="Search coworkers…"
-                className={cn(inputClass, 'pl-9 py-2 rounded-xl text-xs')}
-                autoFocus
-              />
-            </div>
-            <div className="max-h-48 overflow-y-auto space-y-0.5">
-              {filteredCoworkers.length === 0 ? (
-                <p className="text-xs text-on-surface-variant px-2 py-3 text-center">
-                  No coworkers found.
-                </p>
-              ) : (
-                filteredCoworkers.map((c) => {
-                  const existing = conversations.find(
-                    (x) => x.other_user_id === c.id
-                  );
-                  const loading = startingWith === c.id;
-                  return (
-                    <button
-                      key={c.id}
-                      type="button"
-                      disabled={!!startingWith || loading}
-                      onClick={() => void startDm(c.id)}
-                      className="w-full flex items-center gap-2.5 text-left px-2.5 py-2 rounded-xl hover:bg-surface-container/60 transition-colors active:scale-[0.99]"
-                    >
-                      <span className="w-8 h-8 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center shrink-0">
-                        {initials(c.name)}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-semibold text-on-surface truncate">
-                          {c.name}
-                        </span>
-                        <span className="block text-[10px] text-on-surface-variant capitalize truncate">
-                          {existing
-                            ? 'Open conversation'
-                            : formatRole(c.role)}
-                        </span>
-                      </span>
-                      {loading && (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin text-primary shrink-0" />
-                      )}
-                    </button>
-                  );
-                })
-              )}
-            </div>
+          <div className="p-3 border-b border-outline-variant/30 bg-surface-container/20 shrink-0 space-y-2.5 animate-in fade-in duration-150">
+            {canCreateGroup && (
+              <div className="flex items-center gap-1 p-0.5 rounded-xl bg-surface-container/60">
+                <button
+                  type="button"
+                  onClick={() => setNewTab('direct')}
+                  className={cn(
+                    'flex-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-colors',
+                    newTab === 'direct'
+                      ? chipActiveClass
+                      : 'text-on-surface-variant hover:text-on-surface'
+                  )}
+                >
+                  Direct
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNewTab('group')}
+                  className={cn(
+                    'flex-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-colors',
+                    newTab === 'group'
+                      ? chipActiveClass
+                      : 'text-on-surface-variant hover:text-on-surface'
+                  )}
+                >
+                  Group
+                </button>
+              </div>
+            )}
+
+            {newTab === 'group' && canCreateGroup ? (
+              <>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1.5">
+                    Group name
+                  </label>
+                  <input
+                    value={groupTitle}
+                    onChange={(e) => setGroupTitle(e.target.value)}
+                    placeholder="e.g. Front desk"
+                    className={cn(inputClass, 'py-2 rounded-xl text-xs')}
+                    autoFocus
+                  />
+                </div>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-on-surface-variant/60" />
+                  <input
+                    value={coworkerQuery}
+                    onChange={(e) => setCoworkerQuery(e.target.value)}
+                    placeholder="Find staff to add…"
+                    className={cn(inputClass, 'pl-9 py-2 rounded-xl text-xs')}
+                  />
+                </div>
+                <div className="max-h-40 overflow-y-auto space-y-0.5">
+                  {filteredCoworkers.length === 0 ? (
+                    <p className="text-xs text-on-surface-variant px-2 py-3 text-center">
+                      No coworkers found.
+                    </p>
+                  ) : (
+                    filteredCoworkers.map((c) => {
+                      const selected = groupMemberIds.includes(c.id);
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => toggleGroupMember(c.id)}
+                          className={cn(
+                            'w-full flex items-center gap-2.5 text-left px-2.5 py-2 rounded-xl transition-colors active:scale-[0.99]',
+                            selected
+                              ? 'bg-primary/10'
+                              : 'hover:bg-surface-container/60'
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              'w-4 h-4 rounded border flex items-center justify-center shrink-0 text-[9px]',
+                              selected
+                                ? 'bg-primary border-primary text-on-primary'
+                                : 'border-outline-variant/50'
+                            )}
+                          >
+                            {selected ? '✓' : ''}
+                          </span>
+                          <span className="w-8 h-8 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center shrink-0">
+                            {initials(c.name)}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-sm font-semibold text-on-surface truncate">
+                              {c.name}
+                            </span>
+                            <span className="block text-[10px] text-on-surface-variant capitalize truncate">
+                              {formatRole(c.role)}
+                            </span>
+                          </span>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+                <button
+                  type="button"
+                  disabled={
+                    creatingGroup ||
+                    !groupTitle.trim() ||
+                    groupMemberIds.length < 1
+                  }
+                  onClick={() => void createGroup()}
+                  className={cn(btnPrimaryClass, 'w-full justify-center')}
+                >
+                  {creatingGroup ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      Creating…
+                    </>
+                  ) : (
+                    `Create group${
+                      groupMemberIds.length
+                        ? ` (${groupMemberIds.length + 1})`
+                        : ''
+                    }`
+                  )}
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-on-surface-variant/60" />
+                  <input
+                    value={coworkerQuery}
+                    onChange={(e) => setCoworkerQuery(e.target.value)}
+                    placeholder="Search coworkers…"
+                    className={cn(inputClass, 'pl-9 py-2 rounded-xl text-xs')}
+                    autoFocus
+                  />
+                </div>
+                <div className="max-h-48 overflow-y-auto space-y-0.5">
+                  {filteredCoworkers.length === 0 ? (
+                    <p className="text-xs text-on-surface-variant px-2 py-3 text-center">
+                      No coworkers found.
+                    </p>
+                  ) : (
+                    filteredCoworkers.map((c) => {
+                      const existing = conversations.find(
+                        (x) => x.type !== 'group' && x.other_user_id === c.id
+                      );
+                      const loading = startingWith === c.id;
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          disabled={!!startingWith || loading}
+                          onClick={() => void startDm(c.id)}
+                          className="w-full flex items-center gap-2.5 text-left px-2.5 py-2 rounded-xl hover:bg-surface-container/60 transition-colors active:scale-[0.99]"
+                        >
+                          <span className="w-8 h-8 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center shrink-0">
+                            {initials(c.name)}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-sm font-semibold text-on-surface truncate">
+                              {c.name}
+                            </span>
+                            <span className="block text-[10px] text-on-surface-variant capitalize truncate">
+                              {existing
+                                ? 'Open conversation'
+                                : formatRole(c.role)}
+                            </span>
+                          </span>
+                          {loading && (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-primary shrink-0" />
+                          )}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -618,6 +787,7 @@ export default function StaffChatClient({
           ) : (
             conversations.map((c) => {
               const activeRow = activeId === c.id;
+              const isGroup = c.type === 'group';
               return (
                 <li
                   key={c.id}
@@ -641,10 +811,16 @@ export default function StaffChatClient({
                           'w-9 h-9 rounded-full text-[11px] font-bold flex items-center justify-center shrink-0',
                           activeRow
                             ? 'bg-primary/20 text-primary'
-                            : 'bg-surface-container-high text-on-surface'
+                            : isGroup
+                              ? 'bg-sky-500/15 text-sky-300'
+                              : 'bg-surface-container-high text-on-surface'
                         )}
                       >
-                        {initials(c.other_user_name)}
+                        {isGroup ? (
+                          <Users className="w-4 h-4" />
+                        ) : (
+                          initials(c.other_user_name)
+                        )}
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-2">
@@ -656,7 +832,9 @@ export default function StaffChatClient({
                           </span>
                         </div>
                         <p className="text-[11px] text-on-surface-variant line-clamp-1 mt-0.5">
-                          {c.last_message || 'No messages yet'}
+                          {isGroup
+                            ? `${c.member_count} members · ${c.last_message || 'No messages yet'}`
+                            : c.last_message || 'No messages yet'}
                         </p>
                       </div>
                     </div>
@@ -672,15 +850,28 @@ export default function StaffChatClient({
         <header className="px-5 py-3.5 border-b border-outline-variant/30 shrink-0 flex items-center gap-3 min-h-[68px]">
           {active ? (
             <>
-              <span className="w-10 h-10 rounded-full bg-primary/15 text-primary text-xs font-bold flex items-center justify-center shrink-0">
-                {initials(active.other_user_name)}
+              <span
+                className={cn(
+                  'w-10 h-10 rounded-full text-xs font-bold flex items-center justify-center shrink-0',
+                  active.type === 'group'
+                    ? 'bg-sky-500/15 text-sky-300'
+                    : 'bg-primary/15 text-primary'
+                )}
+              >
+                {active.type === 'group' ? (
+                  <Users className="w-4.5 h-4.5" />
+                ) : (
+                  initials(active.other_user_name)
+                )}
               </span>
               <div className="min-w-0 flex-1">
                 <h2 className="text-sm font-bold text-on-surface truncate">
                   {active.other_user_name}
                 </h2>
                 <p className="text-[10px] text-on-surface-variant mt-0.5">
-                  Private · only the two of you can read this
+                  {active.type === 'group'
+                    ? `Group · ${active.member_count} member${active.member_count === 1 ? '' : 's'}`
+                    : 'Private · only the two of you can read this'}
                 </p>
               </div>
               <div ref={headerMenuRef} className="relative shrink-0">
@@ -706,8 +897,10 @@ export default function StaffChatClient({
                     ) : (
                       <div className="px-3 py-2.5 space-y-2">
                         <p className="text-[11px] text-on-surface-variant leading-relaxed">
-                          Hide this chat for you only. {active.other_user_name}{' '}
-                          keeps their copy.
+                          Hide this chat for you only.
+                          {active.type === 'group'
+                            ? ' Other members keep the group.'
+                            : ` ${active.other_user_name} keeps their copy.`}
                         </p>
                         <div className="flex gap-2">
                           <button
@@ -764,8 +957,7 @@ export default function StaffChatClient({
                 Your staff inbox
               </p>
               <p className="text-[11px] text-on-surface-variant max-w-xs leading-relaxed">
-                Direct messages stay between you and one coworker. Platform
-                admins cannot read message content.
+                Direct messages and group chats stay within your clinic team.
               </p>
             </div>
           ) : showSkeleton && messages.length === 0 ? (
@@ -834,7 +1026,11 @@ export default function StaffChatClient({
                 ref={composerRef}
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                placeholder={`Message ${active.other_user_name.split(' ')[0]}…`}
+                placeholder={
+                  active.type === 'group'
+                    ? `Message ${active.other_user_name}…`
+                    : `Message ${active.other_user_name.split(' ')[0]}…`
+                }
                 rows={1}
                 className={cn(
                   inputClass,

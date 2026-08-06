@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { MessageSquare } from 'lucide-react';
+import { hasCapability } from '@/lib/auth/capabilities';
 import { resolveServerAuthContext } from '@/lib/auth/context';
 import { guardRoute } from '@/lib/auth/page-guards';
 import {
@@ -11,7 +12,7 @@ import StaffChatClient from '@/components/chat/StaffChatClient';
 
 export const metadata = {
   title: 'Messages',
-  description: 'Private 1:1 staff direct messages.',
+  description: 'Staff direct messages and group chat.',
 };
 
 export default async function ChatPage() {
@@ -26,17 +27,21 @@ export default async function ChatPage() {
     listChatCoworkersAction(),
   ]);
 
+  const canCreateGroup =
+    hasCapability(ctx.role, 'manage_staff') || ctx.role === 'clinic_admin';
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Messages"
-        description="Private 1:1 staff messages. Only the two participants can read them."
+        description="Direct messages and clinic group chats for your team."
         icon={MessageSquare}
       />
       <StaffChatClient
         initialConversations={convos.conversations}
         coworkers={coworkers.coworkers}
         currentUserId={ctx.userId}
+        canCreateGroup={canCreateGroup}
       />
     </div>
   );
