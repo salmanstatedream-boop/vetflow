@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback, useTransition } from 'react';
 import RoleQuickActionsGrid, { type QabLayout } from '@/components/dashboard/RoleQuickActionsGrid';
 import ReceptionistPrimaryActions from '@/components/dashboard/ReceptionistPrimaryActions';
 import DashboardWorkflowLauncher from '@/components/dashboard/DashboardWorkflowLauncher';
+import MyTasksCard from '@/components/tasks/MyTasksCard';
 import {
   getQabsForRole,
   filterQabs,
@@ -13,6 +14,7 @@ import {
 import type { LiveConsultRow } from '@/components/dashboard/LiveOperationsPanel';
 import type { UserSessionDetails } from '@/lib/services/auth';
 import type { Feature } from '@/lib/auth/features';
+import type { StaffTaskRow } from '@/lib/services/staff-task-actions';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useGlobalLoadingOptional } from '@/components/layout/NavigationLoadingProvider';
@@ -40,6 +42,7 @@ interface DashboardQabShellProps {
   categories: { id: string; name: string }[];
   layout?: QabLayout;
   showHeading?: boolean;
+  myTasks?: StaffTaskRow[];
 }
 
 export default function DashboardQabShell({
@@ -58,6 +61,7 @@ export default function DashboardQabShell({
   categories,
   layout = 'compact',
   showHeading = true,
+  myTasks,
 }: DashboardQabShellProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -111,6 +115,7 @@ export default function DashboardQabShell({
             branches={branches}
             doctors={doctors}
           />
+          {myTasks !== undefined && <MyTasksCard tasks={myTasks} />}
           <RoleQuickActionsGrid
             layout={layout}
             showHeading={false}

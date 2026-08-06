@@ -189,6 +189,8 @@ export default async function DashboardOverview({
   let showConsultTimer = false;
   let featuresJson: Record<string, unknown> | null = session.featuresJson;
   let myTasks: StaffTaskRow[] = [];
+  let myTasksAssignedCount = 0;
+  let myTasksOpenCount = 0;
   let doctors: { id: string; firstName: string; lastName: string }[] = [];
   const staffAttendanceRows: StaffAttendanceOverviewRow[] = [];
   let doctorQueueWaiting: DoctorQueueVisit[] = [];
@@ -614,7 +616,10 @@ export default async function DashboardOverview({
     if (showMyTasks) {
       const tasksRes = await listStaffTasksAction({ assignedToMe: true });
       if (tasksRes.success) {
-        myTasks = tasksRes.tasks.filter((t) => t.status !== 'done').slice(0, 8);
+        myTasksAssignedCount = tasksRes.tasks.length;
+        const openTasks = tasksRes.tasks.filter((t) => t.status !== 'done');
+        myTasksOpenCount = openTasks.length;
+        myTasks = openTasks.slice(0, 8);
       }
     }
 
@@ -838,7 +843,7 @@ export default async function DashboardOverview({
 
   const dashboardBody = (
     <>
-      {showMyTasks && (
+      {showMyTasks && role !== 'clinic_admin' && role !== 'receptionist' && (
         <MyTasksCard tasks={myTasks} />
       )}
       {role === 'clinic_admin' && adminOverview ? (
@@ -854,6 +859,9 @@ export default async function DashboardOverview({
           clinicName={session.organizationName || 'Clinic'}
           branches={ctx.branches}
           categories={productCategories}
+          showMyTasks={showMyTasks}
+          myTasksOpenCount={myTasksOpenCount}
+          myTasksAssignedCount={myTasksAssignedCount}
         />
       ) : (
         <>
@@ -871,6 +879,9 @@ export default async function DashboardOverview({
         showConsultTimer={showConsultTimer}
         branches={session.branches}
         categories={productCategories}
+        myTasks={
+          showMyTasks && role === 'receptionist' ? myTasks : undefined
+        }
       />
 
       {role === 'doctor' && !staffGateLocked && (

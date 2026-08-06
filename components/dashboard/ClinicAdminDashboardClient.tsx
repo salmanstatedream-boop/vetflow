@@ -10,6 +10,7 @@ import {
   Users,
   Plus,
   Syringe,
+  ListTodo,
 } from 'lucide-react';
 import { useVisibilityPolling } from '@/lib/hooks/useVisibilityPolling';
 import { formatMoney } from '@/lib/utils/currency';
@@ -47,6 +48,9 @@ interface ClinicAdminDashboardClientProps extends AdminOverviewBundle {
   clinicName: string;
   branches: { id: string; name: string }[];
   categories: { id: string; name: string }[];
+  showMyTasks?: boolean;
+  myTasksOpenCount?: number;
+  myTasksAssignedCount?: number;
 }
 
 export default function ClinicAdminDashboardClient({
@@ -83,6 +87,9 @@ export default function ClinicAdminDashboardClient({
   clinicName,
   branches,
   categories,
+  showMyTasks = false,
+  myTasksOpenCount = 0,
+  myTasksAssignedCount = 0,
 }: ClinicAdminDashboardClientProps) {
   useVisibilityPolling(30_000);
 
@@ -126,7 +133,25 @@ export default function ClinicAdminDashboardClient({
       )}
 
       {/* Row A — KPIs */}
-      <div className={cn('grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-7 items-stretch', DASHBOARD_DENSITY.gridGap)}>
+      <div
+        className={cn(
+          'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 items-stretch',
+          showMyTasks ? '2xl:grid-cols-8' : '2xl:grid-cols-7',
+          DASHBOARD_DENSITY.gridGap
+        )}
+      >
+        {showMyTasks && (
+          <DashboardKpiStatCard
+            density="compact"
+            label="My Tasks"
+            value={myTasksOpenCount}
+            icon={ListTodo}
+            accentClass={KPI_ACCENTS.clients.bg}
+            iconTextClass={KPI_ACCENTS.clients.text}
+            deltaLabel={`${myTasksAssignedCount} assigned`}
+            href="/dashboard/tasks"
+          />
+        )}
         <DashboardKpiStatCard
           density="compact"
           label="Today's Appointments"
