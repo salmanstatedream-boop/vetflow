@@ -6,7 +6,6 @@ import {
   useMemo,
   useRef,
   useState,
-  useTransition,
 } from 'react';
 import {
   deleteStaffMessageAction,
@@ -95,6 +94,22 @@ function mergeMessages(
   );
 }
 
+function ThreadSkeleton() {
+  return (
+    <div className="space-y-3 pt-4" aria-hidden>
+      <div className="flex justify-start">
+        <div className="h-10 w-[42%] rounded-2xl rounded-bl-md bg-surface-container/70 animate-pulse" />
+      </div>
+      <div className="flex justify-end">
+        <div className="h-12 w-[48%] rounded-2xl rounded-br-md bg-primary/15 animate-pulse" />
+      </div>
+      <div className="flex justify-start">
+        <div className="h-9 w-[36%] rounded-2xl rounded-bl-md bg-surface-container/70 animate-pulse" />
+      </div>
+    </div>
+  );
+}
+
 type Props = {
   initialConversations: StaffConversationRow[];
   coworkers: StaffChatCoworker[];
@@ -107,13 +122,15 @@ export default function StaffChatClient({
   currentUserId,
 }: Props) {
   const [conversations, setConversations] = useState(initialConversations);
+  const conversationsRef = useRef(initialConversations);
   const [activeId, setActiveIdState] = useState<string | null>(
     initialConversations[0]?.id ?? null
   );
   const [messages, setMessages] = useState<StaffMessageRow[]>([]);
   const [draft, setDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [loadingMessages, setLoadingMessages] = useState(false);
+  /** Cold open with unknown content (has preview, no cache) */
+  const [showSkeleton, setShowSkeleton] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [coworkerQuery, setCoworkerQuery] = useState('');
   const [startingWith, setStartingWith] = useState<string | null>(null);
@@ -121,36 +138,42 @@ export default function StaffChatClient({
   const [confirmHide, setConfirmHide] = useState(false);
   const [voiceUploading, setVoiceUploading] = useState(false);
   const [voiceResetKey, setVoiceResetKey] = useState(0);
-  const [pending, startTransition] = useTransition();
+  const [sending, setSending] = useState(false);
+  const [mutating, setMutating] = useState(false);
 
   const activeIdRef = useRef<string | null>(activeId);
+  const messagesByConvoRef = useRef<Map<string, StaffMessageRow[]>>(new Map());
+  const prefetchInFlightRef = useRef<Set<string>>(new Set());
   const bottomRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const shouldStickBottomRef = useRef(true);
   const headerMenuRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    conversationsRef.current = conversations;
+  }, [conversations]);
+
   const active = conversations.find((c) => c.id === activeId) ?? null;
 
-  const setActiveId = useCallback((id: string | null) => {
-    activeIdRef.current = id;
-    setActiveIdState(id);
-    setMessages([]);
-    setDraft('');
-    setError(null);
-    setHeaderMenuOpen(false);
-    setConfirmHide(false);
-    shouldStickBottomRef.current = true;
+  const writeCache = useCallback((conversationId: string, next: StaffMessageRow[]) => {
+    messagesByConvoRef.current.set(conversationId, next);
   }, []);
 
-  const filteredCoworkers = useMemo(() => {
-    const q = coworkerQuery.trim().toLowerCase();
-    if (!q) return coworkers;
-    return coworkers.filter(
-      (c) =>
-        c.name.toLowerCase().includes(q) || c.role.toLowerCase().includes(q)
-    );
-  }, [coworkers, coworkerQuery]);
+  const patchActiveMessages = useCallback(
+    (
+      conversationId: string,
+      updater: (prev: StaffMessageRow[]) => StaffMessageRow[]
+    ) => {
+      const prev = messagesByConvoRef.current.get(conversationId) || [];
+      const next = updater(prev);
+      writeCache(conversationId, next);
+      if (activeIdRef.current === conversationId) {
+        setMessages(next);
+      }
+    },
+    [writeCache]
+  );
 
   const refreshConversations = useCallback(async () => {
     const res = await listStaffConversationsAction();
@@ -158,35 +181,88 @@ export default function StaffChatClient({
   }, []);
 
   const loadMessages = useCallback(
-    async (conversationId: string, quiet = false) => {
-      if (!quiet) setLoadingMessages(true);
+    async (conversationId: string, opts?: { quiet?: boolean; forPrefetch?: boolean }) => {
+      const quiet = opts?.quiet ?? true;
+      const forPrefetch = opts?.forPrefetch ?? false;
       try {
         const res = await listStaffMessagesAction(conversationId);
-        if (activeIdRef.current !== conversationId) return;
         if (!res.success) {
-          if (!quiet) {
+          if (!quiet && activeIdRef.current === conversationId) {
             setError(res.error || 'Failed to load messages');
-            setMessages([]);
           }
           return;
         }
-        if (quiet) {
-          setMessages((prev) => mergeMessages(prev, res.messages));
-        } else {
+        writeCache(conversationId, res.messages);
+        if (!forPrefetch && activeIdRef.current === conversationId) {
           setMessages(res.messages);
+          setShowSkeleton(false);
         }
       } finally {
-        if (!quiet && activeIdRef.current === conversationId) {
-          setLoadingMessages(false);
+        if (!forPrefetch && activeIdRef.current === conversationId) {
+          setShowSkeleton(false);
         }
+        prefetchInFlightRef.current.delete(conversationId);
       }
     },
-    []
+    [writeCache]
   );
 
+  const selectConversation = useCallback(
+    (id: string | null) => {
+      activeIdRef.current = id;
+      setActiveIdState(id);
+      setDraft('');
+      setError(null);
+      setHeaderMenuOpen(false);
+      setConfirmHide(false);
+      shouldStickBottomRef.current = true;
+
+      if (!id) {
+        setMessages([]);
+        setShowSkeleton(false);
+        return;
+      }
+
+      const cached = messagesByConvoRef.current.get(id);
+      const row = conversationsRef.current.find((c) => c.id === id);
+      const apparentlyEmpty = !row?.last_message;
+
+      if (cached) {
+        setMessages(cached);
+        setShowSkeleton(false);
+        void loadMessages(id, { quiet: true });
+        return;
+      }
+
+      if (apparentlyEmpty) {
+        setMessages([]);
+        setShowSkeleton(false);
+        void loadMessages(id, { quiet: true });
+        return;
+      }
+
+      setMessages([]);
+      setShowSkeleton(true);
+      void loadMessages(id, { quiet: true });
+    },
+    [loadMessages]
+  );
+
+  const prefetchConversation = useCallback(
+    (id: string) => {
+      if (messagesByConvoRef.current.has(id)) return;
+      if (prefetchInFlightRef.current.has(id)) return;
+      prefetchInFlightRef.current.add(id);
+      void loadMessages(id, { quiet: true, forPrefetch: true });
+    },
+    [loadMessages]
+  );
+
+  // Initial thread paint without blank spinner
   useEffect(() => {
-    if (activeId) void loadMessages(activeId);
-  }, [activeId, loadMessages]);
+    if (activeId) selectConversation(activeId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount only
+  }, []);
 
   useEffect(() => {
     if (!shouldStickBottomRef.current) return;
@@ -208,11 +284,15 @@ export default function StaffChatClient({
     if (!activeId) return;
 
     const conversationId = activeId;
-    const poll = setInterval(() => {
+    const messagePoll = setInterval(() => {
       if (activeIdRef.current !== conversationId) return;
-      void loadMessages(conversationId, true);
+      void loadMessages(conversationId, { quiet: true });
+    }, 5000);
+
+    const inboxPoll = setInterval(() => {
+      if (activeIdRef.current !== conversationId) return;
       void refreshConversations();
-    }, 4000);
+    }, 15000);
 
     const supabase = createClient();
     const channel = supabase
@@ -230,7 +310,7 @@ export default function StaffChatClient({
           if (payload.eventType === 'INSERT') {
             const row = payload.new as StaffMessageRow;
             if (row.conversation_id !== conversationId) return;
-            setMessages((prev) => {
+            patchActiveMessages(conversationId, (prev) => {
               if (prev.some((m) => m.id === row.id)) return prev;
               return mergeMessages(prev, [
                 {
@@ -241,13 +321,13 @@ export default function StaffChatClient({
                   deleted_at: row.deleted_at ?? null,
                   audio_path: row.audio_path ?? null,
                   audio_duration_sec: row.audio_duration_sec ?? null,
+                  audio_url: null,
                 },
               ]);
             });
-            void loadMessages(conversationId, true);
           } else if (payload.eventType === 'UPDATE') {
             const row = payload.new as StaffMessageRow;
-            setMessages((prev) =>
+            patchActiveMessages(conversationId, (prev) =>
               prev.map((m) =>
                 m.id === row.id
                   ? {
@@ -268,10 +348,11 @@ export default function StaffChatClient({
       .subscribe();
 
     return () => {
-      clearInterval(poll);
+      clearInterval(messagePoll);
+      clearInterval(inboxPoll);
       void supabase.removeChannel(channel);
     };
-  }, [activeId, loadMessages, refreshConversations]);
+  }, [activeId, loadMessages, patchActiveMessages, refreshConversations]);
 
   useEffect(() => {
     if (!headerMenuOpen) return;
@@ -284,11 +365,20 @@ export default function StaffChatClient({
     return () => document.removeEventListener('mousedown', onDoc);
   }, [headerMenuOpen]);
 
-  const startDm = (userId: string) => {
+  const filteredCoworkers = useMemo(() => {
+    const q = coworkerQuery.trim().toLowerCase();
+    if (!q) return coworkers;
+    return coworkers.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) || c.role.toLowerCase().includes(q)
+    );
+  }, [coworkers, coworkerQuery]);
+
+  const startDm = async (userId: string) => {
     setError(null);
     const existing = conversations.find((c) => c.other_user_id === userId);
     if (existing) {
-      setActiveId(existing.id);
+      selectConversation(existing.id);
       setShowNew(false);
       setCoworkerQuery('');
       requestAnimationFrame(() => composerRef.current?.focus());
@@ -296,54 +386,56 @@ export default function StaffChatClient({
     }
 
     setStartingWith(userId);
-    startTransition(async () => {
+    try {
       const res = await getOrCreateConversationAction(userId);
-      setStartingWith(null);
       if (!res.success || !res.conversationId) {
         setError(res.error || 'Failed to start chat');
         return;
       }
       await refreshConversations();
-      setActiveId(res.conversationId);
+      selectConversation(res.conversationId);
       setShowNew(false);
       setCoworkerQuery('');
       requestAnimationFrame(() => composerRef.current?.focus());
-    });
+    } finally {
+      setStartingWith(null);
+    }
   };
 
-  const send = () => {
+  const send = async () => {
     const conversationId = activeIdRef.current;
-    if (!conversationId || !draft.trim()) return;
+    if (!conversationId || !draft.trim() || sending) return;
     const body = draft.trim();
     setDraft('');
     setError(null);
     shouldStickBottomRef.current = true;
+    setSending(true);
 
-    startTransition(async () => {
+    try {
       const res = await sendStaffMessageAction({ conversationId, body });
       if (!res.success || !res.message) {
         setError(res.error || 'Failed to send');
         if (activeIdRef.current === conversationId) setDraft(body);
         return;
       }
-      if (activeIdRef.current === conversationId) {
-        setMessages((prev) => {
-          if (prev.some((m) => m.id === res.message!.id)) return prev;
-          return mergeMessages(prev, [res.message!]);
-        });
-      }
+      patchActiveMessages(conversationId, (prev) => {
+        if (prev.some((m) => m.id === res.message!.id)) return prev;
+        return mergeMessages(prev, [res.message!]);
+      });
       await refreshConversations();
-    });
+    } finally {
+      setSending(false);
+    }
   };
 
-  const sendVoice = (blob: Blob, durationSec: number, mimeType: string) => {
+  const sendVoice = async (blob: Blob, durationSec: number, mimeType: string) => {
     const conversationId = activeIdRef.current;
     if (!conversationId) return;
     setError(null);
     setVoiceUploading(true);
     shouldStickBottomRef.current = true;
 
-    startTransition(async () => {
+    try {
       const fd = new FormData();
       fd.set('conversationId', conversationId);
       fd.set('durationSec', String(durationSec));
@@ -351,57 +443,63 @@ export default function StaffChatClient({
       fd.set('audio', blob, 'voice.webm');
 
       const res = await sendStaffVoiceMessageAction(fd);
-      setVoiceUploading(false);
       if (!res.success || !res.message) {
         setError(res.error || 'Failed to send voice note');
         return;
       }
-      if (activeIdRef.current === conversationId) {
-        setMessages((prev) => mergeMessages(prev, [res.message!]));
-        setVoiceResetKey((k) => k + 1);
-      }
+      patchActiveMessages(conversationId, (prev) =>
+        mergeMessages(prev, [res.message!])
+      );
+      setVoiceResetKey((k) => k + 1);
       await refreshConversations();
-    });
+    } finally {
+      setVoiceUploading(false);
+    }
   };
 
-  const handleEdit = (messageId: string, body: string) => {
+  const handleEdit = async (messageId: string, body: string) => {
     const conversationId = activeIdRef.current;
-    startTransition(async () => {
+    if (!conversationId) return;
+    setMutating(true);
+    try {
       const res = await editStaffMessageAction({ messageId, body });
       if (!res.success || !res.message) {
         setError(res.error || 'Failed to edit');
         return;
       }
-      if (activeIdRef.current === conversationId) {
-        setMessages((prev) =>
-          prev.map((m) => (m.id === res.message!.id ? res.message! : m))
-        );
-      }
+      patchActiveMessages(conversationId, (prev) =>
+        prev.map((m) => (m.id === res.message!.id ? res.message! : m))
+      );
       await refreshConversations();
-    });
+    } finally {
+      setMutating(false);
+    }
   };
 
-  const handleDeleteMessage = (messageId: string) => {
+  const handleDeleteMessage = async (messageId: string) => {
     const conversationId = activeIdRef.current;
-    startTransition(async () => {
+    if (!conversationId) return;
+    setMutating(true);
+    try {
       const res = await deleteStaffMessageAction(messageId);
       if (!res.success || !res.message) {
         setError(res.error || 'Failed to delete');
         return;
       }
-      if (activeIdRef.current === conversationId) {
-        setMessages((prev) =>
-          prev.map((m) => (m.id === res.message!.id ? res.message! : m))
-        );
-      }
+      patchActiveMessages(conversationId, (prev) =>
+        prev.map((m) => (m.id === res.message!.id ? res.message! : m))
+      );
       await refreshConversations();
-    });
+    } finally {
+      setMutating(false);
+    }
   };
 
-  const handleHideConversation = () => {
+  const handleHideConversation = async () => {
     const conversationId = activeIdRef.current;
     if (!conversationId) return;
-    startTransition(async () => {
+    setMutating(true);
+    try {
       const res = await hideStaffConversationAction(conversationId);
       if (!res.success) {
         setError(res.error || 'Failed to delete conversation');
@@ -409,11 +507,13 @@ export default function StaffChatClient({
       }
       setConfirmHide(false);
       setHeaderMenuOpen(false);
-      await refreshConversations();
+      messagesByConvoRef.current.delete(conversationId);
       const remaining = (await listStaffConversationsAction()).conversations;
       setConversations(remaining);
-      setActiveId(remaining[0]?.id ?? null);
-    });
+      selectConversation(remaining[0]?.id ?? null);
+    } finally {
+      setMutating(false);
+    }
   };
 
   return (
@@ -474,8 +574,8 @@ export default function StaffChatClient({
                     <button
                       key={c.id}
                       type="button"
-                      disabled={pending || loading}
-                      onClick={() => startDm(c.id)}
+                      disabled={!!startingWith || loading}
+                      onClick={() => void startDm(c.id)}
                       className="w-full flex items-center gap-2.5 text-left px-2.5 py-2 rounded-xl hover:bg-surface-container/60 transition-colors active:scale-[0.99]"
                     >
                       <span className="w-8 h-8 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center shrink-0">
@@ -525,7 +625,9 @@ export default function StaffChatClient({
                 >
                   <button
                     type="button"
-                    onClick={() => setActiveId(c.id)}
+                    onClick={() => selectConversation(c.id)}
+                    onMouseEnter={() => prefetchConversation(c.id)}
+                    onFocus={() => prefetchConversation(c.id)}
                     className={cn(
                       'w-full text-left px-4 py-3.5 transition-colors active:scale-[0.995]',
                       activeRow
@@ -617,12 +719,12 @@ export default function StaffChatClient({
                           </button>
                           <button
                             type="button"
-                            disabled={pending}
+                            disabled={mutating}
                             className={cn(
                               btnPrimaryClass,
                               'flex-1 justify-center text-[10px] !bg-destructive'
                             )}
-                            onClick={handleHideConversation}
+                            onClick={() => void handleHideConversation()}
                           >
                             Hide
                           </button>
@@ -666,10 +768,8 @@ export default function StaffChatClient({
                 admins cannot read message content.
               </p>
             </div>
-          ) : loadingMessages && messages.length === 0 ? (
-            <div className="h-full min-h-[240px] flex items-center justify-center text-on-surface-variant">
-              <Loader2 className="w-5 h-5 animate-spin" />
-            </div>
+          ) : showSkeleton && messages.length === 0 ? (
+            <ThreadSkeleton />
           ) : messages.length === 0 ? (
             <div className="h-full min-h-[240px] flex flex-col items-center justify-center gap-2 text-center px-6">
               <p className="text-sm font-semibold text-on-surface">Say hello</p>
@@ -707,9 +807,9 @@ export default function StaffChatClient({
                       mine={mine}
                       stacked={stacked}
                       currentUserId={currentUserId}
-                      onEdit={handleEdit}
-                      onDelete={handleDeleteMessage}
-                      pending={pending}
+                      onEdit={(id, body) => void handleEdit(id, body)}
+                      onDelete={(id) => void handleDeleteMessage(id)}
+                      pending={mutating}
                     />
                   </div>
                 );
@@ -723,10 +823,12 @@ export default function StaffChatClient({
           <div className="p-4 border-t border-outline-variant/30 shrink-0 bg-surface-container/15">
             <div className="flex items-end gap-2">
               <VoiceRecorderButton
-                disabled={pending}
+                disabled={sending || voiceUploading}
                 uploading={voiceUploading}
                 resetKey={`${activeId}-${voiceResetKey}`}
-                onSend={sendVoice}
+                onSend={(blob, duration, mime) =>
+                  void sendVoice(blob, duration, mime)
+                }
               />
               <textarea
                 ref={composerRef}
@@ -741,21 +843,21 @@ export default function StaffChatClient({
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    send();
+                    void send();
                   }
                 }}
               />
               <button
                 type="button"
-                disabled={pending || voiceUploading || !draft.trim()}
-                onClick={send}
+                disabled={sending || voiceUploading || !draft.trim()}
+                onClick={() => void send()}
                 className={cn(
                   btnPrimaryClass,
                   'h-11 w-11 shrink-0 !px-0 justify-center active:scale-[0.96]'
                 )}
                 aria-label="Send message"
               >
-                {pending && !voiceUploading ? (
+                {sending ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <Send className="w-4 h-4" />

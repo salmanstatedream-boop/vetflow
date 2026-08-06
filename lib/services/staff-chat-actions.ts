@@ -209,32 +209,46 @@ export async function listStaffConversationsAction(): Promise<{
       }
     }
 
-    const conversations: StaffConversationRow[] = await Promise.all(
-      rows.map(async (r) => {
-        const otherId =
-          r.participant_a === ctx.userId ? r.participant_b : r.participant_a;
-        const { data: last } = await supabase
-          .from('staff_messages')
-          .select('body, message_type, deleted_at')
-          .eq('conversation_id', r.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
+    const convoIds = rows.map((r) => r.id);
+    const lastByConvo = new Map<
+      string,
+      { body: string | null; message_type: string | null; deleted_at: string | null }
+    >();
 
-        return {
-          id: r.id,
-          organization_id: r.organization_id,
-          participant_a: r.participant_a,
-          participant_b: r.participant_b,
-          updated_at: r.updated_at,
-          other_user_id: otherId,
-          other_user_name: nameById.get(otherId) || 'Staff',
-          last_message: last
-            ? previewForMessage(last)
-            : null,
-        };
-      })
-    );
+    if (convoIds.length > 0) {
+      const { data: recentMessages } = await supabase
+        .from('staff_messages')
+        .select('conversation_id, body, message_type, deleted_at, created_at')
+        .in('conversation_id', convoIds)
+        .order('created_at', { ascending: false })
+        .limit(Math.min(convoIds.length * 3, 150));
+
+      for (const msg of recentMessages || []) {
+        if (!lastByConvo.has(msg.conversation_id)) {
+          lastByConvo.set(msg.conversation_id, {
+            body: msg.body,
+            message_type: msg.message_type,
+            deleted_at: msg.deleted_at,
+          });
+        }
+      }
+    }
+
+    const conversations: StaffConversationRow[] = rows.map((r) => {
+      const otherId =
+        r.participant_a === ctx.userId ? r.participant_b : r.participant_a;
+      const last = lastByConvo.get(r.id) ?? null;
+      return {
+        id: r.id,
+        organization_id: r.organization_id,
+        participant_a: r.participant_a,
+        participant_b: r.participant_b,
+        updated_at: r.updated_at,
+        other_user_id: otherId,
+        other_user_name: nameById.get(otherId) || 'Staff',
+        last_message: last ? previewForMessage(last) : null,
+      };
+    });
 
     return { success: true, conversations };
   } catch (err: unknown) {
@@ -363,14 +377,8 @@ export async function listStaffMessagesAction(conversationId: string): Promise<{
 
     if (error) throw new Error(error.message);
 
-    const messages = await Promise.all(
-      (data || []).map(async (row) => {
-        const audioUrl =
-          row.message_type === 'voice' && !row.deleted_at
-            ? await signedAudioUrl(row.audio_path)
-            : null;
-        return mapMessage(row as Record<string, unknown>, audioUrl);
-      })
+    const messages = (data || []).map((row) =>
+      mapMessage(row as Record<string, unknown>, null)
     );
 
     return { success: true, messages };
