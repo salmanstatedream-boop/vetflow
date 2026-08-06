@@ -1,11 +1,22 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from 'react';
+import {
+  deleteStaffMessageAction,
+  editStaffMessageAction,
   getOrCreateConversationAction,
+  hideStaffConversationAction,
   listStaffConversationsAction,
   listStaffMessagesAction,
   sendStaffMessageAction,
+  sendStaffVoiceMessageAction,
   type StaffChatCoworker,
   type StaffConversationRow,
   type StaffMessageRow,
@@ -18,12 +29,16 @@ import {
   inputClass,
 } from '@/lib/ui/dashboard-classes';
 import { cn } from '@/lib/utils';
+import MessageBubble from '@/components/chat/MessageBubble';
+import VoiceRecorderButton from '@/components/chat/VoiceRecorderButton';
 import {
   Loader2,
   MessageSquare,
   MessageSquarePlus,
+  MoreVertical,
   Search,
   Send,
+  Trash2,
   X,
 } from 'lucide-react';
 
@@ -51,13 +66,6 @@ function relativeTime(iso: string) {
   });
 }
 
-function messageTime(iso: string) {
-  return new Date(iso).toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
 function sameDay(a: string, b: string) {
   return new Date(a).toDateString() === new Date(b).toDateString();
 }
@@ -76,6 +84,17 @@ function dayLabel(iso: string) {
   });
 }
 
+function mergeMessages(
+  prev: StaffMessageRow[],
+  next: StaffMessageRow[]
+): StaffMessageRow[] {
+  const map = new Map(prev.map((m) => [m.id, m]));
+  for (const m of next) map.set(m.id, m);
+  return [...map.values()].sort(
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  );
+}
+
 type Props = {
   initialConversations: StaffConversationRow[];
   coworkers: StaffChatCoworker[];
@@ -88,7 +107,7 @@ export default function StaffChatClient({
   currentUserId,
 }: Props) {
   const [conversations, setConversations] = useState(initialConversations);
-  const [activeId, setActiveId] = useState<string | null>(
+  const [activeId, setActiveIdState] = useState<string | null>(
     initialConversations[0]?.id ?? null
   );
   const [messages, setMessages] = useState<StaffMessageRow[]>([]);
@@ -97,78 +116,153 @@ export default function StaffChatClient({
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [coworkerQuery, setCoworkerQuery] = useState('');
+  const [startingWith, setStartingWith] = useState<string | null>(null);
+  const [headerMenuOpen, setHeaderMenuOpen] = useState(false);
+  const [confirmHide, setConfirmHide] = useState(false);
+  const [voiceUploading, setVoiceUploading] = useState(false);
+  const [voiceResetKey, setVoiceResetKey] = useState(0);
   const [pending, startTransition] = useTransition();
+
+  const activeIdRef = useRef<string | null>(activeId);
   const bottomRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const composerRef = useRef<HTMLTextAreaElement>(null);
+  const shouldStickBottomRef = useRef(true);
+  const headerMenuRef = useRef<HTMLDivElement>(null);
 
   const active = conversations.find((c) => c.id === activeId) ?? null;
+
+  const setActiveId = useCallback((id: string | null) => {
+    activeIdRef.current = id;
+    setActiveIdState(id);
+    setMessages([]);
+    setDraft('');
+    setError(null);
+    setHeaderMenuOpen(false);
+    setConfirmHide(false);
+    shouldStickBottomRef.current = true;
+  }, []);
 
   const filteredCoworkers = useMemo(() => {
     const q = coworkerQuery.trim().toLowerCase();
     if (!q) return coworkers;
     return coworkers.filter(
       (c) =>
-        c.name.toLowerCase().includes(q) ||
-        c.role.toLowerCase().includes(q)
+        c.name.toLowerCase().includes(q) || c.role.toLowerCase().includes(q)
     );
   }, [coworkers, coworkerQuery]);
 
-  const loadMessages = async (conversationId: string, quiet = false) => {
-    if (!quiet) setLoadingMessages(true);
-    setError(null);
-    try {
-      const res = await listStaffMessagesAction(conversationId);
-      if (!res.success) {
-        if (!quiet) {
-          setError(res.error || 'Failed to load messages');
-          setMessages([]);
-        }
-        return;
-      }
-      setMessages(res.messages);
-    } finally {
-      if (!quiet) setLoadingMessages(false);
-    }
-  };
-
-  const refreshConversations = async () => {
+  const refreshConversations = useCallback(async () => {
     const res = await listStaffConversationsAction();
     if (res.success) setConversations(res.conversations);
-  };
+  }, []);
+
+  const loadMessages = useCallback(
+    async (conversationId: string, quiet = false) => {
+      if (!quiet) setLoadingMessages(true);
+      try {
+        const res = await listStaffMessagesAction(conversationId);
+        if (activeIdRef.current !== conversationId) return;
+        if (!res.success) {
+          if (!quiet) {
+            setError(res.error || 'Failed to load messages');
+            setMessages([]);
+          }
+          return;
+        }
+        if (quiet) {
+          setMessages((prev) => mergeMessages(prev, res.messages));
+        } else {
+          setMessages(res.messages);
+        }
+      } finally {
+        if (!quiet && activeIdRef.current === conversationId) {
+          setLoadingMessages(false);
+        }
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     if (activeId) void loadMessages(activeId);
-  }, [activeId]);
+  }, [activeId, loadMessages]);
 
   useEffect(() => {
+    if (!shouldStickBottomRef.current) return;
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages.length]);
+  }, [messages.length, activeId]);
+
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const dist = el.scrollHeight - el.scrollTop - el.clientHeight;
+      shouldStickBottomRef.current = dist < 80;
+    };
+    el.addEventListener('scroll', onScroll);
+    return () => el.removeEventListener('scroll', onScroll);
+  }, [activeId]);
 
   useEffect(() => {
     if (!activeId) return;
 
+    const conversationId = activeId;
     const poll = setInterval(() => {
-      void loadMessages(activeId, true);
+      if (activeIdRef.current !== conversationId) return;
+      void loadMessages(conversationId, true);
       void refreshConversations();
     }, 4000);
 
     const supabase = createClient();
     const channel = supabase
-      .channel(`staff-chat-${activeId}`)
+      .channel(`staff-chat-${conversationId}`)
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'staff_messages',
-          filter: `conversation_id=eq.${activeId}`,
+          filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
-          const row = payload.new as StaffMessageRow;
-          setMessages((prev) => {
-            if (prev.some((m) => m.id === row.id)) return prev;
-            return [...prev, row];
-          });
+          if (activeIdRef.current !== conversationId) return;
+          if (payload.eventType === 'INSERT') {
+            const row = payload.new as StaffMessageRow;
+            if (row.conversation_id !== conversationId) return;
+            setMessages((prev) => {
+              if (prev.some((m) => m.id === row.id)) return prev;
+              return mergeMessages(prev, [
+                {
+                  ...row,
+                  body: row.body || '',
+                  message_type: row.message_type || 'text',
+                  edited_at: row.edited_at ?? null,
+                  deleted_at: row.deleted_at ?? null,
+                  audio_path: row.audio_path ?? null,
+                  audio_duration_sec: row.audio_duration_sec ?? null,
+                },
+              ]);
+            });
+            void loadMessages(conversationId, true);
+          } else if (payload.eventType === 'UPDATE') {
+            const row = payload.new as StaffMessageRow;
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === row.id
+                  ? {
+                      ...m,
+                      ...row,
+                      body: row.body || '',
+                      edited_at: row.edited_at ?? null,
+                      deleted_at: row.deleted_at ?? null,
+                      audio_path: row.audio_path ?? null,
+                      audio_duration_sec: row.audio_duration_sec ?? null,
+                    }
+                  : m
+              )
+            );
+          }
         }
       )
       .subscribe();
@@ -177,12 +271,34 @@ export default function StaffChatClient({
       clearInterval(poll);
       void supabase.removeChannel(channel);
     };
-  }, [activeId]);
+  }, [activeId, loadMessages, refreshConversations]);
+
+  useEffect(() => {
+    if (!headerMenuOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      if (!headerMenuRef.current?.contains(e.target as Node)) {
+        setHeaderMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [headerMenuOpen]);
 
   const startDm = (userId: string) => {
     setError(null);
+    const existing = conversations.find((c) => c.other_user_id === userId);
+    if (existing) {
+      setActiveId(existing.id);
+      setShowNew(false);
+      setCoworkerQuery('');
+      requestAnimationFrame(() => composerRef.current?.focus());
+      return;
+    }
+
+    setStartingWith(userId);
     startTransition(async () => {
       const res = await getOrCreateConversationAction(userId);
+      setStartingWith(null);
       if (!res.success || !res.conversationId) {
         setError(res.error || 'Failed to start chat');
         return;
@@ -191,29 +307,112 @@ export default function StaffChatClient({
       setActiveId(res.conversationId);
       setShowNew(false);
       setCoworkerQuery('');
+      requestAnimationFrame(() => composerRef.current?.focus());
     });
   };
 
   const send = () => {
-    if (!activeId || !draft.trim()) return;
+    const conversationId = activeIdRef.current;
+    if (!conversationId || !draft.trim()) return;
     const body = draft.trim();
     setDraft('');
     setError(null);
+    shouldStickBottomRef.current = true;
+
     startTransition(async () => {
-      const res = await sendStaffMessageAction({
-        conversationId: activeId,
-        body,
-      });
+      const res = await sendStaffMessageAction({ conversationId, body });
       if (!res.success || !res.message) {
         setError(res.error || 'Failed to send');
-        setDraft(body);
+        if (activeIdRef.current === conversationId) setDraft(body);
         return;
       }
-      setMessages((prev) => {
-        if (prev.some((m) => m.id === res.message!.id)) return prev;
-        return [...prev, res.message!];
-      });
+      if (activeIdRef.current === conversationId) {
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === res.message!.id)) return prev;
+          return mergeMessages(prev, [res.message!]);
+        });
+      }
       await refreshConversations();
+    });
+  };
+
+  const sendVoice = (blob: Blob, durationSec: number, mimeType: string) => {
+    const conversationId = activeIdRef.current;
+    if (!conversationId) return;
+    setError(null);
+    setVoiceUploading(true);
+    shouldStickBottomRef.current = true;
+
+    startTransition(async () => {
+      const fd = new FormData();
+      fd.set('conversationId', conversationId);
+      fd.set('durationSec', String(durationSec));
+      fd.set('mimeType', mimeType);
+      fd.set('audio', blob, 'voice.webm');
+
+      const res = await sendStaffVoiceMessageAction(fd);
+      setVoiceUploading(false);
+      if (!res.success || !res.message) {
+        setError(res.error || 'Failed to send voice note');
+        return;
+      }
+      if (activeIdRef.current === conversationId) {
+        setMessages((prev) => mergeMessages(prev, [res.message!]));
+        setVoiceResetKey((k) => k + 1);
+      }
+      await refreshConversations();
+    });
+  };
+
+  const handleEdit = (messageId: string, body: string) => {
+    const conversationId = activeIdRef.current;
+    startTransition(async () => {
+      const res = await editStaffMessageAction({ messageId, body });
+      if (!res.success || !res.message) {
+        setError(res.error || 'Failed to edit');
+        return;
+      }
+      if (activeIdRef.current === conversationId) {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === res.message!.id ? res.message! : m))
+        );
+      }
+      await refreshConversations();
+    });
+  };
+
+  const handleDeleteMessage = (messageId: string) => {
+    const conversationId = activeIdRef.current;
+    startTransition(async () => {
+      const res = await deleteStaffMessageAction(messageId);
+      if (!res.success || !res.message) {
+        setError(res.error || 'Failed to delete');
+        return;
+      }
+      if (activeIdRef.current === conversationId) {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === res.message!.id ? res.message! : m))
+        );
+      }
+      await refreshConversations();
+    });
+  };
+
+  const handleHideConversation = () => {
+    const conversationId = activeIdRef.current;
+    if (!conversationId) return;
+    startTransition(async () => {
+      const res = await hideStaffConversationAction(conversationId);
+      if (!res.success) {
+        setError(res.error || 'Failed to delete conversation');
+        return;
+      }
+      setConfirmHide(false);
+      setHeaderMenuOpen(false);
+      await refreshConversations();
+      const remaining = (await listStaffConversationsAction()).conversations;
+      setConversations(remaining);
+      setActiveId(remaining[0]?.id ?? null);
     });
   };
 
@@ -239,13 +438,17 @@ export default function StaffChatClient({
               'inline-flex items-center gap-1 active:scale-[0.97]'
             )}
           >
-            {showNew ? <X className="w-3.5 h-3.5" /> : <MessageSquarePlus className="w-3.5 h-3.5" />}
+            {showNew ? (
+              <X className="w-3.5 h-3.5" />
+            ) : (
+              <MessageSquarePlus className="w-3.5 h-3.5" />
+            )}
             {showNew ? 'Close' : 'New'}
           </button>
         </div>
 
         {showNew && (
-          <div className="p-3 border-b border-outline-variant/30 bg-surface-container/20 shrink-0 space-y-2">
+          <div className="p-3 border-b border-outline-variant/30 bg-surface-container/20 shrink-0 space-y-2 animate-in fade-in duration-150">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-on-surface-variant/60" />
               <input
@@ -253,35 +456,47 @@ export default function StaffChatClient({
                 onChange={(e) => setCoworkerQuery(e.target.value)}
                 placeholder="Search coworkers…"
                 className={cn(inputClass, 'pl-9 py-2 rounded-xl text-xs')}
+                autoFocus
               />
             </div>
-            <div className="max-h-44 overflow-y-auto space-y-0.5">
+            <div className="max-h-48 overflow-y-auto space-y-0.5">
               {filteredCoworkers.length === 0 ? (
                 <p className="text-xs text-on-surface-variant px-2 py-3 text-center">
                   No coworkers found.
                 </p>
               ) : (
-                filteredCoworkers.map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    disabled={pending}
-                    onClick={() => startDm(c.id)}
-                    className="w-full flex items-center gap-2.5 text-left px-2.5 py-2 rounded-xl hover:bg-surface-container/60 transition-colors active:scale-[0.99]"
-                  >
-                    <span className="w-8 h-8 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center shrink-0">
-                      {initials(c.name)}
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block text-sm font-semibold text-on-surface truncate">
-                        {c.name}
+                filteredCoworkers.map((c) => {
+                  const existing = conversations.find(
+                    (x) => x.other_user_id === c.id
+                  );
+                  const loading = startingWith === c.id;
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      disabled={pending || loading}
+                      onClick={() => startDm(c.id)}
+                      className="w-full flex items-center gap-2.5 text-left px-2.5 py-2 rounded-xl hover:bg-surface-container/60 transition-colors active:scale-[0.99]"
+                    >
+                      <span className="w-8 h-8 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center shrink-0">
+                        {initials(c.name)}
                       </span>
-                      <span className="block text-[10px] text-on-surface-variant capitalize truncate">
-                        {formatRole(c.role)}
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-semibold text-on-surface truncate">
+                          {c.name}
+                        </span>
+                        <span className="block text-[10px] text-on-surface-variant capitalize truncate">
+                          {existing
+                            ? 'Open conversation'
+                            : formatRole(c.role)}
+                        </span>
                       </span>
-                    </span>
-                  </button>
-                ))
+                      {loading && (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-primary shrink-0" />
+                      )}
+                    </button>
+                  );
+                })
               )}
             </div>
           </div>
@@ -293,7 +508,9 @@ export default function StaffChatClient({
               <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center mb-1">
                 <MessageSquare className="w-5 h-5 text-primary/70" />
               </div>
-              <p className="text-sm font-semibold text-on-surface">No conversations yet</p>
+              <p className="text-sm font-semibold text-on-surface">
+                No conversations yet
+              </p>
               <p className="text-[11px] text-on-surface-variant leading-relaxed max-w-[14rem]">
                 Start a private message with a coworker using New.
               </p>
@@ -302,7 +519,10 @@ export default function StaffChatClient({
             conversations.map((c) => {
               const activeRow = activeId === c.id;
               return (
-                <li key={c.id} className="border-b border-outline-variant/15 last:border-0">
+                <li
+                  key={c.id}
+                  className="border-b border-outline-variant/15 last:border-0"
+                >
                   <button
                     type="button"
                     onClick={() => setActiveId(c.id)}
@@ -353,13 +573,64 @@ export default function StaffChatClient({
               <span className="w-10 h-10 rounded-full bg-primary/15 text-primary text-xs font-bold flex items-center justify-center shrink-0">
                 {initials(active.other_user_name)}
               </span>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <h2 className="text-sm font-bold text-on-surface truncate">
                   {active.other_user_name}
                 </h2>
                 <p className="text-[10px] text-on-surface-variant mt-0.5">
                   Private · only the two of you can read this
                 </p>
+              </div>
+              <div ref={headerMenuRef} className="relative shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setHeaderMenuOpen((v) => !v)}
+                  className={cn(chipClass, 'h-9 w-9 !px-0 justify-center')}
+                  aria-label="Conversation options"
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </button>
+                {headerMenuOpen && (
+                  <div className="absolute right-0 top-10 w-52 rounded-xl border border-outline-variant/40 bg-surface-container-high shadow-lg py-1 z-20">
+                    {!confirmHide ? (
+                      <button
+                        type="button"
+                        className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-destructive hover:bg-destructive/10"
+                        onClick={() => setConfirmHide(true)}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Delete conversation
+                      </button>
+                    ) : (
+                      <div className="px-3 py-2.5 space-y-2">
+                        <p className="text-[11px] text-on-surface-variant leading-relaxed">
+                          Hide this chat for you only. {active.other_user_name}{' '}
+                          keeps their copy.
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            className={cn(chipClass, 'flex-1 justify-center text-[10px]')}
+                            onClick={() => setConfirmHide(false)}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            disabled={pending}
+                            className={cn(
+                              btnPrimaryClass,
+                              'flex-1 justify-center text-[10px] !bg-destructive'
+                            )}
+                            onClick={handleHideConversation}
+                          >
+                            Hide
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </>
           ) : (
@@ -378,16 +649,21 @@ export default function StaffChatClient({
           </div>
         )}
 
-        <div ref={listRef} className="flex-1 overflow-y-auto min-h-0 px-4 sm:px-5 py-4">
+        <div
+          ref={listRef}
+          className="flex-1 overflow-y-auto min-h-0 px-4 sm:px-5 py-4"
+        >
           {!active ? (
             <div className="h-full min-h-[240px] flex flex-col items-center justify-center gap-2 text-center px-6">
               <div className="w-12 h-12 rounded-2xl bg-surface-container flex items-center justify-center">
                 <MessageSquare className="w-5 h-5 text-on-surface-variant/50" />
               </div>
-              <p className="text-sm font-semibold text-on-surface">Your staff inbox</p>
+              <p className="text-sm font-semibold text-on-surface">
+                Your staff inbox
+              </p>
               <p className="text-[11px] text-on-surface-variant max-w-xs leading-relaxed">
-                Direct messages stay between you and one coworker. Platform admins cannot read
-                message content.
+                Direct messages stay between you and one coworker. Platform
+                admins cannot read message content.
               </p>
             </div>
           ) : loadingMessages && messages.length === 0 ? (
@@ -398,7 +674,7 @@ export default function StaffChatClient({
             <div className="h-full min-h-[240px] flex flex-col items-center justify-center gap-2 text-center px-6">
               <p className="text-sm font-semibold text-on-surface">Say hello</p>
               <p className="text-[11px] text-on-surface-variant">
-                Send the first message to start this conversation.
+                Send a text or voice note to start this conversation.
               </p>
             </div>
           ) : (
@@ -411,8 +687,11 @@ export default function StaffChatClient({
                   !!prev &&
                   prev.sender_id === m.sender_id &&
                   sameDay(prev.created_at, m.created_at) &&
-                  new Date(m.created_at).getTime() - new Date(prev.created_at).getTime() <
-                    5 * 60 * 1000;
+                  new Date(m.created_at).getTime() -
+                    new Date(prev.created_at).getTime() <
+                    5 * 60 * 1000 &&
+                  !m.deleted_at &&
+                  !prev.deleted_at;
 
                 return (
                   <div key={m.id}>
@@ -423,32 +702,15 @@ export default function StaffChatClient({
                         </span>
                       </div>
                     )}
-                    <div
-                      className={cn(
-                        'flex',
-                        mine ? 'justify-end' : 'justify-start',
-                        stacked ? 'mt-0.5' : 'mt-2.5'
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          'max-w-[78%] sm:max-w-[70%] px-3.5 py-2 text-sm whitespace-pre-wrap leading-relaxed shadow-sm',
-                          mine
-                            ? 'bg-primary text-on-primary rounded-2xl rounded-br-md'
-                            : 'bg-surface-container text-on-surface rounded-2xl rounded-bl-md border border-outline-variant/25'
-                        )}
-                      >
-                        {m.body}
-                        <p
-                          className={cn(
-                            'text-[9px] mt-1 tabular-nums text-right',
-                            mine ? 'text-on-primary/65' : 'text-on-surface-variant/80'
-                          )}
-                        >
-                          {messageTime(m.created_at)}
-                        </p>
-                      </div>
-                    </div>
+                    <MessageBubble
+                      message={m}
+                      mine={mine}
+                      stacked={stacked}
+                      currentUserId={currentUserId}
+                      onEdit={handleEdit}
+                      onDelete={handleDeleteMessage}
+                      pending={pending}
+                    />
                   </div>
                 );
               })}
@@ -460,7 +722,14 @@ export default function StaffChatClient({
         {active && (
           <div className="p-4 border-t border-outline-variant/30 shrink-0 bg-surface-container/15">
             <div className="flex items-end gap-2">
+              <VoiceRecorderButton
+                disabled={pending}
+                uploading={voiceUploading}
+                resetKey={`${activeId}-${voiceResetKey}`}
+                onSend={sendVoice}
+              />
               <textarea
+                ref={composerRef}
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 placeholder={`Message ${active.other_user_name.split(' ')[0]}…`}
@@ -478,7 +747,7 @@ export default function StaffChatClient({
               />
               <button
                 type="button"
-                disabled={pending || !draft.trim()}
+                disabled={pending || voiceUploading || !draft.trim()}
                 onClick={send}
                 className={cn(
                   btnPrimaryClass,
@@ -486,7 +755,7 @@ export default function StaffChatClient({
                 )}
                 aria-label="Send message"
               >
-                {pending ? (
+                {pending && !voiceUploading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <Send className="w-4 h-4" />
@@ -494,7 +763,7 @@ export default function StaffChatClient({
               </button>
             </div>
             <p className="mt-1.5 text-[10px] text-on-surface-variant/60 pl-1">
-              Enter to send · Shift+Enter for a new line
+              Enter to send · Shift+Enter for a new line · Mic for voice notes
             </p>
           </div>
         )}
