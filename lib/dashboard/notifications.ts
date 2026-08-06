@@ -4,7 +4,9 @@ export type DashboardNotificationKind =
   | 'low_stock'
   | 'emergency_queue'
   | 'assigned_to_me'
-  | 'assigned_in_clinic';
+  | 'assigned_in_clinic'
+  | 'staff_chat_message'
+  | 'staff_task_update';
 
 export type DashboardNotification = {
   id: string;
@@ -19,6 +21,8 @@ export type DashboardNotification = {
 const KIND_PRIORITY: Record<DashboardNotificationKind, number> = {
   emergency_queue: 0,
   assigned_to_me: 0,
+  staff_chat_message: 0,
+  staff_task_update: 0,
   assigned_in_clinic: 1,
   checkout: 1,
   unpaid_invoice: 2,

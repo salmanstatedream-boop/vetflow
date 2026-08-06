@@ -9,6 +9,8 @@ export const NOTIFICATION_PREF_KEYS: DashboardNotificationKind[] = [
   'unpaid_invoice',
   'low_stock',
   'emergency_queue',
+  'staff_chat_message',
+  'staff_task_update',
 ];
 
 export const NOTIFICATION_PREF_LABELS: Record<DashboardNotificationKind, string> = {
@@ -18,6 +20,8 @@ export const NOTIFICATION_PREF_LABELS: Record<DashboardNotificationKind, string>
   unpaid_invoice: 'Unpaid invoices',
   low_stock: 'Low stock alerts',
   emergency_queue: 'Emergency queue',
+  staff_chat_message: 'Staff chat messages',
+  staff_task_update: 'Staff task updates',
 };
 
 /** Missing keys default to enabled. Explicit `false` disables. */

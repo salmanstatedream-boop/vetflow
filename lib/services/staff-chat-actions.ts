@@ -602,6 +602,12 @@ export async function listStaffMessagesAction(conversationId: string): Promise<{
       mapMessage(row as Record<string, unknown>, null)
     );
 
+    await supabase
+      .from('staff_conversation_members')
+      .update({ last_read_at: new Date().toISOString() })
+      .eq('conversation_id', conversationId)
+      .eq('user_id', ctx.userId);
+
     return { success: true, messages };
   } catch (err: unknown) {
     return {

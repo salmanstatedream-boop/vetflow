@@ -118,6 +118,7 @@ type Props = {
   coworkers: StaffChatCoworker[];
   currentUserId: string;
   canCreateGroup?: boolean;
+  initialActiveId?: string;
 };
 
 export default function StaffChatClient({
@@ -125,11 +126,12 @@ export default function StaffChatClient({
   coworkers,
   currentUserId,
   canCreateGroup = false,
+  initialActiveId,
 }: Props) {
   const [conversations, setConversations] = useState(initialConversations);
   const conversationsRef = useRef(initialConversations);
   const [activeId, setActiveIdState] = useState<string | null>(
-    initialConversations[0]?.id ?? null
+    initialActiveId ?? initialConversations[0]?.id ?? null
   );
   const [messages, setMessages] = useState<StaffMessageRow[]>([]);
   const [draft, setDraft] = useState('');

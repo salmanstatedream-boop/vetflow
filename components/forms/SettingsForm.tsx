@@ -446,6 +446,8 @@ export default function SettingsForm({ defaultValues, brandedPdfsAllowed = false
               ['notifyUnpaidInvoice', 'Unpaid invoices'],
               ['notifyLowStock', 'Low stock alerts'],
               ['notifyEmergencyQueue', 'Emergency queue'],
+              ['notifyStaffChatMessage', 'Staff chat messages'],
+              ['notifyStaffTaskUpdate', 'Staff task updates'],
             ] as const
           ).map(([name, label]) => (
             <label

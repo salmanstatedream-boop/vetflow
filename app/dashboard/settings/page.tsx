@@ -108,6 +108,8 @@ export default async function SettingsPage() {
     notifyUnpaidInvoice: notifyPrefs.unpaid_invoice,
     notifyLowStock: notifyPrefs.low_stock,
     notifyEmergencyQueue: notifyPrefs.emergency_queue,
+    notifyStaffChatMessage: notifyPrefs.staff_chat_message,
+    notifyStaffTaskUpdate: notifyPrefs.staff_task_update,
   };
 
   return (

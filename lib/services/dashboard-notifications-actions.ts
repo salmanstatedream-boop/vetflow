@@ -13,10 +13,31 @@ import {
   type DashboardNotification,
 } from '@/lib/dashboard/notifications';
 import { isNotificationKindEnabled, type NotificationPrefs } from '@/lib/dashboard/notification-prefs';
+import { isStaffChatEnabled, isStaffTasksEnabled } from '@/lib/auth/features';
 import { filterLowStockProducts } from '@/lib/inventory/low-stock';
 import { normalizeOneToOne } from '@/lib/supabase/embed';
 
 const MAX_NOTIFICATIONS = 10;
+const EPOCH = '1970-01-01T00:00:00.000Z';
+
+function previewMessage(row: {
+  body: string | null;
+  message_type: string | null;
+  deleted_at: string | null;
+}): string {
+  if (row.deleted_at) return 'Message deleted';
+  if (row.message_type === 'voice') return 'Voice message';
+  const body = (row.body || '').trim();
+  return body || 'New message';
+}
+
+function displayName(profile: {
+  first_name?: string | null;
+  last_name?: string | null;
+} | null): string {
+  const name = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ').trim();
+  return name || 'Staff';
+}
 
 export async function getDashboardNotificationsAction(): Promise<{
   success: boolean;
@@ -250,6 +271,164 @@ export async function getDashboardNotificationsAction(): Promise<{
           href: '/dashboard/walk-ins',
           priority: 0,
           createdAt: (v.checked_in_at as string | null) ?? null,
+        });
+      }
+    }
+
+    if (isStaffChatEnabled(ctx.featuresJson)) {
+      const { data: memberships } = await supabase
+        .from('staff_conversation_members')
+        .select('conversation_id, last_read_at')
+        .eq('user_id', ctx.userId)
+        .eq('hidden', false);
+
+      const memberRows = memberships || [];
+      if (memberRows.length > 0) {
+        const convoIds = memberRows.map((m) => m.conversation_id);
+        const lastReadByConvo = new Map<string, string>(
+          memberRows.map((m) => [
+            m.conversation_id as string,
+            (m.last_read_at as string | null) || EPOCH,
+          ])
+        );
+
+        const { data: recentMessages } = await supabase
+          .from('staff_messages')
+          .select(
+            'conversation_id, body, message_type, deleted_at, sender_id, created_at'
+          )
+          .in('conversation_id', convoIds)
+          .neq('sender_id', ctx.userId)
+          .order('created_at', { ascending: false })
+          .limit(Math.min(convoIds.length * 5, 150));
+
+        const latestByConvo = new Map<
+          string,
+          {
+            body: string | null;
+            message_type: string | null;
+            deleted_at: string | null;
+            created_at: string;
+          }
+        >();
+        for (const msg of recentMessages || []) {
+          if (latestByConvo.has(msg.conversation_id)) continue;
+          const lastRead = lastReadByConvo.get(msg.conversation_id) || EPOCH;
+          if (new Date(msg.created_at).getTime() <= new Date(lastRead).getTime()) {
+            continue;
+          }
+          latestByConvo.set(msg.conversation_id, {
+            body: msg.body,
+            message_type: msg.message_type,
+            deleted_at: msg.deleted_at,
+            created_at: msg.created_at,
+          });
+        }
+
+        const unreadIds = [...latestByConvo.keys()];
+        if (unreadIds.length > 0) {
+          const { data: convos } = await supabase
+            .from('staff_conversations')
+            .select(
+              'id, type, title, participant_a, participant_b, organization_id'
+            )
+            .eq('organization_id', ctx.organizationId!)
+            .in('id', unreadIds);
+
+          const peerIds = new Set<string>();
+          for (const c of convos || []) {
+            if (c.type !== 'group') {
+              const other =
+                c.participant_a === ctx.userId
+                  ? c.participant_b
+                  : c.participant_a;
+              if (other) peerIds.add(other);
+            }
+          }
+
+          const nameById = new Map<string, string>();
+          if (peerIds.size > 0) {
+            const { data: profiles } = await supabase
+              .from('user_profiles')
+              .select('id, first_name, last_name')
+              .in('id', [...peerIds]);
+            for (const p of profiles || []) {
+              nameById.set(p.id, displayName(p));
+            }
+          }
+
+          for (const c of convos || []) {
+            const latest = latestByConvo.get(c.id);
+            if (!latest) continue;
+            const title =
+              c.type === 'group'
+                ? c.title?.trim() || 'Group chat'
+                : nameById.get(
+                    (c.participant_a === ctx.userId
+                      ? c.participant_b
+                      : c.participant_a) || ''
+                  ) || 'Staff';
+            notifications.push({
+              id: `staff-chat-${c.id}`,
+              kind: 'staff_chat_message',
+              title,
+              body: previewMessage(latest),
+              href: `/dashboard/chat?c=${c.id}`,
+              priority: 0,
+              createdAt: latest.created_at,
+            });
+          }
+        }
+      }
+    }
+
+    if (isStaffTasksEnabled(ctx.featuresJson)) {
+      const [{ data: activity }, { data: taskReads }, { data: openTasks }] =
+        await Promise.all([
+          supabase
+            .from('staff_user_activity')
+            .select('tasks_seen_at')
+            .eq('user_id', ctx.userId)
+            .maybeSingle(),
+          supabase
+            .from('staff_task_reads')
+            .select('task_id, last_read_at')
+            .eq('user_id', ctx.userId),
+          supabase
+            .from('staff_tasks')
+            .select('id, title, status, updated_at, created_at')
+            .eq('organization_id', ctx.organizationId!)
+            .eq('assignee_id', ctx.userId)
+            .neq('status', 'done')
+            .order('updated_at', { ascending: false })
+            .limit(20),
+        ]);
+
+      const readByTask = new Map(
+        (taskReads || []).map((r) => [r.task_id, r.last_read_at as string])
+      );
+      const inboxSeen = activity?.tasks_seen_at || EPOCH;
+
+      for (const task of openTasks || []) {
+        const seenAt = readByTask.get(task.id) || inboxSeen;
+        if (
+          new Date(task.updated_at).getTime() <= new Date(seenAt).getTime()
+        ) {
+          continue;
+        }
+        const isNew =
+          new Date(task.created_at).getTime() >
+          new Date(inboxSeen).getTime() - 1000;
+        notifications.push({
+          id: `staff-task-${task.id}`,
+          kind: 'staff_task_update',
+          title: task.title,
+          body: isNew
+            ? 'New task assigned to you'
+            : `Updated · ${String(task.status).replace(/_/g, ' ')}`,
+          href: '/dashboard/tasks',
+          priority: 0,
+          createdAt: task.updated_at,
         });
       }
     }

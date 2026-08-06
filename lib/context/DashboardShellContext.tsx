@@ -7,11 +7,17 @@ import {
   type DashboardNotification,
 } from '@/lib/dashboard/notifications';
 
+export type NavIndicators = {
+  '/dashboard/chat'?: boolean;
+  '/dashboard/tasks'?: boolean;
+};
+
 type DashboardShellContextValue = {
   notifications: DashboardNotification[];
   setNotifications: (items: DashboardNotification[]) => void;
   notificationCount: number;
   clearNotifications: () => void;
+  navIndicators: NavIndicators;
 };
 
 const DashboardShellContext = createContext<DashboardShellContextValue | null>(null);
@@ -44,14 +50,29 @@ export function DashboardShellProvider({ children }: { children: ReactNode }) {
     [notifications]
   );
 
+  const navIndicators = useMemo<NavIndicators>(() => {
+    let chat = false;
+    let tasks = false;
+    for (const n of notifications) {
+      if (n.kind === 'staff_chat_message') chat = true;
+      if (n.kind === 'staff_task_update') tasks = true;
+      if (chat && tasks) break;
+    }
+    return {
+      '/dashboard/chat': chat,
+      '/dashboard/tasks': tasks,
+    };
+  }, [notifications]);
+
   const value = useMemo(
     () => ({
       notifications,
       setNotifications,
       notificationCount,
       clearNotifications,
+      navIndicators,
     }),
-    [notifications, setNotifications, notificationCount, clearNotifications]
+    [notifications, setNotifications, notificationCount, clearNotifications, navIndicators]
   );
 
   return (

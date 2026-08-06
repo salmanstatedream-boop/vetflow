@@ -15,12 +15,20 @@ export const metadata = {
   description: 'Staff direct messages and group chat.',
 };
 
-export default async function ChatPage() {
+export default async function ChatPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ c?: string }>;
+}) {
   const ctx = await resolveServerAuthContext();
   if (!ctx) redirect('/login');
 
   const denied = guardRoute(ctx, '/dashboard/chat');
   if (denied) return denied;
+
+  const params = await searchParams;
+  const requestedId =
+    typeof params.c === 'string' && params.c.length > 0 ? params.c : null;
 
   const [convos, coworkers] = await Promise.all([
     listStaffConversationsAction(),
@@ -29,6 +37,12 @@ export default async function ChatPage() {
 
   const canCreateGroup =
     hasCapability(ctx.role, 'manage_staff') || ctx.role === 'clinic_admin';
+
+  const initialActiveId =
+    requestedId &&
+    convos.conversations.some((c) => c.id === requestedId)
+      ? requestedId
+      : undefined;
 
   return (
     <div className="space-y-6">
@@ -42,6 +56,7 @@ export default async function ChatPage() {
         coworkers={coworkers.coworkers}
         currentUserId={ctx.userId}
         canCreateGroup={canCreateGroup}
+        initialActiveId={initialActiveId}
       />
     </div>
   );

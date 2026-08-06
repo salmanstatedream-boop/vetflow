@@ -139,6 +139,16 @@ export async function listStaffTasksAction(opts?: {
       }
     }
 
+    const now = new Date().toISOString();
+    await supabase.from('staff_user_activity').upsert(
+      {
+        user_id: ctx.userId,
+        tasks_seen_at: now,
+        updated_at: now,
+      },
+      { onConflict: 'user_id' }
+    );
+
     return { success: true, tasks };
   } catch (err: unknown) {
     return {
@@ -204,6 +214,16 @@ export async function getStaffTaskAction(taskId: string): Promise<{
       ...r,
       author_name: nameById.get(r.author_id) ?? 'Staff',
     }));
+
+    const now = new Date().toISOString();
+    await supabase.from('staff_task_reads').upsert(
+      {
+        user_id: ctx.userId,
+        task_id: taskId,
+        last_read_at: now,
+      },
+      { onConflict: 'user_id,task_id' }
+    );
 
     return { success: true, task: taskRow, replies: replyRows };
   } catch (err: unknown) {

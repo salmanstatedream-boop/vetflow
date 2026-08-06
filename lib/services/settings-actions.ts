@@ -47,6 +47,8 @@ export async function updateSettingsAction(payload: unknown) {
             unpaid_invoice: parsed.notifyUnpaidInvoice,
             low_stock: parsed.notifyLowStock,
             emergency_queue: parsed.notifyEmergencyQueue,
+            staff_chat_message: parsed.notifyStaffChatMessage,
+            staff_task_update: parsed.notifyStaffTaskUpdate,
           },
         },
         { onConflict: 'organization_id' }

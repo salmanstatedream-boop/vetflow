@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, type ComponentType } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ChevronDown } from 'lucide-react';
 import DashboardNavLink from '@/components/layout/DashboardNavLink';
@@ -15,6 +15,10 @@ import type { ServerAuthContext } from '@/lib/auth/context';
 import type { Feature } from '@/lib/auth/features';
 import { canAccessRoute } from '@/lib/auth/capabilities';
 import { canAccessRouteByFeature } from '@/lib/auth/features';
+import {
+  useDashboardShell,
+  type NavIndicators,
+} from '@/lib/context/DashboardShellContext';
 
 interface DashboardSidebarNavProps {
   session: ServerAuthContext;
@@ -30,6 +34,31 @@ function isNavAllowedWhenLocked(href: string): boolean {
   return base === '/dashboard';
 }
 
+function NavIcon({
+  Icon,
+  showDot,
+  label,
+}: {
+  Icon: ComponentType<{ className?: string }>;
+  showDot?: boolean;
+  label: string;
+}) {
+  return (
+    <span className="relative shrink-0">
+      <Icon className="w-4 h-4" />
+      {showDot && (
+        <span
+          className="absolute -top-0.5 -right-0.5 size-1.5 rounded-full bg-destructive ring-2 ring-surface-container"
+          aria-hidden
+        />
+      )}
+      {showDot && (
+        <span className="sr-only">{label} has unread notifications</span>
+      )}
+    </span>
+  );
+}
+
 export default function DashboardSidebarNav({
   session,
   pathname,
@@ -38,6 +67,8 @@ export default function DashboardSidebarNav({
   collapsed = false,
   navLocked = false,
 }: DashboardSidebarNavProps) {
+  const shell = useDashboardShell();
+  const indicators: NavIndicators = shell?.navIndicators ?? {};
   const urlSearchParams = useSearchParams();
   const searchParams = useMemo(() => {
     const params: Record<string, string> = {};
@@ -78,6 +109,7 @@ export default function DashboardSidebarNav({
           onToggle={() => toggle(group.section)}
           collapsed={collapsed}
           navLocked={navLocked}
+          indicators={indicators}
         />
       ))}
       {settingsVisible && (
@@ -88,9 +120,13 @@ export default function DashboardSidebarNav({
             className={`${navLinkClass(isNavItemActive(pathname, SETTINGS_NAV_ITEM.href, searchParams))} ${collapsed ? 'justify-center px-2' : ''}`}
             onClick={onNavigate}
             title={collapsed ? SETTINGS_NAV_ITEM.name : undefined}
-            aria-current={isNavItemActive(pathname, SETTINGS_NAV_ITEM.href, searchParams) ? 'page' : undefined}
+            aria-current={
+              isNavItemActive(pathname, SETTINGS_NAV_ITEM.href, searchParams)
+                ? 'page'
+                : undefined
+            }
           >
-            <SETTINGS_NAV_ITEM.icon className="w-4 h-4 shrink-0" />
+            <NavIcon Icon={SETTINGS_NAV_ITEM.icon} label={SETTINGS_NAV_ITEM.name} />
             {!collapsed && SETTINGS_NAV_ITEM.name}
           </DashboardNavLink>
         </div>
@@ -110,6 +146,7 @@ function NavGroupBlock({
   onToggle,
   collapsed = false,
   navLocked = false,
+  indicators,
 }: {
   group: DashboardNavGroup;
   pathname: string;
@@ -121,10 +158,12 @@ function NavGroupBlock({
   onToggle: () => void;
   collapsed?: boolean;
   navLocked?: boolean;
+  indicators: NavIndicators;
 }) {
   if (group.section === 'Overview' && group.items.length === 1) {
     const item = group.items[0]!;
     const active = isNavItemActive(pathname, item.href, searchParams);
+    const showDot = Boolean(indicators[item.href as keyof NavIndicators]);
     return (
       <DashboardNavLink
         href={item.href}
@@ -134,7 +173,7 @@ function NavGroupBlock({
         title={collapsed ? item.name : undefined}
         aria-current={active ? 'page' : undefined}
       >
-        <item.icon className="w-4 h-4 shrink-0" />
+        <NavIcon Icon={item.icon} showDot={showDot} label={item.name} />
         {!collapsed && item.name}
       </DashboardNavLink>
     );
@@ -151,7 +190,9 @@ function NavGroupBlock({
         >
           {group.section}
           {collapsible && (
-            <ChevronDown className={`w-3 h-3 transition-transform ${open ? '' : '-rotate-90'}`} />
+            <ChevronDown
+              className={`w-3 h-3 transition-transform ${open ? '' : '-rotate-90'}`}
+            />
           )}
         </button>
       )}
@@ -159,6 +200,7 @@ function NavGroupBlock({
         <div className="space-y-0.5">
           {group.items.map((item) => {
             const active = isNavItemActive(pathname, item.href, searchParams);
+            const showDot = Boolean(indicators[item.href as keyof NavIndicators]);
             return (
               <DashboardNavLink
                 key={item.href}
@@ -169,7 +211,7 @@ function NavGroupBlock({
                 title={collapsed ? item.name : undefined}
                 aria-current={active ? 'page' : undefined}
               >
-                <item.icon className="w-4 h-4 shrink-0" />
+                <NavIcon Icon={item.icon} showDot={showDot} label={item.name} />
                 {!collapsed && item.name}
               </DashboardNavLink>
             );

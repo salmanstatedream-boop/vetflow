@@ -185,6 +185,8 @@ export const SettingsSchema = z.object({
   notifyUnpaidInvoice: z.boolean(),
   notifyLowStock: z.boolean(),
   notifyEmergencyQueue: z.boolean(),
+  notifyStaffChatMessage: z.boolean(),
+  notifyStaffTaskUpdate: z.boolean(),
 });
 
 // --- BRANCHES ---
