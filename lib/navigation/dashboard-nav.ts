@@ -22,6 +22,8 @@ import {
   BarChart3,
   Share2,
   Video,
+  ListTodo,
+  MessageSquare,
 } from 'lucide-react';
 import type { UserSessionDetails } from '@/lib/services/auth';
 import { canAccessRoute, hasCapability, type Capability } from '@/lib/auth/capabilities';
@@ -70,6 +72,24 @@ export const DASHBOARD_NAV_GROUPS: DashboardNavGroup[] = [
     items: [
       { name: 'Calendar', href: '/dashboard/schedule', icon: CalendarDays },
       { name: 'Appointments', href: '/dashboard/appointments', icon: Calendar },
+    ],
+  },
+  {
+    section: 'Team',
+    collapsible: true,
+    items: [
+      {
+        name: 'Tasks',
+        href: '/dashboard/tasks',
+        icon: ListTodo,
+        optInFeature: 'staff_tasks',
+      },
+      {
+        name: 'Messages',
+        href: '/dashboard/chat',
+        icon: MessageSquare,
+        optInFeature: 'staff_chat',
+      },
     ],
   },
   {
@@ -148,6 +168,8 @@ const PAGE_TITLES: Record<string, string> = {
   '/dashboard/upgrade': 'Upgrade',
   '/dashboard/benchmarking': 'Benchmarking',
   '/dashboard/camera': 'Cameras',
+  '/dashboard/tasks': 'Tasks',
+  '/dashboard/chat': 'Messages',
 };
 
 export function resolvePageTitle(pathname: string): string {

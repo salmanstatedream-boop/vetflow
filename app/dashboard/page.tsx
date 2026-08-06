@@ -2,7 +2,11 @@ export const dynamic = 'force-dynamic';
 
 import { resolveServerAuthContext } from '@/lib/auth/context';
 import { canAccessRoute, canShowWidget, hasCapability, getCapabilitiesForRole } from '@/lib/auth/capabilities';
-import { canAccessRouteByFeature } from '@/lib/auth/features';
+import {
+  canAccessRouteByFeature,
+  isConsultTrackingEnabled,
+  isStaffTasksEnabled,
+} from '@/lib/auth/features';
 import { createClient } from '@/lib/supabase/server';
 import { isDemoMode } from '@/lib/demo/credentials';
 import {
@@ -35,7 +39,11 @@ import {
   formatMedicalActionLabel,
   isDraftSaveActivity,
 } from '@/lib/activity/format-medical-activity';
-import { isConsultTrackingEnabled } from '@/lib/auth/features';
+import MyTasksCard from '@/components/tasks/MyTasksCard';
+import {
+  listStaffTasksAction,
+  type StaffTaskRow,
+} from '@/lib/services/staff-task-actions';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -179,7 +187,8 @@ export default async function DashboardOverview({
   let liveCheckoutQueue: LiveConsultRow[] = [];
   let medicalActivities: MedicalActivityRow[] = [];
   let showConsultTimer = false;
-  let featuresJson: Record<string, unknown> | null = null;
+  let featuresJson: Record<string, unknown> | null = session.featuresJson;
+  let myTasks: StaffTaskRow[] = [];
   let doctors: { id: string; firstName: string; lastName: string }[] = [];
   const staffAttendanceRows: StaffAttendanceOverviewRow[] = [];
   let doctorQueueWaiting: DoctorQueueVisit[] = [];
@@ -189,6 +198,7 @@ export default async function DashboardOverview({
   const netRevenueMtd: number | null = null;
   const clinicCurrency = 'USD';
   const showAttendance = hasCapability(role, 'mark_attendance');
+  const showMyTasks = isStaffTasksEnabled(featuresJson);
 
   if (isDemoMode()) {
     todayAppointments = MOCK_DASHBOARD_KPIS.todayAppointments;
@@ -596,14 +606,16 @@ export default async function DashboardOverview({
       );
     }
 
-    if (role === 'clinic_admin' || role === 'receptionist') {
-      const { data: subRow } = await supabase
-        .from('subscription_status')
-        .select('features')
-        .eq('organization_id', session.organizationId || '')
-        .maybeSingle();
-      featuresJson = (subRow?.features as Record<string, unknown>) || null;
+    if (role === 'clinic_admin' || role === 'receptionist' || role === 'doctor') {
+      featuresJson = session.featuresJson;
       showConsultTimer = isConsultTrackingEnabled(featuresJson);
+    }
+
+    if (showMyTasks) {
+      const tasksRes = await listStaffTasksAction({ assignedToMe: true });
+      if (tasksRes.success) {
+        myTasks = tasksRes.tasks.filter((t) => t.status !== 'done').slice(0, 8);
+      }
     }
 
     if (role === 'clinic_admin' || role === 'receptionist' || role === 'doctor') {
@@ -826,6 +838,9 @@ export default async function DashboardOverview({
 
   const dashboardBody = (
     <>
+      {showMyTasks && (
+        <MyTasksCard tasks={myTasks} />
+      )}
       {role === 'clinic_admin' && adminOverview ? (
         <ClinicAdminDashboardClient
           {...adminOverview}

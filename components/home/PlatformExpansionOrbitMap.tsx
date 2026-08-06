@@ -98,8 +98,8 @@ export default function PlatformExpansionOrbitMap({
       />
 
       {/* Center hub — fixed */}
-      <div className="absolute left-1/2 top-1/2 z-10 flex w-[42%] max-w-[180px] -translate-x-1/2 -translate-y-1/2 flex-col items-center text-center">
-        <div className="relative mb-3 flex h-[88px] w-[88px] items-center justify-center sm:h-[100px] sm:w-[100px]">
+      <div className="absolute left-1/2 top-1/2 z-10 flex w-[48%] max-w-[200px] -translate-x-1/2 -translate-y-1/2 flex-col items-center text-center">
+        <div className="relative mb-3 flex h-[104px] w-[104px] items-center justify-center sm:h-[120px] sm:w-[120px]">
           <div
             aria-hidden
             className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.4)_0%,rgba(59,130,246,0.12)_45%,transparent_72%)] blur-[2px]"
@@ -108,23 +108,23 @@ export default function PlatformExpansionOrbitMap({
             aria-hidden
             className="absolute inset-[10%] rounded-full border border-[#22D3EE]/25 bg-[#050B18]/70 shadow-[0_0_40px_rgba(34,211,238,0.25)]"
           />
-          <div className="relative h-14 w-14 sm:h-16 sm:w-16">
+          <div className="relative h-20 w-20 sm:h-24 sm:w-24">
             <Image
               src="/phoenix-logo-mark.png"
               alt=""
               fill
               className="object-contain drop-shadow-[0_0_20px_rgba(34,211,238,0.55)]"
-              sizes="64px"
+              sizes="96px"
             />
           </div>
         </div>
-        <p className="text-[10px] font-bold tracking-[0.2em] text-[#F8FAFC] sm:text-[11px]">
+        <p className="text-[11px] font-bold tracking-[0.2em] text-[#F8FAFC] sm:text-sm">
           {PLATFORM_EXPANSION.hub.brand}
         </p>
-        <p className="mt-0.5 text-[10px] font-semibold text-[#22D3EE] sm:text-xs">
+        <p className="mt-0.5 text-[11px] font-semibold text-[#22D3EE] sm:text-sm">
           {PLATFORM_EXPANSION.hub.title}
         </p>
-        <p className="mt-1.5 max-w-[140px] text-[9px] leading-snug text-[#64748B] sm:text-[10px]">
+        <p className="mt-1.5 max-w-[160px] text-[10px] leading-snug text-[#64748B] sm:text-[11px]">
           {PLATFORM_EXPANSION.hub.tagline}
         </p>
       </div>

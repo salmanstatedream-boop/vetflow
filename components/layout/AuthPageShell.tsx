@@ -37,6 +37,10 @@ function TitleBlock({
           )}
         </h2>
       )}
+      <div
+        aria-hidden
+        className="mx-auto mt-4 h-px w-full max-w-[12rem] bg-gradient-to-r from-transparent via-primary/45 to-transparent"
+      />
     </div>
   );
 }
@@ -45,12 +49,13 @@ function BrandHeader({ subtitle }: { subtitle?: string }) {
   return (
     <div className="flex flex-col items-center mb-8">
       <Link href="/" className="flex flex-col items-center group">
-        <div className="w-12 h-12 bg-primary/15 border border-primary/20 flex items-center justify-center rounded-2xl mb-3 transition-colors group-hover:bg-primary/20 overflow-hidden">
-          <PhoenixLogo size={40} />
+        <div className="w-16 h-16 sm:w-[4.5rem] sm:h-[4.5rem] bg-primary/15 border border-primary/20 flex items-center justify-center rounded-2xl mb-3 transition-colors group-hover:bg-primary/20 overflow-hidden shadow-[0_0_24px_rgba(34,211,238,0.15)]">
+          <PhoenixLogo size={56} />
         </div>
-        <span className="text-2xl font-black tracking-tight text-on-surface font-[family-name:var(--font-display)]">
+        <span className="text-2xl sm:text-3xl font-black tracking-tight text-on-surface font-[family-name:var(--font-display)]">
           {PRODUCT_NAME}
-        </span>      </Link>
+        </span>
+      </Link>
       {subtitle && (
         <p className="text-xs text-on-surface-variant/80 mt-1.5 text-center max-w-xs leading-relaxed">
           {subtitle}

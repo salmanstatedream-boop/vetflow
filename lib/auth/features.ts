@@ -11,7 +11,9 @@ export type Feature =
   | 'branded_pdfs'
   | 'consult_tracking'
   | 'clinic_benchmarking'
-  | 'camera_feed';
+  | 'camera_feed'
+  | 'staff_tasks'
+  | 'staff_chat';
 
 export const ALL_FEATURES: Feature[] = [
   'appointments',
@@ -33,6 +35,8 @@ export const OPT_IN_FEATURES: Feature[] = [
   'consult_tracking',
   'clinic_benchmarking',
   'camera_feed',
+  'staff_tasks',
+  'staff_chat',
 ];
 
 /** Full set a super admin can toggle per organization. */
@@ -53,6 +57,8 @@ export const FEATURE_LABELS: Record<Feature, string> = {
   consult_tracking: 'Consultation time tracking',
   clinic_benchmarking: 'Clinic benchmarking',
   camera_feed: 'Live camera feed',
+  staff_tasks: 'Staff tasks & tickets',
+  staff_chat: 'Staff direct messages',
 };
 
 /**
@@ -84,6 +90,18 @@ export function isCameraFeedEnabled(
   return featuresJson?.camera_feed === true;
 }
 
+export function isStaffTasksEnabled(
+  featuresJson: Record<string, unknown> | null | undefined
+): boolean {
+  return featuresJson?.staff_tasks === true;
+}
+
+export function isStaffChatEnabled(
+  featuresJson: Record<string, unknown> | null | undefined
+): boolean {
+  return featuresJson?.staff_chat === true;
+}
+
 /** Nav route → required feature (undefined = no feature gate) */
 export const ROUTE_FEATURES: Record<string, Feature | undefined> = {
   '/dashboard/appointments': 'appointments',
@@ -99,6 +117,8 @@ export const ROUTE_FEATURES: Record<string, Feature | undefined> = {
   '/dashboard/ai-assistant': 'ai_assistant',
   '/dashboard/social': 'social_automation',
   '/dashboard/camera': 'camera_feed',
+  '/dashboard/tasks': 'staff_tasks',
+  '/dashboard/chat': 'staff_chat',
 };
 
 export function resolveFeatures(

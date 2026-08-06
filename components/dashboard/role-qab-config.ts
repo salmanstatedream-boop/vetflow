@@ -19,6 +19,8 @@ import {
   FileCheck2,
   ShoppingBag,
   Store,
+  ListTodo,
+  MessageSquare,
 } from 'lucide-react';
 import type { Capability } from '@/lib/auth/capabilities';
 import type { Feature } from '@/lib/auth/features';
@@ -91,6 +93,8 @@ const ADMIN_QABS: QabItem[] = [
   { id: 'prescriptions', label: 'Prescriptions', description: 'Treatment records', icon: FileText, launcher: 'page', href: '/dashboard/prescriptions', capability: 'manage_prescriptions', group: 'clinical', priority: 4 },
   { id: 'social', label: 'Social Media', description: 'Post & publish', icon: Share2, launcher: 'slideover', modalId: 'social_media', capability: 'manage_social', feature: 'social_automation', group: 'organization', priority: 3 },
   { id: 'camera', label: 'Live Camera Feed', description: 'Clinic cameras', icon: Video, launcher: 'page', href: '/dashboard/camera', capability: 'view_camera_feed', optInFeature: 'camera_feed', group: 'organization', priority: 4 },
+  { id: 'tasks', label: 'Staff Tasks', description: 'Tickets & assignments', icon: ListTodo, launcher: 'page', href: '/dashboard/tasks', optInFeature: 'staff_tasks', group: 'operations', priority: 4 },
+  { id: 'chat', label: 'Messages', description: 'Staff direct messages', icon: MessageSquare, launcher: 'page', href: '/dashboard/chat', optInFeature: 'staff_chat', group: 'operations', priority: 5 },
   { id: 'branches', label: 'Multi Branch Control', description: 'Branch operations', icon: MapPin, launcher: 'modal', modalId: 'multi_branch', capability: 'manage_branches', feature: 'multi_branch', group: 'organization', priority: 2 },
   { id: 'benchmarking', label: 'Clinic Benchmarking', description: 'Compare performance', icon: BarChart3, launcher: 'page', href: '/dashboard/benchmarking', capability: 'view_reports', optInFeature: 'clinic_benchmarking', group: 'insights', priority: 2 },
   { id: 'ai_assistant', label: 'AI Assistant', description: 'Clinic chatbot', icon: Bot, launcher: 'slideover', modalId: 'ai_assistant', capability: 'use_ai_assistant', feature: 'ai_assistant', group: 'insights', priority: 3 },
@@ -103,6 +107,8 @@ const RECEPTION_QABS: QabItem[] = [
   { id: 'inventory', label: 'Inventory Control', description: 'Stock updates', icon: Layers, launcher: 'modal', modalId: 'inventory_control', capability: 'manage_inventory', feature: 'inventory', group: 'operations', priority: 2 },
   { id: 'ai_assistant', label: 'AI Assistant', description: 'Front desk help', icon: Bot, launcher: 'slideover', modalId: 'ai_assistant', capability: 'use_ai_assistant', feature: 'ai_assistant', group: 'insights', priority: 1 },
   { id: 'camera', label: 'Live Camera Feed', description: 'View clinic cameras', icon: Video, launcher: 'page', href: '/dashboard/camera', capability: 'view_camera_feed', optInFeature: 'camera_feed', group: 'organization', priority: 1 },
+  { id: 'tasks', label: 'My Tasks', description: 'Assigned tickets', icon: ListTodo, launcher: 'page', href: '/dashboard/tasks', optInFeature: 'staff_tasks', group: 'operations', priority: 3 },
+  { id: 'chat', label: 'Messages', description: 'Staff DMs', icon: MessageSquare, launcher: 'page', href: '/dashboard/chat', optInFeature: 'staff_chat', group: 'operations', priority: 4 },
 ];
 
 const DOCTOR_QABS: QabItem[] = [
@@ -112,6 +118,8 @@ const DOCTOR_QABS: QabItem[] = [
   { id: 'patient', label: 'Pet Patient Profile', description: 'Search patient history', icon: Heart, launcher: 'modal', modalId: 'patient_profile', capability: 'view_patient_history', group: 'clinical', priority: 4 },
   { id: 'treatment', label: 'Treatment Record', description: 'Today\'s treatments', icon: FileCheck2, launcher: 'modal', modalId: 'treatment_record', capability: 'clinical_queue', group: 'clinical', priority: 5 },
   { id: 'consultation', label: 'Consultation', description: 'Open clinical queue', icon: BriefcaseMedical, launcher: 'page', href: '/dashboard/doctors', capability: 'clinical_queue', group: 'clinical', priority: 6 },
+  { id: 'tasks', label: 'My Tasks', description: 'Assigned tickets', icon: ListTodo, launcher: 'page', href: '/dashboard/tasks', optInFeature: 'staff_tasks', group: 'operations', priority: 1 },
+  { id: 'chat', label: 'Messages', description: 'Staff DMs', icon: MessageSquare, launcher: 'page', href: '/dashboard/chat', optInFeature: 'staff_chat', group: 'operations', priority: 2 },
 ];
 
 export function getQabsForRole(role: UserSessionDetails['role']): QabItem[] {
