@@ -100,22 +100,31 @@ async function assertStaffChat(
   assertFeature(ctx, 'staff_chat');
 }
 
-async function assertConversationAccess(
+async function assertConversationMembership(
   conversationId: string,
-  organizationId: string,
   userId: string
 ) {
   const supabase = await createClient();
-  const { data: membership, error: memberError } = await supabase
+  const { data: membership, error } = await supabase
     .from('staff_conversation_members')
     .select('conversation_id, hidden')
     .eq('conversation_id', conversationId)
     .eq('user_id', userId)
     .maybeSingle();
 
-  if (memberError) throw new Error(memberError.message);
+  if (error) throw new Error(error.message);
   if (!membership) throw new Error('Conversation not found');
+  return membership;
+}
 
+async function assertConversationAccess(
+  conversationId: string,
+  organizationId: string,
+  userId: string
+) {
+  const membership = await assertConversationMembership(conversationId, userId);
+
+  const supabase = await createClient();
   const { data: convo, error } = await supabase
     .from('staff_conversations')
     .select(
@@ -638,7 +647,7 @@ export async function listStaffMessagesAction(conversationId: string): Promise<{
     const ctx = await resolveServerAuthContext();
     if (!ctx) throw new Error('Unauthorized');
     await assertStaffChat(ctx);
-    await assertConversationAccess(conversationId, ctx.organizationId!, ctx.userId);
+    await assertConversationMembership(conversationId, ctx.userId);
 
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -653,12 +662,6 @@ export async function listStaffMessagesAction(conversationId: string): Promise<{
     const messages = (data || []).map((row) =>
       mapMessage(row as Record<string, unknown>, null)
     );
-
-    await supabase
-      .from('staff_conversation_members')
-      .update({ last_read_at: new Date().toISOString() })
-      .eq('conversation_id', conversationId)
-      .eq('user_id', ctx.userId);
 
     return { success: true, messages };
   } catch (err: unknown) {
@@ -682,11 +685,7 @@ export async function sendStaffMessageAction(payload: unknown) {
     await assertStaffChat(ctx);
 
     const parsed = SendSchema.parse(payload);
-    await assertConversationAccess(
-      parsed.conversationId,
-      ctx.organizationId!,
-      ctx.userId
-    );
+    await assertConversationMembership(parsed.conversationId, ctx.userId);
 
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -702,17 +701,18 @@ export async function sendStaffMessageAction(payload: unknown) {
 
     if (error) throw new Error(error.message);
 
-    await supabase
-      .from('staff_conversations')
-      .update({ updated_at: new Date().toISOString() })
-      .eq('id', parsed.conversationId);
-
-    // Unhide for sender if previously hidden
-    await supabase
-      .from('staff_conversation_members')
-      .update({ hidden: false })
-      .eq('conversation_id', parsed.conversationId)
-      .eq('user_id', ctx.userId);
+    const now = new Date().toISOString();
+    void Promise.all([
+      supabase
+        .from('staff_conversations')
+        .update({ updated_at: now })
+        .eq('id', parsed.conversationId),
+      supabase
+        .from('staff_conversation_members')
+        .update({ hidden: false, last_read_at: now })
+        .eq('conversation_id', parsed.conversationId)
+        .eq('user_id', ctx.userId),
+    ]);
 
     return { success: true, message: mapMessage(data as Record<string, unknown>) };
   } catch (err: unknown) {
@@ -859,11 +859,7 @@ export async function sendStaffVoiceMessageAction(formData: FormData) {
     if (!(file instanceof File)) throw new Error('Audio file required');
     if (file.size > 5 * 1024 * 1024) throw new Error('Voice note must be under 5MB');
 
-    await assertConversationAccess(
-      meta.conversationId,
-      ctx.organizationId!,
-      ctx.userId
-    );
+    await assertConversationMembership(meta.conversationId, ctx.userId);
 
     const supabase = await createClient();
     const messageId = crypto.randomUUID();
@@ -905,10 +901,18 @@ export async function sendStaffVoiceMessageAction(formData: FormData) {
       throw new Error(error.message);
     }
 
-    await supabase
-      .from('staff_conversations')
-      .update({ updated_at: new Date().toISOString() })
-      .eq('id', meta.conversationId);
+    const now = new Date().toISOString();
+    void Promise.all([
+      supabase
+        .from('staff_conversations')
+        .update({ updated_at: now })
+        .eq('id', meta.conversationId),
+      supabase
+        .from('staff_conversation_members')
+        .update({ hidden: false, last_read_at: now })
+        .eq('conversation_id', meta.conversationId)
+        .eq('user_id', ctx.userId),
+    ]);
 
     const audioUrl = await signedAudioUrl(audioPath);
     return {

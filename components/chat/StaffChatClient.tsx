@@ -192,6 +192,24 @@ export default function StaffChatClient({
     if (res.success) setConversations(res.conversations);
   }, []);
 
+  const patchInboxPreview = useCallback(
+    (conversationId: string, preview: string) => {
+      const now = new Date().toISOString();
+      setConversations((prev) => {
+        const idx = prev.findIndex((c) => c.id === conversationId);
+        if (idx < 0) return prev;
+        const updated = {
+          ...prev[idx]!,
+          last_message: preview,
+          updated_at: now,
+        };
+        const rest = prev.filter((c) => c.id !== conversationId);
+        return [updated, ...rest];
+      });
+    },
+    []
+  );
+
   const loadMessages = useCallback(
     async (conversationId: string, opts?: { quiet?: boolean; forPrefetch?: boolean }) => {
       const quiet = opts?.quiet ?? true;
@@ -454,23 +472,44 @@ export default function StaffChatClient({
     const conversationId = activeIdRef.current;
     if (!conversationId || !draft.trim() || sending) return;
     const body = draft.trim();
+    const tempId = `temp-${crypto.randomUUID()}`;
+    const optimistic: StaffMessageRow = {
+      id: tempId,
+      conversation_id: conversationId,
+      sender_id: currentUserId,
+      body,
+      created_at: new Date().toISOString(),
+      message_type: 'text',
+      edited_at: null,
+      deleted_at: null,
+      audio_path: null,
+      audio_duration_sec: null,
+      audio_url: null,
+    };
+
     setDraft('');
     setError(null);
     shouldStickBottomRef.current = true;
+    patchActiveMessages(conversationId, (prev) => mergeMessages(prev, [optimistic]));
+    patchInboxPreview(conversationId, body);
     setSending(true);
 
     try {
       const res = await sendStaffMessageAction({ conversationId, body });
       if (!res.success || !res.message) {
         setError(res.error || 'Failed to send');
+        patchActiveMessages(conversationId, (prev) =>
+          prev.filter((m) => m.id !== tempId)
+        );
         if (activeIdRef.current === conversationId) setDraft(body);
         return;
       }
       patchActiveMessages(conversationId, (prev) => {
-        if (prev.some((m) => m.id === res.message!.id)) return prev;
-        return mergeMessages(prev, [res.message!]);
+        const withoutTemp = prev.filter((m) => m.id !== tempId);
+        if (withoutTemp.some((m) => m.id === res.message!.id)) return withoutTemp;
+        return mergeMessages(withoutTemp, [res.message!]);
       });
-      await refreshConversations();
+      patchInboxPreview(conversationId, body);
     } finally {
       setSending(false);
     }
@@ -498,8 +537,8 @@ export default function StaffChatClient({
       patchActiveMessages(conversationId, (prev) =>
         mergeMessages(prev, [res.message!])
       );
+      patchInboxPreview(conversationId, 'Voice message');
       setVoiceResetKey((k) => k + 1);
-      await refreshConversations();
     } finally {
       setVoiceUploading(false);
     }
@@ -518,7 +557,7 @@ export default function StaffChatClient({
       patchActiveMessages(conversationId, (prev) =>
         prev.map((m) => (m.id === res.message!.id ? res.message! : m))
       );
-      await refreshConversations();
+      patchInboxPreview(conversationId, body);
     } finally {
       setMutating(false);
     }
@@ -537,7 +576,7 @@ export default function StaffChatClient({
       patchActiveMessages(conversationId, (prev) =>
         prev.map((m) => (m.id === res.message!.id ? res.message! : m))
       );
-      await refreshConversations();
+      patchInboxPreview(conversationId, 'Message deleted');
     } finally {
       setMutating(false);
     }

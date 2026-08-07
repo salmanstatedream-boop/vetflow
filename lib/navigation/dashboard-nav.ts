@@ -197,6 +197,26 @@ export function filterNavGroups(
 }
 
 const ROLE_NAV_PRIORITIES: Partial<Record<NonNullable<UserSessionDetails['role']>, string[]>> = {
+  clinic_admin: [
+    '/dashboard',
+    '/dashboard/tasks',
+    '/dashboard/chat',
+    '/dashboard/appointments',
+    '/dashboard/schedule',
+    '/dashboard/walk-ins',
+    '/dashboard/doctors',
+    '/dashboard/pets',
+    '/dashboard/customers',
+    '/dashboard/invoices',
+    '/dashboard/sales/new',
+    '/dashboard/revenue',
+    '/dashboard/inventory',
+    '/dashboard/inventory?tab=intake',
+    '/dashboard/staff',
+    '/dashboard/branches',
+    '/dashboard/ai-assistant',
+    '/dashboard/profile',
+  ],
   receptionist: [
     '/dashboard',
     '/dashboard/tasks',
