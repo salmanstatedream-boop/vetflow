@@ -150,12 +150,13 @@ export default function StaffChatClient({
   const [confirmHide, setConfirmHide] = useState(false);
   const [voiceUploading, setVoiceUploading] = useState(false);
   const [voiceResetKey, setVoiceResetKey] = useState(0);
-  const [sending, setSending] = useState(false);
   const [mutating, setMutating] = useState(false);
 
   const activeIdRef = useRef<string | null>(activeId);
   const messagesByConvoRef = useRef<Map<string, StaffMessageRow[]>>(new Map());
   const prefetchInFlightRef = useRef<Set<string>>(new Set());
+  const pendingSendIdsRef = useRef<Set<string>>(new Set());
+  const draftRef = useRef(draft);
   const bottomRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
@@ -165,6 +166,10 @@ export default function StaffChatClient({
   useEffect(() => {
     conversationsRef.current = conversations;
   }, [conversations]);
+
+  useEffect(() => {
+    draftRef.current = draft;
+  }, [draft]);
 
   const active = conversations.find((c) => c.id === activeId) ?? null;
 
@@ -468,10 +473,10 @@ export default function StaffChatClient({
     }
   };
 
-  const send = async () => {
+  const send = () => {
     const conversationId = activeIdRef.current;
-    if (!conversationId || !draft.trim() || sending) return;
-    const body = draft.trim();
+    const body = draftRef.current.trim();
+    if (!conversationId || !body) return;
     const tempId = `temp-${crypto.randomUUID()}`;
     const optimistic: StaffMessageRow = {
       id: tempId,
@@ -487,32 +492,41 @@ export default function StaffChatClient({
       audio_url: null,
     };
 
+    draftRef.current = '';
     setDraft('');
     setError(null);
     shouldStickBottomRef.current = true;
+    pendingSendIdsRef.current.add(tempId);
     patchActiveMessages(conversationId, (prev) => mergeMessages(prev, [optimistic]));
     patchInboxPreview(conversationId, body);
-    setSending(true);
 
-    try {
-      const res = await sendStaffMessageAction({ conversationId, body });
-      if (!res.success || !res.message) {
-        setError(res.error || 'Failed to send');
-        patchActiveMessages(conversationId, (prev) =>
-          prev.filter((m) => m.id !== tempId)
-        );
-        if (activeIdRef.current === conversationId) setDraft(body);
-        return;
+    void (async () => {
+      try {
+        const res = await sendStaffMessageAction({ conversationId, body });
+        if (!res.success || !res.message) {
+          setError(res.error || 'Failed to send');
+          patchActiveMessages(conversationId, (prev) =>
+            prev.filter((m) => m.id !== tempId)
+          );
+          if (
+            activeIdRef.current === conversationId &&
+            !draftRef.current.trim()
+          ) {
+            draftRef.current = body;
+            setDraft(body);
+          }
+          return;
+        }
+        patchActiveMessages(conversationId, (prev) => {
+          const withoutTemp = prev.filter((m) => m.id !== tempId);
+          if (withoutTemp.some((m) => m.id === res.message!.id)) return withoutTemp;
+          return mergeMessages(withoutTemp, [res.message!]);
+        });
+        patchInboxPreview(conversationId, body);
+      } finally {
+        pendingSendIdsRef.current.delete(tempId);
       }
-      patchActiveMessages(conversationId, (prev) => {
-        const withoutTemp = prev.filter((m) => m.id !== tempId);
-        if (withoutTemp.some((m) => m.id === res.message!.id)) return withoutTemp;
-        return mergeMessages(withoutTemp, [res.message!]);
-      });
-      patchInboxPreview(conversationId, body);
-    } finally {
-      setSending(false);
-    }
+    })();
   };
 
   const sendVoice = async (blob: Blob, durationSec: number, mimeType: string) => {
@@ -1038,15 +1052,21 @@ export default function StaffChatClient({
                         </span>
                       </div>
                     )}
-                    <MessageBubble
-                      message={m}
-                      mine={mine}
-                      stacked={stacked}
-                      currentUserId={currentUserId}
-                      onEdit={(id, body) => void handleEdit(id, body)}
-                      onDelete={(id) => void handleDeleteMessage(id)}
-                      pending={mutating}
-                    />
+                    <div
+                      className={cn(
+                        m.id.startsWith('temp-') && 'opacity-70'
+                      )}
+                    >
+                      <MessageBubble
+                        message={m}
+                        mine={mine}
+                        stacked={stacked}
+                        currentUserId={currentUserId}
+                        onEdit={(id, body) => void handleEdit(id, body)}
+                        onDelete={(id) => void handleDeleteMessage(id)}
+                        pending={mutating}
+                      />
+                    </div>
                   </div>
                 );
               })}
@@ -1059,7 +1079,7 @@ export default function StaffChatClient({
           <div className="p-4 border-t border-outline-variant/30 shrink-0 bg-surface-container/15">
             <div className="flex items-end gap-2">
               <VoiceRecorderButton
-                disabled={sending || voiceUploading}
+                disabled={voiceUploading}
                 uploading={voiceUploading}
                 resetKey={`${activeId}-${voiceResetKey}`}
                 onSend={(blob, duration, mime) =>
@@ -1083,25 +1103,21 @@ export default function StaffChatClient({
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    void send();
+                    send();
                   }
                 }}
               />
               <button
                 type="button"
-                disabled={sending || voiceUploading || !draft.trim()}
-                onClick={() => void send()}
+                disabled={voiceUploading || !draft.trim()}
+                onClick={() => send()}
                 className={cn(
                   btnPrimaryClass,
                   'h-11 w-11 shrink-0 !px-0 justify-center active:scale-[0.96]'
                 )}
                 aria-label="Send message"
               >
-                {sending ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
+                <Send className="w-4 h-4" />
               </button>
             </div>
             <p className="mt-1.5 text-[10px] text-on-surface-variant/60 pl-1">

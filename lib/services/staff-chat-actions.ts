@@ -685,8 +685,6 @@ export async function sendStaffMessageAction(payload: unknown) {
     await assertStaffChat(ctx);
 
     const parsed = SendSchema.parse(payload);
-    await assertConversationMembership(parsed.conversationId, ctx.userId);
-
     const supabase = await createClient();
     const { data, error } = await supabase
       .from('staff_messages')
