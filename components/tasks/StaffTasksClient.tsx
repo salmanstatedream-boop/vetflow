@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   addStaffTaskReplyAction,
   createStaffTaskAction,
@@ -90,24 +89,55 @@ function repliesSignature(replies: StaffTaskReplyRow[]) {
 
 type Props = {
   initialTasks: StaffTaskRow[];
+  initialReplies?: StaffTaskReplyRow[];
+  initialSelectedId?: string | null;
   staff: StaffOption[];
   currentUserId: string;
   canCreate: boolean;
 };
 
+function DiscussionSkeleton() {
+  return (
+    <ul className="space-y-2.5" aria-hidden>
+      {[0, 1, 2].map((i) => (
+        <li
+          key={i}
+          className="rounded-2xl border border-outline-variant/20 bg-surface-container/35 px-3.5 py-3 animate-pulse"
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <span className="w-6 h-6 rounded-full bg-surface-container-high/80 shrink-0" />
+            <span className="h-2.5 w-24 rounded bg-surface-container-high/80" />
+            <span className="ml-auto h-2 w-10 rounded bg-surface-container-high/60" />
+          </div>
+          <div className="pl-8 space-y-1.5">
+            <span className="block h-2.5 w-full rounded bg-surface-container-high/70" />
+            <span
+              className={cn(
+                'block h-2.5 rounded bg-surface-container-high/50',
+                i === 1 ? 'w-3/5' : 'w-4/5'
+              )}
+            />
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export default function StaffTasksClient({
   initialTasks,
+  initialReplies = [],
+  initialSelectedId = null,
   staff,
   currentUserId,
   canCreate,
 }: Props) {
-  const router = useRouter();
+  const seededId = initialSelectedId ?? initialTasks[0]?.id ?? null;
+
   const [tasks, setTasks] = useState(initialTasks);
-  const [selectedId, setSelectedId] = useState<string | null>(
-    initialTasks[0]?.id ?? null
-  );
+  const [selectedId, setSelectedId] = useState<string | null>(seededId);
   const [filterMine, setFilterMine] = useState(!canCreate);
-  const [replies, setReplies] = useState<StaffTaskReplyRow[]>([]);
+  const [replies, setReplies] = useState<StaffTaskReplyRow[]>(initialReplies);
   const [replyBody, setReplyBody] = useState('');
   const [detailLoading, setDetailLoading] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
@@ -116,13 +146,20 @@ export default function StaffTasksClient({
   const [assigneeId, setAssigneeId] = useState(staff[0]?.id ?? '');
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [replying, setReplying] = useState(false);
 
   const selectedIdRef = useRef<string | null>(selectedId);
-  const repliesSigRef = useRef('');
+  const repliesSigRef = useRef(repliesSignature(initialReplies));
+  const repliesRef = useRef<StaffTaskReplyRow[]>(initialReplies);
+  const hydratedTaskIdRef = useRef<string | null>(initialSelectedId);
 
   useEffect(() => {
     selectedIdRef.current = selectedId;
   }, [selectedId]);
+
+  useEffect(() => {
+    repliesRef.current = replies;
+  }, [replies]);
 
   const visible = useMemo(() => {
     if (!filterMine) return tasks;
@@ -159,10 +196,28 @@ export default function StaffTasksClient({
         return copy;
       });
 
-      const sig = repliesSignature(nextReplies);
+      const pendingOptimistic = quiet
+        ? repliesRef.current.filter(
+            (r) =>
+              r.id.startsWith('temp-') &&
+              !nextReplies.some(
+                (s) =>
+                  s.author_id === r.author_id &&
+                  s.body === r.body &&
+                  Math.abs(
+                    new Date(s.created_at).getTime() -
+                      new Date(r.created_at).getTime()
+                  ) < 60_000
+              )
+          )
+        : [];
+      const merged = pendingOptimistic.length
+        ? [...nextReplies, ...pendingOptimistic]
+        : nextReplies;
+      const sig = repliesSignature(merged);
       if (!quiet || sig !== repliesSigRef.current) {
         repliesSigRef.current = sig;
-        setReplies(nextReplies);
+        setReplies(merged);
       }
     },
     []
@@ -176,9 +231,14 @@ export default function StaffTasksClient({
       if (!quiet) {
         setDetailLoading(true);
         setError(null);
+        setReplies([]);
+        repliesSigRef.current = '';
+        repliesRef.current = [];
       }
       try {
-        const res = await getStaffTaskAction(taskId);
+        const res = await getStaffTaskAction(taskId, {
+          markRead: !quiet,
+        });
         if (selectedIdRef.current !== taskId && quiet) return;
         if (!res.success || !res.task) {
           if (!quiet) {
@@ -188,6 +248,7 @@ export default function StaffTasksClient({
           return;
         }
         applyDetail(res.task, res.replies, quiet);
+        if (!quiet) hydratedTaskIdRef.current = taskId;
       } finally {
         if (!quiet && selectedIdRef.current === taskId) {
           setDetailLoading(false);
@@ -220,7 +281,9 @@ export default function StaffTasksClient({
   }, []);
 
   useEffect(() => {
-    if (selectedId) void loadDetail(selectedId, { select: false });
+    if (!selectedId) return;
+    if (hydratedTaskIdRef.current === selectedId) return;
+    void loadDetail(selectedId, { select: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -299,7 +362,6 @@ export default function StaffTasksClient({
       setFilterMine(false);
       setSelectedId(res.task.id);
       await loadDetail(res.task.id);
-      router.refresh();
     });
   };
 
@@ -318,30 +380,70 @@ export default function StaffTasksClient({
       setTasks((prev) =>
         prev.map((t) => (t.id === selected.id ? { ...t, status } : t))
       );
-      router.refresh();
     });
   };
 
-  const handleReply = () => {
-    if (!selected || !replyBody.trim()) return;
+  const handleReply = async () => {
+    if (!selected || !replyBody.trim() || replying) return;
+    const taskId = selected.id;
+    const bodyText = replyBody.trim();
+    const tempId = `temp-${crypto.randomUUID()}`;
+    const optimistic: StaffTaskReplyRow = {
+      id: tempId,
+      task_id: taskId,
+      author_id: currentUserId,
+      body: bodyText,
+      created_at: new Date().toISOString(),
+      author_name: 'You',
+    };
+
+    setReplyBody('');
     setError(null);
-    startTransition(async () => {
+    setReplies((prev) => {
+      const next = [...prev, optimistic];
+      repliesSigRef.current = repliesSignature(next);
+      return next;
+    });
+    setReplying(true);
+
+    try {
       const res = await addStaffTaskReplyAction({
-        taskId: selected.id,
-        body: replyBody,
+        taskId,
+        body: bodyText,
       });
       if (!res.success || !res.reply) {
         setError(res.error || 'Failed to reply');
+        setReplies((prev) => {
+          const next = prev.filter((r) => r.id !== tempId);
+          repliesSigRef.current = repliesSignature(next);
+          return next;
+        });
+        if (selectedIdRef.current === taskId) setReplyBody(bodyText);
         return;
       }
       setReplies((prev) => {
-        const next = [...prev, { ...res.reply!, author_name: 'You' }];
+        const withoutTemp = prev.filter((r) => r.id !== tempId);
+        if (withoutTemp.some((r) => r.id === res.reply!.id)) {
+          repliesSigRef.current = repliesSignature(withoutTemp);
+          return withoutTemp;
+        }
+        const next = [
+          ...withoutTemp,
+          { ...res.reply!, author_name: 'You' },
+        ];
         repliesSigRef.current = repliesSignature(next);
         return next;
       });
-      setReplyBody('');
-      router.refresh();
-    });
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === taskId
+            ? { ...t, updated_at: res.reply!.created_at }
+            : t
+        )
+      );
+    } finally {
+      setReplying(false);
+    }
   };
 
   return (
@@ -529,10 +631,6 @@ export default function StaffTasksClient({
               Choose a ticket from the list to view details, update status, and reply.
             </p>
           </div>
-        ) : detailLoading && replies.length === 0 && !selected.body ? (
-          <div className="flex-1 flex items-center justify-center text-on-surface-variant">
-            <Loader2 className="w-5 h-5 animate-spin" />
-          </div>
         ) : (
           <>
             <header className="px-5 py-4 border-b border-outline-variant/30 shrink-0 space-y-3">
@@ -604,11 +702,13 @@ export default function StaffTasksClient({
                     Discussion
                   </p>
                   <span className="text-[10px] text-on-surface-variant/60 tabular-nums">
-                    {replies.length}
+                    {detailLoading ? '…' : replies.length}
                   </span>
                 </div>
 
-                {replies.length === 0 ? (
+                {detailLoading ? (
+                  <DiscussionSkeleton />
+                ) : replies.length === 0 ? (
                   <p className="text-xs text-on-surface-variant/70 py-2">
                     No replies yet. Leave the first update for your team.
                   </p>
@@ -656,21 +756,21 @@ export default function StaffTasksClient({
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
-                      handleReply();
+                      void handleReply();
                     }
                   }}
                 />
                 <button
                   type="button"
-                  disabled={pending || !replyBody.trim()}
-                  onClick={handleReply}
+                  disabled={replying || !replyBody.trim()}
+                  onClick={() => void handleReply()}
                   className={cn(
                     btnPrimaryClass,
                     'h-11 w-11 shrink-0 !px-0 justify-center active:scale-[0.96]'
                   )}
                   aria-label="Send reply"
                 >
-                  {pending ? (
+                  {replying ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
                     <Send className="w-4 h-4" />

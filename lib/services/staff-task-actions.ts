@@ -101,6 +101,7 @@ export async function listOrgStaffForTasksAction(): Promise<{
 
 export async function listStaffTasksAction(opts?: {
   assignedToMe?: boolean;
+  markSeen?: boolean;
 }): Promise<{ success: boolean; error?: string; tasks: StaffTaskRow[] }> {
   try {
     const ctx = await resolveServerAuthContext();
@@ -139,15 +140,17 @@ export async function listStaffTasksAction(opts?: {
       }
     }
 
-    const now = new Date().toISOString();
-    await supabase.from('staff_user_activity').upsert(
-      {
-        user_id: ctx.userId,
-        tasks_seen_at: now,
-        updated_at: now,
-      },
-      { onConflict: 'user_id' }
-    );
+    if (opts?.markSeen) {
+      const now = new Date().toISOString();
+      void supabase.from('staff_user_activity').upsert(
+        {
+          user_id: ctx.userId,
+          tasks_seen_at: now,
+          updated_at: now,
+        },
+        { onConflict: 'user_id' }
+      );
+    }
 
     return { success: true, tasks };
   } catch (err: unknown) {
@@ -159,7 +162,10 @@ export async function listStaffTasksAction(opts?: {
   }
 }
 
-export async function getStaffTaskAction(taskId: string): Promise<{
+export async function getStaffTaskAction(
+  taskId: string,
+  opts?: { markRead?: boolean }
+): Promise<{
   success: boolean;
   error?: string;
   task: StaffTaskRow | null;
@@ -171,25 +177,28 @@ export async function getStaffTaskAction(taskId: string): Promise<{
     await assertStaffTasks(ctx);
 
     const supabase = await createClient();
-    const { data: task, error } = await supabase
-      .from('staff_tasks')
-      .select(
-        'id, title, body, status, created_by, assignee_id, branch_id, created_at, updated_at'
-      )
-      .eq('id', taskId)
-      .eq('organization_id', ctx.organizationId!)
-      .maybeSingle();
+    const [taskRes, repliesRes] = await Promise.all([
+      supabase
+        .from('staff_tasks')
+        .select(
+          'id, title, body, status, created_by, assignee_id, branch_id, created_at, updated_at'
+        )
+        .eq('id', taskId)
+        .eq('organization_id', ctx.organizationId!)
+        .maybeSingle(),
+      supabase
+        .from('staff_task_replies')
+        .select('id, task_id, author_id, body, created_at')
+        .eq('task_id', taskId)
+        .order('created_at', { ascending: true }),
+    ]);
 
-    if (error) throw new Error(error.message);
-    if (!task) throw new Error('Task not found');
+    if (taskRes.error) throw new Error(taskRes.error.message);
+    if (!taskRes.data) throw new Error('Task not found');
+    if (repliesRes.error) throw new Error(repliesRes.error.message);
 
-    const { data: replies, error: repliesError } = await supabase
-      .from('staff_task_replies')
-      .select('id, task_id, author_id, body, created_at')
-      .eq('task_id', taskId)
-      .order('created_at', { ascending: true });
-
-    if (repliesError) throw new Error(repliesError.message);
+    const task = taskRes.data;
+    const replies = repliesRes.data;
 
     const authorIds = [
       ...new Set([
@@ -215,15 +224,17 @@ export async function getStaffTaskAction(taskId: string): Promise<{
       author_name: nameById.get(r.author_id) ?? 'Staff',
     }));
 
-    const now = new Date().toISOString();
-    await supabase.from('staff_task_reads').upsert(
-      {
-        user_id: ctx.userId,
-        task_id: taskId,
-        last_read_at: now,
-      },
-      { onConflict: 'user_id,task_id' }
-    );
+    if (opts?.markRead) {
+      const now = new Date().toISOString();
+      void supabase.from('staff_task_reads').upsert(
+        {
+          user_id: ctx.userId,
+          task_id: taskId,
+          last_read_at: now,
+        },
+        { onConflict: 'user_id,task_id' }
+      );
+    }
 
     return { success: true, task: taskRow, replies: replyRows };
   } catch (err: unknown) {
@@ -369,7 +380,7 @@ export async function addStaffTaskReplyAction(payload: unknown) {
 
     if (error) throw new Error(error.message);
 
-    await supabase
+    void supabase
       .from('staff_tasks')
       .update({ updated_at: new Date().toISOString() })
       .eq('id', parsed.taskId);

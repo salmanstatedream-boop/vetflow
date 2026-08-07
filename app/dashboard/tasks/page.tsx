@@ -4,6 +4,7 @@ import { resolveServerAuthContext } from '@/lib/auth/context';
 import { guardRoute } from '@/lib/auth/page-guards';
 import { hasCapability } from '@/lib/auth/capabilities';
 import {
+  getStaffTaskAction,
   listOrgStaffForTasksAction,
   listStaffTasksAction,
 } from '@/lib/services/staff-task-actions';
@@ -24,9 +25,30 @@ export default async function TasksPage() {
 
   const canCreate = hasCapability(ctx.role, 'manage_staff');
   const [tasksRes, staffRes] = await Promise.all([
-    listStaffTasksAction(),
-    canCreate ? listOrgStaffForTasksAction() : Promise.resolve({ success: true as const, staff: [] }),
+    listStaffTasksAction({ markSeen: true }),
+    canCreate
+      ? listOrgStaffForTasksAction()
+      : Promise.resolve({ success: true as const, staff: [] }),
   ]);
+
+  const tasks = tasksRes.tasks;
+  const initialSelected =
+    (!canCreate
+      ? tasks.find((t) => t.assignee_id === ctx.userId)
+      : tasks[0]) ??
+    tasks[0] ??
+    null;
+
+  const detailRes = initialSelected
+    ? await getStaffTaskAction(initialSelected.id, { markRead: true })
+    : null;
+
+  const initialTasks =
+    detailRes?.success && detailRes.task
+      ? tasks.map((t) =>
+          t.id === detailRes.task!.id ? { ...t, ...detailRes.task } : t
+        )
+      : tasks;
 
   return (
     <div className="space-y-6">
@@ -36,7 +58,11 @@ export default async function TasksPage() {
         icon={ListTodo}
       />
       <StaffTasksClient
-        initialTasks={tasksRes.tasks}
+        initialTasks={initialTasks}
+        initialReplies={detailRes?.success ? detailRes.replies : []}
+        initialSelectedId={
+          detailRes?.success ? (initialSelected?.id ?? null) : null
+        }
         staff={staffRes.staff}
         currentUserId={ctx.userId}
         canCreate={canCreate}
