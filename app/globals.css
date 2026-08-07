@@ -836,6 +836,42 @@ html.screenshotting .sticky-showcase-container {
   color: var(--phx-text);
 }
 
+/* Homepage stays dark even when the app theme is light */
+html.light .phx-page {
+  --phx-bg: #03040a;
+  --phx-bg-alt: #070a12;
+  --phx-panel: #0b1020;
+  --phx-panel-high: #101a33;
+  --phx-border: rgba(255, 255, 255, 0.1);
+  --phx-text: #f8fafc;
+  --phx-muted: #94a3b8;
+  --phx-label: #64748b;
+  --phx-cyan: #22d3ee;
+  --phx-blue: #3b82f6;
+  --phx-violet: #8b5cf6;
+  --phx-purple: #a855f7;
+  --color-surface: var(--phx-bg);
+  --color-surface-dim: var(--phx-bg);
+  --color-surface-container: var(--phx-panel);
+  --color-surface-container-high: var(--phx-panel-high);
+  --color-on-surface: var(--phx-text);
+  --color-on-surface-variant: var(--phx-muted);
+  --color-outline: var(--phx-label);
+  --color-outline-variant: var(--phx-border);
+  --color-primary: var(--phx-cyan);
+  --color-on-primary: #03040a;
+  --color-primary-container: color-mix(in srgb, var(--phx-cyan) 35%, var(--phx-blue));
+  --color-secondary: var(--phx-blue);
+  --color-border: var(--phx-border);
+  --color-landing-bg: var(--phx-bg-alt);
+  --color-landing-surface: var(--phx-panel);
+  --color-landing-cyan: var(--phx-cyan);
+  --color-landing-pink: var(--phx-violet);
+  background-color: var(--phx-bg);
+  color: var(--phx-text);
+  color-scheme: dark;
+}
+
 /* App-wide utilities (dashboard + auth) */
 .app-focus-ring {
   outline: none;

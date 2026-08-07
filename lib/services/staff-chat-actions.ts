@@ -136,10 +136,21 @@ async function ensureDmMembers(
   participantB: string
 ) {
   const supabase = await createClient();
+  const now = new Date().toISOString();
   await supabase.from('staff_conversation_members').upsert(
     [
-      { conversation_id: conversationId, user_id: participantA, hidden: false },
-      { conversation_id: conversationId, user_id: participantB, hidden: false },
+      {
+        conversation_id: conversationId,
+        user_id: participantA,
+        hidden: false,
+        last_read_at: now,
+      },
+      {
+        conversation_id: conversationId,
+        user_id: participantB,
+        hidden: false,
+        last_read_at: now,
+      },
     ],
     { onConflict: 'conversation_id,user_id', ignoreDuplicates: true }
   );
@@ -399,11 +410,22 @@ export async function getOrCreateConversationAction(otherUserId: string): Promis
 
     if (error) throw new Error(error.message);
 
+    const now = new Date().toISOString();
     const { error: memberInsertError } = await supabase
       .from('staff_conversation_members')
       .insert([
-        { conversation_id: created.id, user_id: participant_a, hidden: false },
-        { conversation_id: created.id, user_id: participant_b, hidden: false },
+        {
+          conversation_id: created.id,
+          user_id: participant_a,
+          hidden: false,
+          last_read_at: now,
+        },
+        {
+          conversation_id: created.id,
+          user_id: participant_b,
+          hidden: false,
+          last_read_at: now,
+        },
       ]);
 
     if (memberInsertError) throw new Error(memberInsertError.message);
@@ -469,10 +491,12 @@ export async function createStaffGroupAction(payload: unknown): Promise<{
 
     if (error) throw new Error(error.message);
 
+    const now = new Date().toISOString();
     const memberRows = [ctx.userId, ...uniqueMemberIds].map((user_id) => ({
       conversation_id: created.id,
       user_id,
       hidden: false,
+      last_read_at: now,
     }));
 
     const { error: memberError } = await supabase
@@ -531,11 +555,13 @@ export async function addStaffGroupMembersAction(payload: unknown): Promise<{
       throw new Error('All members must be active staff in your organization');
     }
 
+    const now = new Date().toISOString();
     const { error } = await supabase.from('staff_conversation_members').upsert(
       uniqueIds.map((user_id) => ({
         conversation_id: parsed.conversationId,
         user_id,
         hidden: false,
+        last_read_at: now,
       })),
       { onConflict: 'conversation_id,user_id', ignoreDuplicates: true }
     );
@@ -564,6 +590,32 @@ export async function hideStaffConversationAction(conversationId: string): Promi
     const { error } = await supabase
       .from('staff_conversation_members')
       .update({ hidden: true })
+      .eq('conversation_id', conversationId)
+      .eq('user_id', ctx.userId);
+
+    if (error) throw new Error(error.message);
+    return { success: true };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Failed',
+    };
+  }
+}
+
+export async function markStaffConversationReadAction(
+  conversationId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const ctx = await resolveServerAuthContext();
+    if (!ctx) throw new Error('Unauthorized');
+    await assertStaffChat(ctx);
+    await assertConversationAccess(conversationId, ctx.organizationId!, ctx.userId);
+
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from('staff_conversation_members')
+      .update({ last_read_at: new Date().toISOString() })
       .eq('conversation_id', conversationId)
       .eq('user_id', ctx.userId);
 

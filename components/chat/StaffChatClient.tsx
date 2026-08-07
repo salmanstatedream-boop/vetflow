@@ -15,6 +15,7 @@ import {
   hideStaffConversationAction,
   listStaffConversationsAction,
   listStaffMessagesAction,
+  markStaffConversationReadAction,
   sendStaffMessageAction,
   sendStaffVoiceMessageAction,
   type StaffChatCoworker,
@@ -233,6 +234,8 @@ export default function StaffChatClient({
         setShowSkeleton(false);
         return;
       }
+
+      void markStaffConversationReadAction(id);
 
       const cached = messagesByConvoRef.current.get(id);
       const row = conversationsRef.current.find((c) => c.id === id);

@@ -199,6 +199,8 @@ export function filterNavGroups(
 const ROLE_NAV_PRIORITIES: Partial<Record<NonNullable<UserSessionDetails['role']>, string[]>> = {
   receptionist: [
     '/dashboard',
+    '/dashboard/tasks',
+    '/dashboard/chat',
     '/dashboard/walk-ins',
     '/dashboard/appointments',
     '/dashboard/schedule',
@@ -213,6 +215,8 @@ const ROLE_NAV_PRIORITIES: Partial<Record<NonNullable<UserSessionDetails['role']
   ],
   doctor: [
     '/dashboard',
+    '/dashboard/tasks',
+    '/dashboard/chat',
     '/dashboard/doctors',
     '/dashboard/schedule',
     '/dashboard/appointments',
