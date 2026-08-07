@@ -46,6 +46,7 @@ export type StaffMessageRow = {
   audio_path: string | null;
   audio_duration_sec: number | null;
   audio_url?: string | null;
+  sender_name?: string;
 };
 
 const MESSAGE_SELECT =
@@ -75,7 +76,8 @@ function previewForMessage(row: {
 
 function mapMessage(
   row: Record<string, unknown>,
-  audioUrl?: string | null
+  audioUrl?: string | null,
+  senderName?: string | null
 ): StaffMessageRow {
   return {
     id: row.id as string,
@@ -90,6 +92,7 @@ function mapMessage(
     audio_duration_sec:
       row.audio_duration_sec == null ? null : Number(row.audio_duration_sec),
     audio_url: audioUrl ?? null,
+    ...(senderName ? { sender_name: senderName } : {}),
   };
 }
 
@@ -659,8 +662,25 @@ export async function listStaffMessagesAction(conversationId: string): Promise<{
 
     if (error) throw new Error(error.message);
 
-    const messages = (data || []).map((row) =>
-      mapMessage(row as Record<string, unknown>, null)
+    const rows = data || [];
+    const senderIds = [...new Set(rows.map((r) => r.sender_id as string))];
+    const nameById = new Map<string, string>();
+    if (senderIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('user_profiles')
+        .select('id, first_name, last_name')
+        .in('id', senderIds);
+      for (const p of profiles || []) {
+        nameById.set(p.id as string, displayName(p));
+      }
+    }
+
+    const messages = rows.map((row) =>
+      mapMessage(
+        row as Record<string, unknown>,
+        null,
+        nameById.get(row.sender_id as string) ?? 'Staff'
+      )
     );
 
     return { success: true, messages };

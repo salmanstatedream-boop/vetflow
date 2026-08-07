@@ -36,6 +36,7 @@ type Props = {
   onEdit: (messageId: string, body: string) => void;
   onDelete: (messageId: string) => void;
   pending?: boolean;
+  showSenderName?: boolean;
 };
 
 export default function MessageBubble({
@@ -45,6 +46,7 @@ export default function MessageBubble({
   onEdit,
   onDelete,
   pending,
+  showSenderName = false,
 }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -114,18 +116,25 @@ export default function MessageBubble({
   if (message.deleted_at) {
     return (
       <div className={cn('flex', mine ? 'justify-end' : 'justify-start', stacked ? 'mt-0.5' : 'mt-2.5')}>
-        <div
-          className={cn(
-            'max-w-[78%] sm:max-w-[70%] px-3.5 py-2 text-sm italic rounded-2xl border border-dashed',
-            mine
-              ? 'border-primary/25 text-on-primary/70 bg-primary/40 rounded-br-md'
-              : 'border-outline-variant/40 text-on-surface-variant bg-surface-container/40 rounded-bl-md'
-          )}
-        >
-          This message was deleted
-          <p className={cn('text-[9px] mt-1 tabular-nums not-italic text-right', mine ? 'text-on-primary/55' : 'text-on-surface-variant/70')}>
-            {messageTime(message.created_at)}
-          </p>
+        <div className="max-w-[78%] sm:max-w-[70%]">
+          {showSenderName && message.sender_name ? (
+            <p className="text-[11px] font-semibold text-primary mb-1 px-1">
+              {message.sender_name}
+            </p>
+          ) : null}
+          <div
+            className={cn(
+              'px-3.5 py-2 text-sm italic rounded-2xl border border-dashed',
+              mine
+                ? 'border-primary/25 text-on-primary/70 bg-primary/40 rounded-br-md'
+                : 'border-outline-variant/40 text-on-surface-variant bg-surface-container/40 rounded-bl-md'
+            )}
+          >
+            This message was deleted
+            <p className={cn('text-[9px] mt-1 tabular-nums not-italic text-right', mine ? 'text-on-primary/55' : 'text-on-surface-variant/70')}>
+              {messageTime(message.created_at)}
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -140,6 +149,11 @@ export default function MessageBubble({
       )}
     >
       <div className={cn('relative max-w-[78%] sm:max-w-[70%]', mine && 'flex flex-col items-end')}>
+        {showSenderName && message.sender_name ? (
+          <p className="text-[11px] font-semibold text-primary mb-1 px-1 self-start">
+            {message.sender_name}
+          </p>
+        ) : null}
         {mine && !editing && (
           <div ref={menuRef} className="absolute -top-2 right-0 z-10">
             <button

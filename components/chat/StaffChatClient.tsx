@@ -173,6 +173,25 @@ export default function StaffChatClient({
 
   const active = conversations.find((c) => c.id === activeId) ?? null;
 
+  const nameByUserId = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const c of coworkers) map.set(c.id, c.name);
+    for (const m of messages) {
+      if (m.sender_name) map.set(m.sender_id, m.sender_name);
+    }
+    return map;
+  }, [coworkers, messages]);
+
+  const nameByUserIdRef = useRef(nameByUserId);
+  useEffect(() => {
+    nameByUserIdRef.current = nameByUserId;
+  }, [nameByUserId]);
+
+  const resolveSenderName = useCallback((senderId: string, existing?: string | null) => {
+    if (existing) return existing;
+    return nameByUserIdRef.current.get(senderId) || 'Staff';
+  }, []);
+
   const writeCache = useCallback((conversationId: string, next: StaffMessageRow[]) => {
     messagesByConvoRef.current.set(conversationId, next);
   }, []);
@@ -359,6 +378,7 @@ export default function StaffChatClient({
                   audio_path: row.audio_path ?? null,
                   audio_duration_sec: row.audio_duration_sec ?? null,
                   audio_url: null,
+                  sender_name: resolveSenderName(row.sender_id, row.sender_name),
                 },
               ]);
             });
@@ -375,6 +395,10 @@ export default function StaffChatClient({
                       deleted_at: row.deleted_at ?? null,
                       audio_path: row.audio_path ?? null,
                       audio_duration_sec: row.audio_duration_sec ?? null,
+                      sender_name: resolveSenderName(
+                        row.sender_id,
+                        m.sender_name || row.sender_name
+                      ),
                     }
                   : m
               )
@@ -389,7 +413,7 @@ export default function StaffChatClient({
       clearInterval(inboxPoll);
       void supabase.removeChannel(channel);
     };
-  }, [activeId, loadMessages, patchActiveMessages, refreshConversations]);
+  }, [activeId, loadMessages, patchActiveMessages, refreshConversations, resolveSenderName]);
 
   useEffect(() => {
     if (!headerMenuOpen) return;
@@ -1065,6 +1089,9 @@ export default function StaffChatClient({
                         onEdit={(id, body) => void handleEdit(id, body)}
                         onDelete={(id) => void handleDeleteMessage(id)}
                         pending={mutating}
+                        showSenderName={
+                          active?.type === 'group' && !mine && !stacked
+                        }
                       />
                     </div>
                   </div>
