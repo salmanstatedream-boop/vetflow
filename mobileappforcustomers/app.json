@@ -1,0 +1,88 @@
+{
+  "expo": {
+    "name": "Phoenix Care",
+    "slug": "phoenix-care",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/phoenix-logo-mark.png",
+    "scheme": "phoenixcare",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/phoenix-logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F9FAFB"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.phoenixos.care",
+      "infoPlist": {
+        "CFBundleDisplayName": "Phoenix Care",
+        "NSCameraUsageDescription": "Phoenix Care uses the camera to scan clinic invitation and login QR codes.",
+        "NSPhotoLibraryUsageDescription": "Phoenix Care uses your photo library to scan clinic login QR codes you downloaded or were emailed.",
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "phoenixcare"
+            ]
+          }
+        ]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/phoenix-logo-mark.png",
+        "backgroundColor": "#F9FAFB"
+      },
+      "package": "com.phoenixos.care",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "phoenixcare"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/phoenix-logo-mark.png",
+      "name": "Phoenix Care",
+      "shortName": "Phoenix Care",
+      "description": "Book appointments and view pet medical history across Phoenix OS clinics.",
+      "themeColor": "#2563EB",
+      "backgroundColor": "#F9FAFB"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Phoenix Care uses your photo library to scan clinic login QR codes you downloaded or were emailed."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "61a8da34-2c6d-47ae-bea5-8af632f80ce6"
+      },
+      "router": {}
+    },
+    "owner": "salmaniqbaljoyia",
+    "description": "Phoenix Care is the companion app for clinics running Phoenix OS. Sign in with email OTP, link your clinic invite, book appointments, message your clinic, and view medical history across every linked location.",
+    "primaryColor": "#2563EB",
+    "privacy": "public"
+  }
+}
