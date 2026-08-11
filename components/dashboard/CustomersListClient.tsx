@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Phone, ChevronRight, Heart, Calendar, Search } from 'lucide-react';
 import { normalizePhoneInput, looksLikePhone } from '@/lib/reception/phone';
 import CustomerForm, { CustomerDeleteButton } from '@/components/forms/CustomerForm';
+import OwnerLoginQrButton from '@/components/dashboard/OwnerLoginQrButton';
 import type { CustomerInput } from '@/lib/validations/schemas';
 
 export type CustomerRow = {
@@ -23,6 +24,7 @@ interface CustomersListClientProps {
   initialPhone?: string;
   focusPhone?: boolean;
   isAdmin?: boolean;
+  canManageCredentials?: boolean;
   branches?: { id: string; name: string }[];
   activeBranchId?: string;
 }
@@ -32,6 +34,7 @@ export default function CustomersListClient({
   initialPhone = '',
   focusPhone = false,
   isAdmin = false,
+  canManageCredentials = false,
   branches = [],
   activeBranchId,
 }: CustomersListClientProps) {
@@ -127,6 +130,13 @@ export default function CustomersListClient({
                       Profile
                       <ChevronRight className="w-3 h-3" />
                     </Link>
+                    {canManageCredentials && (
+                      <OwnerLoginQrButton
+                        customerId={cust.id}
+                        customerName={`${cust.first_name} ${cust.last_name}`}
+                        email={cust.email}
+                      />
+                    )}
                     {isAdmin && (
                       <>
                         <CustomerForm

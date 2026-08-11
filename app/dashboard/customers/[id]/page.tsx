@@ -6,6 +6,7 @@ import { guardRoute } from '@/lib/auth/page-guards';
 import { createClient } from '@/lib/supabase/server';
 import PetForm from '@/components/forms/PetForm';
 import CustomerDetailAdminBar, { PetRowAdminActions } from '@/components/dashboard/CustomerDetailAdminBar';
+import InviteOwnerButton from '@/components/dashboard/InviteOwnerButton';
 import PageHeader from '@/components/ui/premium/PageHeader';
 import { formatMoney } from '@/lib/utils/currency';
 import { computePetAgeLabel } from '@/lib/utils/pet-species-avatar';
@@ -147,7 +148,7 @@ export default async function CustomerDetailPage({
         title="Customer Profile"
         icon={User}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {isAdmin && (
               <CustomerDetailAdminBar
                 isAdmin={isAdmin}
@@ -155,6 +156,10 @@ export default async function CustomerDetailPage({
                 customer={customer}
               />
             )}
+            <InviteOwnerButton
+              customerId={customer.id}
+              disabled={!customer.email}
+            />
             <PetForm customerId={customer.id} />
           </div>
         }

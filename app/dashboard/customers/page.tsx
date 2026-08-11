@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { resolveServerAuthContext } from '@/lib/auth/context';
+import { hasCapability } from '@/lib/auth/capabilities';
 import { guardRoute } from '@/lib/auth/page-guards';
 import { getActiveBranchId } from '@/lib/dashboard/resolve-active-branch';
 import { createClient } from '@/lib/supabase/server';
@@ -92,6 +93,7 @@ export default async function CustomersPage({
         initialPhone={phone || ''}
         focusPhone={focus === 'phone'}
         isAdmin={session.role === 'clinic_admin'}
+        canManageCredentials={hasCapability(session.role, 'manage_customers')}
         branches={session.branches}
         activeBranchId={activeBranchId}
       />
