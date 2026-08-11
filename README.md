@@ -1,7 +1,7 @@
 # 🏥 Phoenix OS
 
 Phoenix OS is a high-performance, multi-tenant clinic software-as-a-service (SaaS) platform. The MVP is purpose-built for **veterinary clinics** — owners/patients, appointments, doctor consultations, prescriptions, lab tests, medical documents, inventory, and tax-aware branded invoicing — while the underlying model is **generic (patients + clinic types)** so it scales to dental, general, and specialty clinics over time.
-
+lkjjhgffdss
 Designed with robust architectural patterns, Phoenix OS enforces strict tenant isolation using **PostgreSQL Row-Level Security (RLS)** and **Storage object policies**, writes **compliance-grade audit logs** for sensitive actions, and is engineered as a **HIPAA-ready** architecture for future human clinics.
 
 ### Architecture highlights
