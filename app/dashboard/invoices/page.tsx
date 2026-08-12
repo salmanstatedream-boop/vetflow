@@ -63,7 +63,7 @@ export default async function InvoicesPage({
       customers ( first_name, last_name, email ),
       pets:patients ( name ),
       invoice_items ( id ),
-      payments ( payment_method, amount, created_at )
+      payments ( payment_method, amount, created_at, proof_storage_path )
     `)
     .eq('branch_id', activeBranchId)
     .order('created_at', { ascending: false });
@@ -80,7 +80,10 @@ export default async function InvoicesPage({
     const cust = inv.customers as { first_name?: string; last_name?: string; email?: string | null } | null;
     const pet = inv.pets as { name?: string } | null;
     const items = inv.invoice_items as { id: string }[] | null;
-    const payments = inv.payments as { payment_method: string }[] | null;
+    const payments = inv.payments as {
+      payment_method: string;
+      proof_storage_path?: string | null;
+    }[] | null;
     return {
       id: inv.id,
       invoice_number: inv.invoice_number,
@@ -97,6 +100,7 @@ export default async function InvoicesPage({
       customerEmail: cust?.email || null,
       itemCount: items?.length || 0,
       paymentMethods: getInvoicePaymentMethods(payments),
+      hasUploadedProof: (payments || []).some((p) => !!p.proof_storage_path),
     };
   });
 

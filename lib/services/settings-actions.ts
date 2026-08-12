@@ -36,6 +36,8 @@ export async function updateSettingsAction(payload: unknown) {
           clinic_address: parsed.clinicAddress || null,
           clinic_phone: parsed.clinicPhone || null,
           clinic_email: parsed.clinicEmail || null,
+          emergency_call_prompt: parsed.emergencyCallPrompt || null,
+          after_hours_note: parsed.afterHoursNote || null,
           pdf_branding_enabled: parsed.pdfBrandingEnabled ?? false,
           pdf_accent_color: parsed.pdfAccentColor || null,
           pdf_footer_text: parsed.pdfFooterText || null,

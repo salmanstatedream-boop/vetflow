@@ -14,6 +14,7 @@ import {
   Loader2,
   DollarSign,
   FileText,
+  Paperclip,
   Search,
 } from 'lucide-react';
 import {
@@ -46,6 +47,7 @@ export type InvoiceRow = {
   customerEmail: string | null;
   itemCount: number;
   paymentMethods: PaymentMethod[];
+  hasUploadedProof: boolean;
 };
 
 type StatusFilter = 'all' | 'paid' | 'unpaid' | 'partially_paid';
@@ -374,6 +376,17 @@ export default function InvoicesListClient({
                       <Printer className="w-3 h-3" />
                       Invoice
                     </a>
+                    {inv.hasUploadedProof && (
+                      <a
+                        href={`/api/payments/proof?invoiceId=${inv.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[10px] font-bold text-primary border border-primary/10 px-2 py-1 rounded-lg"
+                      >
+                        <Paperclip className="w-3 h-3" />
+                        Uploaded
+                      </a>
+                    )}
                     {inv.visit_id && (
                       <a
                         href={`/api/visits/${inv.visit_id}/treatment-pdf`}

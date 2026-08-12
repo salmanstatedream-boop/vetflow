@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Badge, Card, Muted, SecondaryButton, Title } from '@/components/ui';
-import { Brand, Colors, Fonts, Radii, Spacing } from '@/constants/theme';
+import { Brand, Colors, Fonts, Layout, Radii, Spacing } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { go } from '@/lib/nav';
 
@@ -129,7 +129,10 @@ export default function MoreScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
-  content: { padding: Spacing.xl, paddingBottom: 48 },
+  content: {
+    padding: Spacing.xl,
+    paddingBottom: Layout.tabBarHeight + Layout.floatingTabBottom + 24,
+  },
   profileRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
   avatar: {
     width: 52,

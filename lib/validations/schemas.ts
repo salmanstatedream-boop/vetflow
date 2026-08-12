@@ -171,6 +171,8 @@ export const SettingsSchema = z.object({
   clinicAddress: z.string().optional().or(z.literal('')),
   clinicPhone: z.string().optional().or(z.literal('')),
   clinicEmail: z.string().email({ message: 'Invalid email address' }).optional().or(z.literal('')),
+  emergencyCallPrompt: z.string().max(240).optional().or(z.literal('')),
+  afterHoursNote: z.string().max(800).optional().or(z.literal('')),
   pdfBrandingEnabled: z.boolean(),
   pdfAccentColor: z
     .string()

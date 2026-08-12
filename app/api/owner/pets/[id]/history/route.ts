@@ -3,6 +3,45 @@ import { jsonError, resolveBearerUser } from '@/lib/auth/owner-api';
 
 type Params = { params: Promise<{ id: string }> };
 
+function extractDeworming(payload: Record<string, unknown>, visitPurpose: string | null) {
+  const rows: { name: string; detail: string | null; administeredAt: string | null }[] = [];
+  const sections = (payload.sections || {}) as Record<string, unknown>;
+  const process = (sections.process || {}) as Record<string, unknown>;
+  const candidates = [
+    process.deworming,
+    process.dewormings,
+    process.parasite_control,
+    payload.deworming,
+  ];
+  for (const raw of candidates) {
+    if (Array.isArray(raw)) {
+      for (const item of raw) {
+        const d = item as Record<string, unknown>;
+        rows.push({
+          name: String(d.name || d.product || d.medicine || 'Deworming'),
+          detail: [d.dose, d.dosage, d.notes].filter(Boolean).map(String).join(' · ') || null,
+          administeredAt: d.administeredAt
+            ? String(d.administeredAt)
+            : d.date
+              ? String(d.date)
+              : null,
+        });
+      }
+    } else if (raw && typeof raw === 'object') {
+      const d = raw as Record<string, unknown>;
+      rows.push({
+        name: String(d.name || d.product || 'Deworming'),
+        detail: [d.dose, d.notes].filter(Boolean).map(String).join(' · ') || null,
+        administeredAt: d.administeredAt ? String(d.administeredAt) : null,
+      });
+    }
+  }
+  if (!rows.length && (visitPurpose || '').toLowerCase() === 'deworming') {
+    rows.push({ name: 'Deworming visit', detail: null, administeredAt: null });
+  }
+  return rows;
+}
+
 export async function GET(req: Request, { params }: Params) {
   const user = await resolveBearerUser(req);
   if (!user) return jsonError('Unauthorized', 401);
@@ -41,7 +80,8 @@ export async function GET(req: Request, { params }: Params) {
       visit_purpose, consult_paused_at, workflow_payload,
       clinical_notes (
         chief_complaint, diagnosis, treatment_plan, follow_up_recommendation,
-        temperature_c, heart_rate, respiratory_rate, weight_kg
+        temperature_c, heart_rate_bpm, respiratory_rate, weight_kg,
+        visit_type, procedure_notes, post_op_medication
       ),
       prescriptions (
         id, created_at,
@@ -68,6 +108,11 @@ export async function GET(req: Request, { params }: Params) {
     const sections = (payload.sections || {}) as Record<string, unknown>;
     const process = (sections.process || {}) as Record<string, unknown>;
     const vaccines = Array.isArray(process.vaccines) ? process.vaccines : [];
+    const visitType = notes?.visit_type ? String(notes.visit_type) : null;
+    const isSurgery =
+      visitType === 'surgery' ||
+      (v.visit_purpose || '').toLowerCase() === 'surgery' ||
+      /surg|spay|neuter|castrat/i.test(String(v.reason || ''));
 
     return {
       id: v.id,
@@ -78,6 +123,7 @@ export async function GET(req: Request, { params }: Params) {
       completedAt: v.completed_at,
       isEmergency: v.is_emergency,
       consultPausedAt: v.consult_paused_at,
+      isSurgery,
       notes: notes
         ? {
             chiefComplaint: notes.chief_complaint,
@@ -85,9 +131,12 @@ export async function GET(req: Request, { params }: Params) {
             treatmentPlan: notes.treatment_plan,
             followUp: notes.follow_up_recommendation,
             temperatureC: notes.temperature_c,
-            heartRate: notes.heart_rate,
+            heartRate: notes.heart_rate_bpm,
             respiratoryRate: notes.respiratory_rate,
             weightKg: notes.weight_kg,
+            visitType,
+            procedureNotes: notes.procedure_notes,
+            postOpMedication: notes.post_op_medication,
           }
         : null,
       prescriptions: rxList.map((rx) => {
@@ -113,6 +162,7 @@ export async function GET(req: Request, { params }: Params) {
           nextDueDate: vac.nextDueDate ? String(vac.nextDueDate) : null,
         };
       }),
+      deworming: extractDeworming(payload, v.visit_purpose as string | null),
     };
   });
 

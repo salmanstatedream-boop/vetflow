@@ -98,6 +98,8 @@ export default async function SettingsPage() {
     clinicAddress: appSettings?.clinic_address || '',
     clinicPhone: appSettings?.clinic_phone || '',
     clinicEmail: appSettings?.clinic_email || '',
+    emergencyCallPrompt: appSettings?.emergency_call_prompt || '',
+    afterHoursNote: appSettings?.after_hours_note || '',
     pdfBrandingEnabled: appSettings?.pdf_branding_enabled ?? false,
     pdfAccentColor: appSettings?.pdf_accent_color || '#0b132b',
     pdfFooterText: appSettings?.pdf_footer_text || '',

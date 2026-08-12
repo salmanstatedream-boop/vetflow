@@ -32,6 +32,7 @@ export type OwnerClinic = {
   clinicSlug: string | null;
   clinicPhone: string | null;
   clinicAddress: string | null;
+  emergencyCallPrompt: string | null;
   afterHoursNote: string | null;
   firstName: string;
   lastName: string;
@@ -90,17 +91,25 @@ export type OwnerAppointment = {
 
 export type HistoryVisit = {
   id: string;
-  reason: string;
+  reason: string | null;
   status: string;
   visitPurpose?: string | null;
   checkedInAt: string;
   completedAt: string | null;
   isEmergency: boolean;
+  isSurgery?: boolean;
   notes: {
     chiefComplaint?: string;
     diagnosis?: string;
     treatmentPlan?: string;
     followUp?: string;
+    temperatureC?: number | null;
+    heartRate?: number | null;
+    respiratoryRate?: number | null;
+    weightKg?: number | null;
+    visitType?: string | null;
+    procedureNotes?: string | null;
+    postOpMedication?: string | null;
   } | null;
   prescriptions: {
     id: string;
@@ -119,6 +128,21 @@ export type HistoryVisit = {
     administeredAt: string | null;
     nextDueDate: string | null;
   }[];
+  deworming?: {
+    name: string;
+    detail: string | null;
+    administeredAt: string | null;
+  }[];
+};
+
+export type ExternalPrescription = {
+  id: string;
+  clinicName: string;
+  notes: string | null;
+  takenAt: string | null;
+  storagePath: string | null;
+  fileName: string | null;
+  createdAt: string;
 };
 
 export type MessageThread = {
@@ -163,9 +187,46 @@ export const ownerApi = {
   history: (id: string) =>
     request<{
       success: true;
-      pet: OwnerPet;
+      pet: OwnerPet & {
+        color?: string | null;
+        microchipNumber?: string | null;
+        allergies?: string | null;
+        medicalNotes?: string | null;
+        customerId?: string;
+      };
       history: HistoryVisit[];
     }>(`/api/owner/pets/${id}/history`),
+  metrics: (id: string) =>
+    request<{
+      success: true;
+      pet: { id: string; name: string };
+      series: {
+        date: string;
+        weightKg: number | null;
+        temperatureC: number | null;
+        heartRateBpm: number | null;
+        respiratoryRate: number | null;
+      }[];
+    }>(`/api/owner/pets/${id}/metrics`),
+  externalPrescriptions: (id: string) =>
+    request<{ success: true; prescriptions: ExternalPrescription[] }>(
+      `/api/owner/pets/${id}/external-prescriptions`
+    ),
+  addExternalPrescription: (
+    id: string,
+    payload: {
+      clinicName: string;
+      notes?: string;
+      takenAt?: string;
+      fileBase64?: string;
+      fileName?: string;
+      contentType?: string;
+    }
+  ) =>
+    request<{ success: true; prescription: ExternalPrescription }>(
+      `/api/owner/pets/${id}/external-prescriptions`,
+      { method: 'POST', body: JSON.stringify(payload) }
+    ),
   careJourney: (id: string) =>
     request<{ success: true; active: CareJourney | null }>(
       `/api/owner/pets/${id}/care-journey`

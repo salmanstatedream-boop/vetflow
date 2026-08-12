@@ -7,21 +7,23 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import {
   Card,
+  CollapsibleRecord,
   EmptyState,
   GradientPetHero,
   Muted,
-  PrimaryButton,
   Stepper,
   Subtitle,
-  TimelineCard,
 } from '@/components/ui';
 import { Colors, Fonts, Spacing } from '@/constants/theme';
-import { ownerApi, type CareJourney } from '@/lib/api';
+import { ownerApi, type CareJourney, type HistoryVisit } from '@/lib/api';
 import { go } from '@/lib/nav';
+
+const TABS = ['Overview', 'Records', 'Meds', 'Vaccines', 'Surgery', 'Deworming'] as const;
 
 function petAge(dob?: string | null) {
   if (!dob) return null;
@@ -36,14 +38,77 @@ function petAge(dob?: string | null) {
   return `${y} yrs ${m}mo`;
 }
 
+function DetailTile({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ComponentProps<typeof FontAwesome>['name'];
+  label: string;
+  value: string;
+}) {
+  return (
+    <View style={styles.detailTile}>
+      <FontAwesome name={icon} size={14} color={Colors.primary} />
+      <Text style={styles.detailLabel}>{label}</Text>
+      <Text style={styles.detailValue}>{value}</Text>
+    </View>
+  );
+}
+
+function VisitBody({ visit }: { visit: HistoryVisit }) {
+  return (
+    <View style={{ gap: 8 }}>
+      {visit.notes?.diagnosis ? (
+        <Muted>Diagnosis: {String(visit.notes.diagnosis)}</Muted>
+      ) : null}
+      {visit.notes?.treatmentPlan ? (
+        <Muted>Plan: {String(visit.notes.treatmentPlan)}</Muted>
+      ) : null}
+      {visit.notes?.procedureNotes ? (
+        <Muted>Procedure: {String(visit.notes.procedureNotes)}</Muted>
+      ) : null}
+      {visit.notes?.postOpMedication ? (
+        <Muted>Post-op: {String(visit.notes.postOpMedication)}</Muted>
+      ) : null}
+      {visit.prescriptions.flatMap((rx) =>
+        (rx.items || []).map((item, i) => (
+          <Muted key={`${rx.id}-${i}`}>
+            Rx: {[item.medicineName, item.dosage, item.frequency].filter(Boolean).join(' · ')}
+          </Muted>
+        ))
+      )}
+      {(visit.vaccines || []).map((v, i) => (
+        <Muted key={`v-${i}`}>Vaccine: {v.name}</Muted>
+      ))}
+      {(visit.deworming || []).map((d, i) => (
+        <Muted key={`d-${i}`}>
+          Deworming: {[d.name, d.detail].filter(Boolean).join(' · ')}
+        </Muted>
+      ))}
+    </View>
+  );
+}
+
 export default function PetDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, tab: tabParam } = useLocalSearchParams<{ id: string; tab?: string }>();
+  const router = useRouter();
+  const initialTab = TABS.includes(tabParam as (typeof TABS)[number])
+    ? (tabParam as (typeof TABS)[number])
+    : 'Overview';
+  const [tab, setTab] = useState<(typeof TABS)[number]>(initialTab);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<Awaited<ReturnType<typeof ownerApi.history>> | null>(
     null
   );
   const [journey, setJourney] = useState<CareJourney | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (tabParam && TABS.includes(tabParam as (typeof TABS)[number])) {
+      setTab(tabParam as (typeof TABS)[number]);
+    }
+  }, [tabParam]);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -109,95 +174,227 @@ export default function PetDetailScreen() {
   }
 
   const { pet, history } = data;
+  const age = petAge(pet.dateOfBirth);
   const meta = [
-    petAge(pet.dateOfBirth),
+    age,
     pet.weightKg != null ? `${pet.weightKg} kg` : null,
     pet.gender,
   ]
     .filter(Boolean)
     .join(' · ');
 
+  const surgeries = history.filter((v) => v.isSurgery);
+  const medVisits = history.filter((v) => v.prescriptions.some((rx) => rx.items?.length));
+  const vaxVisits = history.filter(
+    (v) =>
+      (v.vaccines || []).length > 0 ||
+      (v.visitPurpose || '').toLowerCase() === 'vaccination'
+  );
+  const dewormVisits = history.filter(
+    (v) =>
+      (v.deworming || []).length > 0 ||
+      (v.visitPurpose || '').toLowerCase() === 'deworming'
+  );
+
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
-      <ScrollView contentContainerStyle={styles.pad}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.topRow}>
+          <Text style={styles.pageTitle}>Your Pets</Text>
+          <Pressable onPress={() => go(`/(owner)/care/${pet.id}`)} hitSlop={8}>
+            <FontAwesome name="plus-circle" size={22} color={Colors.primary} />
+          </Pressable>
+        </View>
+
         <GradientPetHero
           name={pet.name}
           breed={pet.breed}
           meta={meta || pet.species || 'Pet'}
           clinic={pet.clinicName}
-          nextCare={journey ? `${journey.stageLabel} · ${journey.reason}` : null}
         />
 
-        <View style={{ height: 14 }} />
-        <View style={styles.rowBtns}>
-          <Pressable
-            style={styles.linkBtn}
-            onPress={() => go(`/(owner)/care/${pet.id}?tab=medications`)}
-          >
-            <Text style={styles.linkText}>Medications</Text>
-          </Pressable>
-          <Pressable
-            style={styles.linkBtn}
-            onPress={() => go(`/(owner)/care/${pet.id}?tab=vaccinations`)}
-          >
-            <Text style={styles.linkText}>Vaccinations</Text>
-          </Pressable>
-        </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={{ marginTop: 16 }}
+          contentContainerStyle={{ gap: 8 }}
+        >
+          {TABS.map((t) => {
+            const active = t === tab;
+            return (
+              <Pressable
+                key={t}
+                onPress={() => setTab(t)}
+                style={[styles.tabPill, active && styles.tabPillOn]}
+              >
+                <Text style={[styles.tabPillText, active && { color: '#fff' }]}>{t}</Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
 
-        {pet.allergies ? (
-          <Card style={{ marginTop: 12 }}>
-            <Subtitle>Allergies</Subtitle>
-            <Muted>{pet.allergies}</Muted>
-          </Card>
+        {tab === 'Overview' ? (
+          <View style={{ marginTop: 18, gap: 16 }}>
+            <Subtitle>Pet details</Subtitle>
+            <View style={styles.detailGrid}>
+              <DetailTile icon="paw" label="Species" value={pet.species || '—'} />
+              <DetailTile icon="venus-mars" label="Sex" value={pet.gender || '—'} />
+              <DetailTile
+                icon="balance-scale"
+                label="Weight"
+                value={pet.weightKg != null ? `${pet.weightKg} kg` : '—'}
+              />
+              <DetailTile icon="birthday-cake" label="Age" value={age || '—'} />
+            </View>
+
+            {journey ? (
+              <Card>
+                <Subtitle>Live care journey</Subtitle>
+                <View style={{ height: 10 }} />
+                <Stepper steps={journey.steps} activeIndex={journey.activeIndex} />
+              </Card>
+            ) : (
+              <Card>
+                <Subtitle>Care journey</Subtitle>
+                <View style={{ height: 10 }} />
+                <Stepper steps={fallbackSteps} activeIndex={0} />
+              </Card>
+            )}
+
+            <View style={styles.sectionHead}>
+              <Subtitle>Care timeline</Subtitle>
+              <Pressable onPress={() => setTab('Records')}>
+                <Text style={styles.link}>View all</Text>
+              </Pressable>
+            </View>
+            {history.slice(0, 4).map((visit) => (
+              <CollapsibleRecord
+                key={visit.id}
+                meta={new Date(visit.checkedInAt).toLocaleDateString(undefined, {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}
+                title={visit.reason || visit.visitPurpose || 'Visit'}
+                badge={visit.status}
+              >
+                <VisitBody visit={visit} />
+              </CollapsibleRecord>
+            ))}
+            {!history.length ? (
+              <Card>
+                <EmptyState title="No visits yet" body="Clinic visits will appear here." />
+              </Card>
+            ) : null}
+          </View>
         ) : null}
 
-        <View style={{ height: 20 }} />
-        <Subtitle>Care journey</Subtitle>
-        <Muted>
-          {journey
-            ? `Live · ${journey.clinicName} · ${journey.stageLabel}`
-            : 'Live stages appear when your pet is checked in.'}
-        </Muted>
-        <View style={{ height: 10 }} />
-        <Card>
-          <Stepper
-            steps={journey?.steps || fallbackSteps}
-            activeIndex={journey?.activeIndex ?? 0}
-          />
-        </Card>
+        {tab === 'Records' ? (
+          <View style={{ marginTop: 18 }}>
+            {history.map((visit) => (
+              <CollapsibleRecord
+                key={visit.id}
+                meta={new Date(visit.checkedInAt).toLocaleDateString()}
+                title={visit.reason || 'Clinical visit'}
+                badge={visit.status}
+              >
+                <VisitBody visit={visit} />
+              </CollapsibleRecord>
+            ))}
+            {!history.length ? (
+              <Card>
+                <EmptyState title="No records" body="Records appear after clinic visits." />
+              </Card>
+            ) : null}
+          </View>
+        ) : null}
 
-        <View style={{ height: 20 }} />
-        <Subtitle>Medical history</Subtitle>
-        <Muted>Visit timeline from your Phoenix clinics.</Muted>
-        <View style={{ height: 10 }} />
-        {history.length === 0 ? (
-          <Card>
-            <EmptyState title="No visits yet" body="History appears after clinic visits." />
-          </Card>
-        ) : (
-          history.map((v) => {
-            const noteParts = [
-              v.notes?.diagnosis ? `Diagnosis: ${v.notes.diagnosis}` : null,
-              v.notes?.treatmentPlan ? `Plan: ${v.notes.treatmentPlan}` : null,
-              v.prescriptions?.length
-                ? `${v.prescriptions.length} prescription(s)`
-                : null,
-              v.vaccines?.length ? `${v.vaccines.length} vaccine(s)` : null,
-            ].filter(Boolean);
-            return (
-              <TimelineCard
-                key={v.id}
-                date={new Date(v.checkedInAt).toLocaleDateString()}
-                status={v.status}
-                title={v.reason}
-                subtitle={v.isEmergency ? 'Emergency visit' : v.visitPurpose || undefined}
-                note={noteParts.join(' · ') || undefined}
-              />
-            );
-          })
-        )}
-        <View style={{ height: 12 }} />
-        <PrimaryButton label="Refresh" onPress={() => void load()} />
+        {tab === 'Meds' ? (
+          <View style={{ marginTop: 18 }}>
+            {medVisits.map((visit) => (
+              <CollapsibleRecord
+                key={visit.id}
+                meta={new Date(visit.checkedInAt).toLocaleDateString()}
+                title={visit.reason || 'Prescriptions'}
+                badge="Meds"
+              >
+                <VisitBody visit={visit} />
+              </CollapsibleRecord>
+            ))}
+            <Pressable
+              style={styles.linkRow}
+              onPress={() => router.push(`/(owner)/care/${pet.id}?tab=medications`)}
+            >
+              <Text style={styles.link}>Open medical record</Text>
+            </Pressable>
+            {!medVisits.length ? (
+              <Card>
+                <EmptyState title="No medications" body="Clinic prescriptions will show here." />
+              </Card>
+            ) : null}
+          </View>
+        ) : null}
+
+        {tab === 'Vaccines' ? (
+          <View style={{ marginTop: 18 }}>
+            {vaxVisits.map((visit) => (
+              <CollapsibleRecord
+                key={visit.id}
+                meta={new Date(visit.checkedInAt).toLocaleDateString()}
+                title={visit.reason || 'Vaccination'}
+                badge="Vaccine"
+              >
+                <VisitBody visit={visit} />
+              </CollapsibleRecord>
+            ))}
+            {!vaxVisits.length ? (
+              <Card>
+                <EmptyState title="No vaccines" body="Vaccination records will show here." />
+              </Card>
+            ) : null}
+          </View>
+        ) : null}
+
+        {tab === 'Surgery' ? (
+          <View style={{ marginTop: 18 }}>
+            {surgeries.map((visit) => (
+              <CollapsibleRecord
+                key={visit.id}
+                meta={new Date(visit.checkedInAt).toLocaleDateString()}
+                title={visit.reason || 'Surgery'}
+                badge="Surgery"
+                defaultOpen
+              >
+                <VisitBody visit={visit} />
+              </CollapsibleRecord>
+            ))}
+            {!surgeries.length ? (
+              <Card>
+                <EmptyState title="No surgeries" body="Surgical visits will appear here." />
+              </Card>
+            ) : null}
+          </View>
+        ) : null}
+
+        {tab === 'Deworming' ? (
+          <View style={{ marginTop: 18 }}>
+            {dewormVisits.map((visit) => (
+              <CollapsibleRecord
+                key={visit.id}
+                meta={new Date(visit.checkedInAt).toLocaleDateString()}
+                title={visit.reason || 'Deworming'}
+                badge="Deworming"
+              >
+                <VisitBody visit={visit} />
+              </CollapsibleRecord>
+            ))}
+            {!dewormVisits.length ? (
+              <Card>
+                <EmptyState title="No deworming" body="Deworming records will show here." />
+              </Card>
+            ) : null}
+          </View>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
@@ -205,15 +402,53 @@ export default function PetDetailScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  pad: { padding: Spacing.xl, paddingBottom: 48 },
-  rowBtns: { flexDirection: 'row', gap: 10 },
-  linkBtn: {
+  pad: { flex: 1, padding: Spacing.xl, backgroundColor: Colors.background },
+  center: {
     flex: 1,
-    backgroundColor: Colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.background,
+  },
+  content: { padding: Spacing.xl, paddingBottom: 48 },
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  pageTitle: { fontSize: 22, fontFamily: Fonts.bold, color: Colors.text },
+  tabPill: {
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 999,
+    backgroundColor: Colors.surfaceMuted,
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+  },
+  tabPillOn: { backgroundColor: Colors.primary },
+  tabPillText: { fontFamily: Fonts.semiBold, color: Colors.textMuted, fontSize: 12 },
+  detailGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  detailTile: {
+    width: '48%',
+    backgroundColor: Colors.glass,
     borderRadius: 14,
-    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+    padding: 14,
+    gap: 6,
+  },
+  detailLabel: {
+    fontSize: 11,
+    fontFamily: Fonts.bold,
+    color: Colors.textMuted,
+    textTransform: 'uppercase',
+  },
+  detailValue: { fontSize: 15, fontFamily: Fonts.semiBold, color: Colors.text },
+  sectionHead: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
-  linkText: { fontFamily: Fonts.bold, color: Colors.primaryDark },
+  link: { color: Colors.primary, fontFamily: Fonts.bold, fontSize: 13 },
+  linkRow: { marginTop: 8, marginBottom: 8 },
 });

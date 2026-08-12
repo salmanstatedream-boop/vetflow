@@ -5,7 +5,7 @@
 - Expo account: `salmaniqbaljoyia`
 - Project: https://expo.dev/accounts/salmaniqbaljoyia/projects/phoenix-care
 - EAS project ID: `61a8da34-2c6d-47ae-bea5-8af632f80ce6`
-- Preview build (Android): https://expo.dev/accounts/salmaniqbaljoyia/projects/phoenix-care/builds/d468ac8e-34cf-4e42-b8ed-704b4724de86
+- Preview build (Android): https://expo.dev/accounts/salmaniqbaljoyia/projects/phoenix-care/builds/3708cf7f-1be8-46b8-b752-52b71092a121
 
 ## 1. Expo login (Windows)
 

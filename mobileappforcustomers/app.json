@@ -6,12 +6,12 @@
     "orientation": "portrait",
     "icon": "./assets/images/phoenix-logo-mark.png",
     "scheme": "phoenixcare",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/phoenix-logo.png",
+      "image": "./assets/images/phoenix-logo-mark.png",
       "resizeMode": "contain",
-      "backgroundColor": "#F9FAFB"
+      "backgroundColor": "#070B14"
     },
     "ios": {
       "supportsTablet": true,
@@ -32,7 +32,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/phoenix-logo-mark.png",
-        "backgroundColor": "#F9FAFB"
+        "backgroundColor": "#070B14"
       },
       "package": "com.phoenixos.care",
       "intentFilters": [
@@ -59,7 +59,7 @@
       "shortName": "Phoenix Care",
       "description": "Book appointments and view pet medical history across Phoenix OS clinics.",
       "themeColor": "#2563EB",
-      "backgroundColor": "#F9FAFB"
+      "backgroundColor": "#070B14"
     },
     "plugins": [
       "expo-router",

@@ -384,6 +384,30 @@ export default function SettingsForm({ defaultValues, brandedPdfsAllowed = false
               <span className="text-xs text-destructive mt-1 block">{errors.clinicEmail.message}</span>
             )}
           </div>
+          <div className="md:col-span-2">
+            <label className="block text-[10px] font-semibold text-on-surface/80 uppercase tracking-wider mb-1.5">
+              Emergency call prompt (Phoenix Care)
+            </label>
+            <input
+              {...register('emergencyCallPrompt')}
+              placeholder="Call Salik Pet Clinic?"
+              className="w-full px-4 py-2.5 bg-surface-container/30 border border-outline-variant/80 rounded-xl text-sm text-on-surface outline-none focus:border-primary"
+            />
+            <p className="text-[10px] text-on-surface-variant mt-1">
+              Shown when owners tap Emergency. Leave blank to use “Call {'{clinic}'}?”
+            </p>
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-[10px] font-semibold text-on-surface/80 uppercase tracking-wider mb-1.5">
+              After-hours message (Phoenix Care)
+            </label>
+            <textarea
+              {...register('afterHoursNote')}
+              rows={3}
+              placeholder="If this is a life-threatening emergency and the clinic is closed…"
+              className="w-full px-4 py-2.5 bg-surface-container/30 border border-outline-variant/80 rounded-xl text-sm text-on-surface outline-none focus:border-primary resize-y"
+            />
+          </div>
           <div>
             <label className="block text-[10px] font-semibold text-on-surface/80 uppercase tracking-wider mb-1.5">
               PDF Accent Color

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Modal,
@@ -10,6 +10,7 @@ import {
   type TextInputProps,
   type ViewStyle,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Colors, Fonts, Radii, Spacing } from '@/constants/theme';
@@ -24,6 +25,34 @@ export function Screen({
   return <View style={[styles.screen, style]}>{children}</View>;
 }
 
+export function GlassCard({
+  children,
+  style,
+  onPress,
+}: {
+  children: React.ReactNode;
+  style?: ViewStyle;
+  onPress?: () => void;
+}) {
+  const body = (
+    <View style={[styles.glassInner, style]}>
+      {children}
+    </View>
+  );
+  if (onPress) {
+    return (
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) => [styles.glassOuter, pressed && { opacity: 0.92 }]}
+      >
+        {body}
+      </Pressable>
+    );
+  }
+  return <View style={styles.glassOuter}>{body}</View>;
+}
+
+/** Alias — all cards are glass in dark theme */
 export function Card({
   children,
   style,
@@ -33,17 +62,97 @@ export function Card({
   style?: ViewStyle;
   onPress?: () => void;
 }) {
-  if (onPress) {
-    return (
+  return (
+    <GlassCard style={style} onPress={onPress}>
+      {children}
+    </GlassCard>
+  );
+}
+
+export function GlassModal({
+  visible,
+  title,
+  message,
+  onClose,
+  actions,
+}: {
+  visible: boolean;
+  title: string;
+  message: string;
+  onClose: () => void;
+  actions: { label: string; onPress: () => void; tone?: 'default' | 'danger' | 'primary' }[];
+}) {
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={styles.modalRoot}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        <BlurView intensity={40} tint="dark" style={styles.modalCard}>
+          <Text style={styles.modalTitle}>{title}</Text>
+          <Text style={styles.modalMessage}>{message}</Text>
+          <View style={styles.modalActions}>
+            {actions.map((a) => (
+              <Pressable
+                key={a.label}
+                onPress={() => {
+                  onClose();
+                  a.onPress();
+                }}
+                hitSlop={8}
+                style={styles.modalAction}
+              >
+                <Text
+                  style={[
+                    styles.modalActionText,
+                    a.tone === 'danger' && { color: Colors.danger },
+                    a.tone === 'primary' && { color: Colors.cyan },
+                  ]}
+                >
+                  {a.label.toUpperCase()}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </BlurView>
+      </View>
+    </Modal>
+  );
+}
+
+export function CollapsibleRecord({
+  title,
+  meta,
+  badge,
+  children,
+  defaultOpen = false,
+}: {
+  title: string;
+  meta?: string;
+  badge?: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <GlassCard style={{ marginBottom: 10, padding: 0 }}>
       <Pressable
-        onPress={onPress}
-        style={({ pressed }) => [styles.card, style, pressed && { opacity: 0.92 }]}
+        onPress={() => setOpen((v) => !v)}
+        style={styles.collapseHeader}
       >
-        {children}
+        <View style={{ flex: 1, gap: 4 }}>
+          {meta ? <Text style={styles.timelineDate}>{meta}</Text> : null}
+          <Text style={styles.timelineTitle}>{title}</Text>
+        </View>
+        {badge ? <Badge label={badge} /> : null}
+        <FontAwesome
+          name={open ? 'chevron-up' : 'chevron-down'}
+          size={12}
+          color={Colors.textMuted}
+          style={{ marginLeft: 8 }}
+        />
       </Pressable>
-    );
-  }
-  return <View style={[styles.card, style]}>{children}</View>;
+      {open ? <View style={styles.collapseBody}>{children}</View> : null}
+    </GlassCard>
+  );
 }
 
 export function Title({ children }: { children: React.ReactNode }) {
@@ -154,7 +263,7 @@ export function Badge({
         ? Colors.danger
         : tone === 'muted'
           ? Colors.textMuted
-          : Colors.primaryDark;
+          : Colors.blue;
   return (
     <View style={[styles.badge, { backgroundColor: bg }]}>
       <Text style={[styles.badgeText, { color }]}>{label}</Text>
@@ -501,17 +610,78 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.sm,
   },
+  glassOuter: {
+    borderRadius: Radii.lg,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+    backgroundColor: Colors.glass,
+  },
+  glassInner: {
+    padding: Spacing.lg,
+  },
   card: {
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.glass,
     borderRadius: Radii.lg,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
-    shadowColor: '#111827',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
+    borderColor: Colors.glassBorder,
+  },
+  modalRoot: {
+    flex: 1,
+    backgroundColor: Colors.overlay,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 28,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 360,
+    borderRadius: Radii.xl,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+    backgroundColor: Colors.glass,
+    padding: 22,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontFamily: Fonts.bold,
+    color: Colors.text,
+    marginBottom: 8,
+  },
+  modalMessage: {
+    fontSize: 14,
+    lineHeight: 21,
+    fontFamily: Fonts.regular,
+    color: Colors.textMuted,
+    marginBottom: 20,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    flexWrap: 'wrap',
+    gap: 16,
+  },
+  modalAction: { paddingVertical: 4 },
+  modalActionText: {
+    fontSize: 13,
+    fontFamily: Fonts.bold,
+    color: Colors.cyan,
+    letterSpacing: 0.4,
+  },
+  collapseHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.lg,
+    gap: 8,
+  },
+  collapseBody: {
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    gap: 8,
   },
   title: {
     fontSize: 28,
@@ -609,7 +779,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: '#FECACA',
+    borderColor: 'rgba(248, 113, 113, 0.35)',
   },
   errorBannerText: {
     flex: 1,
@@ -643,7 +813,7 @@ const styles = StyleSheet.create({
     borderRadius: Radii.lg,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: Colors.glassBorder,
   },
   listMeta: {
     fontSize: 11,
@@ -672,17 +842,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   segmentActive: {
-    backgroundColor: Colors.surface,
-    shadowColor: '#111827',
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
+    backgroundColor: 'rgba(255,255,255,0.12)',
   },
   segmentText: {
     color: Colors.textMuted,
     fontFamily: Fonts.semiBold,
-    fontSize: 13,
+    fontSize: 12,
   },
   segmentTextActive: { color: Colors.text, fontFamily: Fonts.bold },
   quickTile: {
@@ -690,9 +855,9 @@ const styles = StyleSheet.create({
     minWidth: 96,
     aspectRatio: 1,
     borderRadius: Radii.md,
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.glass,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: Colors.glassBorder,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 10,
@@ -719,7 +884,7 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: Radii.md,
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255,255,255,0.92)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -807,11 +972,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15,23,42,0.45)',
   },
   sheet: {
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.surfaceSolid,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
     paddingBottom: 32,
     maxHeight: '85%',
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
   },
 });

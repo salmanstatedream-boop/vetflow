@@ -90,6 +90,11 @@ export const DASHBOARD_NAV_GROUPS: DashboardNavGroup[] = [
         icon: MessageSquare,
         optInFeature: 'staff_chat',
       },
+      {
+        name: 'Owner chat',
+        href: '/dashboard/owner-messages',
+        icon: MessageSquare,
+      },
     ],
   },
   {
@@ -170,6 +175,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/dashboard/camera': 'Cameras',
   '/dashboard/tasks': 'Tasks',
   '/dashboard/chat': 'Messages',
+  '/dashboard/owner-messages': 'Owner chat',
 };
 
 export function resolvePageTitle(pathname: string): string {

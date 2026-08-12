@@ -57,7 +57,7 @@ export async function GET(req: Request) {
       const [{ data: settings }, { data: branch }] = await Promise.all([
         admin
           .from('app_settings')
-          .select('clinic_phone')
+          .select('clinic_phone, emergency_call_prompt, after_hours_note')
           .eq('organization_id', organizationId)
           .maybeSingle(),
         admin
@@ -70,15 +70,19 @@ export async function GET(req: Request) {
           .maybeSingle(),
       ]);
 
+      const clinicName = org?.name ?? 'Clinic';
       return {
         linkId: link.id as string,
         customerId: link.customer_id as string,
         organizationId,
-        clinicName: org?.name ?? 'Clinic',
+        clinicName,
         clinicSlug: org?.slug ?? null,
         clinicPhone: (settings?.clinic_phone as string) || (branch?.phone as string) || null,
         clinicAddress: (branch?.address as string) || null,
+        emergencyCallPrompt:
+          (settings?.emergency_call_prompt as string) || `Call ${clinicName}?`,
         afterHoursNote:
+          (settings?.after_hours_note as string) ||
           'If this is a life-threatening emergency and the clinic is closed, contact your nearest emergency veterinary hospital.',
         firstName: (c?.first_name as string) || '',
         lastName: (c?.last_name as string) || '',

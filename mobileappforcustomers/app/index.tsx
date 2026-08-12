@@ -18,14 +18,14 @@ import { Brand, Colors, Fonts } from '@/constants/theme';
 import { consumeBootSplash, storage } from '@/lib/storage';
 import { useAuth } from '@/lib/auth';
 
-const SPLASH_MS = 2000;
+const SPLASH_MS = 1100;
 
 export default function SplashScreen() {
   const router = useRouter();
   const { ready, session, profile } = useAuth();
   const [reduceMotion, setReduceMotion] = useState(false);
-  const logoScale = useSharedValue(0.72);
   const logoOpacity = useSharedValue(0);
+  const logoY = useSharedValue(10);
   const textOpacity = useSharedValue(0);
 
   useEffect(() => {
@@ -43,21 +43,18 @@ export default function SplashScreen() {
   useEffect(() => {
     if (reduceMotion) {
       logoOpacity.value = 1;
-      logoScale.value = 1;
+      logoY.value = 0;
       textOpacity.value = 1;
       return;
     }
-    logoOpacity.value = withTiming(1, { duration: 550 });
-    logoScale.value = withTiming(1, {
-      duration: 850,
-      easing: Easing.out(Easing.cubic),
-    });
-    textOpacity.value = withDelay(280, withTiming(1, { duration: 500 }));
-  }, [reduceMotion, logoOpacity, logoScale, textOpacity]);
+    logoOpacity.value = withTiming(1, { duration: 420, easing: Easing.out(Easing.cubic) });
+    logoY.value = withTiming(0, { duration: 420, easing: Easing.out(Easing.cubic) });
+    textOpacity.value = withDelay(180, withTiming(1, { duration: 360 }));
+  }, [reduceMotion, logoOpacity, logoY, textOpacity]);
 
   useEffect(() => {
     if (!ready) return;
-    const delay = reduceMotion ? 400 : SPLASH_MS;
+    const delay = reduceMotion ? 250 : SPLASH_MS;
     const t = setTimeout(async () => {
       const onboardingDone = await storage.getOnboardingDone();
       if (!session) {
@@ -83,7 +80,7 @@ export default function SplashScreen() {
 
   const logoStyle = useAnimatedStyle(() => ({
     opacity: logoOpacity.value,
-    transform: [{ scale: logoScale.value }],
+    transform: [{ translateY: logoY.value }],
   }));
   const textStyle = useAnimatedStyle(() => ({ opacity: textOpacity.value }));
 
@@ -92,7 +89,7 @@ export default function SplashScreen() {
       <View style={styles.glow} />
       <Animated.View style={logoStyle}>
         <Image
-          source={require('../assets/images/phoenix-logo.png')}
+          source={require('../assets/images/phoenix-logo-mark.png')}
           style={styles.logo}
           resizeMode="contain"
           accessibilityLabel="Phoenix Care"
@@ -120,16 +117,15 @@ const styles = StyleSheet.create({
   },
   glow: {
     position: 'absolute',
-    width: 280,
-    height: 280,
-    borderRadius: 140,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
     backgroundColor: Colors.primarySoft,
-    opacity: 0.55,
   },
-  logo: { width: 148, height: 148 },
+  logo: { width: 88, height: 88 },
   copy: { alignItems: 'center', gap: 6 },
   title: {
-    fontSize: 30,
+    fontSize: 28,
     fontFamily: Fonts.extraBold,
     color: Colors.text,
     letterSpacing: -0.5,

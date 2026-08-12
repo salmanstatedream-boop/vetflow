@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
-  Alert,
   Linking,
   Pressable,
   RefreshControl,
@@ -16,13 +15,14 @@ import {
   Card,
   EmptyState,
   ErrorBanner,
+  GlassModal,
   GradientPetHero,
   Muted,
   QuickActionTile,
   Skeleton,
   Subtitle,
 } from '@/components/ui';
-import { Colors, Fonts, Radii, Spacing } from '@/constants/theme';
+import { Colors, Fonts, Layout, Radii, Spacing } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { ownerApi, type OwnerAppointment, type OwnerPet } from '@/lib/api';
 import { go } from '@/lib/nav';
@@ -51,6 +51,11 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [emergencyOpen, setEmergencyOpen] = useState(false);
+  const [afterHoursOpen, setAfterHoursOpen] = useState(false);
+  const [infoOpen, setInfoOpen] = useState<{ title: string; message: string } | null>(
+    null
+  );
 
   const load = useCallback(async () => {
     setError(null);
@@ -123,37 +128,17 @@ export default function HomeScreen() {
     .filter(Boolean)
     .join(' · ');
 
-  const callClinic = () => {
-    const phone = activeClinic?.clinicPhone;
-    if (!phone) {
-      Alert.alert(
-        'No clinic phone on file',
-        activeClinic?.afterHoursNote ||
-          'Ask your clinic to add a phone number in Phoenix OS settings.'
-      );
+  const needPet = (fn: () => void) => {
+    if (!selected) {
+      setInfoOpen({ title: 'Select a pet', message: 'Choose a pet first to continue.' });
       return;
     }
-    Alert.alert('Emergency', `Call ${activeClinic?.clinicName}?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Call',
-        style: 'destructive',
-        onPress: () => void Linking.openURL(`tel:${phone.replace(/[^\d+]/g, '')}`),
-      },
-      {
-        text: 'After-hours info',
-        onPress: () =>
-          Alert.alert(
-            'After hours',
-            activeClinic?.afterHoursNote || 'Contact the nearest emergency hospital.'
-          ),
-      },
-    ]);
+    fn();
   };
 
   const openChat = async () => {
     if (!activeClinic) {
-      Alert.alert('Connect a clinic first');
+      setInfoOpen({ title: 'Connect a clinic first', message: 'Link your clinic invite to message the team.' });
       return;
     }
     try {
@@ -163,8 +148,17 @@ export default function HomeScreen() {
       );
       go(`/(owner)/chat/${res.threadId}`);
     } catch (err: unknown) {
-      Alert.alert('Chat unavailable', err instanceof Error ? err.message : 'Try again');
+      setInfoOpen({
+        title: 'Chat unavailable',
+        message: err instanceof Error ? err.message : 'Try again',
+      });
     }
+  };
+
+  const dial = () => {
+    const phone = activeClinic?.clinicPhone;
+    if (!phone) return;
+    void Linking.openURL(`tel:${phone.replace(/[^\d+]/g, '')}`);
   };
 
   return (
@@ -174,6 +168,7 @@ export default function HomeScreen() {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
+            tintColor={Colors.primary}
             onRefresh={async () => {
               setRefreshing(true);
               await load();
@@ -304,51 +299,88 @@ export default function HomeScreen() {
                 label="Book"
                 onPress={() => router.push('/(owner)/(tabs)/book')}
               />
-              <QuickActionTile icon="comments" label="Message" onPress={openChat} />
-              <QuickActionTile
-                icon="file-text-o"
-                label="Records"
-                onPress={() =>
-                  selected
-                    ? router.push(`/(owner)/pet/${selected.id}`)
-                    : Alert.alert('Select a pet first')
-                }
-              />
+              <QuickActionTile icon="comments" label="Messages" onPress={openChat} />
               <QuickActionTile
                 icon="exclamation-triangle"
                 label="Emergency"
                 danger
-                onPress={callClinic}
+                onPress={() => {
+                  if (!activeClinic?.clinicPhone) {
+                    setAfterHoursOpen(true);
+                    return;
+                  }
+                  setEmergencyOpen(true);
+                }}
+              />
+              <QuickActionTile
+                icon="file-text-o"
+                label="Records"
+                onPress={() =>
+                  needPet(() =>
+                    router.push(`/(owner)/pet/${selected!.id}?tab=Records`)
+                  )
+                }
+              />
+              <QuickActionTile
+                icon="line-chart"
+                label="Graphs"
+                onPress={() => needPet(() => go(`/(owner)/graphs/${selected!.id}`))}
               />
               <QuickActionTile
                 icon="medkit"
-                label="Medications"
-                onPress={() =>
-                  selected
-                    ? go(`/(owner)/care/${selected.id}?tab=medications`)
-                    : Alert.alert('Select a pet first')
-                }
-              />
-              <QuickActionTile
-                icon="shield"
-                label="Vaccines"
-                onPress={() =>
-                  selected
-                    ? go(`/(owner)/care/${selected.id}?tab=vaccinations`)
-                    : Alert.alert('Select a pet first')
-                }
+                label="Surgery"
+                onPress={() => needPet(() => go(`/(owner)/surgery/${selected!.id}`))}
               />
             </View>
           </>
         )}
       </ScrollView>
+
+      <GlassModal
+        visible={emergencyOpen}
+        title="Emergency"
+        message={
+          activeClinic?.emergencyCallPrompt ||
+          `Call ${activeClinic?.clinicName || 'clinic'}?`
+        }
+        onClose={() => setEmergencyOpen(false)}
+        actions={[
+          { label: 'Cancel', onPress: () => {} },
+          { label: 'Call', onPress: dial, tone: 'danger' },
+          {
+            label: 'After-hours info',
+            onPress: () => setAfterHoursOpen(true),
+            tone: 'primary',
+          },
+        ]}
+      />
+      <GlassModal
+        visible={afterHoursOpen}
+        title="After hours"
+        message={
+          activeClinic?.afterHoursNote ||
+          'If this is a life-threatening emergency and the clinic is closed, contact your nearest emergency veterinary hospital.'
+        }
+        onClose={() => setAfterHoursOpen(false)}
+        actions={[{ label: 'OK', onPress: () => {}, tone: 'primary' }]}
+      />
+      <GlassModal
+        visible={Boolean(infoOpen)}
+        title={infoOpen?.title || ''}
+        message={infoOpen?.message || ''}
+        onClose={() => setInfoOpen(null)}
+        actions={[{ label: 'OK', onPress: () => {}, tone: 'primary' }]}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
-  content: { padding: Spacing.xl, paddingBottom: 48 },
+  content: {
+    padding: Spacing.xl,
+    paddingBottom: Layout.tabBarHeight + Layout.floatingTabBottom + 24,
+  },
   header: { flexDirection: 'row', gap: 10, alignItems: 'stretch' },
   clinicLabel: {
     fontSize: 11,
@@ -368,6 +400,8 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: Radii.md,
     backgroundColor: Colors.primarySoft,
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
@@ -400,6 +434,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: Radii.full,
     backgroundColor: Colors.surfaceMuted,
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
     marginRight: 8,
   },
   clinicChipOn: { backgroundColor: Colors.primaryDark },
@@ -412,6 +448,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: Radii.full,
     backgroundColor: Colors.surfaceMuted,
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
     marginRight: 8,
   },
   petChipActive: { backgroundColor: Colors.primary },
