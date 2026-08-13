@@ -32,7 +32,7 @@ export function FloatingTabBar(props: any) {
       ]}
     >
       <View style={styles.pillShadow}>
-        <BlurView intensity={55} tint="dark" style={styles.pill}>
+        <BlurView intensity={65} tint="dark" style={styles.pill}>
           {visible.map((route: { key: string; name: string }) => {
             const routeIndex = state.routes.findIndex(
               (r: { key: string }) => r.key === route.key
@@ -56,12 +56,17 @@ export function FloatingTabBar(props: any) {
                 accessibilityRole="button"
                 accessibilityState={focused ? { selected: true } : {}}
                 onPress={onPress}
-                style={[styles.item, focused && styles.itemActive]}
+                style={({ pressed }) => [
+                  styles.item,
+                  focused && styles.itemActive,
+                  pressed && !focused && { opacity: 0.75 },
+                  pressed && focused && { transform: [{ scale: 0.97 }] },
+                ]}
               >
                 <View>
                   <FontAwesome
                     name={meta.icon}
-                    size={20}
+                    size={18}
                     color={focused ? Colors.onPrimary : Colors.textMuted}
                   />
                   {badge != null && badge !== '' ? (
@@ -129,16 +134,16 @@ const styles = StyleSheet.create({
     borderRadius: Radii.full,
   },
   itemActive: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.primaryDark,
   },
   label: {
     fontSize: 10,
-    fontFamily: Fonts.semiBold,
+    fontFamily: Fonts.medium,
     color: Colors.textMuted,
   },
   labelActive: {
     color: Colors.onPrimary,
-    fontFamily: Fonts.bold,
+    fontFamily: Fonts.semiBold,
   },
   badge: {
     position: 'absolute',

@@ -8,6 +8,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -51,6 +52,7 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
   const [emergencyOpen, setEmergencyOpen] = useState(false);
   const [afterHoursOpen, setAfterHoursOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState<{ title: string; message: string } | null>(
@@ -99,9 +101,9 @@ export default function HomeScreen() {
     [clinicPets, pets, petId]
   );
 
-  const nextCare = useMemo(() => {
-    if (!selected) return null;
-    const upcoming = appts
+  const scheduledVisits = useMemo(() => {
+    if (!selected) return [];
+    return appts
       .filter(
         (a) =>
           a.patientId === selected.id &&
@@ -111,22 +113,12 @@ export default function HomeScreen() {
         `${a.preferredDate}${a.preferredTime}`.localeCompare(
           `${b.preferredDate}${b.preferredTime}`
         )
-      )[0];
-    if (!upcoming) return null;
-    return `${upcoming.reason} · ${upcoming.preferredDate} · ${String(upcoming.preferredTime).slice(0, 5)}`;
+      );
   }, [appts, selected]);
 
   const initials =
     `${activeClinic?.firstName?.[0] || ''}${activeClinic?.lastName?.[0] || ''}`.toUpperCase() ||
     'PC';
-
-  const meta = [
-    petAge(selected?.dateOfBirth),
-    selected?.weightKg != null ? `${selected.weightKg} kg` : null,
-    selected?.gender,
-  ]
-    .filter(Boolean)
-    .join(' · ');
 
   const needPet = (fn: () => void) => {
     if (!selected) {
@@ -138,7 +130,10 @@ export default function HomeScreen() {
 
   const openChat = async () => {
     if (!activeClinic) {
-      setInfoOpen({ title: 'Connect a clinic first', message: 'Link your clinic invite to message the team.' });
+      setInfoOpen({
+        title: 'Connect a clinic first',
+        message: 'Link your clinic invite to message the team.',
+      });
       return;
     }
     try {
@@ -159,6 +154,45 @@ export default function HomeScreen() {
     const phone = activeClinic?.clinicPhone;
     if (!phone) return;
     void Linking.openURL(`tel:${phone.replace(/[^\d+]/g, '')}`);
+  };
+
+  const changePetPhoto = async () => {
+    if (!selected || photoUploading) return;
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      setInfoOpen({
+        title: 'Photos unavailable',
+        message: 'Allow photo library access to update your pet picture.',
+      });
+      return;
+    }
+    const picked = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.85,
+      base64: true,
+    });
+    if (picked.canceled || !picked.assets[0]?.base64) return;
+    const asset = picked.assets[0];
+    setPhotoUploading(true);
+    try {
+      const res = await ownerApi.uploadPetPhoto(selected.id, {
+        fileBase64: asset.base64!,
+        fileName: asset.fileName || 'pet-photo.jpg',
+        contentType: asset.mimeType || 'image/jpeg',
+      });
+      setPets((prev) =>
+        prev.map((p) =>
+          p.id === selected.id ? { ...p, photoUrl: res.photoUrl } : p
+        )
+      );
+    } catch (err: unknown) {
+      setInfoOpen({
+        title: 'Upload failed',
+        message: err instanceof Error ? err.message : 'Could not update pet photo',
+      });
+    } finally {
+      setPhotoUploading(false);
+    }
   };
 
   return (
@@ -189,8 +223,11 @@ export default function HomeScreen() {
                 : 'Invite code required'}
             </Muted>
           </Card>
-          <Pressable style={styles.bell} onPress={() => go('/(owner)/notifications')}>
-            <FontAwesome name="bell" size={18} color={Colors.primary} />
+          <Pressable
+            style={({ pressed }) => [styles.bell, pressed && { transform: [{ scale: 0.96 }] }]}
+            onPress={() => go('/(owner)/notifications')}
+          >
+            <FontAwesome name="bell" size={16} color={Colors.blue} />
             {unread > 0 ? (
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>{unread > 9 ? '9+' : unread}</Text>
@@ -198,7 +235,7 @@ export default function HomeScreen() {
             ) : null}
           </Pressable>
           <Pressable
-            style={styles.avatar}
+            style={({ pressed }) => [styles.avatar, pressed && { transform: [{ scale: 0.96 }] }]}
             onPress={() => router.push('/(owner)/(tabs)/more')}
           >
             <Text style={styles.avatarText}>{initials}</Text>
@@ -225,7 +262,7 @@ export default function HomeScreen() {
                   }}
                   style={[styles.clinicChip, active && styles.clinicChipOn]}
                 >
-                  <Text style={[styles.clinicChipText, active && { color: '#fff' }]}>
+                  <Text style={[styles.clinicChipText, active && { color: Colors.blue }]}>
                     {c.clinicName}
                   </Text>
                 </Pressable>
@@ -249,7 +286,7 @@ export default function HomeScreen() {
                 style={{ marginVertical: 14 }}
               >
                 {(clinicPets.length ? clinicPets : pets).map((p) => {
-                  const active = p.id === (selected?.id || petId);
+                  const active = p.id === selected?.id;
                   return (
                     <Pressable
                       key={p.id}
@@ -271,15 +308,17 @@ export default function HomeScreen() {
             ) : null}
 
             {selected ? (
-              <Pressable onPress={() => router.push(`/(owner)/pet/${selected.id}`)}>
-                <GradientPetHero
-                  name={selected.name}
-                  breed={selected.breed}
-                  meta={meta || selected.species || 'Pet'}
-                  nextCare={nextCare}
-                  clinic={selected.clinicName}
-                />
-              </Pressable>
+              <GradientPetHero
+                name={selected.name}
+                age={petAge(selected.dateOfBirth)}
+                weight={selected.weightKg != null ? `${selected.weightKg} kg` : null}
+                gender={selected.gender}
+                species={selected.species}
+                photoUrl={selected.photoUrl}
+                onEditPhoto={changePetPhoto}
+                photoUploading={photoUploading}
+                onOpen={() => router.push(`/(owner)/pet/${selected.id}`)}
+              />
             ) : (
               <Card>
                 <EmptyState
@@ -315,11 +354,7 @@ export default function HomeScreen() {
               <QuickActionTile
                 icon="file-text-o"
                 label="Records"
-                onPress={() =>
-                  needPet(() =>
-                    router.push(`/(owner)/pet/${selected!.id}?tab=Records`)
-                  )
-                }
+                onPress={() => needPet(() => router.push(`/(owner)/care/${selected!.id}`))}
               />
               <QuickActionTile
                 icon="line-chart"
@@ -332,6 +367,37 @@ export default function HomeScreen() {
                 onPress={() => needPet(() => go(`/(owner)/surgery/${selected!.id}`))}
               />
             </View>
+
+            <View style={{ height: Spacing.xl }} />
+            <Subtitle>Scheduled visits</Subtitle>
+            {scheduledVisits.length === 0 ? (
+              <Card style={{ marginTop: Spacing.sm, paddingVertical: 18 }}>
+                <Text style={styles.visitEmptyTitle}>Nothing upcoming</Text>
+                <Muted>Book a visit when your pet needs care.</Muted>
+              </Card>
+            ) : (
+              <View style={{ marginTop: Spacing.sm, gap: 10 }}>
+                {scheduledVisits.map((visit) => (
+                  <Pressable
+                    key={visit.id}
+                    onPress={() => router.push('/(owner)/(tabs)/visits')}
+                    style={({ pressed }) => pressed && { opacity: 0.92 }}
+                  >
+                    <Card>
+                      <View style={styles.visitRow}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.visitReason}>{visit.reason}</Text>
+                          <Muted>
+                            {visit.preferredDate} · {String(visit.preferredTime).slice(0, 5)}
+                          </Muted>
+                        </View>
+                        <Text style={styles.visitStatus}>{visit.status}</Text>
+                      </View>
+                    </Card>
+                  </Pressable>
+                ))}
+              </View>
+            )}
           </>
         )}
       </ScrollView>
@@ -348,7 +414,7 @@ export default function HomeScreen() {
           { label: 'Cancel', onPress: () => {} },
           { label: 'Call', onPress: dial, tone: 'danger' },
           {
-            label: 'After-hours info',
+            label: 'After hours',
             onPress: () => setAfterHoursOpen(true),
             tone: 'primary',
           },
@@ -396,11 +462,11 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   bell: {
-    width: 48,
-    height: 48,
-    borderRadius: Radii.md,
-    backgroundColor: Colors.primarySoft,
-    borderWidth: 1,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: Colors.surface,
+    borderWidth: StyleSheet.hairlineWidth * 2,
     borderColor: Colors.glassBorder,
     alignItems: 'center',
     justifyContent: 'center',
@@ -408,10 +474,10 @@ const styles = StyleSheet.create({
   },
   badge: {
     position: 'absolute',
-    top: 6,
-    right: 6,
-    minWidth: 16,
-    height: 16,
+    top: 5,
+    right: 5,
+    minWidth: 15,
+    height: 15,
     borderRadius: 8,
     backgroundColor: Colors.danger,
     alignItems: 'center',
@@ -420,45 +486,73 @@ const styles = StyleSheet.create({
   },
   badgeText: { color: '#fff', fontSize: 9, fontFamily: Fonts.bold },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: Radii.md,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     backgroundColor: Colors.primary,
+    borderWidth: StyleSheet.hairlineWidth * 2,
+    borderColor: 'rgba(96, 165, 250, 0.35)',
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
   },
-  avatarText: { color: '#fff', fontFamily: Fonts.bold },
+  avatarText: { color: '#fff', fontFamily: Fonts.semiBold, fontSize: 14 },
   clinicChip: {
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: Radii.full,
-    backgroundColor: Colors.surfaceMuted,
-    borderWidth: 1,
+    borderRadius: Radii.md,
+    backgroundColor: Colors.surface,
+    borderWidth: StyleSheet.hairlineWidth * 2,
     borderColor: Colors.glassBorder,
     marginRight: 8,
   },
-  clinicChipOn: { backgroundColor: Colors.primaryDark },
-  clinicChipText: { fontFamily: Fonts.semiBold, color: Colors.text, fontSize: 12 },
+  clinicChipOn: {
+    backgroundColor: Colors.primarySoft,
+    borderColor: 'rgba(59, 130, 246, 0.4)',
+  },
+  clinicChipText: { fontFamily: Fonts.semiBold, color: Colors.textMuted, fontSize: 12 },
   petChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: Radii.full,
-    backgroundColor: Colors.surfaceMuted,
-    borderWidth: 1,
+    paddingVertical: 9,
+    borderRadius: Radii.md,
+    backgroundColor: Colors.surface,
+    borderWidth: StyleSheet.hairlineWidth * 2,
     borderColor: Colors.glassBorder,
     marginRight: 8,
   },
-  petChipActive: { backgroundColor: Colors.primary },
-  petChipText: { fontFamily: Fonts.semiBold, color: Colors.text, fontSize: 13 },
+  petChipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  petChipText: { fontFamily: Fonts.semiBold, color: Colors.textMuted, fontSize: 13 },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
     marginTop: Spacing.md,
     justifyContent: 'space-between',
+  },
+  visitReason: {
+    fontSize: 15,
+    fontFamily: Fonts.semiBold,
+    color: Colors.text,
+    marginBottom: 4,
+  },
+  visitRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  visitStatus: {
+    fontSize: 11,
+    fontFamily: Fonts.bold,
+    color: Colors.blue,
+    textTransform: 'capitalize',
+  },
+  visitEmptyTitle: {
+    fontSize: 15,
+    fontFamily: Fonts.semiBold,
+    color: Colors.text,
+    marginBottom: 4,
   },
 });

@@ -18,14 +18,14 @@ import { Brand, Colors, Fonts } from '@/constants/theme';
 import { consumeBootSplash, storage } from '@/lib/storage';
 import { useAuth } from '@/lib/auth';
 
-const SPLASH_MS = 1100;
+const SPLASH_MS = 1000;
 
 export default function SplashScreen() {
   const router = useRouter();
   const { ready, session, profile } = useAuth();
   const [reduceMotion, setReduceMotion] = useState(false);
   const logoOpacity = useSharedValue(0);
-  const logoY = useSharedValue(10);
+  const logoY = useSharedValue(8);
   const textOpacity = useSharedValue(0);
 
   useEffect(() => {
@@ -47,14 +47,14 @@ export default function SplashScreen() {
       textOpacity.value = 1;
       return;
     }
-    logoOpacity.value = withTiming(1, { duration: 420, easing: Easing.out(Easing.cubic) });
-    logoY.value = withTiming(0, { duration: 420, easing: Easing.out(Easing.cubic) });
-    textOpacity.value = withDelay(180, withTiming(1, { duration: 360 }));
+    logoOpacity.value = withTiming(1, { duration: 360, easing: Easing.out(Easing.cubic) });
+    logoY.value = withTiming(0, { duration: 360, easing: Easing.out(Easing.cubic) });
+    textOpacity.value = withDelay(120, withTiming(1, { duration: 300 }));
   }, [reduceMotion, logoOpacity, logoY, textOpacity]);
 
   useEffect(() => {
     if (!ready) return;
-    const delay = reduceMotion ? 250 : SPLASH_MS;
+    const delay = reduceMotion ? 200 : SPLASH_MS;
     const t = setTimeout(async () => {
       const onboardingDone = await storage.getOnboardingDone();
       if (!session) {
@@ -86,8 +86,9 @@ export default function SplashScreen() {
 
   return (
     <View style={styles.root} accessibilityLabel="Phoenix Care loading">
-      <View style={styles.glow} />
-      <Animated.View style={logoStyle}>
+      <View style={styles.glowOuter} pointerEvents="none" />
+      <View style={styles.glowInner} pointerEvents="none" />
+      <Animated.View style={[styles.brandStack, logoStyle]}>
         <Image
           source={require('../assets/images/phoenix-logo-mark.png')}
           style={styles.logo}
@@ -113,26 +114,35 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 18,
+    gap: 20,
   },
-  glow: {
+  glowOuter: {
     position: 'absolute',
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: Colors.primarySoft,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: 'rgba(59, 130, 246, 0.08)',
   },
+  glowInner: {
+    position: 'absolute',
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: 'rgba(59, 130, 246, 0.14)',
+  },
+  brandStack: { alignItems: 'center' },
   logo: { width: 88, height: 88 },
   copy: { alignItems: 'center', gap: 6 },
   title: {
     fontSize: 28,
-    fontFamily: Fonts.extraBold,
+    fontFamily: Fonts.bold,
     color: Colors.text,
-    letterSpacing: -0.5,
+    letterSpacing: -0.6,
   },
   tag: {
-    fontSize: 14,
+    fontSize: 13,
     color: Colors.textMuted,
-    fontFamily: Fonts.semiBold,
+    fontFamily: Fonts.medium,
+    letterSpacing: 0.2,
   },
 });

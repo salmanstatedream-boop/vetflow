@@ -100,14 +100,6 @@ export default function PlatformExpansionOrbitMap({
       {/* Center hub — fixed */}
       <div className="absolute left-1/2 top-1/2 z-10 flex w-[48%] max-w-[200px] -translate-x-1/2 -translate-y-1/2 flex-col items-center text-center">
         <div className="relative mb-3 flex h-[104px] w-[104px] items-center justify-center sm:h-[120px] sm:w-[120px]">
-          <div
-            aria-hidden
-            className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.4)_0%,rgba(59,130,246,0.12)_45%,transparent_72%)] blur-[2px]"
-          />
-          <div
-            aria-hidden
-            className="absolute inset-[10%] rounded-full border border-[#22D3EE]/25 bg-[#050B18]/70 shadow-[0_0_40px_rgba(34,211,238,0.25)]"
-          />
           <div className="relative h-20 w-20 sm:h-24 sm:w-24">
             <Image
               src="/phoenix-logo-mark.png"

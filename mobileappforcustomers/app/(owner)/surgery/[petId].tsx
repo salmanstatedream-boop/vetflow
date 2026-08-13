@@ -46,7 +46,7 @@ export default function SurgeryScreen() {
     <SafeAreaView style={styles.safe} edges={['bottom']}>
       <ScrollView contentContainerStyle={styles.content}>
         <Title>Surgery</Title>
-        <Muted>Procedure timeline for {name}</Muted>
+        <Muted>All surgical visits completed for {name}</Muted>
         <View style={{ height: Spacing.lg }} />
         {error ? <ErrorBanner message={error} /> : null}
         {loading ? (

@@ -23,7 +23,7 @@ export function SharedTooltipAvatars({
   const [tooltipPos, setTooltipPos] = useState({ left: 0, top: 0 });
   const [activeName, setActiveName] = useState("");
   
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const avatarRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const handleMouseEnter = (index: number) => {

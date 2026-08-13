@@ -175,13 +175,6 @@ export default function PetDetailScreen() {
 
   const { pet, history } = data;
   const age = petAge(pet.dateOfBirth);
-  const meta = [
-    age,
-    pet.weightKg != null ? `${pet.weightKg} kg` : null,
-    pet.gender,
-  ]
-    .filter(Boolean)
-    .join(' · ');
 
   const surgeries = history.filter((v) => v.isSurgery);
   const medVisits = history.filter((v) => v.prescriptions.some((rx) => rx.items?.length));
@@ -208,9 +201,11 @@ export default function PetDetailScreen() {
 
         <GradientPetHero
           name={pet.name}
-          breed={pet.breed}
-          meta={meta || pet.species || 'Pet'}
-          clinic={pet.clinicName}
+          age={age}
+          weight={pet.weightKg != null ? `${pet.weightKg} kg` : null}
+          gender={pet.gender}
+          species={pet.species}
+          photoUrl={pet.photoUrl}
         />
 
         <ScrollView

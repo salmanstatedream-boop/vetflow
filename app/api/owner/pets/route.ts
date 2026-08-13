@@ -1,6 +1,9 @@
 import { createAdminClient } from '@/lib/supabase/server';
 import { jsonError, resolveBearerUser } from '@/lib/auth/owner-api';
 
+const DOCUMENTS_BUCKET = 'clinic-documents';
+const SIGNED_URL_TTL = 60 * 60;
+
 export async function GET(req: Request) {
   const user = await resolveBearerUser(req);
   if (!user) return jsonError('Unauthorized', 401);
@@ -33,6 +36,29 @@ export async function GET(req: Request) {
 
   if (error) return jsonError(error.message, 500);
 
+  const petIds = (pets || []).map((p) => p.id);
+  const photoByPatient = new Map<string, string>();
+
+  if (petIds.length) {
+    const { data: docs } = await admin
+      .from('documents')
+      .select('id, patient_id, bucket_id, storage_path, created_at')
+      .in('patient_id', petIds)
+      .eq('category', 'profile_photo')
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false });
+
+    const seen = new Set<string>();
+    for (const doc of docs || []) {
+      if (!doc.patient_id || seen.has(doc.patient_id) || !doc.storage_path) continue;
+      seen.add(doc.patient_id);
+      const { data: signed } = await admin.storage
+        .from(doc.bucket_id || DOCUMENTS_BUCKET)
+        .createSignedUrl(doc.storage_path, SIGNED_URL_TTL);
+      if (signed?.signedUrl) photoByPatient.set(doc.patient_id, signed.signedUrl);
+    }
+  }
+
   const rows = (pets || []).map((p) => {
     const org = p.organizations as
       | { id: string; name: string; slug: string }
@@ -55,6 +81,7 @@ export async function GET(req: Request) {
       organizationId: p.organization_id,
       clinicName: o?.name ?? 'Clinic',
       clinicSlug: o?.slug ?? null,
+      photoUrl: photoByPatient.get(p.id) ?? null,
     };
   });
 

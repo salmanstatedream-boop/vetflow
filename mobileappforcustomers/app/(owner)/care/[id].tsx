@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import {
   Card,
+  CollapsibleRecord,
   EmptyState,
   ErrorBanner,
   Field,
@@ -31,15 +32,72 @@ import {
   type HistoryVisit,
 } from '@/lib/api';
 
+const TABS = ['Health Visits', 'Vaccinations', 'Deworming'] as const;
+type Tab = (typeof TABS)[number];
+
+function VisitBody({ visit }: { visit: HistoryVisit }) {
+  return (
+    <View style={{ gap: 8 }}>
+      {visit.notes?.chiefComplaint ? (
+        <Muted>Complaint: {String(visit.notes.chiefComplaint)}</Muted>
+      ) : null}
+      {visit.notes?.diagnosis ? (
+        <Muted>Diagnosis: {String(visit.notes.diagnosis)}</Muted>
+      ) : null}
+      {visit.notes?.treatmentPlan ? (
+        <Muted>Plan: {String(visit.notes.treatmentPlan)}</Muted>
+      ) : null}
+      {visit.notes?.followUp ? (
+        <Muted>Follow-up: {String(visit.notes.followUp)}</Muted>
+      ) : null}
+      {visit.prescriptions.flatMap((rx) =>
+        (rx.items || []).map((item, i) => (
+          <Muted key={`${rx.id}-${i}`}>
+            Rx: {[item.medicineName, item.dosage, item.frequency, item.duration]
+              .filter(Boolean)
+              .join(' · ')}
+          </Muted>
+        ))
+      )}
+    </View>
+  );
+}
+
+function isSurgeryVisit(v: HistoryVisit) {
+  if (v.isSurgery) return true;
+  return (v.visitPurpose || '').toLowerCase() === 'surgery';
+}
+
+function isVaccinationVisit(v: HistoryVisit) {
+  const purpose = (v.visitPurpose || '').toLowerCase();
+  if (purpose === 'vaccination' || purpose === 'vaccine') return true;
+  return (v.vaccines || []).length > 0 && !hasClinicalSummary(v) && !isDewormingVisit(v);
+}
+
+function isDewormingVisit(v: HistoryVisit) {
+  const purpose = (v.visitPurpose || '').toLowerCase();
+  if (purpose === 'deworming') return true;
+  return (v.deworming || []).length > 0;
+}
+
+function hasClinicalSummary(v: HistoryVisit) {
+  return Boolean(
+    v.notes?.diagnosis ||
+      v.notes?.chiefComplaint ||
+      v.notes?.treatmentPlan ||
+      v.prescriptions.some((rx) => (rx.items || []).length > 0)
+  );
+}
+
 export default function MedicalRecordScreen() {
   const { id, tab: tabParam } = useLocalSearchParams<{ id: string; tab?: string }>();
-  const initial =
+  const initial: Tab =
     tabParam === 'vaccinations'
       ? 'Vaccinations'
       : tabParam === 'deworming'
         ? 'Deworming'
-        : 'Medications';
-  const [tab, setTab] = useState(initial);
+        : 'Health Visits';
+  const [tab, setTab] = useState<Tab>(initial);
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState<HistoryVisit[]>([]);
   const [external, setExternal] = useState<ExternalPrescription[]>([]);
@@ -60,44 +118,41 @@ export default function MedicalRecordScreen() {
     if (!id) return;
     setLoading(true);
     setError(null);
-    Promise.all([ownerApi.history(id), ownerApi.externalPrescriptions(id)])
-      .then(([hist, ext]) => {
+    void (async () => {
+      try {
+        const hist = await ownerApi.history(id);
         setHistory(hist.history);
         setPetName(hist.pet.name);
-        setExternal(ext.prescriptions);
-      })
-      .catch((err: unknown) => {
+        try {
+          const ext = await ownerApi.externalPrescriptions(id);
+          setExternal(ext.prescriptions);
+        } catch {
+          setExternal([]);
+        }
+        setError(null);
+      } catch (err: unknown) {
         setHistory([]);
         setExternal([]);
         setError(err instanceof Error ? err.message : 'Could not load medical record');
-      })
-      .finally(() => setLoading(false));
+      } finally {
+        setLoading(false);
+      }
+    })();
   };
 
   useEffect(() => {
     reload();
   }, [id]);
 
-  const meds = useMemo(() => {
-    const rows: { key: string; name: string; detail: string; when: string }[] = [];
-    for (const visit of history) {
-      for (const rx of visit.prescriptions) {
-        for (const [i, item] of (rx.items || []).entries()) {
-          rows.push({
-            key: `${rx.id}-${i}`,
-            name: item.medicineName || 'Medication',
-            detail: [item.dosage, item.frequency, item.duration, item.instructions]
-              .filter(Boolean)
-              .join(' · '),
-            when: new Date(rx.createdAt || visit.checkedInAt).toLocaleDateString(),
-          });
-        }
-      }
-    }
-    return rows;
-  }, [history]);
+  const healthVisits = useMemo(
+    () =>
+      history.filter(
+        (v) => !isSurgeryVisit(v) && !isVaccinationVisit(v) && !isDewormingVisit(v)
+      ),
+    [history]
+  );
 
-  const vax = useMemo(() => {
+  const vaccinations = useMemo(() => {
     const rows: { key: string; name: string; detail: string; when: string }[] = [];
     for (const visit of history) {
       for (const [i, vaccine] of (visit.vaccines || []).entries()) {
@@ -115,11 +170,23 @@ export default function MedicalRecordScreen() {
             : new Date(visit.checkedInAt).toLocaleDateString(),
         });
       }
+      if (
+        ((visit.visitPurpose || '').toLowerCase() === 'vaccination' ||
+          (visit.visitPurpose || '').toLowerCase() === 'vaccine') &&
+        !(visit.vaccines || []).length
+      ) {
+        rows.push({
+          key: `${visit.id}-vax-purpose`,
+          name: visit.reason || 'Vaccination visit',
+          detail: 'Recorded as vaccination visit',
+          when: new Date(visit.checkedInAt).toLocaleDateString(),
+        });
+      }
     }
     return rows;
   }, [history]);
 
-  const deworm = useMemo(() => {
+  const deworming = useMemo(() => {
     const rows: { key: string; name: string; detail: string; when: string }[] = [];
     for (const visit of history) {
       for (const [i, d] of (visit.deworming || []).entries()) {
@@ -139,16 +206,13 @@ export default function MedicalRecordScreen() {
         rows.push({
           key: `${visit.id}-purpose`,
           name: visit.reason || 'Deworming visit',
-          detail: 'Recorded as deworming visit',
+          detail: '',
           when: new Date(visit.checkedInAt).toLocaleDateString(),
         });
       }
     }
     return rows;
   }, [history]);
-
-  const list =
-    tab === 'Vaccinations' ? vax : tab === 'Deworming' ? deworm : meds;
 
   const pickFile = async () => {
     const res = await ImagePicker.launchImageLibraryAsync({
@@ -209,20 +273,23 @@ export default function MedicalRecordScreen() {
       <SafeAreaView style={styles.safe} edges={['bottom']}>
         <ScrollView contentContainerStyle={styles.content}>
           <Title>{petName}</Title>
-          <Muted>Medical files from your clinic, plus external prescriptions you add.</Muted>
+          <Muted>
+            Visit summaries from your clinic, plus vaccines, deworming, and external files you
+            add.
+          </Muted>
           <View style={{ height: Spacing.lg }} />
           <SegmentedControl
-            options={['Medications', 'Vaccinations', 'Deworming']}
+            options={[...TABS]}
             value={tab}
-            onChange={setTab}
+            onChange={(v) => setTab(v as Tab)}
           />
           <View style={{ height: Spacing.lg }} />
           {error ? <ErrorBanner message={error} onRetry={reload} /> : null}
           {loading ? (
             <ActivityIndicator color={Colors.primary} style={{ marginTop: 24 }} />
-          ) : (
+          ) : tab === 'Health Visits' ? (
             <>
-              {tab === 'Medications' && external.length > 0 ? (
+              {external.length > 0 ? (
                 <View style={{ marginBottom: 16, gap: 8 }}>
                   <Subtitle>From other clinics</Subtitle>
                   {external.map((rx) => (
@@ -235,23 +302,58 @@ export default function MedicalRecordScreen() {
                   ))}
                 </View>
               ) : null}
-              {list.length === 0 ? (
+              {healthVisits.length === 0 ? (
                 <Card>
                   <EmptyState
-                    title={`No ${tab.toLowerCase()} yet`}
-                    body="Records appear after clinic visits."
+                    title="No health visits yet"
+                    body="General clinic visits (excluding vaccines, deworming, and surgery) appear here."
                   />
                 </Card>
               ) : (
-                list.map((row) => (
-                  <Card key={row.key} style={{ marginBottom: 8 }}>
-                    <Text style={styles.itemTitle}>{row.name}</Text>
-                    {row.detail ? <Muted>{row.detail}</Muted> : null}
-                    <Muted>{row.when}</Muted>
-                  </Card>
+                healthVisits.map((visit) => (
+                  <CollapsibleRecord
+                    key={visit.id}
+                    meta={new Date(visit.checkedInAt).toLocaleDateString()}
+                    title={visit.reason || visit.visitPurpose || 'Clinical visit'}
+                    badge={visit.status}
+                  >
+                    <VisitBody visit={visit} />
+                  </CollapsibleRecord>
                 ))
               )}
             </>
+          ) : tab === 'Vaccinations' ? (
+            vaccinations.length === 0 ? (
+              <Card>
+                <EmptyState
+                  title="No vaccinations yet"
+                  body="Vaccines recorded at the clinic will show here."
+                />
+              </Card>
+            ) : (
+              vaccinations.map((row) => (
+                <Card key={row.key} style={{ marginBottom: 8 }}>
+                  <Text style={styles.itemTitle}>{row.name}</Text>
+                  {row.detail ? <Muted>{row.detail}</Muted> : null}
+                  <Muted>{row.when}</Muted>
+                </Card>
+              ))
+            )
+          ) : deworming.length === 0 ? (
+            <Card>
+              <EmptyState
+                title="No deworming yet"
+                body="Deworming records from clinic visits will show here."
+              />
+            </Card>
+          ) : (
+            deworming.map((row) => (
+              <Card key={row.key} style={{ marginBottom: 8 }}>
+                <Text style={styles.itemTitle}>{row.name}</Text>
+                {row.detail ? <Muted>{row.detail}</Muted> : null}
+                <Muted>{row.when}</Muted>
+              </Card>
+            ))
           )}
         </ScrollView>
       </SafeAreaView>

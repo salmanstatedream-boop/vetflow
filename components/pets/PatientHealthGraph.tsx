@@ -10,8 +10,8 @@ import {
   Tooltip,
   ResponsiveContainer,
   ReferenceDot,
-  ScatterChart,
-  Scatter,
+  BarChart,
+  Bar,
 } from 'recharts';
 import type { PatientMedicalProfileData } from '@/lib/types/patient-medical';
 import {
@@ -81,6 +81,7 @@ export default function PatientHealthGraph({ profile }: PatientHealthGraphProps)
         .map((p) => ({
           ageYears: p.ageYears as number,
           weightKg: p.weightKg as number,
+          ageLabel: `${p.ageYears} yr`,
           label: `${p.ageYears} yr · ${formatDateLabel(p.date)}`,
         })),
     [metricPoints]
@@ -146,23 +147,17 @@ export default function PatientHealthGraph({ profile }: PatientHealthGraphProps)
             </p>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+              <BarChart data={ageWeightData} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
                 <XAxis
-                  type="number"
-                  dataKey="ageYears"
-                  name="Age"
-                  unit=" yr"
+                  dataKey="ageLabel"
                   tick={{ fontSize: 10 }}
                   stroke="rgba(255,255,255,0.4)"
                 />
                 <YAxis
-                  type="number"
-                  dataKey="weightKg"
-                  name="Weight"
-                  unit=" kg"
                   tick={{ fontSize: 10 }}
                   stroke="rgba(255,255,255,0.4)"
+                  unit=" kg"
                 />
                 <Tooltip
                   contentStyle={{
@@ -171,16 +166,13 @@ export default function PatientHealthGraph({ profile }: PatientHealthGraphProps)
                     borderRadius: 8,
                     fontSize: 11,
                   }}
-                  formatter={(value, name) => [
-                    name === 'weightKg' ? `${value} kg` : `${value} yr`,
-                    name === 'weightKg' ? 'Weight' : 'Age',
-                  ]}
+                  formatter={(value) => [`${value} kg`, 'Weight']}
                   labelFormatter={(_, payload) =>
                     payload?.[0]?.payload?.label ?? ''
                   }
                 />
-                <Scatter data={ageWeightData} fill="#74f5ff" />
-              </ScatterChart>
+                <Bar dataKey="weightKg" fill="#74f5ff" radius={[4, 4, 0, 0]} />
+              </BarChart>
             </ResponsiveContainer>
           )
         ) : activeSeries && activeSeries.data.length === 0 ? (

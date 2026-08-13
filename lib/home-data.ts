@@ -468,7 +468,7 @@ export const CLINIC_TYPES = [
       'And much more...',
     ],
     cta: 'Explore Platform',
-    liveSince: 'Since May 2024',
+    liveSince: 'Since May 2026',
   },
   {
     id: 'dental',

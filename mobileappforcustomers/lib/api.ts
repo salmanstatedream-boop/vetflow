@@ -71,6 +71,7 @@ export type OwnerPet = {
   organizationId: string;
   clinicName: string;
   clinicSlug: string | null;
+  photoUrl?: string | null;
 };
 
 export type OwnerAppointment = {
@@ -199,13 +200,15 @@ export const ownerApi = {
   metrics: (id: string) =>
     request<{
       success: true;
-      pet: { id: string; name: string };
+      pet: { id: string; name: string; dateOfBirth: string | null };
       series: {
         date: string;
         weightKg: number | null;
+        bodyConditionScore: number | null;
         temperatureC: number | null;
         heartRateBpm: number | null;
         respiratoryRate: number | null;
+        ageYears: number | null;
       }[];
     }>(`/api/owner/pets/${id}/metrics`),
   externalPrescriptions: (id: string) =>
@@ -225,6 +228,16 @@ export const ownerApi = {
   ) =>
     request<{ success: true; prescription: ExternalPrescription }>(
       `/api/owner/pets/${id}/external-prescriptions`,
+      { method: 'POST', body: JSON.stringify(payload) }
+    ),
+  petPhoto: (id: string) =>
+    request<{ success: true; photoUrl: string | null }>(`/api/owner/pets/${id}/photo`),
+  uploadPetPhoto: (
+    id: string,
+    payload: { fileBase64: string; fileName?: string; contentType?: string }
+  ) =>
+    request<{ success: true; photoUrl: string | null; documentId: string }>(
+      `/api/owner/pets/${id}/photo`,
       { method: 'POST', body: JSON.stringify(payload) }
     ),
   careJourney: (id: string) =>

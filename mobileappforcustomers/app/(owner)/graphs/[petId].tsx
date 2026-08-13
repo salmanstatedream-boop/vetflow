@@ -1,20 +1,24 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LineChart } from 'react-native-gifted-charts';
+import { BarChart, LineChart } from 'react-native-gifted-charts';
 import { Card, EmptyState, ErrorBanner, Muted, Subtitle, Title } from '@/components/ui';
 import { Colors, Fonts, Spacing } from '@/constants/theme';
 import { ownerApi } from '@/lib/api';
 
-function ChartBlock({
+function LineChartBlock({
   title,
   color,
   points,
+  maxValue,
+  noOfSections,
 }: {
   title: string;
   color: string;
   points: { value: number; label: string }[];
+  maxValue?: number;
+  noOfSections?: number;
 }) {
   if (!points.length) return null;
   return (
@@ -32,6 +36,8 @@ function ChartBlock({
         startOpacity={0.25}
         endOpacity={0.02}
         areaChart
+        maxValue={maxValue}
+        noOfSections={noOfSections}
         yAxisColor={Colors.border}
         xAxisColor={Colors.border}
         yAxisTextStyle={{ color: Colors.textMuted, fontSize: 10 }}
@@ -39,6 +45,37 @@ function ChartBlock({
         rulesColor={Colors.border}
         backgroundColor="transparent"
         height={160}
+      />
+    </Card>
+  );
+}
+
+function AgeWeightBarBlock({
+  points,
+}: {
+  points: { value: number; label: string; frontColor: string }[];
+}) {
+  if (!points.length) return null;
+  return (
+    <Card style={{ marginBottom: 14 }}>
+      <Subtitle>Age vs weight (kg)</Subtitle>
+      <Muted style={{ marginTop: 4 }}>Weight recorded at each age</Muted>
+      <View style={{ height: 10 }} />
+      <BarChart
+        data={points}
+        barWidth={28}
+        spacing={18}
+        initialSpacing={12}
+        roundedTop
+        roundedBottom
+        yAxisColor={Colors.border}
+        xAxisColor={Colors.border}
+        yAxisTextStyle={{ color: Colors.textMuted, fontSize: 10 }}
+        xAxisLabelTextStyle={{ color: Colors.textMuted, fontSize: 9 }}
+        rulesColor={Colors.border}
+        backgroundColor="transparent"
+        height={180}
+        isAnimated
       />
     </Card>
   );
@@ -70,12 +107,12 @@ export default function GraphsScreen() {
       .finally(() => setLoading(false));
   }, [petId]);
 
-  const weight = useMemo(
+  const bodyCondition = useMemo(
     () =>
       series
-        .filter((s) => s.weightKg != null)
+        .filter((s) => s.bodyConditionScore != null)
         .map((s) => ({
-          value: Number(s.weightKg),
+          value: Number(s.bodyConditionScore),
           label: new Date(s.date).toLocaleDateString(undefined, {
             month: 'short',
             day: 'numeric',
@@ -83,6 +120,7 @@ export default function GraphsScreen() {
         })),
     [series]
   );
+
   const temp = useMemo(
     () =>
       series
@@ -96,19 +134,21 @@ export default function GraphsScreen() {
         })),
     [series]
   );
-  const hr = useMemo(
+
+  const ageWeight = useMemo(
     () =>
       series
-        .filter((s) => s.heartRateBpm != null)
+        .filter((s) => s.weightKg != null && s.ageYears != null)
         .map((s) => ({
-          value: Number(s.heartRateBpm),
-          label: new Date(s.date).toLocaleDateString(undefined, {
-            month: 'short',
-            day: 'numeric',
-          }),
+          value: Number(s.weightKg),
+          label: `${s.ageYears} yr`,
+          frontColor: Colors.primary,
         })),
     [series]
   );
+
+  const hasCharts =
+    bodyCondition.length > 0 || temp.length > 0 || ageWeight.length > 0;
 
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
@@ -119,18 +159,28 @@ export default function GraphsScreen() {
         {error ? <ErrorBanner message={error} /> : null}
         {loading ? (
           <ActivityIndicator color={Colors.primary} style={{ marginTop: 24 }} />
-        ) : !weight.length && !temp.length && !hr.length ? (
+        ) : !hasCharts ? (
           <Card>
             <EmptyState
               title="No chart data yet"
-              body="Vitals recorded in clinic visits will appear as graphs here."
+              body="Body condition, temperature, and weight at age from clinic visits will appear here."
             />
           </Card>
         ) : (
           <>
-            <ChartBlock title="Weight (kg)" color={Colors.primary} points={weight} />
-            <ChartBlock title="Temperature (°C)" color={Colors.cyan} points={temp} />
-            <ChartBlock title="Heart rate (bpm)" color={Colors.violet} points={hr} />
+            <LineChartBlock
+              title="Body condition (/9)"
+              color={Colors.violet}
+              points={bodyCondition}
+              maxValue={9}
+              noOfSections={8}
+            />
+            <LineChartBlock
+              title="Temperature (°C)"
+              color={Colors.cyan}
+              points={temp}
+            />
+            <AgeWeightBarBlock points={ageWeight} />
           </>
         )}
       </ScrollView>

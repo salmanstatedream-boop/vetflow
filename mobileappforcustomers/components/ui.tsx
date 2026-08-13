@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  AccessibilityInfo,
   ActivityIndicator,
+  Image,
   Modal,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -12,8 +15,14 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Colors, Fonts, Radii, Spacing } from '@/constants/theme';
+import { Colors, Fonts, Layout, Radii, Spacing } from '@/constants/theme';
 
 export function Screen({
   children,
@@ -43,7 +52,10 @@ export function GlassCard({
     return (
       <Pressable
         onPress={onPress}
-        style={({ pressed }) => [styles.glassOuter, pressed && { opacity: 0.92 }]}
+        style={({ pressed }) => [
+          styles.glassOuter,
+          pressed && { transform: [{ scale: 0.99 }] },
+        ]}
       >
         {body}
       </Pressable>
@@ -82,37 +94,89 @@ export function GlassModal({
   onClose: () => void;
   actions: { label: string; onPress: () => void; tone?: 'default' | 'danger' | 'primary' }[];
 }) {
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const scale = useSharedValue(0.98);
+  const opacity = useSharedValue(0);
+
+  useEffect(() => {
+    let mounted = true;
+    void AccessibilityInfo.isReduceMotionEnabled().then((v) => {
+      if (mounted) setReduceMotion(v);
+    });
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
+    return () => {
+      mounted = false;
+      sub.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!visible) {
+      opacity.value = 0;
+      scale.value = 0.98;
+      return;
+    }
+    if (reduceMotion) {
+      opacity.value = 1;
+      scale.value = 1;
+      return;
+    }
+    opacity.value = withTiming(1, { duration: 160 });
+    scale.value = withSpring(1, { damping: 28, stiffness: 320, mass: 0.8 });
+  }, [visible, reduceMotion, opacity, scale]);
+
+  const cardStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ scale: scale.value }],
+  }));
+
+  const runAction = (fn: () => void) => {
+    onClose();
+    fn();
+  };
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.modalRoot}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-        <BlurView intensity={40} tint="dark" style={styles.modalCard}>
+        <BlurView intensity={85} tint="dark" style={StyleSheet.absoluteFill} />
+        <View style={[StyleSheet.absoluteFill, styles.modalScrim]} />
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Dismiss" />
+        <Animated.View style={[styles.modalCard, cardStyle]}>
+          <View style={styles.modalHighlight} />
           <Text style={styles.modalTitle}>{title}</Text>
           <Text style={styles.modalMessage}>{message}</Text>
           <View style={styles.modalActions}>
-            {actions.map((a) => (
-              <Pressable
-                key={a.label}
-                onPress={() => {
-                  onClose();
-                  a.onPress();
-                }}
-                hitSlop={8}
-                style={styles.modalAction}
-              >
-                <Text
-                  style={[
-                    styles.modalActionText,
-                    a.tone === 'danger' && { color: Colors.danger },
-                    a.tone === 'primary' && { color: Colors.cyan },
+            {actions.map((a) => {
+              const tone = a.tone || 'default';
+              return (
+                <Pressable
+                  key={a.label}
+                  accessibilityRole="button"
+                  onPress={() => runAction(a.onPress)}
+                  style={({ pressed }) => [
+                    styles.modalBtn,
+                    tone === 'default' && styles.modalBtnGhost,
+                    tone === 'primary' && styles.modalBtnPrimary,
+                    tone === 'danger' && styles.modalBtnDanger,
+                    pressed && { transform: [{ scale: 0.97 }], opacity: 0.92 },
                   ]}
                 >
-                  {a.label.toUpperCase()}
-                </Text>
-              </Pressable>
-            ))}
+                  <Text
+                    style={[
+                      styles.modalBtnText,
+                      tone === 'default' && { color: Colors.text },
+                      tone === 'primary' && { color: Colors.blue },
+                      tone === 'danger' && { color: Colors.onPrimary },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {a.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
-        </BlurView>
+        </Animated.View>
       </View>
     </Modal>
   );
@@ -200,7 +264,7 @@ export function PrimaryButton({
       style={({ pressed }) => [
         styles.primaryBtn,
         (disabled || loading) && { opacity: 0.5 },
-        pressed && { opacity: 0.9 },
+        pressed && !disabled && !loading && { transform: [{ scale: 0.97 }] },
       ]}
     >
       {loading ? (
@@ -230,13 +294,40 @@ export function SecondaryButton({
       disabled={disabled}
       style={({ pressed }) => [
         styles.secondaryBtn,
-        danger && { borderColor: Colors.dangerSoft, backgroundColor: Colors.dangerSoft },
-        (disabled || pressed) && { opacity: disabled ? 0.5 : 0.85 },
+        danger && { borderColor: 'rgba(248, 113, 113, 0.32)', backgroundColor: Colors.dangerSoft },
+        disabled && { opacity: 0.5 },
+        pressed && !disabled && { transform: [{ scale: 0.97 }] },
       ]}
     >
       <Text style={[styles.secondaryBtnText, danger && { color: Colors.danger }]}>
         {label}
       </Text>
+    </Pressable>
+  );
+}
+
+export function TextButton({
+  label,
+  onPress,
+  disabled,
+}: {
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      disabled={disabled}
+      hitSlop={8}
+      style={({ pressed }) => [
+        styles.textBtn,
+        disabled && { opacity: 0.45 },
+        pressed && !disabled && { opacity: 0.7 },
+      ]}
+    >
+      <Text style={styles.textBtnLabel}>{label}</Text>
     </Pressable>
   );
 }
@@ -445,15 +536,17 @@ export function QuickActionTile({
       onPress={onPress}
       style={({ pressed }) => [
         styles.quickTile,
-        danger && { backgroundColor: Colors.dangerSoft },
-        pressed && { opacity: 0.88 },
+        danger && styles.quickTileDanger,
+        pressed && { transform: [{ scale: 0.97 }] },
       ]}
     >
-      <FontAwesome
-        name={icon}
-        size={20}
-        color={danger ? Colors.danger : Colors.primary}
-      />
+      <View style={[styles.quickIconWell, danger && styles.quickIconWellDanger]}>
+        <FontAwesome
+          name={icon}
+          size={16}
+          color={danger ? Colors.danger : Colors.blue}
+        />
+      </View>
       <Text style={[styles.quickLabel, danger && { color: Colors.danger }]} numberOfLines={2}>
         {label}
       </Text>
@@ -464,17 +557,32 @@ export function QuickActionTile({
 
 export function GradientPetHero({
   name,
-  breed,
-  meta,
-  nextCare,
-  clinic,
+  age,
+  weight,
+  gender,
+  species,
+  photoUrl,
+  onEditPhoto,
+  photoUploading,
+  onOpen,
 }: {
   name: string;
-  breed?: string | null;
-  meta: string;
-  nextCare?: string | null;
-  clinic?: string | null;
+  age?: string | null;
+  weight?: string | null;
+  gender?: string | null;
+  species?: string | null;
+  photoUrl?: string | null;
+  onEditPhoto?: () => void;
+  photoUploading?: boolean;
+  onOpen?: () => void;
 }) {
+  const details = [
+    { label: 'Age', value: age },
+    { label: 'Weight', value: weight },
+    { label: 'Gender', value: gender },
+    { label: 'Species', value: species },
+  ].filter((d) => Boolean(d.value));
+
   return (
     <LinearGradient
       colors={[Colors.gradientStart, Colors.gradientEnd]}
@@ -483,21 +591,49 @@ export function GradientPetHero({
       style={styles.hero}
     >
       <View style={styles.heroRow}>
-        <View style={styles.heroAvatar}>
-          <FontAwesome name="paw" size={28} color={Colors.primary} />
-        </View>
-        <View style={{ flex: 1 }}>
-          {clinic ? <Text style={styles.heroClinic}>{clinic}</Text> : null}
+        <Pressable
+          onPress={onEditPhoto}
+          disabled={!onEditPhoto || photoUploading}
+          style={({ pressed }) => [
+            styles.heroAvatar,
+            pressed && onEditPhoto && { opacity: 0.88 },
+          ]}
+          accessibilityRole={onEditPhoto ? 'button' : undefined}
+          accessibilityLabel={onEditPhoto ? 'Change pet photo' : undefined}
+        >
+          {photoUrl ? (
+            <Image source={{ uri: photoUrl }} style={styles.heroPhoto} />
+          ) : (
+            <FontAwesome name="paw" size={26} color={Colors.primary} />
+          )}
+          {onEditPhoto ? (
+            <View style={styles.heroPhotoBadge}>
+              {photoUploading ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <FontAwesome name="camera" size={10} color="#fff" />
+              )}
+            </View>
+          ) : null}
+        </Pressable>
+        <Pressable
+          style={{ flex: 1, gap: 4 }}
+          onPress={onOpen}
+          disabled={!onOpen}
+        >
           <Text style={styles.heroName}>{name}</Text>
-          {breed ? <Text style={styles.heroBreed}>{breed}</Text> : null}
-          <Text style={styles.heroMeta}>{meta}</Text>
-        </View>
+          {species ? <Text style={styles.heroBreed}>{species}</Text> : null}
+        </Pressable>
       </View>
-      {nextCare ? (
-        <View style={styles.nextCare}>
-          <Text style={styles.nextCareLabel}>Next care</Text>
-          <Text style={styles.nextCareValue}>{nextCare}</Text>
-        </View>
+      {details.length ? (
+        <Pressable onPress={onOpen} disabled={!onOpen} style={styles.heroStats}>
+          {details.map((d) => (
+            <View key={d.label} style={styles.heroStat}>
+              <Text style={styles.heroStatLabel}>{d.label}</Text>
+              <Text style={styles.heroStatValue}>{d.value}</Text>
+            </View>
+          ))}
+        </Pressable>
       ) : null}
     </LinearGradient>
   );
@@ -597,8 +733,12 @@ export function Sheet({
 }) {
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable style={styles.sheetBackdrop} onPress={onClose} />
-      <View style={styles.sheet}>{children}</View>
+      <View style={styles.sheetRoot}>
+        <BlurView intensity={85} tint="dark" style={StyleSheet.absoluteFill} />
+        <View style={[StyleSheet.absoluteFill, styles.modalScrim]} />
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Dismiss" />
+        <View style={styles.sheet}>{children}</View>
+      </View>
     </Modal>
   );
 }
@@ -613,41 +753,65 @@ const styles = StyleSheet.create({
   glassOuter: {
     borderRadius: Radii.lg,
     overflow: 'hidden',
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth * 2,
     borderColor: Colors.glassBorder,
-    backgroundColor: Colors.glass,
+    backgroundColor: Colors.surfaceSolid,
   },
   glassInner: {
     padding: Spacing.lg,
   },
   card: {
-    backgroundColor: Colors.glass,
+    backgroundColor: Colors.surfaceSolid,
     borderRadius: Radii.lg,
     padding: Spacing.lg,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth * 2,
     borderColor: Colors.glassBorder,
   },
   modalRoot: {
     flex: 1,
-    backgroundColor: Colors.overlay,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 28,
+    paddingHorizontal: 24,
+  },
+  modalScrim: {
+    backgroundColor: Colors.overlay,
   },
   modalCard: {
     width: '100%',
-    maxWidth: 360,
+    maxWidth: 340,
     borderRadius: Radii.xl,
     overflow: 'hidden',
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth * 2,
     borderColor: Colors.glassBorder,
-    backgroundColor: Colors.glass,
-    padding: 22,
+    backgroundColor: Colors.surfaceSolid,
+    paddingTop: 22,
+    paddingHorizontal: 20,
+    paddingBottom: 18,
+    zIndex: 2,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOpacity: 0.4,
+        shadowRadius: 28,
+        shadowOffset: { width: 0, height: 16 },
+      },
+      android: { elevation: 16 },
+      default: {},
+    }),
+  },
+  modalHighlight: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: StyleSheet.hairlineWidth * 2,
+    backgroundColor: Colors.glassHighlight,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontFamily: Fonts.bold,
     color: Colors.text,
+    letterSpacing: -0.2,
     marginBottom: 8,
   },
   modalMessage: {
@@ -655,20 +819,40 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     fontFamily: Fonts.regular,
     color: Colors.textMuted,
-    marginBottom: 20,
+    marginBottom: 18,
   },
   modalActions: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
     flexWrap: 'wrap',
-    gap: 16,
+    gap: 8,
   },
-  modalAction: { paddingVertical: 4 },
-  modalActionText: {
-    fontSize: 13,
-    fontFamily: Fonts.bold,
-    color: Colors.cyan,
-    letterSpacing: 0.4,
+  modalBtn: {
+    flexGrow: 1,
+    flexBasis: '28%',
+    minHeight: 44,
+    borderRadius: Radii.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+  },
+  modalBtnGhost: {
+    backgroundColor: Colors.surface,
+    borderWidth: StyleSheet.hairlineWidth * 2,
+    borderColor: Colors.glassBorder,
+  },
+  modalBtnPrimary: {
+    backgroundColor: Colors.primarySoft,
+    borderWidth: StyleSheet.hairlineWidth * 2,
+    borderColor: 'rgba(59, 130, 246, 0.45)',
+  },
+  modalBtnDanger: {
+    backgroundColor: Colors.danger,
+  },
+  modalBtnText: {
+    fontSize: 14,
+    fontFamily: Fonts.semiBold,
+    color: Colors.text,
+    letterSpacing: -0.1,
   },
   collapseHeader: {
     flexDirection: 'row',
@@ -688,7 +872,7 @@ const styles = StyleSheet.create({
     lineHeight: 34,
     fontFamily: Fonts.bold,
     color: Colors.text,
-    letterSpacing: -0.4,
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 17,
@@ -698,7 +882,7 @@ const styles = StyleSheet.create({
   },
   muted: {
     fontSize: 14,
-    lineHeight: 20,
+    lineHeight: 21,
     fontFamily: Fonts.regular,
     color: Colors.textMuted,
   },
@@ -711,7 +895,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   input: {
-    minHeight: 50,
+    minHeight: Layout.inputHeight,
     borderRadius: Radii.md,
     borderWidth: 1,
     borderColor: Colors.border,
@@ -722,8 +906,8 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   primaryBtn: {
-    minHeight: 52,
-    borderRadius: Radii.md,
+    minHeight: Layout.buttonHeight,
+    borderRadius: Radii.lg,
     backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -731,14 +915,15 @@ const styles = StyleSheet.create({
   },
   primaryBtnText: {
     color: Colors.onPrimary,
-    fontFamily: Fonts.bold,
-    fontSize: 16,
+    fontFamily: Fonts.semiBold,
+    fontSize: 15,
+    letterSpacing: -0.15,
   },
   secondaryBtn: {
-    minHeight: 50,
-    borderRadius: Radii.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    minHeight: Layout.buttonHeight,
+    borderRadius: Radii.lg,
+    borderWidth: StyleSheet.hairlineWidth * 2,
+    borderColor: Colors.glassBorder,
     backgroundColor: Colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
@@ -748,6 +933,19 @@ const styles = StyleSheet.create({
     color: Colors.text,
     fontFamily: Fonts.semiBold,
     fontSize: 15,
+    letterSpacing: -0.15,
+  },
+  textBtn: {
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+  },
+  textBtnLabel: {
+    color: Colors.blue,
+    fontFamily: Fonts.semiBold,
+    fontSize: 14,
+    letterSpacing: -0.1,
   },
   badge: {
     alignSelf: 'flex-start',
@@ -847,26 +1045,43 @@ const styles = StyleSheet.create({
   segmentText: {
     color: Colors.textMuted,
     fontFamily: Fonts.semiBold,
-    fontSize: 12,
+    fontSize: 11,
+    textAlign: 'center',
   },
   segmentTextActive: { color: Colors.text, fontFamily: Fonts.bold },
   quickTile: {
     width: '31%',
     minWidth: 96,
     aspectRatio: 1,
-    borderRadius: Radii.md,
-    backgroundColor: Colors.glass,
-    borderWidth: 1,
+    borderRadius: Radii.lg,
+    backgroundColor: Colors.surface,
+    borderWidth: StyleSheet.hairlineWidth * 2,
     borderColor: Colors.glassBorder,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 10,
     gap: 8,
   },
+  quickTileDanger: {
+    backgroundColor: Colors.dangerSoft,
+    borderColor: 'rgba(248, 113, 113, 0.22)',
+  },
+  quickIconWell: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: Colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickIconWellDanger: {
+    backgroundColor: 'rgba(248, 113, 113, 0.18)',
+  },
   quickLabel: {
-    fontSize: 12,
-    fontFamily: Fonts.semiBold,
-    color: Colors.text,
+    fontSize: 11,
+    lineHeight: 14,
+    fontFamily: Fonts.medium,
+    color: Colors.textMuted,
     textAlign: 'center',
   },
   soon: {
@@ -879,12 +1094,28 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     overflow: 'hidden',
   },
-  heroRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
+  heroRow: { flexDirection: 'row', gap: 14, alignItems: 'center' },
   heroAvatar: {
     width: 72,
     height: 72,
-    borderRadius: Radii.md,
-    backgroundColor: 'rgba(255,255,255,0.92)',
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.96)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  heroPhoto: {
+    width: '100%',
+    height: '100%',
+  },
+  heroPhotoBadge: {
+    position: 'absolute',
+    right: 4,
+    bottom: 4,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(15,23,42,0.72)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -905,6 +1136,33 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
     fontFamily: Fonts.regular,
+  },
+  heroStats: {
+    marginTop: 14,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  heroStat: {
+    minWidth: '22%',
+    flexGrow: 1,
+    backgroundColor: 'rgba(15,23,42,0.28)',
+    borderRadius: Radii.md,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+  },
+  heroStatLabel: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 10,
+    fontFamily: Fonts.bold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  heroStatValue: {
+    color: '#fff',
+    fontSize: 13,
+    fontFamily: Fonts.semiBold,
+    marginTop: 3,
   },
   nextCare: {
     marginTop: 14,
@@ -967,18 +1225,20 @@ const styles = StyleSheet.create({
   },
   stepNum: { fontSize: 12, fontFamily: Fonts.bold, color: Colors.textMuted },
   stepTitle: { fontSize: 15, fontFamily: Fonts.bold, color: Colors.text },
-  sheetBackdrop: {
+  sheetRoot: {
     flex: 1,
-    backgroundColor: 'rgba(15,23,42,0.45)',
+    justifyContent: 'flex-end',
   },
   sheet: {
     backgroundColor: Colors.surfaceSolid,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: Radii.xl,
+    borderTopRightRadius: Radii.xl,
     padding: 20,
     paddingBottom: 32,
     maxHeight: '85%',
     borderWidth: 1,
     borderColor: Colors.glassBorder,
+    borderBottomWidth: 0,
+    zIndex: 2,
   },
 });

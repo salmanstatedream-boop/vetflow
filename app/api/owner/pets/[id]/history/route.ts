@@ -166,6 +166,24 @@ export async function GET(req: Request, { params }: Params) {
     };
   });
 
+  let photoUrl: string | null = null;
+  const { data: photoDoc } = await admin
+    .from('documents')
+    .select('bucket_id, storage_path')
+    .eq('patient_id', patientId)
+    .eq('organization_id', pet.organization_id)
+    .eq('category', 'profile_photo')
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (photoDoc?.storage_path) {
+    const { data: signed } = await admin.storage
+      .from(photoDoc.bucket_id || 'clinic-documents')
+      .createSignedUrl(photoDoc.storage_path, 60 * 60);
+    photoUrl = signed?.signedUrl ?? null;
+  }
+
   return Response.json({
     success: true,
     pet: {
@@ -184,6 +202,7 @@ export async function GET(req: Request, { params }: Params) {
       clinicSlug: o?.slug ?? null,
       organizationId: pet.organization_id,
       customerId: pet.customer_id,
+      photoUrl,
     },
     history,
   });
