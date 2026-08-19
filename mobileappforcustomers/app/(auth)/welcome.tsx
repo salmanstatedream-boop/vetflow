@@ -11,8 +11,6 @@ export default function WelcomeScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={styles.glowOuter} pointerEvents="none" />
-      <View style={styles.glowInner} pointerEvents="none" />
       <View style={styles.body}>
         <View style={styles.brandBlock}>
           <Image
@@ -66,24 +64,6 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: Colors.background,
-  },
-  glowOuter: {
-    position: 'absolute',
-    top: '22%',
-    alignSelf: 'center',
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    backgroundColor: 'rgba(59, 130, 246, 0.07)',
-  },
-  glowInner: {
-    position: 'absolute',
-    top: '28%',
-    alignSelf: 'center',
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: 'rgba(59, 130, 246, 0.12)',
   },
   body: {
     flex: 1,

@@ -10,7 +10,7 @@ import { Video } from 'lucide-react';
 
 export const metadata = {
   title: 'Cameras',
-  description: 'View live clinic camera feeds and stored recordings.',
+  description: 'Connect and monitor cameras installed at this clinic.',
 };
 
 export default async function CameraPage() {
@@ -48,7 +48,7 @@ export default async function CameraPage() {
     <div className="space-y-8">
       <PageHeader
         title="Cameras"
-        description="Live streams and stored recordings for your active branch."
+        description="Connect and monitor cameras installed at this clinic."
         icon={Video}
       />
       <CameraFeedClient />

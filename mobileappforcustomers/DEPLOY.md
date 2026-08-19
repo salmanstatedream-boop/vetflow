@@ -5,7 +5,7 @@
 - Expo account: `salmaniqbaljoyia`
 - Project: https://expo.dev/accounts/salmaniqbaljoyia/projects/phoenix-care
 - EAS project ID: `61a8da34-2c6d-47ae-bea5-8af632f80ce6`
-- Preview build v1.0.2 (Android, graphs update): https://expo.dev/accounts/salmaniqbaljoyia/projects/phoenix-care/builds/beb94ed7-597c-42a6-8e80-ab9c52e086ac
+- Preview build v1.0.3 (Android, notifications + booking UX): https://expo.dev/accounts/salmaniqbaljoyia/projects/phoenix-care/builds/6295e198-8245-42dd-9250-db15a49b18b1
 - Direct APK: https://expo.dev/artifacts/eas/V5zAdFXS7m3AZonZUFHy_A8lwhhaD9-KknFRBqZ1-jg.apk
 - Previous preview build: https://expo.dev/accounts/salmaniqbaljoyia/projects/phoenix-care/builds/da535c1e-5f06-4fa4-b45f-b3a1fc7bbb72
 

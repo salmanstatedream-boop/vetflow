@@ -861,6 +861,16 @@ const VoiceMetaSchema = z.object({
   mimeType: z.string().min(1).max(100),
 });
 
+function normalizeAudioMime(raw: string): string {
+  const base = raw.split(';')[0]?.trim().toLowerCase() || 'audio/webm';
+  if (base === 'audio/webm' || base.startsWith('audio/webm')) return 'audio/webm';
+  if (base.includes('ogg')) return 'audio/ogg';
+  if (base.includes('mp4') || base.includes('aac') || base.includes('m4a')) return 'audio/mp4';
+  if (base.includes('mpeg') || base.includes('mp3')) return 'audio/mpeg';
+  if (base.includes('wav')) return 'audio/wav';
+  return 'audio/webm';
+}
+
 export async function sendStaffVoiceMessageAction(formData: FormData) {
   try {
     const ctx = await resolveServerAuthContext();
@@ -870,7 +880,7 @@ export async function sendStaffVoiceMessageAction(formData: FormData) {
     const meta = VoiceMetaSchema.parse({
       conversationId: formData.get('conversationId'),
       durationSec: Number(formData.get('durationSec')),
-      mimeType: String(formData.get('mimeType') || 'audio/webm'),
+      mimeType: normalizeAudioMime(String(formData.get('mimeType') || 'audio/webm')),
     });
 
     const file = formData.get('audio');

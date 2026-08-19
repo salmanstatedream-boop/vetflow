@@ -17,8 +17,6 @@ import {
   Card,
   EmptyState,
   ErrorBanner,
-  Field,
-  Label,
   Muted,
   PrimaryButton,
   SecondaryButton,
@@ -28,6 +26,7 @@ import {
   Title,
 } from '@/components/ui';
 import { Colors } from '@/constants/theme';
+import DateTimeFields, { toDateString, toTimeString } from '@/components/DateTimeFields';
 import { ownerApi, type OwnerAppointment, type OwnerPet } from '@/lib/api';
 
 const SERVICES = [
@@ -196,6 +195,9 @@ export default function VisitsScreen() {
             <PrimaryButton
               label="+ Book Appointment"
               onPress={() => {
+                const now = new Date();
+                setDate(toDateString(now));
+                setTime(toTimeString(now));
                 setBookOpen(true);
                 setStep(0);
               }}
@@ -296,14 +298,15 @@ export default function VisitsScreen() {
           </View>
         )}
         {step === 2 && (
-          <View style={{ gap: 10 }}>
-            <Label>Date (YYYY-MM-DD)</Label>
-            <Field value={date} onChangeText={setDate} placeholder="2026-09-24" />
-            <Label>Time (HH:MM)</Label>
-            <Field value={time} onChangeText={setTime} placeholder="16:30" />
-            <Label>Notes (optional)</Label>
-            <Field value={notes} onChangeText={setNotes} placeholder="Anything the clinic should know" />
-          </View>
+          <DateTimeFields
+            date={date}
+            time={time}
+            onDateChange={setDate}
+            onTimeChange={setTime}
+            notes={notes}
+            onNotesChange={setNotes}
+            showNotes
+          />
         )}
         {step === 3 && (
           <Card>
@@ -330,11 +333,12 @@ export default function VisitsScreen() {
       <Sheet visible={Boolean(rescheduleId)} onClose={() => setRescheduleId(null)}>
         <Title>Reschedule</Title>
         <View style={{ height: 12 }} />
-        <Label>Date (YYYY-MM-DD)</Label>
-        <Field value={rescheduleDate} onChangeText={setRescheduleDate} />
-        <View style={{ height: 10 }} />
-        <Label>Time (HH:MM)</Label>
-        <Field value={rescheduleTime} onChangeText={setRescheduleTime} />
+        <DateTimeFields
+          date={rescheduleDate}
+          time={rescheduleTime}
+          onDateChange={setRescheduleDate}
+          onTimeChange={setRescheduleTime}
+        />
         <View style={{ height: 16 }} />
         <PrimaryButton label="Save" loading={loading} onPress={submitReschedule} />
         <View style={{ height: 8 }} />

@@ -492,7 +492,7 @@ function MultiBranchModal({ open, onClose }: { open: boolean; onClose: () => voi
 
 function LiveCameraModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [devices, setDevices] = useState<
-    Array<{ id: string; name: string; snapshot_url: string | null; stream_url: string | null }>
+    Array<{ id: string; name: string; snapshotUrl: string | null; streamUrl: string | null }>
   >([]);
 
   useEffect(() => {
@@ -513,9 +513,9 @@ function LiveCameraModal({ open, onClose }: { open: boolean; onClose: () => void
           {devices.map((d) => (
             <div key={d.id} className="rounded-xl border border-outline-variant/40 overflow-hidden">
               <p className="text-xs font-bold p-2 bg-surface-container/40">{d.name}</p>
-              {d.snapshot_url ? (
+              {d.snapshotUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={d.snapshot_url} alt={d.name} className="w-full h-40 object-cover bg-black/20" />
+                <img src={d.snapshotUrl} alt={d.name} className="w-full h-40 object-cover bg-black/20" />
               ) : (
                 <div className="h-40 bg-surface-container/20 flex items-center justify-center text-xs text-on-surface-variant">
                   No snapshot URL configured

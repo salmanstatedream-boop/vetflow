@@ -9,8 +9,10 @@ import {
   Phone,
   Printer,
   FileText,
+  X,
 } from 'lucide-react';
 import { useVisibilityPolling } from '@/lib/hooks/useVisibilityPolling';
+import { useDashboardShell } from '@/lib/context/DashboardShellContext';
 import DateRangeQuickFilter from '@/components/dashboard/DateRangeQuickFilter';
 import VisitStatusBadge from '@/components/dashboard/VisitStatusBadge';
 import { isConsultPaused } from '@/lib/utils/visit-status';
@@ -24,6 +26,7 @@ export type ReceptionistAppointmentRow = {
   customerPhone: string;
   preferredTime: string;
   isEmergency: boolean;
+  status: string;
 };
 
 export type ReceptionistVisitRow = {
@@ -72,6 +75,27 @@ export default function ReceptionistHomeClient({
   deviceTimezone,
 }: ReceptionistHomeClientProps) {
   useVisibilityPolling(15000, true);
+  const shell = useDashboardShell();
+  const [requestToast, setRequestToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    const apptNotifs =
+      shell?.notifications.filter((n) => n.kind === 'appointment_request') ?? [];
+    if (!apptNotifs.length) return;
+    let seen: string[] = [];
+    try {
+      seen = JSON.parse(sessionStorage.getItem('phx-seen-appt-notifs') || '[]');
+    } catch {
+      seen = [];
+    }
+    const seenSet = new Set(seen);
+    const fresh = apptNotifs.find((n) => !seenSet.has(n.id));
+    if (fresh) {
+      setRequestToast(fresh.body);
+      seenSet.add(fresh.id);
+      sessionStorage.setItem('phx-seen-appt-notifs', JSON.stringify([...seenSet]));
+    }
+  }, [shell?.notifications]);
 
   const searchParams = useSearchParams();
   const urlDate = searchParams.get('date');
@@ -104,6 +128,30 @@ export default function ReceptionistHomeClient({
 
   return (
     <div className="space-y-6">
+      {requestToast ? (
+        <div className="flex items-start justify-between gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide text-amber-400">
+              New appointment request
+            </p>
+            <p className="mt-1 text-sm text-on-surface">{requestToast}</p>
+            <AppLink
+              href="/dashboard/appointments?status=requested"
+              className="mt-2 inline-block text-xs font-semibold text-primary hover:underline"
+            >
+              Review & confirm →
+            </AppLink>
+          </div>
+          <button
+            type="button"
+            onClick={() => setRequestToast(null)}
+            className="shrink-0 text-on-surface-variant hover:text-on-surface"
+            aria-label="Dismiss"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      ) : null}
       <DateRangeQuickFilter showWeek={false} deviceTimezone={deviceTimezone} />
 
       <div className="grid md:grid-cols-3 gap-4">
@@ -121,6 +169,11 @@ export default function ReceptionistHomeClient({
             >
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-on-surface">{a.petName}</span>
+                {a.status === 'requested' && (
+                  <span className="rounded-full border border-amber-500/40 bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-400">
+                    Requested
+                  </span>
+                )}
                 {a.isEmergency && (
                   <span className="text-[9px] font-bold text-destructive flex items-center gap-0.5">
                     <AlertTriangle className="w-2.5 h-2.5" />

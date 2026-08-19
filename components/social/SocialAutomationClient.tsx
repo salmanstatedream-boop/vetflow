@@ -14,7 +14,9 @@ import SocialConnectionsBar from '@/components/social/SocialConnectionsBar';
 import Button from '@/components/ui/premium/Button';
 import Select from '@/components/ui/premium/Select';
 import Textarea from '@/components/ui/premium/Textarea';
-import { Sparkles, Trash2, Copy, Check, Upload, Send, ImageIcon, X } from 'lucide-react';
+import Modal from '@/components/ui/premium/Modal';
+import EmptyState from '@/components/ui/premium/EmptyState';
+import { Sparkles, Trash2, Copy, Check, Upload, Send, ImageIcon, X, Share2 } from 'lucide-react';
 
 type Post = {
   id: string;
@@ -58,7 +60,11 @@ export default function SocialAutomationClient({
 }: SocialAutomationClientProps) {
   const [platform, setPlatform] = useState('instagram');
   const [topic, setTopic] = useState('');
+  const [tone, setTone] = useState<'friendly' | 'professional' | 'playful'>('friendly');
+  const [extraInstructions, setExtraInstructions] = useState('');
   const [content, setContent] = useState('');
+  const [userEdited, setUserEdited] = useState(false);
+  const [confirmPublish, setConfirmPublish] = useState(false);
   const [imagePath, setImagePath] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -113,13 +119,19 @@ export default function SocialAutomationClient({
     }
     setLoading(true);
     setError(null);
+    if (userEdited && content.trim()) {
+      if (!window.confirm('You have edited the caption. Generate a new one?')) {
+        setLoading(false);
+        return;
+      }
+    }
     const res = await generateSocialPostAction({
       platform: platform as 'facebook' | 'instagram',
-      topic: topic.trim(),
-      tone: 'friendly',
+      topic: topic.trim() + (extraInstructions.trim() ? `\n\nAdditional context: ${extraInstructions.trim()}` : ''),
+      tone,
     });
     setLoading(false);
-    if (res.success && res.content) setContent(res.content);
+    if (res.success && res.content) { setContent(res.content); setUserEdited(false); }
     else setError(res.error || 'Generation failed.');
   };
 
@@ -287,6 +299,29 @@ export default function SocialAutomationClient({
             </div>
           </div>
 
+          <Select
+            label="Tone"
+            value={tone}
+            onChange={(v) => setTone(v as 'friendly' | 'professional' | 'playful')}
+            options={[
+              { value: 'friendly', label: 'Friendly' },
+              { value: 'professional', label: 'Professional' },
+              { value: 'playful', label: 'Playful' },
+            ]}
+          />
+
+          <div>
+            <label className="block text-[10px] font-semibold text-on-surface/80 uppercase tracking-wider mb-1.5">
+              Additional instructions (optional)
+            </label>
+            <input
+              value={extraInstructions}
+              onChange={(e) => setExtraInstructions(e.target.value)}
+              placeholder="e.g. Promote our free consultation offer"
+              className="w-full px-4 py-3 bg-surface-container border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary rounded-2xl outline-none text-sm text-on-surface"
+            />
+          </div>
+
           <Button
             type="button"
             onClick={generate}
@@ -300,7 +335,7 @@ export default function SocialAutomationClient({
           <Textarea
             label="Caption"
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={(e) => { setContent(e.target.value); setUserEdited(true); }}
             rows={6}
             placeholder="Write your caption or generate one with AI."
           />
@@ -326,13 +361,12 @@ export default function SocialAutomationClient({
             </Button>
             <Button
               type="button"
-              onClick={() => save(true)}
-              loading={publishing || saving}
+              onClick={() => setConfirmPublish(true)}
               disabled={!canPublish}
               icon={<Send className="w-4 h-4" />}
               className="flex-1"
             >
-              Publish now
+              Review &amp; Publish
             </Button>
           </div>
         </div>
@@ -340,7 +374,13 @@ export default function SocialAutomationClient({
         <div className="glass-panel rounded-2xl border border-outline-variant/40 p-6">
           <h3 className="text-sm font-bold text-on-surface mb-4">Posts</h3>
           {posts.length === 0 ? (
-            <p className="text-xs text-on-surface-variant text-center py-12">No posts yet.</p>
+            <div className="py-8">
+              <EmptyState
+                icon={Share2}
+                title="No posts yet"
+                description="Connect your social accounts and create your first post with AI."
+              />
+            </div>
           ) : (
             <ul className="space-y-3 max-h-[640px] overflow-y-auto">
               {posts.map((p) => (
@@ -399,6 +439,41 @@ export default function SocialAutomationClient({
           )}
         </div>
       </div>
+
+      <Modal
+        open={confirmPublish}
+        onClose={() => setConfirmPublish(false)}
+        title="Confirm publish"
+        description="Review your post before publishing."
+        size="sm"
+      >
+        <div className="space-y-4">
+          {imagePreview && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={imagePreview} alt="Post preview" className="w-full max-h-48 object-cover rounded-xl" />
+          )}
+          <p className="text-xs text-on-surface leading-relaxed whitespace-pre-wrap">{content}</p>
+          <p className="text-[10px] text-on-surface-variant">
+            Publishing to <span className="font-bold text-primary capitalize">{platform}</span>
+          </p>
+          <div className="flex justify-end gap-2 pt-3 border-t border-outline-variant/30">
+            <Button variant="ghost" size="sm" onClick={() => setConfirmPublish(false)}>
+              Back to edit
+            </Button>
+            <Button
+              size="sm"
+              loading={publishing || saving}
+              onClick={async () => {
+                setConfirmPublish(false);
+                await save(true);
+              }}
+              icon={<Send className="w-4 h-4" />}
+            >
+              Publish now
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

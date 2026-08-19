@@ -133,7 +133,7 @@ export const DASHBOARD_NAV_GROUPS: DashboardNavGroup[] = [
     collapsible: true,
     items: [
       { name: 'Sales', href: '/dashboard/sales', icon: BarChart3, adminOnly: true },
-      { name: 'Social', href: '/dashboard/social', icon: Share2 },
+      { name: 'Social Media', href: '/dashboard/social', icon: Share2 },
       { name: 'Branches', href: '/dashboard/branches', icon: MapPin },
       { name: 'Staff', href: '/dashboard/staff', icon: Users },
       { name: 'My Profile', href: '/dashboard/profile', icon: UserCircle },
@@ -165,7 +165,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/dashboard/reports/ai': 'AI Analytics',
   '/dashboard/revenue': 'Revenue',
   '/dashboard/ai-assistant': 'AI Assistant',
-  '/dashboard/social': 'Social',
+  '/dashboard/social': 'Social Media',
   '/dashboard/branches': 'Branches',
   '/dashboard/staff': 'Staff',
   '/dashboard/profile': 'My Profile',

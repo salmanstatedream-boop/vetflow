@@ -6,6 +6,7 @@ import {
   resolveServerAuthContext,
 } from '@/lib/auth/context';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { notifyOwner } from '@/lib/services/owner-care';
 
 export type OwnerInboxThread = {
   id: string;
@@ -162,7 +163,12 @@ export async function replyOwnerInboxAction(payload: unknown) {
     const supabase = await createClient();
     const { data: thread } = await supabase
       .from('owner_clinic_threads')
-      .select('id')
+      .select(
+        `
+        id, user_id, organization_id,
+        customers ( first_name, last_name )
+      `
+      )
       .eq('id', parsed.threadId)
       .eq('organization_id', ctx.organizationId)
       .maybeSingle();
@@ -187,6 +193,18 @@ export async function replyOwnerInboxAction(payload: unknown) {
       .from('owner_clinic_threads')
       .update({ last_message_at: now })
       .eq('id', parsed.threadId);
+
+    const ownerUserId = thread.user_id as string | null;
+    if (ownerUserId) {
+      await notifyOwner({
+        userId: ownerUserId,
+        organizationId: ctx.organizationId,
+        kind: 'owner_message',
+        title: 'New message from clinic',
+        body: parsed.body.slice(0, 120),
+        data: { threadId: parsed.threadId },
+      });
+    }
 
     return {
       success: true as const,

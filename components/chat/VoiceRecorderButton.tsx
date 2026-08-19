@@ -7,6 +7,31 @@ import { Loader2, Mic, Square, Trash2, Send } from 'lucide-react';
 
 const MAX_MS = 120_000;
 
+function pickRecorderMimeType(): string {
+  const candidates = [
+    'audio/webm;codecs=opus',
+    'audio/webm',
+    'audio/mp4',
+    'audio/aac',
+    'audio/ogg;codecs=opus',
+    'audio/ogg',
+  ];
+  for (const type of candidates) {
+    if (MediaRecorder.isTypeSupported(type)) return type;
+  }
+  return '';
+}
+
+function normalizeAudioMime(raw: string): string {
+  const base = raw.split(';')[0]?.trim().toLowerCase() || 'audio/webm';
+  if (base.startsWith('audio/webm')) return 'audio/webm';
+  if (base.includes('ogg')) return 'audio/ogg';
+  if (base.includes('mp4') || base.includes('aac')) return 'audio/mp4';
+  if (base.includes('mpeg') || base.includes('mp3')) return 'audio/mpeg';
+  if (base.includes('wav')) return 'audio/wav';
+  return 'audio/webm';
+}
+
 type Props = {
   disabled?: boolean;
   uploading?: boolean;
@@ -73,11 +98,7 @@ export default function VoiceRecorderButton({
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus'
-        : MediaRecorder.isTypeSupported('audio/webm')
-          ? 'audio/webm'
-          : '';
+      const mimeType = pickRecorderMimeType();
 
       const recorder = mimeType
         ? new MediaRecorder(stream, { mimeType })
@@ -92,7 +113,7 @@ export default function VoiceRecorderButton({
           0.5,
           (Date.now() - startedAtRef.current) / 1000
         );
-        const type = recorder.mimeType || mimeType || 'audio/webm';
+        const type = normalizeAudioMime(recorder.mimeType || mimeType || 'audio/webm');
         const blob = new Blob(chunksRef.current, { type });
         cleanupStream();
         setRecording(false);
@@ -163,7 +184,11 @@ export default function VoiceRecorderButton({
           type="button"
           disabled={uploading}
           onClick={() =>
-            onSend(preview.blob, preview.durationSec, preview.mimeType)
+            onSend(
+              preview.blob,
+              preview.durationSec,
+              normalizeAudioMime(preview.mimeType)
+            )
           }
           className={cn(btnPrimaryClass, 'h-11 w-11 !px-0 justify-center')}
           aria-label="Send voice note"

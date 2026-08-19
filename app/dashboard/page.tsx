@@ -224,6 +224,7 @@ export default async function DashboardOverview({
           customerPhone: '555-9090',
           preferredTime: '10:00',
           isEmergency: false,
+          status: 'confirmed',
         },
         {
           id: 'ap2',
@@ -232,6 +233,7 @@ export default async function DashboardOverview({
           customerPhone: '555-8080',
           preferredTime: '14:30',
           isEmergency: true,
+          status: 'requested',
         },
       ];
       receptionistWaiting = [
@@ -482,7 +484,7 @@ export default async function DashboardOverview({
       queries.push(
         supabase
           .from('appointments')
-          .select('id, patient_name, customer_name, customer_phone, preferred_time, is_emergency')
+          .select('id, patient_name, customer_name, customer_phone, preferred_time, is_emergency, status')
           .eq('branch_id', activeBranchId)
           .eq('preferred_date', today)
           .in('status', [...UPCOMING_APPOINTMENT_STATUSES])
@@ -501,6 +503,7 @@ export default async function DashboardOverview({
                 customerPhone: a.customer_phone || '',
                 preferredTime: a.preferred_time?.slice(0, 5) || '',
                 isEmergency: a.is_emergency ?? false,
+                status: a.status || 'requested',
               })) || [];
           })
       );

@@ -86,8 +86,6 @@ export default function SplashScreen() {
 
   return (
     <View style={styles.root} accessibilityLabel="Phoenix Care loading">
-      <View style={styles.glowOuter} pointerEvents="none" />
-      <View style={styles.glowInner} pointerEvents="none" />
       <Animated.View style={[styles.brandStack, logoStyle]}>
         <Image
           source={require('../assets/images/phoenix-logo-mark.png')}
@@ -115,20 +113,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 20,
-  },
-  glowOuter: {
-    position: 'absolute',
-    width: 280,
-    height: 280,
-    borderRadius: 140,
-    backgroundColor: 'rgba(59, 130, 246, 0.08)',
-  },
-  glowInner: {
-    position: 'absolute',
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: 'rgba(59, 130, 246, 0.14)',
   },
   brandStack: { alignItems: 'center' },
   logo: { width: 88, height: 88 },

@@ -7,8 +7,8 @@ import SocialAutomationClient from '@/components/social/SocialAutomationClient';
 import { Share2 } from 'lucide-react';
 
 export const metadata = {
-  title: 'Social Automation',
-  description: 'AI-assisted social media posts with Facebook and Instagram publishing.',
+  title: 'Social Media',
+  description: 'Manage your clinic\'s social accounts and create AI-assisted content.',
 };
 
 export default async function SocialAutomationPage({
@@ -49,8 +49,8 @@ export default async function SocialAutomationPage({
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Social Automation"
-        description="Connect Facebook and Instagram per branch, compose with AI, and publish directly."
+        title="Social Media"
+        description="Manage your clinic's social accounts and create content."
         icon={Share2}
       />
       <p className="text-xs text-on-surface-variant -mt-4">

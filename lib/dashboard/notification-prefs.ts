@@ -11,6 +11,8 @@ export const NOTIFICATION_PREF_KEYS: DashboardNotificationKind[] = [
   'emergency_queue',
   'staff_chat_message',
   'staff_task_update',
+  'appointment_request',
+  'owner_chat_message',
 ];
 
 export const NOTIFICATION_PREF_LABELS: Record<DashboardNotificationKind, string> = {
@@ -22,6 +24,8 @@ export const NOTIFICATION_PREF_LABELS: Record<DashboardNotificationKind, string>
   emergency_queue: 'Emergency queue',
   staff_chat_message: 'Staff chat messages',
   staff_task_update: 'Staff task updates',
+  appointment_request: 'Owner appointment requests',
+  owner_chat_message: 'Owner chat messages',
 };
 
 /** Missing keys default to enabled. Explicit `false` disables. */

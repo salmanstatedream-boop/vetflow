@@ -5,6 +5,7 @@
   "dependencies": {
     "@expo-google-fonts/plus-jakarta-sans": "^0.4.2",
     "@expo/vector-icons": "^15.0.3",
+    "@react-native-community/datetimepicker": "8.4.4",
     "@supabase/supabase-js": "^2.112.2",
     "expo": "~54.0.36",
     "expo-auth-session": "~7.0.11",

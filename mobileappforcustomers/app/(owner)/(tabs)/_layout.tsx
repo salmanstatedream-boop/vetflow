@@ -3,6 +3,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
 import { Colors, Fonts, Layout } from '@/constants/theme';
 import { FloatingTabBar } from '@/components/FloatingTabBar';
+import { useUnreadMessagesBadge } from '@/lib/useUnreadMessagesBadge';
 
 function TabIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>['name'];
@@ -12,6 +13,8 @@ function TabIcon(props: {
 }
 
 export default function OwnerTabsLayout() {
+  const messagesBadge = useUnreadMessagesBadge();
+
   return (
     <Tabs
       tabBar={(props) => <FloatingTabBar {...props} />}
@@ -55,6 +58,7 @@ export default function OwnerTabsLayout() {
         options={{
           title: 'Messages',
           tabBarIcon: ({ color }) => <TabIcon name="comments" color={String(color)} />,
+          tabBarBadge: messagesBadge,
         }}
       />
       <Tabs.Screen

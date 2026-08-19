@@ -27,6 +27,7 @@ import { Colors, Fonts, Layout, Radii, Spacing } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { ownerApi, type OwnerAppointment, type OwnerPet } from '@/lib/api';
 import { go } from '@/lib/nav';
+import { useOwnerNotificationPoll } from '@/lib/useOwnerNotificationPoll';
 
 function petAge(dob?: string | null) {
   if (!dob) return null;
@@ -86,6 +87,8 @@ export default function HomeScreen() {
       void load();
     }, [load])
   );
+
+  useOwnerNotificationPoll(useCallback((count) => setUnread(count), []));
 
   const clinics = profile?.clinics || [];
   const activeClinic =

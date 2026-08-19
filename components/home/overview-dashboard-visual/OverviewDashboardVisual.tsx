@@ -15,6 +15,7 @@ import {
   LayoutDashboard,
   MoreHorizontal,
   Package,
+  DollarSign,
   Receipt,
   Search,
   Settings,
@@ -67,7 +68,7 @@ const SCHEDULE = [
 const ACTIVITY = [
   { text: 'Appointment scheduled for Bella', detail: 'Check-up on May 18', time: '10m ago', tone: 'purple' as const, icon: CalendarCheck },
   { text: 'Lab results uploaded for Max', detail: 'Blood Test', time: '25m ago', tone: 'blue' as const, icon: FlaskConical },
-  { text: 'Payment received from Rocky', detail: '₹ 3,450', time: '1h ago', tone: 'green' as const, icon: Receipt },
+  { text: 'Payment received from Rocky', detail: '$3,450', time: '1h ago', tone: 'green' as const, icon: DollarSign },
   { text: 'Discharge note created for Luna', detail: 'Post-op care', time: '2h ago', tone: 'purple' as const, icon: ClipboardList },
   { text: 'Follow-up reminder sent — Charlie', detail: 'Reminder', time: '3h ago', tone: 'orange' as const, icon: Bell },
 ];
@@ -77,7 +78,7 @@ const BOTTOM_STATS = [
   { label: 'Patient Retention', value: '85%', delta: '↑ 9% vs last week', tone: 'green' as const, icon: Users },
   { label: 'Avg. Response Time', value: '2.3 hrs', delta: '↓ 8% vs last week', tone: 'blue' as const, icon: Clock },
   { label: 'Completion Rate', value: '92%', delta: '↑ 14% vs last week', tone: 'green' as const, icon: TrendingUp },
-  { label: 'Total Revenue', value: '₹ 4,56,780', delta: '↑ 16% vs last week', tone: 'purple' as const, icon: Receipt },
+  { label: 'Total Revenue', value: '$456,780', delta: '↑ 16% vs last week', tone: 'purple' as const, icon: DollarSign },
 ];
 
 const SYSTEM_STATUS = [
@@ -214,7 +215,7 @@ export default function OverviewDashboardVisual() {
             <MiniStatCard label="Appointments" value="28" delta="↑ 18% vs last week" icon={CalendarCheck} iconTone="purple" />
             <MiniStatCard label="Active Patients" value="5" delta="↑ 12% vs last week" icon={FolderOpen} iconTone="blue" />
             <MiniStatCard label="Lab Tests" value="12" delta="↑ 20% vs last week" icon={FlaskConical} iconTone="orange" />
-            <MiniStatCard label="Total Revenue" value="₹ 4,56,780" delta="↑ 16% vs last week" icon={Receipt} iconTone="green" />
+            <MiniStatCard label="Total Revenue" value="$456,780" delta="↑ 16% vs last week" icon={DollarSign} iconTone="green" />
           </div>
 
           <div className="mb-3.5">

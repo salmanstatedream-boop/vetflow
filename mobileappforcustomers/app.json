@@ -2,7 +2,7 @@
   "expo": {
     "name": "Phoenix Care",
     "slug": "phoenix-care",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/images/phoenix-logo-mark.png",
     "scheme": "phoenixcare",
@@ -30,6 +30,7 @@
       }
     },
     "android": {
+      "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/phoenix-logo-mark.png",
         "backgroundColor": "#070B14"
@@ -69,7 +70,8 @@
         {
           "photosPermission": "Phoenix Care uses your photo library to scan clinic login QR codes you downloaded or were emailed."
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true

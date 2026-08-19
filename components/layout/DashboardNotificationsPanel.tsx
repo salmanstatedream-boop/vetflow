@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { AlertTriangle, BadgeCheck, Banknote, Bell, Layers, ListTodo, MessageSquare, Stethoscope, X } from 'lucide-react';
+import { AlertTriangle, BadgeCheck, Banknote, Bell, Calendar, Layers, ListTodo, MessageSquare, Stethoscope, X } from 'lucide-react';
 import type { DashboardNotification, DashboardNotificationKind } from '@/lib/dashboard/notifications';
 import { useFloatingDropdownPosition } from '@/lib/hooks/useFloatingDropdownPosition';
 import { floatingDropdownStyle } from '@/lib/ui/floating-dropdown';
@@ -18,6 +18,8 @@ const KIND_LABELS: Record<DashboardNotificationKind, string> = {
   assigned_in_clinic: 'Clinic queue',
   staff_chat_message: 'Messages',
   staff_task_update: 'Tasks',
+  appointment_request: 'Appointments',
+  owner_chat_message: 'Owner chat',
 };
 
 function kindIcon(kind: DashboardNotificationKind) {
@@ -35,6 +37,10 @@ function kindIcon(kind: DashboardNotificationKind) {
       return Stethoscope;
     case 'staff_chat_message':
       return MessageSquare;
+    case 'owner_chat_message':
+      return MessageSquare;
+    case 'appointment_request':
+      return Calendar;
     case 'staff_task_update':
       return ListTodo;
     default:

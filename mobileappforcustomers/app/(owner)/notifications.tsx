@@ -21,6 +21,7 @@ import {
 } from '@/components/ui';
 import { Colors, Fonts, Spacing } from '@/constants/theme';
 import { ownerApi, type OwnerNotification } from '@/lib/api';
+import { go } from '@/lib/nav';
 
 export default function NotificationsScreen() {
   const router = useRouter();
@@ -88,8 +89,16 @@ export default function NotificationsScreen() {
             onPress={async () => {
               if (!item.readAt) {
                 await ownerApi.markNotificationsRead(false, [item.id]);
-                await load();
               }
+              const threadId =
+                item.data && typeof item.data === 'object' && 'threadId' in item.data
+                  ? String((item.data as { threadId?: string }).threadId || '')
+                  : '';
+              if (item.kind === 'owner_message' && threadId) {
+                go(`/(owner)/chat/${threadId}`);
+                return;
+              }
+              await load();
             }}
             style={{ marginBottom: 10 }}
           >

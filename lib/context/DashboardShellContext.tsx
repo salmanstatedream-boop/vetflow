@@ -10,6 +10,7 @@ import {
 export type NavIndicators = {
   '/dashboard/chat'?: boolean;
   '/dashboard/tasks'?: boolean;
+  '/dashboard/owner-messages'?: boolean;
 };
 
 type DashboardShellContextValue = {
@@ -53,14 +54,17 @@ export function DashboardShellProvider({ children }: { children: ReactNode }) {
   const navIndicators = useMemo<NavIndicators>(() => {
     let chat = false;
     let tasks = false;
+    let ownerChat = false;
     for (const n of notifications) {
       if (n.kind === 'staff_chat_message') chat = true;
       if (n.kind === 'staff_task_update') tasks = true;
-      if (chat && tasks) break;
+      if (n.kind === 'owner_chat_message') ownerChat = true;
+      if (chat && tasks && ownerChat) break;
     }
     return {
       '/dashboard/chat': chat,
       '/dashboard/tasks': tasks,
+      '/dashboard/owner-messages': ownerChat,
     };
   }, [notifications]);
 

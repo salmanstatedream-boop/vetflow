@@ -21,6 +21,20 @@ export default function OwnerInboxClient({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
+  const refreshThreads = () => {
+    startTransition(async () => {
+      const res = await listOwnerInboxThreadsAction();
+      if (res.success) setThreads(res.threads);
+    });
+  };
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible') refreshThreads();
+    }, 15000);
+    return () => clearInterval(timer);
+  }, []);
+
   useEffect(() => {
     if (!activeId) {
       setMessages([]);
@@ -38,12 +52,20 @@ export default function OwnerInboxClient({
     });
   }, [activeId]);
 
-  const refreshThreads = () => {
-    startTransition(async () => {
-      const res = await listOwnerInboxThreadsAction();
-      if (res.success) setThreads(res.threads);
-    });
-  };
+  useEffect(() => {
+    if (!activeId) return;
+    const timer = setInterval(() => {
+      startTransition(async () => {
+        const res = await listOwnerInboxMessagesAction(activeId);
+        if (res.success) {
+          setMessages(res.messages);
+          refreshThreads();
+        }
+      });
+    }, 15000);
+    return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeId]);
 
   const send = () => {
     if (!activeId || !draft.trim()) return;

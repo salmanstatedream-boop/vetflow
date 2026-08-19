@@ -382,6 +382,78 @@ export async function getDashboardNotificationsAction(): Promise<{
       }
     }
 
+    if (hasCapability(role, 'manage_appointments') || hasCapability(role, 'billing_checkout')) {
+      const { data: requestedAppts } = await supabase
+        .from('appointments')
+        .select(
+          'id, patient_name, customer_name, preferred_date, preferred_time, created_at, source'
+        )
+        .eq('branch_id', branchId)
+        .eq('status', 'requested')
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      for (const appt of requestedAppts || []) {
+        const time = String(appt.preferred_time || '').slice(0, 5);
+        const sourceLabel =
+          appt.source === 'owner_app' ? 'Phoenix Care app' : 'Online booking';
+        notifications.push({
+          id: `appointment-request-${appt.id}`,
+          kind: 'appointment_request',
+          title: `Appointment request: ${appt.patient_name || 'Patient'}`,
+          body: `${appt.customer_name || 'Owner'} · ${appt.preferred_date}${time ? ` ${time}` : ''} · ${sourceLabel}`,
+          href: '/dashboard/appointments?status=requested',
+          priority: 0,
+          createdAt: (appt.created_at as string | null) ?? null,
+        });
+      }
+    }
+
+    {
+      const { data: unreadOwnerMsgs } = await supabase
+        .from('owner_clinic_messages')
+        .select(
+          'id, thread_id, body, created_at, owner_clinic_threads ( id, customers ( first_name, last_name ) )'
+        )
+        .eq('organization_id', ctx.organizationId!)
+        .eq('sender_type', 'owner')
+        .is('read_at', null)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      const seenThreads = new Set<string>();
+      for (const msg of unreadOwnerMsgs || []) {
+        const threadId = msg.thread_id as string;
+        if (seenThreads.has(threadId)) continue;
+        seenThreads.add(threadId);
+        const threadRaw = msg.owner_clinic_threads as
+          | {
+              id: string;
+              customers: { first_name: string; last_name: string } | { first_name: string; last_name: string }[] | null;
+            }
+          | {
+              id: string;
+              customers: { first_name: string; last_name: string } | { first_name: string; last_name: string }[] | null;
+            }[]
+          | null;
+        const thread = Array.isArray(threadRaw) ? threadRaw[0] : threadRaw;
+        const cust = normalizeOneToOne(thread?.customers ?? null);
+        const ownerName = cust
+          ? `${cust.first_name} ${cust.last_name}`.trim()
+          : 'Owner';
+        const preview = (msg.body as string || '').trim().slice(0, 80) || 'New message';
+        notifications.push({
+          id: `owner-chat-${threadId}`,
+          kind: 'owner_chat_message',
+          title: `Owner message: ${ownerName}`,
+          body: preview,
+          href: '/dashboard/owner-messages',
+          priority: 0,
+          createdAt: msg.created_at as string,
+        });
+      }
+    }
+
     if (isStaffTasksEnabled(ctx.featuresJson)) {
       const [{ data: activity }, { data: taskReads }, { data: openTasks }] =
         await Promise.all([
