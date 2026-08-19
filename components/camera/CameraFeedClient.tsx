@@ -149,15 +149,26 @@ export default function CameraFeedClient() {
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const [devicesRes, recordingsRes] = await Promise.all([
-      listCameraDevicesAction(),
-      listCameraRecordingsAction(),
-    ]);
-    if (devicesRes.success) setDevices(devicesRes.devices);
-    else setError(devicesRes.error || 'Failed to load cameras');
-    setGatewayConfigured(Boolean(devicesRes.gatewayConfigured));
-    if (recordingsRes.success) setRecordings(recordingsRes.recordings);
-    setLoading(false);
+    try {
+      const [devicesRes, recordingsRes] = await Promise.all([
+        listCameraDevicesAction(),
+        listCameraRecordingsAction(),
+      ]);
+      if (devicesRes.success) {
+        setDevices(devicesRes.devices);
+      } else {
+        setError(devicesRes.error || 'Failed to load cameras');
+      }
+      setGatewayConfigured(Boolean(devicesRes.gatewayConfigured));
+      if (recordingsRes.success) {
+        setRecordings(recordingsRes.recordings);
+      }
+    } catch {
+      setError('Unable to load cameras right now. Please refresh and try again.');
+      setGatewayConfigured(false);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
