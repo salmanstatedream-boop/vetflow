@@ -1,5 +1,6 @@
 const GRAPH = 'https://graph.facebook.com/v21.0';
 
+/** Fallback scopes when META_LOGIN_CONFIG_ID is not set (classic Facebook Login). */
 const SCOPES = [
   'pages_show_list',
   'pages_manage_posts',
@@ -26,14 +27,31 @@ export function getMetaRedirectUri(origin?: string): string {
   );
 }
 
+/**
+ * Build Meta OAuth URL.
+ *
+ * Facebook Login for Business apps should set META_LOGIN_CONFIG_ID (from
+ * Facebook Login for Business → Configurations). That config_id carries the
+ * allowed permissions; raw `scope` alone often returns "Invalid Scopes".
+ */
 export function buildOAuthUrl(state: string, origin?: string): string {
   const appId = process.env.META_APP_ID!;
   const redirectUri = encodeURIComponent(getMetaRedirectUri(origin));
-  return (
+  const configId = process.env.META_LOGIN_CONFIG_ID?.trim();
+
+  let url =
     `https://www.facebook.com/v21.0/dialog/oauth?client_id=${appId}` +
-    `&redirect_uri=${redirectUri}&state=${encodeURIComponent(state)}` +
-    `&scope=${encodeURIComponent(SCOPES)}&response_type=code`
-  );
+    `&redirect_uri=${redirectUri}` +
+    `&state=${encodeURIComponent(state)}` +
+    `&response_type=code`;
+
+  if (configId) {
+    url += `&config_id=${encodeURIComponent(configId)}`;
+  } else {
+    url += `&scope=${encodeURIComponent(SCOPES)}`;
+  }
+
+  return url;
 }
 
 async function graphGet<T>(path: string, params: Record<string, string>): Promise<T> {

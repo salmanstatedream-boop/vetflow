@@ -41,8 +41,12 @@ const OPERATOR_STEPS = [
   },
   {
     title: 'Set OAuth redirect URI',
-    text: 'Add your callback URL under Facebook Login settings. Use your production domain on Vercel.',
+    text: 'Add your callback URL under Facebook Login for Business → Settings → Valid OAuth Redirect URIs.',
     code: '{APP_URL}/api/social/meta/callback',
+  },
+  {
+    title: 'Create a Login Configuration (required)',
+    text: 'Go to Facebook Login for Business → Configurations → Create configuration. Choose User access token. Add permissions: pages_show_list, pages_manage_posts, pages_read_engagement, instagram_basic, instagram_content_publish, business_management. Copy the Config ID into Vercel as META_LOGIN_CONFIG_ID (Login for Business rejects raw scope lists without this).',
   },
   {
     title: 'Copy App ID and App Secret',
@@ -50,11 +54,11 @@ const OPERATOR_STEPS = [
   },
   {
     title: 'Request permissions',
-    text: 'Ensure these scopes are available: pages_show_list, pages_manage_posts, pages_read_engagement, instagram_basic, instagram_content_publish, business_management.',
+    text: 'Ensure these scopes are available on the Login Configuration: pages_show_list, pages_manage_posts, pages_read_engagement, instagram_basic, instagram_content_publish, business_management.',
   },
   {
     title: 'Add environment variables',
-    text: 'Set the variables below in Vercel (or .env.local for local dev). Restart the app after saving.',
+    text: 'Set the variables below in Vercel (or .env.local for local dev). Restart / redeploy the app after saving.',
   },
   {
     title: 'Generate encryption key',
@@ -66,6 +70,7 @@ const ENV_VARS = [
   'META_APP_ID',
   'META_APP_SECRET',
   'META_REDIRECT_URI',
+  'META_LOGIN_CONFIG_ID',
   'SOCIAL_TOKEN_ENCRYPTION_KEY',
   'NEXT_PUBLIC_APP_URL',
 ];
