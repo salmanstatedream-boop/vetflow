@@ -31,6 +31,8 @@ export const ProvisionClinicSchema = RegisterSchema.extend({
   phone: z.string().optional().or(z.literal('')),
   clinicTypeId: z.string().min(1, { message: 'Clinic type is required' }),
   planId: z.enum(['trial', 'starter', 'pro', 'enterprise'], { message: 'Invalid plan' }),
+  /** Optional feature overrides applied after plan defaults (opt-ins stay off unless true). */
+  features: z.record(z.string(), z.boolean()).optional(),
 });
 export type ProvisionClinicInput = z.infer<typeof ProvisionClinicSchema>;
 

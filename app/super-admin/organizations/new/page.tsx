@@ -4,6 +4,7 @@ import ProvisionClinicForm from '@/components/super-admin/ProvisionClinicForm';
 import { Building2 } from 'lucide-react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { loadSuperAdminPlans } from '@/lib/super-admin/plans';
 
 export const metadata = {
   title: 'Provision Clinic',
@@ -12,14 +13,13 @@ export const metadata = {
 
 export default async function ProvisionClinicPage() {
   const adminClient = await createAdminClient();
-  const { data: typeRows } = await adminClient
-    .from('clinic_types')
-    .select('id, label')
-    .eq('is_active', true)
-    .order('label');
+  const [typeRowsRes, plans] = await Promise.all([
+    adminClient.from('clinic_types').select('id, label').eq('is_active', true).order('label'),
+    loadSuperAdminPlans(),
+  ]);
 
   const clinicTypes =
-    (typeRows as { id: string; label: string }[] | null)?.map((t) => ({
+    (typeRowsRes.data as { id: string; label: string }[] | null)?.map((t) => ({
       id: t.id,
       label: t.label,
     })) ?? [{ id: 'vet', label: 'Veterinary Clinic' }];
@@ -35,10 +35,10 @@ export default async function ProvisionClinicPage() {
       </Link>
       <PageHeader
         title="Provision a clinic"
-        description="Create a tenant, its first clinic admin, plan, and initial branch. This action is audit-logged."
+        description="Create a tenant, pick a plan, enable features, and set up the first admin and branch."
         icon={Building2}
       />
-      <ProvisionClinicForm clinicTypes={clinicTypes} />
+      <ProvisionClinicForm clinicTypes={clinicTypes} plans={plans} />
     </div>
   );
 }

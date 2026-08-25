@@ -98,6 +98,19 @@ export async function provisionClinicAction(payload: unknown) {
     for (const f of OPT_IN_FEATURES) {
       features[f] = false;
     }
+    // Apply explicit feature overrides from the provision form (if any).
+    if (parsed.features) {
+      for (const f of ALL_FEATURES) {
+        if (typeof parsed.features[f] === 'boolean') {
+          features[f] = parsed.features[f];
+        }
+      }
+      for (const f of OPT_IN_FEATURES) {
+        if (parsed.features[f] === true) {
+          features[f] = true;
+        }
+      }
+    }
 
     const trialEnd = new Date();
     trialEnd.setDate(trialEnd.getDate() + 30);
@@ -105,7 +118,7 @@ export async function provisionClinicAction(payload: unknown) {
 
     const subPayload = {
       plan_id: parsed.planId,
-      plan_name: parsed.planId,
+      plan_name: plan?.name || parsed.planId,
       status: isTrial ? 'trial' : 'active',
       trial_start: new Date().toISOString(),
       trial_end: trialEnd.toISOString(),

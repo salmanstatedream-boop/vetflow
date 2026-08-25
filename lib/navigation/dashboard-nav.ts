@@ -21,7 +21,6 @@ import {
   ShoppingBag,
   BarChart3,
   Share2,
-  Video,
   ListTodo,
   MessageSquare,
 } from 'lucide-react';
@@ -57,13 +56,6 @@ export const DASHBOARD_NAV_GROUPS: DashboardNavGroup[] = [
       { name: 'Consultations', href: '/dashboard/doctors', icon: BriefcaseMedical },
       { name: 'Prescriptions', href: '/dashboard/prescriptions', icon: FileText },
       { name: 'Walk-ins', href: '/dashboard/walk-ins', icon: ClipboardList },
-      {
-        name: 'Cameras',
-        href: '/dashboard/camera',
-        icon: Video,
-        requiredCapability: 'view_camera_feed',
-        optInFeature: 'camera_feed',
-      },
     ],
   },
   {

@@ -79,7 +79,7 @@ export default async function SuperAdminOrganizations() {
     <div className="space-y-8">
       <PageHeader
         title="Clinic tenant registry"
-        description="Review tenants, suspend or activate accounts, enter clinics with audit, and adjust plans."
+        description="Search clinics, change plans, and open a tenant for features. Use Provision clinic to create a new organization."
         icon={Building2}
         actions={
           <Link

@@ -48,7 +48,7 @@ export default async function SuperAdminAuditPage({
     <div className="space-y-8">
       <PageHeader
         title="Audit log"
-        description="Immutable record of platform and tenant actions. Filter by organization, category, severity, actor, or date."
+        description="Filter by organization, category, severity, actor, or date. Export from the table when needed."
         icon={ScrollText}
       />
       <AuditLogTableClient

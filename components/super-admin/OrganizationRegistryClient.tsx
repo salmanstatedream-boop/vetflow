@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import SubscriptionForm, { type PlanOption } from '@/components/forms/SubscriptionForm';
 import TenantOrgActions from '@/components/super-admin/TenantOrgActions';
-import OrganizationFeatureToggles from '@/components/super-admin/OrganizationFeatureToggles';
 import GlassPanel from '@/components/ui/premium/GlassPanel';
 import {
   badgeActiveClass,
@@ -211,12 +210,6 @@ export default function OrganizationRegistryClient({ orgs, plans }: Organization
                             isSuspended={Boolean(isSuspended)}
                           />
                           {sub && (
-                            <OrganizationFeatureToggles
-                              organizationId={org.id}
-                              initialFeatures={sub.features}
-                            />
-                          )}
-                          {sub && (
                             <SubscriptionForm
                               organizationId={org.id}
                               organizationName={org.name}
@@ -228,6 +221,12 @@ export default function OrganizationRegistryClient({ orgs, plans }: Organization
                               plans={plans}
                             />
                           )}
+                          <Link
+                            href={`/super-admin/organizations/${org.id}#features`}
+                            className="text-[10px] font-bold text-on-surface-variant hover:text-primary"
+                          >
+                            Manage features →
+                          </Link>
                         </div>
                       </td>
                     </tr>

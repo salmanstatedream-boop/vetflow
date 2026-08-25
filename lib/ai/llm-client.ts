@@ -14,7 +14,7 @@ export function getLlmConfig() {
     provider: 'openai_compat' as const,
     apiKey,
     model: useGroq
-      ? process.env.GROQ_CHAT_MODEL || 'llama-3.3-70b-versatile'
+      ? process.env.GROQ_CHAT_MODEL || 'openai/gpt-oss-120b'
       : process.env.OPENAI_CHAT_MODEL || 'gpt-4o-mini',
     baseUrl: useGroq
       ? process.env.GROQ_BASE_URL || 'https://api.groq.com/openai/v1'

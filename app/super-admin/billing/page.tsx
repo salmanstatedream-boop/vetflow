@@ -100,7 +100,7 @@ export default async function SuperAdminBillingPage() {
     <div className="space-y-8">
       <PageHeader
         title="Platform billing"
-        description={`SaaS subscription management for all ${PRODUCT_NAME} clinic tenants. Patient-visit payments remain in each clinic's dashboard.`}
+        description={`Subscription status and plan changes across ${PRODUCT_NAME} tenants. Open a clinic row to change plan.`}
         icon={CreditCard}
       />
 

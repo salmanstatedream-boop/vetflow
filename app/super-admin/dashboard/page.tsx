@@ -293,6 +293,15 @@ export default async function SuperAdminDashboard() {
             title="Platform performance"
             description="Unified telemetry covering tenant aggregates, billing, signups, and system health."
             icon={LayoutDashboard}
+            actions={
+              <Link
+                href="/super-admin/organizations/new"
+                className="inline-flex items-center gap-1.5 bg-primary hover:opacity-90 text-white py-2.5 px-4 rounded-2xl font-bold text-sm shadow-premium transition-all"
+              >
+                <PlusCircle className="w-4 h-4" />
+                Provision clinic
+              </Link>
+            }
           />
         </div>
       </div>

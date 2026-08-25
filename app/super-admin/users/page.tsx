@@ -106,7 +106,7 @@ export default async function SuperAdminUsersPage() {
     <div className="space-y-8">
       <PageHeader
         title="Users & access"
-        description="Manage platform super admins, monitor clinic staffing, and oversee active impersonation sessions."
+        description="Platform super admins, clinic staff counts, and active impersonation sessions."
         icon={Users}
       />
 

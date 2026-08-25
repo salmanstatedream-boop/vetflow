@@ -279,9 +279,31 @@ export default async function OrganizationDetailPage({
             )}
           </GlassPanel>
 
-          <GlassPanel className="p-6 space-y-4">
+          <div id="features">
+            <GlassPanel className="p-6 space-y-4">
             <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5">
               <ShieldCheck className="w-4 h-4 text-primary" />
+              Features
+            </h3>
+            <p className="text-[11px] text-on-surface-variant">
+              Enable or disable modules for this clinic. Changes save instantly.
+            </p>
+            {sub ? (
+              <OrganizationFeatureToggles
+                organizationId={org.id}
+                initialFeatures={sub.features}
+                layout="grouped"
+              />
+            ) : (
+              <p className="text-xs text-on-surface-variant italic">
+                Add a subscription before managing features.
+              </p>
+            )}
+            </GlassPanel>
+          </div>
+
+          <GlassPanel className="p-6 space-y-4">
+            <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider">
               Tenant actions
             </h3>
             <TenantOrgActions
@@ -289,11 +311,6 @@ export default async function OrganizationDetailPage({
               organizationName={org.name}
               isSuspended={Boolean(isSuspended)}
             />
-            {sub && (
-              <div className="pt-2 border-t border-outline-variant/30">
-                <OrganizationFeatureToggles organizationId={org.id} initialFeatures={sub.features} />
-              </div>
-            )}
           </GlassPanel>
         </div>
 
