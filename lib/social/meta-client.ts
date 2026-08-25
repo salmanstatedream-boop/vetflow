@@ -10,20 +10,20 @@ const SCOPES = [
   'business_management',
 ].join(',');
 
+function env(name: string): string | undefined {
+  const v = process.env[name]?.trim();
+  return v || undefined;
+}
+
 export function isMetaConfigured(): boolean {
-  const key = process.env.SOCIAL_TOKEN_ENCRYPTION_KEY;
-  return Boolean(
-    process.env.META_APP_ID &&
-      process.env.META_APP_SECRET &&
-      key &&
-      key.length >= 16
-  );
+  const key = env('SOCIAL_TOKEN_ENCRYPTION_KEY');
+  return Boolean(env('META_APP_ID') && env('META_APP_SECRET') && key && key.length >= 16);
 }
 
 export function getMetaRedirectUri(origin?: string): string {
   return (
-    process.env.META_REDIRECT_URI ||
-    `${origin || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/social/meta/callback`
+    env('META_REDIRECT_URI') ||
+    `${origin || env('NEXT_PUBLIC_APP_URL') || 'http://localhost:3000'}/api/social/meta/callback`
   );
 }
 
@@ -35,9 +35,9 @@ export function getMetaRedirectUri(origin?: string): string {
  * allowed permissions; raw `scope` alone often returns "Invalid Scopes".
  */
 export function buildOAuthUrl(state: string, origin?: string): string {
-  const appId = process.env.META_APP_ID!;
+  const appId = env('META_APP_ID')!;
   const redirectUri = encodeURIComponent(getMetaRedirectUri(origin));
-  const configId = process.env.META_LOGIN_CONFIG_ID?.trim();
+  const configId = env('META_LOGIN_CONFIG_ID');
 
   let url =
     `https://www.facebook.com/v21.0/dialog/oauth?client_id=${appId}` +
@@ -76,8 +76,8 @@ async function graphPost<T>(path: string, params: Record<string, string>): Promi
 
 export async function exchangeCodeForUserToken(code: string, origin?: string): Promise<string> {
   const data = await graphGet<{ access_token: string }>('/oauth/access_token', {
-    client_id: process.env.META_APP_ID!,
-    client_secret: process.env.META_APP_SECRET!,
+    client_id: env('META_APP_ID')!,
+    client_secret: env('META_APP_SECRET')!,
     redirect_uri: getMetaRedirectUri(origin),
     code,
   });
@@ -90,8 +90,8 @@ export async function exchangeForLongLivedUserToken(shortToken: string): Promise
 }> {
   return graphGet('/oauth/access_token', {
     grant_type: 'fb_exchange_token',
-    client_id: process.env.META_APP_ID!,
-    client_secret: process.env.META_APP_SECRET!,
+    client_id: env('META_APP_ID')!,
+    client_secret: env('META_APP_SECRET')!,
     fb_exchange_token: shortToken,
   });
 }

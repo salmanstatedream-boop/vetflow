@@ -3,9 +3,14 @@ export type ChatMessage = {
   content: string;
 };
 
+function env(name: string): string | undefined {
+  const v = process.env[name]?.trim();
+  return v || undefined;
+}
+
 export function getLlmConfig() {
-  const groqKey = process.env.GROQ_API_KEY;
-  const openaiKey = process.env.OPENAI_API_KEY;
+  const groqKey = env('GROQ_API_KEY');
+  const openaiKey = env('OPENAI_API_KEY');
   const useGroq = Boolean(groqKey);
   const apiKey = groqKey || openaiKey;
   if (!apiKey) return null;
@@ -14,11 +19,11 @@ export function getLlmConfig() {
     provider: 'openai_compat' as const,
     apiKey,
     model: useGroq
-      ? process.env.GROQ_CHAT_MODEL || 'openai/gpt-oss-120b'
-      : process.env.OPENAI_CHAT_MODEL || 'gpt-4o-mini',
+      ? env('GROQ_CHAT_MODEL') || 'openai/gpt-oss-120b'
+      : env('OPENAI_CHAT_MODEL') || 'gpt-4o-mini',
     baseUrl: useGroq
-      ? process.env.GROQ_BASE_URL || 'https://api.groq.com/openai/v1'
-      : process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
+      ? env('GROQ_BASE_URL') || 'https://api.groq.com/openai/v1'
+      : env('OPENAI_BASE_URL') || 'https://api.openai.com/v1',
   };
 }
 
